@@ -76,7 +76,6 @@ bool SatelliteTrackerGUI::deserialize(const QByteArray& data)
         m_feature->setWorkspaceIndex(m_settings.m_workspaceIndex);
         updateSelectedSats();
         displaySettings();
-        qDebug() << " deserialize " << m_settings.m_satellites;
         applySettings(true);
         return true;
     }
@@ -348,18 +347,21 @@ void SatelliteTrackerGUI::displaySettings()
     blockApplySettings(true);
     ui->latitude->setValue(m_settings.m_latitude);
     ui->longitude->setValue(m_settings.m_longitude);
-    ui->target->clear();
 
+    ui->target->blockSignals(true);
+    ui->target->clear();
     for (const QString& s : m_settings.m_satellites) {
         ui->target->addItem(s);
     }
-
+    ui->target->blockSignals(false);
     ui->target->setCurrentIndex(ui->target->findText(m_settings.m_target));
+
     ui->dateTimeSelect->setCurrentIndex((int)m_settings.m_dateTimeSelect);
     ui->dateTime->setVisible(m_settings.m_dateTimeSelect == SatelliteTrackerSettings::CUSTOM);
     ui->dateTime->setDateTime(QDateTime::fromString(m_settings.m_dateTime, Qt::ISODateWithMs));
     ui->autoTarget->setChecked(m_settings.m_autoTarget);
     ui->darkTheme->setChecked(m_settings.m_chartsDarkTheme);
+    ui->satTable->horizontalHeader()->setSortIndicator(m_settings.m_columnSort, m_settings.m_columnSortOrder);
     getRollupContents()->restoreState(m_rollupState);
     plotChart();
     blockApplySettings(false);
@@ -1008,8 +1010,8 @@ void SatelliteTrackerGUI::resizeTable()
     ui->satTable->setItem(row, SAT_COL_NAME, new QTableWidgetItem("Satellite123"));
     ui->satTable->setItem(row, SAT_COL_AZ, new QTableWidgetItem("360"));
     ui->satTable->setItem(row, SAT_COL_EL, new QTableWidgetItem("-90"));
-    ui->satTable->setItem(row, SAT_COL_TNE, new QTableWidgetItem("9999:99 AOS"));
-    ui->satTable->setItem(row, SAT_COL_DUR, new QTableWidgetItem("999:99"));
+    ui->satTable->setItem(row, SAT_COL_TNE, new QTableWidgetItem("99:99:99 AOS"));
+    ui->satTable->setItem(row, SAT_COL_DUR, new QTableWidgetItem("9:99:99"));
     ui->satTable->setItem(row, SAT_COL_AOS, new QTableWidgetItem("+1 10:17"));
     ui->satTable->setItem(row, SAT_COL_LOS, new QTableWidgetItem("+1 10:17"));
     ui->satTable->setItem(row, SAT_COL_MAX_EL, new QTableWidgetItem("90"));
@@ -1045,8 +1047,7 @@ QString SatelliteTrackerGUI::formatDaysTime(qint64 days, QDateTime dateTime)
         return dt.time().toString(QString("hh:mm %1").arg(days));
 }
 
-
-QString SatelliteTrackerGUI::formatSecondsHHMM(qint64 seconds)
+QString SatelliteTrackerGUI::formatSecondsAsHHMMSS(qint64 seconds)
 {
     char const* sign = "";
     if(seconds < 0)
@@ -1054,9 +1055,16 @@ QString SatelliteTrackerGUI::formatSecondsHHMM(qint64 seconds)
         sign    = "-";
         seconds = -seconds;
     }
-    return QString("%1%2:%3").arg(sign).arg(seconds/60).arg(seconds%60,2,10,QChar('0'));
+    int minutes = seconds / 60;
+    seconds = seconds % 60;
+    int hours = minutes / 60;
+    minutes = minutes % 60;
+    if (hours > 0) {
+        return QString("%1%2:%3:%4").arg(sign).arg(hours).arg(minutes, 2, 10, QChar('0')).arg(seconds, 2, 10, QChar('0'));
+    } else {
+        return QString("%1%2:%3").arg(sign).arg(minutes).arg(seconds, 2, 10, QChar('0'));
+    }
 }
-
 
 // Table item showing some text, but sorted by datetime set as user data
 class DateTimeSortedTableWidgetItem : public QTableWidgetItem {
@@ -1072,6 +1080,28 @@ public:
     }
 };
 
+// Handle sorting for next column, which can have times as HH:MM:SS or MM:SS
+class NextEventTableWidgetItem : public QTableWidgetItem
+{
+public:
+    bool operator<(const QTableWidgetItem &other) const override
+    {
+        QString t1 = text();
+        QString t2 = other.text();
+        int t1Colons = t1.count(":");
+        int t2Colons = t2.count(":");
+        if (t1Colons == t2Colons)
+        {
+            QCollator coll;
+            coll.setNumericMode(true);
+            return coll.compare(t1, t2) < 0;
+        }
+        else
+        {
+            return t1Colons < t2Colons;
+        }
+    }
+};
 
 class NaturallySortedTableWidgetItem : public QTableWidgetItem
 {
@@ -1080,11 +1110,9 @@ public:
     {
         QCollator coll;
         coll.setNumericMode(true);
-        return coll.compare( text() , other.text() ) < 0;
+        return coll.compare(text() , other.text()) < 0;
     }
 };
-
-
 
 #define SPEED_OF_LIGHT 299792458.0
 
@@ -1122,8 +1150,10 @@ void SatelliteTrackerGUI::updateTable(SatelliteState *satState)
         {
             if ((i == SAT_COL_AOS) || (i == SAT_COL_LOS))
                 items[i] = new DateTimeSortedTableWidgetItem();
-            else if((i == SAT_COL_NAME) || (i == SAT_COL_NORAD_ID))
+            else if ((i == SAT_COL_NAME) || (i == SAT_COL_NORAD_ID))
                 items[i] = new QTableWidgetItem();
+            else if (i == SAT_COL_TNE)
+                items[i] = new NextEventTableWidgetItem();
             else
                 items[i] = new NaturallySortedTableWidgetItem();
             items[i]->setToolTip(ui->satTable->horizontalHeaderItem(i)->toolTip());
@@ -1162,10 +1192,10 @@ void SatelliteTrackerGUI::updateTable(SatelliteState *satState)
         int daysToAOS = currentDateTime.daysTo(satState->m_passes[0].m_aos);
         int daysToLOS = currentDateTime.daysTo(satState->m_passes[0].m_los);
         if (satState->m_passes[0].m_aos > currentDateTime)
-            items[SAT_COL_TNE]->setText(formatSecondsHHMM(currentDateTime.secsTo(satState->m_passes[0].m_aos))+" AOS");
+            items[SAT_COL_TNE]->setText(formatSecondsAsHHMMSS(currentDateTime.secsTo(satState->m_passes[0].m_aos))+" AOS");
         else
-            items[SAT_COL_TNE]->setText(formatSecondsHHMM(currentDateTime.secsTo(satState->m_passes[0].m_los))+" LOS");
-        items[SAT_COL_DUR]->setText(formatSecondsHHMM(satState->m_passes[0].m_aos.secsTo(satState->m_passes[0].m_los)));
+            items[SAT_COL_TNE]->setText(formatSecondsAsHHMMSS(currentDateTime.secsTo(satState->m_passes[0].m_los))+" LOS");
+        items[SAT_COL_DUR]->setText(formatSecondsAsHHMMSS(satState->m_passes[0].m_aos.secsTo(satState->m_passes[0].m_los)));
         items[SAT_COL_AOS]->setText(formatDaysTime(daysToAOS, satState->m_passes[0].m_aos));
         items[SAT_COL_AOS]->setData(Qt::UserRole, satState->m_passes[0].m_aos);
         items[SAT_COL_LOS]->setText(formatDaysTime(daysToLOS, satState->m_passes[0].m_los));
@@ -1201,7 +1231,13 @@ void SatelliteTrackerGUI::on_satTable_cellDoubleClicked(int row, int column)
 
     QString sat = ui->satTable->item(row, SAT_COL_NAME)->text();
     FeatureWebAPIUtils::mapFind(sat);
+}
 
+void SatelliteTrackerGUI::on_satTableHeader_sortIndicatorChanged(int logicalIndex, Qt::SortOrder order)
+{
+    m_settings.m_columnSort = logicalIndex;
+    m_settings.m_columnSortOrder = order;
+    applySettings();
 }
 
 // Columns in table reordered
@@ -1344,5 +1380,6 @@ void SatelliteTrackerGUI::makeUIConnections()
     QObject::connect(ui->prevPass, &QToolButton::clicked, this, &SatelliteTrackerGUI::on_prevPass_clicked);
     QObject::connect(ui->darkTheme, &QToolButton::clicked, this, &SatelliteTrackerGUI::on_darkTheme_clicked);
     QObject::connect(ui->satTable, &QTableWidget::cellDoubleClicked, this, &SatelliteTrackerGUI::on_satTable_cellDoubleClicked);
+    QObject::connect(ui->satTable->horizontalHeader(), &QHeaderView::sortIndicatorChanged, this, &SatelliteTrackerGUI::on_satTableHeader_sortIndicatorChanged);
     QObject::connect(ui->deviceFeatureSelect, qOverload<int>(&QComboBox::currentIndexChanged), this, &SatelliteTrackerGUI::on_deviceFeatureSelect_currentIndexChanged);
 }

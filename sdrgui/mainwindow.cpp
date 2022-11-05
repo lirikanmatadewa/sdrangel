@@ -107,6 +107,7 @@ MainWindow::MainWindow(qtwebapp::LoggerWithFile *logger, const MainParser& parse
     m_mainCore(MainCore::instance()),
 	m_dspEngine(DSPEngine::instance()),
 	m_lastEngineState(DeviceAPI::StNotStarted),
+    m_commandKeyReceiver(nullptr),
     m_fftWisdomProcess(nullptr)
 {
 	qDebug() << "MainWindow::MainWindow: start";
@@ -185,6 +186,11 @@ MainWindow::MainWindow(qtwebapp::LoggerWithFile *logger, const MainParser& parse
     m_pluginManager->loadPlugins(QString("plugins"));
     m_pluginManager->loadPluginsNonDiscoverable(m_mainCore->m_settings.getDeviceUserArgs());
 
+    splash->showStatusMessage("Add command key receiver...", Qt::white);
+	m_commandKeyReceiver = new CommandKeyReceiver();
+	m_commandKeyReceiver->setRelease(true);
+	this->installEventFilter(m_commandKeyReceiver);
+
     splash->showStatusMessage("Add unique feature set...", Qt::white);
     addFeatureSet(); // Create the uniuefeature set
 	m_apiAdapter = new WebAPIAdapter();
@@ -224,10 +230,6 @@ MainWindow::MainWindow(qtwebapp::LoggerWithFile *logger, const MainParser& parse
 	m_apiPort = parser.getServerPort();
 	m_apiServer = new WebAPIServer(m_apiHost, m_apiPort, m_requestMapper);
 	m_apiServer->start();
-
-	m_commandKeyReceiver = new CommandKeyReceiver();
-	m_commandKeyReceiver->setRelease(true);
-	this->installEventFilter(m_commandKeyReceiver);
 
     m_dspEngine->setMIMOSupport(true);
 
@@ -2040,7 +2042,7 @@ void MainWindow::on_action_saveAll_triggered()
 {
     saveConfiguration(m_mainCore->m_settings.getWorkingConfiguration());
     m_mainCore->m_settings.save();
-    QMessageBox::information(this, tr("Done"), tr("All curent settings saved"));
+    QMessageBox::information(this, tr("Done"), tr("All current settings saved"));
 }
 
 void MainWindow::on_action_Quick_Start_triggered()

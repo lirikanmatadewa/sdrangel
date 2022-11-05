@@ -129,7 +129,7 @@ private:
     QAction *createCheckableItem(QString& text, int idx, bool checked);
     void updateTimeToAOS();
     QString formatDaysTime(qint64 days, QDateTime dateTime);
-    QString formatSecondsHHMM(qint64 seconds);
+    QString formatSecondsAsHHMMSS(qint64 seconds);
     void updateDeviceFeatureCombo();
     void updateDeviceFeatureCombo(const QStringList &items, const QString &selected);
     void updateFileInputList();
@@ -161,6 +161,7 @@ private slots:
     void on_satTable_cellDoubleClicked(int row, int column);
     void satTable_sectionMoved(int logicalIndex, int oldVisualIndex, int newVisualIndex);
     void satTable_sectionResized(int logicalIndex, int oldSize, int newSize);
+    void on_satTableHeader_sortIndicatorChanged(int logicalIndex, Qt::SortOrder order);
     void columnSelectMenu(QPoint pos);
     void columnSelectMenuChecked(bool checked = false);
     void on_deviceFeatureSelect_currentIndexChanged(int index);
