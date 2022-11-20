@@ -64,9 +64,6 @@ public slots:
     void channelMarkerChangedByCursor();
     void channelMarkerHighlightedByCursor();
 
-protected:
-    void resizeEvent(QResizeEvent* size);
-
 private:
     Ui::VORDemodGUI* ui;
     PluginAPI* m_pluginAPI;
@@ -94,7 +91,7 @@ private:
     void updateAbsoluteCenterFrequency();
 
     void leaveEvent(QEvent*);
-    void enterEvent(QEvent*);
+    void enterEvent(EnterEventType*);
 
 private slots:
 	void on_deltaFrequency_changed(qint64 value);

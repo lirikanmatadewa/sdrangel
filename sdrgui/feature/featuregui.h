@@ -60,6 +60,7 @@ public:
 	virtual MessageQueue* getInputMessageQueue() = 0;
 
     RollupContents *getRollupContents() { return &m_rollupContents; }
+    void sizeToContents();
     void setTitleColor(const QColor&) {} // not implemented for a feature
     void setTitle(const QString& title);
     void setIndex(int index);
@@ -74,6 +75,7 @@ protected:
     void mouseMoveEvent(QMouseEvent* event) override;
     void resetContextMenuType() { m_contextMenuType = ContextMenuNone; }
     int getAdditionalHeight() const { return 22 + 22; } // height of top and bottom bars
+    int gripSize() { return m_resizer.m_gripSize; } // size in pixels of resize grip around the window
 
     Feature *m_feature;
     int m_featureIndex;
@@ -84,6 +86,7 @@ protected:
 
 protected slots:
     void shrinkWindow();
+    void maximizeWindow();
 
 private:
     bool isOnMovingPad();
@@ -94,6 +97,7 @@ private:
     QPushButton *m_helpButton;
     QPushButton *m_moveButton;
     QPushButton *m_shrinkButton;
+    QPushButton *m_maximizeButton;
     QPushButton *m_closeButton;
     QLabel *m_statusLabel;
     QVBoxLayout *m_layouts;
@@ -105,6 +109,7 @@ private:
     QPoint m_DragPosition;
     QMap<QWidget*, int> m_heightsMap;
     FramelessWindowResizer m_resizer;
+    bool m_disableResize;
 
 private slots:
     void activateSettingsDialog();

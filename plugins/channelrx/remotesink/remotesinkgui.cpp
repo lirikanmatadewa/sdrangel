@@ -16,7 +16,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
 
 #include <QLocale>
-#include <QResizeEvent>
 
 #include "device/deviceuiset.h"
 #include "gui/basicchannelsettingsdialog.h"
@@ -62,14 +61,6 @@ bool RemoteSinkGUI::deserialize(const QByteArray& data)
         resetToDefaults();
         return false;
     }
-}
-
-void RemoteSinkGUI::resizeEvent(QResizeEvent* size)
-{
-    int maxWidth = getRollupContents()->maximumWidth();
-    int minHeight = getRollupContents()->minimumHeight() + getAdditionalHeight();
-    resize(width() < maxWidth ? width() : maxWidth, minHeight);
-    size->accept();
 }
 
 bool RemoteSinkGUI::handleMessage(const Message& message)
@@ -209,7 +200,7 @@ void RemoteSinkGUI::leaveEvent(QEvent* event)
     ChannelGUI::leaveEvent(event);
 }
 
-void RemoteSinkGUI::enterEvent(QEvent* event)
+void RemoteSinkGUI::enterEvent(EnterEventType* event)
 {
     m_channelMarker.setHighlighted(true);
     ChannelGUI::enterEvent(event);

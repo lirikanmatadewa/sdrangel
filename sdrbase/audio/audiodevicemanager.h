@@ -22,10 +22,10 @@
 #include <QStringList>
 #include <QList>
 #include <QMap>
-#include <QAudioDeviceInfo>
 
 #include "audio/audioinputdevice.h"
 #include "audio/audiooutputdevice.h"
+#include "audio/audiodeviceinfo.h"
 #include "export.h"
 
 class QDataStream;
@@ -62,7 +62,9 @@ public:
             udpUseRTP(false),
             udpChannelMode(AudioOutputDevice::UDPChannelLeft),
             udpChannelCodec(AudioOutputDevice::UDPCodecL16),
-            udpDecimationFactor(1)
+            udpDecimationFactor(1),
+            recordToFile(false),
+            recordSilenceTime(0)
         {}
         void resetToDefaults() {
             sampleRate = m_defaultAudioSampleRate;
@@ -73,6 +75,9 @@ public:
             udpChannelMode = AudioOutputDevice::UDPChannelLeft;
             udpChannelCodec = AudioOutputDevice::UDPCodecL16;
             udpDecimationFactor = 1;
+            fileRecordName.clear();
+            recordToFile = false;
+            recordSilenceTime = 0;
         }
         int sampleRate;
         QString udpAddress;
@@ -82,6 +87,9 @@ public:
         AudioOutputDevice::UDPChannelMode udpChannelMode;
         AudioOutputDevice::UDPChannelCodec udpChannelCodec;
         uint32_t udpDecimationFactor;
+        QString fileRecordName;
+        bool recordToFile;
+        int recordSilenceTime; //!< 100's ms
         friend QDataStream& operator<<(QDataStream& ds, const OutputDeviceInfo& info);
         friend QDataStream& operator>>(QDataStream& ds, OutputDeviceInfo& info);
     };
@@ -89,8 +97,8 @@ public:
 	AudioDeviceManager();
 	~AudioDeviceManager();
 
-	const QList<QAudioDeviceInfo>& getInputDevices() const { return m_inputDevicesInfo; }
-    const QList<QAudioDeviceInfo>& getOutputDevices() const { return m_outputDevicesInfo; }
+    const QList<AudioDeviceInfo>& getInputDevices() const { return m_inputDevicesInfo; }
+    const QList<AudioDeviceInfo>& getOutputDevices() const { return m_outputDevicesInfo; }
 
     bool getOutputDeviceName(int outputDeviceIndex, QString &deviceName) const;
     bool getInputDeviceName(int inputDeviceIndex, QString &deviceName) const;
@@ -121,8 +129,8 @@ public:
     static const QString m_defaultDeviceName;
 
 private:
-    QList<QAudioDeviceInfo> m_inputDevicesInfo;
-    QList<QAudioDeviceInfo> m_outputDevicesInfo;
+    QList<AudioDeviceInfo> m_inputDevicesInfo;
+    QList<AudioDeviceInfo> m_outputDevicesInfo;
 
     QMap<AudioFifo*, int> m_audioSinkFifos; //< audio sink FIFO to audio output device index-1 map
     QMap<AudioFifo*, MessageQueue*> m_audioFifoToSinkMessageQueues; //!< audio sink FIFO to attached sink message queue

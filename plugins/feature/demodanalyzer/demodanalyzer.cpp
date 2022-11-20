@@ -220,6 +220,10 @@ bool DemodAnalyzer::handleMessage(const Message& cmd)
             m_sampleRate = report.getSampleRate();
             m_scopeVis.setLiveRate(m_sampleRate);
 
+            if (m_running) {
+                m_worker->applySampleRate(m_sampleRate);
+            }
+
             DSPSignalNotification *msg = new DSPSignalNotification(0, m_sampleRate);
             m_spectrumVis.getInputMessageQueue()->push(msg);
 
@@ -505,6 +509,15 @@ void DemodAnalyzer::webapiFormatFeatureSettings(
     response.getDemodAnalyzerSettings()->setReverseApiFeatureSetIndex(settings.m_reverseAPIFeatureSetIndex);
     response.getDemodAnalyzerSettings()->setReverseApiFeatureIndex(settings.m_reverseAPIFeatureIndex);
 
+    if (response.getDemodAnalyzerSettings()->getFileRecordName()) {
+        *response.getDemodAnalyzerSettings()->getFileRecordName() = settings.m_fileRecordName;
+    } else {
+        response.getDemodAnalyzerSettings()->setFileRecordName(new QString(settings.m_fileRecordName));
+    }
+
+    response.getDemodAnalyzerSettings()->setRecordToFile(settings.m_recordToFile ? 1 : 0);
+    response.getDemodAnalyzerSettings()->setRecordSilenceTime(settings.m_recordSilenceTime);
+
     if (settings.m_spectrumGUI)
     {
         if (response.getDemodAnalyzerSettings()->getSpectrumConfig())
@@ -586,6 +599,15 @@ void DemodAnalyzer::webapiUpdateFeatureSettings(
     if (settings.m_rollupState && featureSettingsKeys.contains("rollupState")) {
         settings.m_rollupState->updateFrom(featureSettingsKeys, response.getDemodAnalyzerSettings()->getRollupState());
     }
+    if (featureSettingsKeys.contains("fileRecordName")) {
+        settings.m_fileRecordName = *response.getDemodAnalyzerSettings()->getFileRecordName();
+    }
+    if (featureSettingsKeys.contains("recordToFile")) {
+        settings.m_recordToFile = response.getDemodAnalyzerSettings()->getRecordToFile() != 0;
+    }
+    if (featureSettingsKeys.contains("recordSilenceTime")) {
+        settings.m_recordSilenceTime = response.getDemodAnalyzerSettings()->getRecordSilenceTime();
+    }
 }
 
 void DemodAnalyzer::webapiReverseSendSettings(QList<QString>& featureSettingsKeys, const DemodAnalyzerSettings& settings, bool force)
@@ -607,6 +629,15 @@ void DemodAnalyzer::webapiReverseSendSettings(QList<QString>& featureSettingsKey
     }
     if (featureSettingsKeys.contains("rgbColor") || force) {
         swgDemodAnalyzerSettings->setRgbColor(settings.m_rgbColor);
+    }
+    if (featureSettingsKeys.contains("fileRecordName")) {
+        swgDemodAnalyzerSettings->setFileRecordName(new QString(settings.m_fileRecordName));
+    }
+    if (featureSettingsKeys.contains("recordToFile")) {
+        swgDemodAnalyzerSettings->setRecordToFile(settings.m_recordToFile ? 1 : 0);
+    }
+    if (featureSettingsKeys.contains("recordSilenceTime") || force) {
+        swgDemodAnalyzerSettings->setRecordSilenceTime(settings.m_recordSilenceTime);
     }
 
     QString channelSettingsURL = QString("http://%1:%2/sdrangel/featureset/%3/feature/%4/settings")

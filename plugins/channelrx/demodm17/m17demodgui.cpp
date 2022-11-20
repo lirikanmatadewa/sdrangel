@@ -86,14 +86,6 @@ bool M17DemodGUI::deserialize(const QByteArray& data)
     }
 }
 
-void M17DemodGUI::resizeEvent(QResizeEvent* size)
-{
-    int maxWidth = getRollupContents()->maximumWidth();
-    int minHeight = getRollupContents()->minimumHeight() + getAdditionalHeight();
-    resize(width() < maxWidth ? width() : maxWidth, minHeight);
-    size->accept();
-}
-
 bool M17DemodGUI::handleMessage(const Message& message)
 {
     if (M17Demod::MsgConfigureM17Demod::match(message))
@@ -620,7 +612,7 @@ void M17DemodGUI::leaveEvent(QEvent* event)
     ChannelGUI::leaveEvent(event);
 }
 
-void M17DemodGUI::enterEvent(QEvent* event)
+void M17DemodGUI::enterEvent(EnterEventType* event)
 {
 	m_channelMarker.setHighlighted(true);
     ChannelGUI::enterEvent(event);

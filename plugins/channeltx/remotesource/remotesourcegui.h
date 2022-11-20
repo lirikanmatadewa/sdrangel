@@ -62,9 +62,6 @@ public:
 public slots:
     void channelMarkerChangedByCursor();
 
-protected:
-    void resizeEvent(QResizeEvent* size);
-
 private:
     Ui::RemoteSourceGUI* ui;
     PluginAPI* m_pluginAPI;
@@ -104,7 +101,7 @@ private:
     void updateAbsoluteCenterFrequency();
 
     void leaveEvent(QEvent*);
-    void enterEvent(QEvent*);
+    void enterEvent(EnterEventType*);
 
     void displayEventCounts();
     void displayEventStatus(int recoverableCount, int unrecoverableCount);

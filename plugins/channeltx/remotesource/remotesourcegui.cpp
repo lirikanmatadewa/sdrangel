@@ -16,7 +16,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
 
 #include <QTime>
-#include <QResizeEvent>
 
 #include "device/deviceapi.h"
 #include "device/deviceuiset.h"
@@ -64,14 +63,6 @@ bool RemoteSourceGUI::deserialize(const QByteArray& data)
         resetToDefaults();
         return false;
     }
-}
-
-void RemoteSourceGUI::resizeEvent(QResizeEvent* size)
-{
-    int maxWidth = getRollupContents()->maximumWidth();
-    int minHeight = getRollupContents()->minimumHeight() + getAdditionalHeight();
-    resize(width() < maxWidth ? width() : maxWidth, minHeight);
-    size->accept();
 }
 
 bool RemoteSourceGUI::handleMessage(const Message& message)
@@ -288,7 +279,7 @@ void RemoteSourceGUI::leaveEvent(QEvent* event)
     ChannelGUI::leaveEvent(event);
 }
 
-void RemoteSourceGUI::enterEvent(QEvent* event)
+void RemoteSourceGUI::enterEvent(EnterEventType* event)
 {
     m_channelMarker.setHighlighted(true);
     ChannelGUI::enterEvent(event);

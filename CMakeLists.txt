@@ -16,7 +16,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # configure version
 set(sdrangel_VERSION_MAJOR "7")
 set(sdrangel_VERSION_MINOR "8")
-set(sdrangel_VERSION_PATCH "2")
+set(sdrangel_VERSION_PATCH "3")
 set(sdrangel_VERSION_SUFFIX "")
 
 # SDRAngel cmake options
@@ -29,6 +29,7 @@ option(HIDE_CONSOLE "Hide console when running GUI on Windows" ON)
 option(BUNDLE "Enable distribution bundle" OFF)
 set(ARCH_OPT "native" CACHE STRING "Specify instruction set to use. Will be passed directly as `-march` or `/arch:` argument on supported compilers. \
                                    'native' option will figure out host machine compatibilities and set flags accordingly (even with MSVC).")
+option(ENABLE_QT6 "Build with Qt6 rather than Qt5" OFF)
 
 # Sampling devices enablers
 option(ENABLE_AIRSPY "Enable AirSpy support" ON)
@@ -410,30 +411,60 @@ set(CMAKE_AUTORCC TRUE)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 # Qt requirements
-find_package(Qt5
-               REQUIRED COMPONENTS
-                 Core
-                 Widgets
-                 WebSockets
-                 Multimedia
-                 MultimediaWidgets
-                 Positioning
-                 Charts
-                 SerialPort)
+# See: https://doc-snapshots.qt.io/qt6-dev/cmake-qt5-and-qt6-compatibility.html
+if(ENABLE_QT6)
+    # Qt6 doesn't currently support Location
+    find_package(Qt6
+                   COMPONENTS
+                     Core
+                     Widgets
+                     WebSockets
+                     Multimedia
+                     MultimediaWidgets
+                     Positioning
+                     Charts
+                     SerialPort
+                     Core5Compat)
+else()
+    find_package(Qt5 5.15
+                   REQUIRED COMPONENTS
+                     Core
+                     Widgets
+                     WebSockets
+                     Multimedia
+                     MultimediaWidgets
+                     Positioning
+                     Charts
+                     SerialPort)
+endif()
 
 # for the server we don't need OpenGL/Qt Quick components
 if (BUILD_GUI)
     find_package(OpenGL REQUIRED)
-    find_package(Qt5
-                   REQUIRED COMPONENTS
-                    OpenGL
-                    Quick
-                    QuickWidgets
-                    Location
-                    TextToSpeech
-                    WebEngine
-                    WebEngineCore
-                    WebEngineWidgets)
+    if (ENABLE_QT6)
+        find_package(Qt6
+                       REQUIRED COMPONENTS
+                        OpenGL
+                        OpenGLWidgets
+                        Quick
+                        QuickWidgets
+                       OPTIONAL_COMPONENTS
+                        WebEngineQuick
+                        WebEngineCore
+                        WebEngineWidgets
+                        TextToSpeech)
+    else()
+        find_package(Qt5
+                       REQUIRED COMPONENTS
+                        OpenGL
+                        Quick
+                        QuickWidgets
+                        Location
+                        TextToSpeech
+                        WebEngine
+                        WebEngineCore
+                        WebEngineWidgets)
+    endif()
 endif()
 
 # other requirements
@@ -629,7 +660,7 @@ add_executable(sdrangelbench
 )
 
 target_link_libraries(sdrangelbench
-  Qt5::Multimedia
+  Qt::Multimedia
   sdrbench
   logging
 )
@@ -646,8 +677,8 @@ if (BUILD_GUI)
 
   target_link_libraries(${CMAKE_PROJECT_NAME}
     ${OPENGL_LIBRARIES}
-    Qt5::Widgets
-    Qt5::Multimedia
+    Qt::Widgets
+    Qt::Multimedia
     sdrbase
     sdrgui
     logging
@@ -670,7 +701,7 @@ if (BUILD_SERVER)
     )
 
     target_link_libraries(sdrangelsrv
-        Qt5::Multimedia
+        Qt::Multimedia
         sdrbase
         sdrsrv
         logging

@@ -25,7 +25,11 @@
 #include <vector>
 #include "export.h"
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+class QAudioSource;
+#else
 class QAudioInput;
+#endif
 class AudioFifo;
 class AudioOutputPipe;
 
@@ -48,7 +52,11 @@ public:
 
 private:
 	QRecursiveMutex m_mutex;
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+	QAudioSource* m_audioInput;
+#else
 	QAudioInput* m_audioInput;
+#endif
 	uint m_audioUsageCount;
 	bool m_onExit;
 	float m_volume;

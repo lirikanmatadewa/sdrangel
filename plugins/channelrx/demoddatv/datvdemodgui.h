@@ -65,9 +65,6 @@ public:
 
     static const char* const m_strChannelID;
 
-protected:
-    void resizeEvent(QResizeEvent* size);
-
 private slots:
     void channelMarkerChangedByCursor();
     void channelMarkerHighlightedByCursor();
@@ -151,7 +148,7 @@ private:
     void displayRRCParameters(bool blnVisible);
 
 	void leaveEvent(QEvent*);
-	void enterEvent(QEvent*);
+	void enterEvent(EnterEventType*);
     bool handleMessage(const Message& objMessage);
     void makeUIConnections();
     void updateAbsoluteCenterFrequency();

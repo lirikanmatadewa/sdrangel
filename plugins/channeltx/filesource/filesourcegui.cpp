@@ -18,7 +18,6 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QDebug>
-#include <QResizeEvent>
 
 #include "device/deviceapi.h"
 #include "device/deviceuiset.h"
@@ -68,14 +67,6 @@ bool FileSourceGUI::deserialize(const QByteArray& data)
         resetToDefaults();
         return false;
     }
-}
-
-void FileSourceGUI::resizeEvent(QResizeEvent* size)
-{
-    int maxWidth = getRollupContents()->maximumWidth();
-    int minHeight = getRollupContents()->minimumHeight() + getAdditionalHeight();
-    resize(width() < maxWidth ? width() : maxWidth, minHeight);
-    size->accept();
 }
 
 bool FileSourceGUI::handleMessage(const Message& message)
@@ -348,7 +339,7 @@ void FileSourceGUI::leaveEvent(QEvent* event)
     ChannelGUI::leaveEvent(event);
 }
 
-void FileSourceGUI::enterEvent(QEvent* event)
+void FileSourceGUI::enterEvent(EnterEventType* event)
 {
     m_channelMarker.setHighlighted(true);
     ChannelGUI::enterEvent(event);

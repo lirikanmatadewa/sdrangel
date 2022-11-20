@@ -2430,6 +2430,18 @@ margin-bottom: 20px;
     "udpPort" : {
       "type" : "integer",
       "description" : "UDP destination port"
+    },
+    "fileRecordName" : {
+      "type" : "string",
+      "description" : "Output record file name"
+    },
+    "recordToFile" : {
+      "type" : "integer",
+      "description" : "Record to file active\n  * 0 - not recording\n  * 1 - recording\n"
+    },
+    "recordSilenceTime" : {
+      "type" : "integer",
+      "description" : "Record silence time before stopping recording in 10ths of seconds"
     }
   },
   "description" : "Audio output device"
@@ -4845,6 +4857,18 @@ margin-bottom: 20px;
     },
     "rgbColor" : {
       "type" : "integer"
+    },
+    "fileRecordName" : {
+      "type" : "string",
+      "description" : "Output wave file name"
+    },
+    "recordToFile" : {
+      "type" : "integer",
+      "description" : "Recording status\n  * 1 - recording\n  * 0 - not recording\n"
+    },
+    "recordSilenceTime" : {
+      "type" : "integer",
+      "description" : "Record silence time before stopping recording in 10ths of seconds"
     },
     "useReverseAPI" : {
       "type" : "integer",
@@ -56605,7 +56629,7 @@ except ApiException as e:
           </div>
           <div id="generator">
             <div class="content">
-              Generated 2022-08-16T18:08:01.866+02:00
+              Generated 2022-11-13T19:59:19.161+01:00
             </div>
           </div>
       </div>

@@ -18,7 +18,6 @@
 
 #include <QMessageBox>
 #include <QFileDialog>
-#include <QResizeEvent>
 
 #include "ui_audioinputgui.h"
 #include "gui/colormapper.h"
@@ -44,7 +43,7 @@ AudioInputGui::AudioInputGui(DeviceUISet *deviceUISet, QWidget* parent) :
     m_sampleSource = (AudioInput*) m_deviceUISet->m_deviceAPI->getSampleSource();
 
     ui->setupUi(getContents());
-    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    sizeToContents();
     getContents()->setStyleSheet("#AudioInputGui { background-color: rgb(64, 64, 64); }");
     m_helpURL = "plugins/samplesource/audioinput/readme.md";
 
@@ -96,12 +95,6 @@ bool AudioInputGui::deserialize(const QByteArray& data)
         resetToDefaults();
         return false;
     }
-}
-
-void AudioInputGui::resizeEvent(QResizeEvent* size)
-{
-    adjustSize();
-    size->accept();
 }
 
 bool AudioInputGui::handleMessage(const Message& message)
@@ -190,7 +183,7 @@ void AudioInputGui::refreshDeviceList()
 {
     ui->device->blockSignals(true);
     AudioDeviceManager *audioDeviceManager = DSPEngine::instance()->getAudioDeviceManager();
-    const QList<QAudioDeviceInfo>& audioList = audioDeviceManager->getInputDevices();
+    const QList<AudioDeviceInfo>& audioList = audioDeviceManager->getInputDevices();
 
     ui->device->clear();
     for (const auto &itAudio : audioList)
@@ -204,8 +197,8 @@ void AudioInputGui::refreshSampleRates(QString deviceName)
 {
     ui->sampleRate->blockSignals(true);
     ui->sampleRate->clear();
-    const auto deviceInfos = QAudioDeviceInfo::availableDevices(QAudio::AudioInput);
-    for (const QAudioDeviceInfo &deviceInfo : deviceInfos)
+    const auto deviceInfos = AudioDeviceInfo::availableInputDevices();
+    for (const AudioDeviceInfo &deviceInfo : deviceInfos)
     {
         if (deviceName == AudioInputSettings::getFullDeviceName(deviceInfo))
         {

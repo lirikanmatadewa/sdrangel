@@ -60,9 +60,6 @@ public:
     virtual int getStreamIndex() const { return m_settings.m_streamIndex; }
     virtual void setStreamIndex(int streamIndex) { m_settings.m_streamIndex = streamIndex; }
 
-protected:
-    void resizeEvent(QResizeEvent* size);
-
 private:
     Ui::RemoteSinkGUI* ui;
     PluginAPI* m_pluginAPI;
@@ -92,7 +89,7 @@ private:
     void updateAbsoluteCenterFrequency();
 
     void leaveEvent(QEvent*);
-    void enterEvent(QEvent*);
+    void enterEvent(EnterEventType*);
 
     void applyDecimation();
     void applyPosition();

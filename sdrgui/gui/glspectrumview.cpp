@@ -2194,7 +2194,7 @@ void GLSpectrumView::measurePeaks()
         }
     }
 
-    delete spectrum;
+    delete[] spectrum;
 }
 
 // Calculate and display channel power
@@ -4452,7 +4452,7 @@ bool GLSpectrumView::pointInHistogram(const QPointF &point) const
     return (p.x() >= 0) && (p.x() <= 1) && (p.y() >= 0) && (p.y() <= 1);
 }
 
-void GLSpectrumView::enterEvent(QEvent* event)
+void GLSpectrumView::enterEvent(EnterEventType* event)
 {
     m_mouseInside = true;
     update();
@@ -4463,7 +4463,7 @@ void GLSpectrumView::leaveEvent(QEvent* event)
 {
     m_mouseInside = false;
     update();
-    QOpenGLWidget::enterEvent(event);
+    QOpenGLWidget::leaveEvent(event);
 }
 
 void GLSpectrumView::tick()
@@ -4893,6 +4893,7 @@ bool GLSpectrumView::eventFilter(QObject *object, QEvent *event)
                 m_glShaderSpectrogram.rotateZ(-5.0f);
             }
             break;
+        case Qt::Key_Equal: // So you don't need to press shift
         case Qt::Key_Plus:
             if (keyEvent->modifiers() & Qt::ControlModifier) {
                 m_glShaderSpectrogram.userScaleZ(1.1f);

@@ -89,13 +89,10 @@ private:
     void updateAbsoluteCenterFrequency();
 
     void leaveEvent(QEvent*);
-    void enterEvent(QEvent*);
+    void enterEvent(EnterEventType*);
 
     void applyInterpolation();
     void applyPosition();
-
-protected:
-    void resizeEvent(QResizeEvent* size);
 
 private slots:
     void handleSourceMessages();

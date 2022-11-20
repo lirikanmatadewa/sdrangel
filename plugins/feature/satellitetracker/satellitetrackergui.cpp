@@ -144,7 +144,7 @@ bool SatelliteTrackerGUI::handleMessage(const Message& message)
     else if (SatelliteTrackerReport::MsgReportAOS::match(message))
     {
         SatelliteTrackerReport::MsgReportAOS& aosReport = (SatelliteTrackerReport::MsgReportAOS&) message;
-        aos(aosReport.getName(), aosReport.getSpeech());
+        aos(aosReport.getSpeech());
         return true;
     }
     else if (SatelliteTrackerReport::MsgReportTarget::match(message))
@@ -156,7 +156,7 @@ bool SatelliteTrackerGUI::handleMessage(const Message& message)
     else if (SatelliteTrackerReport::MsgReportLOS::match(message))
     {
         SatelliteTrackerReport::MsgReportLOS& losReport = (SatelliteTrackerReport::MsgReportLOS&) message;
-        los(losReport.getName(), losReport.getSpeech());
+        los(losReport.getSpeech());
         return true;
     }
     else if (SatelliteTracker::MsgSatData::match(message))
@@ -231,16 +231,6 @@ void SatelliteTrackerGUI::onWidgetRolled(QWidget* widget, bool rollDown)
     (void) rollDown;
 
     RollupContents *rollupContents = getRollupContents();
-
-    if (rollupContents->hasExpandableWidgets()) {
-        setSizePolicy(sizePolicy().horizontalPolicy(), QSizePolicy::Expanding);
-    } else {
-        setSizePolicy(sizePolicy().horizontalPolicy(), QSizePolicy::Fixed);
-    }
-
-    int h = rollupContents->height() + getAdditionalHeight();
-    resize(width(), h);
-
     rollupContents->saveState(m_rollupState);
     applySettings();
 }
@@ -264,7 +254,6 @@ SatelliteTrackerGUI::SatelliteTrackerGUI(PluginAPI* pluginAPI, FeatureUISet *fea
     m_helpURL = "plugins/feature/satellitetracker/readme.md";
     RollupContents *rollupContents = getRollupContents();
 	ui->setupUi(rollupContents);
-    setSizePolicy(rollupContents->sizePolicy());
     rollupContents->arrangeRollups();
 	connect(rollupContents, SIGNAL(widgetRolled(QWidget*,bool)), this, SLOT(onWidgetRolled(QWidget*,bool)));
 
@@ -399,7 +388,7 @@ void SatelliteTrackerGUI::onMenuDialogCalled(const QPoint &p)
     resetContextMenuType();
 }
 
-void SatelliteTrackerGUI::aos(const QString& name, const QString &speech)
+void SatelliteTrackerGUI::aos(const QString &speech)
 {
     // Call plotChart() to start the periodic updates with sat position in polar chart
     plotChart();
@@ -409,7 +398,7 @@ void SatelliteTrackerGUI::aos(const QString& name, const QString &speech)
     }
 }
 
-void SatelliteTrackerGUI::los(const QString& name, const QString &speech)
+void SatelliteTrackerGUI::los(const QString &speech)
 {
     // Give speech notification of end of pass
     if (!speech.isEmpty()) {

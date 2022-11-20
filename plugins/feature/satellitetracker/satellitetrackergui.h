@@ -40,7 +40,9 @@ namespace Ui {
     class SatelliteTrackerGUI;
 }
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 using namespace QtCharts;
+#endif
 
 class SatelliteTrackerGUI : public FeatureGUI {
     Q_OBJECT
@@ -111,8 +113,8 @@ private:
     explicit SatelliteTrackerGUI(PluginAPI* pluginAPI, FeatureUISet *featureUISet, Feature *feature, QWidget* parent = nullptr);
     virtual ~SatelliteTrackerGUI();
 
-    void aos(const QString& name, const QString &speech);
-    void los(const QString& name, const QString &speech);
+    void aos(const QString &speech);
+    void los(const QString &speech);
 
     void blockApplySettings(bool block);
     void applySettings(bool force = false);

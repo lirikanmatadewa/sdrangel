@@ -600,18 +600,7 @@ void UDPSinkGUI::onWidgetRolled(QWidget* widget, bool rollDown)
         m_udpSink->enableSpectrum(rollDown);
 	}
 
-    RollupContents *rollupContents = getRollupContents();
-
-    if (rollupContents->hasExpandableWidgets()) {
-        setSizePolicy(sizePolicy().horizontalPolicy(), QSizePolicy::Expanding);
-    } else {
-        setSizePolicy(sizePolicy().horizontalPolicy(), QSizePolicy::Fixed);
-    }
-
-    int h = rollupContents->height() + getAdditionalHeight();
-    resize(width(), h);
-
-    rollupContents->saveState(m_rollupState);
+    getRollupContents()->saveState(m_rollupState);
     applySettings();
 }
 
@@ -668,7 +657,7 @@ void UDPSinkGUI::leaveEvent(QEvent* event)
     ChannelGUI::leaveEvent(event);
 }
 
-void UDPSinkGUI::enterEvent(QEvent* event)
+void UDPSinkGUI::enterEvent(EnterEventType* event)
 {
 	m_channelMarker.setHighlighted(true);
     ChannelGUI::enterEvent(event);

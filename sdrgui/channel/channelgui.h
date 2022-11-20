@@ -21,6 +21,7 @@
 #include <QMdiSubWindow>
 #include <QMap>
 
+#include "gui/qtcompatibility.h"
 #include "gui/framelesswindowresizer.h"
 #include "export.h"
 
@@ -74,6 +75,7 @@ public:
 	virtual MessageQueue* getInputMessageQueue() = 0;
 
     RollupContents *getRollupContents() { return m_rollupContents; }
+    void sizeToContents();
     void setTitle(const QString& title);
     void setTitleColor(const QColor& c);
     void setDeviceType(DeviceType type);
@@ -97,6 +99,7 @@ protected:
     void updateIndexLabel();
     int getAdditionalHeight() const { return 22 + 22; }  // height of top and bottom bars
     void setHighlighted(bool highlighted);
+    int gripSize() { return m_resizer.m_gripSize; } // size in pixels of resize grip around the window
 
     DeviceType m_deviceType;
     int m_deviceSetIndex;
@@ -108,6 +111,7 @@ protected:
 
 protected slots:
     void shrinkWindow();
+    void maximizeWindow();
 
 private:
     bool isOnMovingPad();
@@ -120,6 +124,7 @@ private:
     QPushButton *m_helpButton;
     QPushButton *m_moveButton;
     QPushButton *m_shrinkButton;
+    QPushButton *m_maximizeButton;
     QPushButton *m_hideButton;
     QPushButton *m_closeButton;
     QPushButton *m_duplicateButton;
@@ -135,6 +140,7 @@ private:
     QPoint m_DragPosition;
     QMap<QWidget*, int> m_heightsMap;
     FramelessWindowResizer m_resizer;
+    bool m_disableResize;
 
 private slots:
     void activateSettingsDialog();

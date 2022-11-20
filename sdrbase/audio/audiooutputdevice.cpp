@@ -18,21 +18,31 @@
 
 #include <string.h>
 #include <QAudioFormat>
-#include <QAudioDeviceInfo>
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#include <QAudioSink>
+#else
 #include <QAudioOutput>
+#endif
 #include "audiooutputdevice.h"
+#include "audiodeviceinfo.h"
 #include "audiofifo.h"
 #include "audionetsink.h"
+#include "dsp/wavfilerecord.h"
 
 AudioOutputDevice::AudioOutputDevice() :
-	m_audioOutput(0),
-	m_audioNetSink(0),
-	m_copyAudioToUdp(false),
+	m_audioOutput(nullptr),
+	m_audioNetSink(nullptr),
+    m_wavFileRecord(nullptr),
+    m_copyAudioToUdp(false),
 	m_udpChannelMode(UDPChannelLeft),
 	m_udpChannelCodec(UDPCodecL16),
 	m_audioUsageCount(0),
 	m_onExit(false),
 	m_volume(1.0),
+    m_recordToFile(false),
+    m_recordSilenceTime(0),
+    m_recordSilenceNbSamples(0),
+    m_recordSilenceCount(0),
 	m_audioFifos()
 {
 }
@@ -53,20 +63,19 @@ AudioOutputDevice::~AudioOutputDevice()
 
 bool AudioOutputDevice::start(int device, int rate)
 {
-
 //	if (m_audioUsageCount == 0)
 //	{
         QMutexLocker mutexLocker(&m_mutex);
-        QAudioDeviceInfo devInfo;
+        AudioDeviceInfo devInfo;
 
         if (device < 0)
         {
-            devInfo = QAudioDeviceInfo::defaultOutputDevice();
+            devInfo = AudioDeviceInfo::defaultOutputDevice();
             qWarning("AudioOutputDevice::start: using system default device %s", qPrintable(devInfo.defaultOutputDevice().deviceName()));
         }
         else
         {
-            QList<QAudioDeviceInfo> devicesInfo = QAudioDeviceInfo::availableDevices(QAudio::AudioOutput);
+            QList<AudioDeviceInfo> devicesInfo = AudioDeviceInfo::availableOutputDevices();
 
             if (device < devicesInfo.size())
             {
@@ -75,23 +84,34 @@ bool AudioOutputDevice::start(int device, int rate)
             }
             else
             {
-                devInfo = QAudioDeviceInfo::defaultOutputDevice();
+                devInfo = AudioDeviceInfo::defaultOutputDevice();
                 qWarning("AudioOutputDevice::start: audio device #%d does not exist. Using system default device %s", device, qPrintable(devInfo.defaultOutputDevice().deviceName()));
             }
         }
 
         //QAudioDeviceInfo devInfo(QAudioDeviceInfo::defaultOutputDevice());
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+        // Start with a valid format
+        m_audioFormat = devInfo.deviceInfo().preferredFormat();
+#endif
 
         m_audioFormat.setSampleRate(rate);
         m_audioFormat.setChannelCount(2);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+        m_audioFormat.setSampleFormat(QAudioFormat::Int16);
+#else
         m_audioFormat.setSampleSize(16);
         m_audioFormat.setCodec("audio/pcm");
         m_audioFormat.setByteOrder(QAudioFormat::LittleEndian);
         m_audioFormat.setSampleType(QAudioFormat::SignedInt);
+#endif
 
         if (!devInfo.isFormatSupported(m_audioFormat))
         {
-            m_audioFormat = devInfo.nearestFormat(m_audioFormat);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+            qWarning("AudioOutputDevice::start: format %d Hz 2xS16LE audio/pcm not supported.", rate);
+#else
+            m_audioFormat = devInfo.deviceInfo().nearestFormat(m_audioFormat);
             std::ostringstream os;
             os << " sampleRate: " << m_audioFormat.sampleRate()
                << " channelCount: " << m_audioFormat.channelCount()
@@ -100,29 +120,43 @@ bool AudioOutputDevice::start(int device, int rate)
                << " byteOrder: " <<  (m_audioFormat.byteOrder() == QAudioFormat::BigEndian ? "BE" : "LE")
                << " sampleType: " << (int) m_audioFormat.sampleType();
             qWarning("AudioOutputDevice::start: format %d Hz 2xS16LE audio/pcm not supported. Using: %s", rate, os.str().c_str());
+#endif
         }
         else
         {
             qInfo("AudioOutputDevice::start: audio format OK");
         }
 
-        if (m_audioFormat.sampleSize() != 16)
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+        if (m_audioFormat.sampleFormat() != QAudioFormat::Int16)
         {
-            qWarning("AudioOutputDevice::start: Audio device '%s' failed", qPrintable(devInfo.defaultOutputDevice().deviceName()));
+            qWarning("AudioOutputDevice::start: Audio device '%s' failed", qPrintable(devInfo.deviceName()));
             return false;
         }
+#else
+        if (m_audioFormat.sampleSize() != 16)
+        {
+            qWarning("AudioOutputDevice::start: Audio device '%s' failed", qPrintable(devInfo.deviceName()));
+            return false;
+        }
+#endif
 
-        m_audioOutput = new QAudioOutput(devInfo, m_audioFormat);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+        m_audioOutput = new QAudioSink(devInfo.deviceInfo(), m_audioFormat);
+#else
+        m_audioOutput = new QAudioOutput(devInfo.deviceInfo(), m_audioFormat);
+#endif
         m_audioNetSink = new AudioNetSink(0, m_audioFormat.sampleRate(), false);
+        m_wavFileRecord = new WavFileRecord(m_audioFormat.sampleRate());
 		m_audioOutput->setVolume(m_volume);
+        m_recordSilenceNbSamples = (m_recordSilenceTime * m_audioFormat.sampleRate()) / 10; // time in 100'ś ms
 
         QIODevice::open(QIODevice::ReadOnly);
 
         m_audioOutput->start(this);
 
-        if (m_audioOutput->state() != QAudio::ActiveState)
-        {
-            qWarning("AudioOutputDevice::start: cannot start");
+        if (m_audioOutput->state() != QAudio::ActiveState) {
+            qWarning() << "AudioOutputDevice::start: cannot start - " << m_audioOutput->error();
         }
 //	}
 //
@@ -139,8 +173,11 @@ void AudioOutputDevice::stop()
     m_audioOutput->stop();
     QIODevice::close();
     delete m_audioNetSink;
-    m_audioNetSink = 0;
+    m_audioNetSink = nullptr;
+    delete m_wavFileRecord;
+    m_wavFileRecord = nullptr;
     delete m_audioOutput;
+    m_audioOutput = nullptr;
 
 //    if (m_audioUsageCount > 0)
 //    {
@@ -161,14 +198,12 @@ void AudioOutputDevice::stop()
 void AudioOutputDevice::addFifo(AudioFifo* audioFifo)
 {
 	QMutexLocker mutexLocker(&m_mutex);
-
 	m_audioFifos.push_back(audioFifo);
 }
 
 void AudioOutputDevice::removeFifo(AudioFifo* audioFifo)
 {
 	QMutexLocker mutexLocker(&m_mutex);
-
 	m_audioFifos.remove(audioFifo);
 }
 
@@ -210,6 +245,15 @@ void AudioOutputDevice::setUdpChannelFormat(UDPChannelCodec udpChannelCodec, boo
     if (m_audioNetSink) {
         m_audioNetSink->setParameters((AudioNetSink::Codec) m_udpChannelCodec, stereo, sampleRate);
     }
+
+    if (m_wavFileRecord)
+    {
+        if (m_wavFileRecord->isRecording()) {
+            m_wavFileRecord->stopRecording();
+        }
+
+        m_wavFileRecord->setMono(!stereo);
+    }
 }
 
 void AudioOutputDevice::setUdpDecimation(uint32_t decimation)
@@ -219,10 +263,65 @@ void AudioOutputDevice::setUdpDecimation(uint32_t decimation)
 	}
 }
 
+void AudioOutputDevice::setFileRecordName(const QString& fileRecordName)
+{
+    if (!m_wavFileRecord) {
+        return;
+    }
+
+    QStringList dotBreakout = fileRecordName.split(QLatin1Char('.'));
+
+    if (dotBreakout.size() > 1) {
+        QString extension = dotBreakout.last();
+
+        if (extension != "wav") {
+            dotBreakout.last() = "wav";
+        }
+    }
+    else
+    {
+        dotBreakout.append("wav");
+    }
+
+    QString newFileRecordName = dotBreakout.join(QLatin1Char('.'));
+    QString fileBase;
+    FileRecordInterface::guessTypeFromFileName(newFileRecordName, fileBase);
+    qDebug("AudioOutputDevice::setFileRecordName: newFileRecordName: %s fileBase: %s", qPrintable(newFileRecordName), qPrintable(fileBase));
+    m_wavFileRecord->setFileName(fileBase);
+}
+
+void AudioOutputDevice::setRecordToFile(bool recordToFile)
+{
+    if (!m_wavFileRecord) {
+        return;
+    }
+
+    if (recordToFile)
+    {
+        if (!m_wavFileRecord->isRecording()) {
+            m_wavFileRecord->startRecording();
+        }
+    }
+    else
+    {
+        if (m_wavFileRecord->isRecording()) {
+            m_wavFileRecord->stopRecording();
+        }
+    }
+
+    m_recordToFile = recordToFile;
+    m_recordSilenceCount = 0;
+}
+
+void AudioOutputDevice::setRecordSilenceTime(int recordSilenceTime)
+{
+    m_recordSilenceNbSamples = (recordSilenceTime * m_audioFormat.sampleRate()) / 10; // time in 100'ś ms
+    m_recordSilenceCount = 0;
+    m_recordSilenceTime = recordSilenceTime;
+}
+
 qint64 AudioOutputDevice::readData(char* data, qint64 maxLen)
 {
-    //qDebug("AudioOutputDevice::readData: %lld", maxLen);
-
     // Study this mutex on OSX, for now deadlocks possible
     // Removed as it may indeed cause lockups and is in fact useless.
 //#ifndef __APPLE__
@@ -331,9 +430,59 @@ qint64 AudioOutputDevice::readData(char* data, qint64 maxLen)
 	            break;
 	        }
 		}
+
+        if ((m_recordToFile) && (m_wavFileRecord))
+        {
+            if ((sr == 0) && (sl == 0))
+            {
+                if (m_recordSilenceNbSamples <= 0)
+                {
+                    writeSampleToFile(sl, sr);
+                    m_recordSilenceCount = 0;
+                }
+                else if (m_recordSilenceCount < m_recordSilenceNbSamples)
+                {
+                    writeSampleToFile(sl, sr);
+                    m_recordSilenceCount++;
+                }
+                else
+                {
+                    m_wavFileRecord->stopRecording();
+                }
+            }
+            else
+            {
+                if (!m_wavFileRecord->isRecording()) {
+                    m_wavFileRecord->startRecording();
+                }
+
+                writeSampleToFile(sl, sr);
+                m_recordSilenceCount = 0;
+            }
+        }
 	}
 
 	return samplesPerBuffer * 4;
+}
+
+void AudioOutputDevice::writeSampleToFile(qint16 lSample, qint16 rSample)
+{
+    switch (m_udpChannelMode)
+    {
+    case UDPChannelStereo:
+        m_wavFileRecord->write(lSample, rSample);
+        break;
+    case UDPChannelMixed:
+        m_wavFileRecord->writeMono((lSample+rSample)/2);
+        break;
+    case UDPChannelRight:
+        m_wavFileRecord->writeMono(rSample);
+        break;
+    case UDPChannelLeft:
+    default:
+        m_wavFileRecord->writeMono(lSample);
+        break;
+    }
 }
 
 qint64 AudioOutputDevice::writeData(const char* data, qint64 len)
@@ -350,4 +499,26 @@ void AudioOutputDevice::setVolume(float volume)
     if (m_audioOutput) {
         m_audioOutput->setVolume(m_volume);
 	}
+}
+
+// Qt6 requires bytesAvailable to be implemented. Not needed for Qt5.
+qint64 AudioOutputDevice::bytesAvailable() const
+{
+	qint64 available = 0;
+    for (std::list<AudioFifo*>::const_iterator it = m_audioFifos.begin(); it != m_audioFifos.end(); ++it)
+	{
+        qint64 fill = (*it)->fill();
+        if (available == 0) {
+            available = fill;
+        } else {
+            available = std::min(fill, available);
+        }
+    }
+    // If we return 0 from this twice in a row, audio will stop.
+    // So we always return a value, and if we don't have enough data in the FIFOs
+    // when readData is called, that will output silence
+    if (available == 0) {
+        available = 2048; // Is there a better value to use?
+    }
+    return available * 2 * 2; // 2 Channels of 16-bit data
 }

@@ -17,7 +17,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
 
 #include <QLocale>
-#include <QResizeEvent>
 
 #include "device/deviceuiset.h"
 #include "gui/basicchannelsettingsdialog.h"
@@ -63,14 +62,6 @@ bool RemoteTCPSinkGUI::deserialize(const QByteArray& data)
         resetToDefaults();
         return false;
     }
-}
-
-void RemoteTCPSinkGUI::resizeEvent(QResizeEvent* size)
-{
-    int maxWidth = getRollupContents()->maximumWidth();
-    int minHeight = getRollupContents()->minimumHeight() + getAdditionalHeight();
-    resize(width() < maxWidth ? width() : maxWidth, minHeight);
-    size->accept();
 }
 
 QString RemoteTCPSinkGUI::displayScaledF(float value, char type, int precision, bool showMult)
@@ -269,7 +260,7 @@ void RemoteTCPSinkGUI::leaveEvent(QEvent* event)
     ChannelGUI::leaveEvent(event);
 }
 
-void RemoteTCPSinkGUI::enterEvent(QEvent* event)
+void RemoteTCPSinkGUI::enterEvent(EnterEventType* event)
 {
     m_channelMarker.setHighlighted(true);
     ChannelGUI::enterEvent(event);

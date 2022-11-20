@@ -369,31 +369,10 @@ void AISDemodGUI::filter()
 
 void AISDemodGUI::onWidgetRolled(QWidget* widget, bool rollDown)
 {
-    if (widget == ui->scopeContainer)
-    {
-        if (rollDown)
-        {
-            // Make wide enough for scope controls
-            setMinimumWidth(716);
-        }
-        else
-        {
-            setMinimumWidth(352);
-        }
-    }
+    (void) widget;
+    (void) rollDown;
 
-    RollupContents *rollupContents = getRollupContents();
-
-    if (rollupContents->hasExpandableWidgets()) {
-        setSizePolicy(sizePolicy().horizontalPolicy(), QSizePolicy::Expanding);
-    } else {
-        setSizePolicy(sizePolicy().horizontalPolicy(), QSizePolicy::Fixed);
-    }
-
-    int h = rollupContents->height() + getAdditionalHeight();
-    resize(width(), h);
-
-    rollupContents->saveState(m_rollupState);
+    getRollupContents()->saveState(m_rollupState);
     applySettings();
 }
 
@@ -653,7 +632,7 @@ void AISDemodGUI::leaveEvent(QEvent* event)
     ChannelGUI::leaveEvent(event);
 }
 
-void AISDemodGUI::enterEvent(QEvent* event)
+void AISDemodGUI::enterEvent(EnterEventType* event)
 {
     m_channelMarker.setHighlighted(true);
     ChannelGUI::enterEvent(event);

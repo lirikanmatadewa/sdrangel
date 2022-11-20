@@ -260,7 +260,7 @@ void DOA2GUI::leaveEvent(QEvent*)
     m_channelMarker.setHighlighted(false);
 }
 
-void DOA2GUI::enterEvent(QEvent*)
+void DOA2GUI::enterEvent(EnterEventType*)
 {
     m_channelMarker.setHighlighted(true);
 }
@@ -283,18 +283,7 @@ void DOA2GUI::onWidgetRolled(QWidget* widget, bool rollDown)
     (void) widget;
     (void) rollDown;
 
-    RollupContents *rollupContents = getRollupContents();
-
-    if (rollupContents->hasExpandableWidgets()) {
-        setSizePolicy(sizePolicy().horizontalPolicy(), QSizePolicy::Expanding);
-    } else {
-        setSizePolicy(sizePolicy().horizontalPolicy(), QSizePolicy::Fixed);
-    }
-
-    int h = rollupContents->height() + getAdditionalHeight();
-    resize(width(), h);
-
-    rollupContents->saveState(m_rollupState);
+    getRollupContents()->saveState(m_rollupState);
     applySettings();
 }
 

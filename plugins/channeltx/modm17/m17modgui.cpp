@@ -20,8 +20,7 @@
 #include <QFileDialog>
 #include <QTime>
 #include <QDebug>
-#include <QRegExp>
-#include <QResizeEvent>
+#include <QRegularExpression>
 
 #include "device/deviceuiset.h"
 #include "plugin/pluginapi.h"
@@ -73,14 +72,6 @@ bool M17ModGUI::deserialize(const QByteArray& data)
         resetToDefaults();
         return false;
     }
-}
-
-void M17ModGUI::resizeEvent(QResizeEvent* size)
-{
-    int maxWidth = getRollupContents()->maximumWidth();
-    int minHeight = getRollupContents()->minimumHeight() + getAdditionalHeight();
-    resize(width() < maxWidth ? width() : maxWidth, minHeight);
-    size->accept();
 }
 
 bool M17ModGUI::handleMessage(const Message& message)
@@ -480,7 +471,7 @@ M17ModGUI::M17ModGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, BasebandSam
     m_feedbackAudioSampleRate(-1),
     m_tickCount(0),
     m_enableNavTime(false),
-    m_dcsCodeValidator(QRegExp("[0-7]{1,3}"))
+    m_dcsCodeValidator(QRegularExpression("[0-7]{1,3}"))
 {
 	setAttribute(Qt::WA_DeleteOnClose, true);
     m_helpURL = "plugins/channeltx/modm17/readme.md";
@@ -711,7 +702,7 @@ void M17ModGUI::leaveEvent(QEvent* event)
     ChannelGUI::leaveEvent(event);
 }
 
-void M17ModGUI::enterEvent(QEvent* event)
+void M17ModGUI::enterEvent(EnterEventType* event)
 {
 	m_channelMarker.setHighlighted(true);
     ChannelGUI::enterEvent(event);

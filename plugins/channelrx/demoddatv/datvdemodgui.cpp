@@ -20,7 +20,6 @@
 #include <QDockWidget>
 #include <QMainWindow>
 #include <QMediaMetaData>
-#include <QResizeEvent>
 
 #include "device/deviceuiset.h"
 #include "dsp/dspengine.h"
@@ -91,14 +90,6 @@ bool DATVDemodGUI::deserialize(const QByteArray& arrData)
         resetToDefaults();
         return false;
     }
-}
-
-void DATVDemodGUI::resizeEvent(QResizeEvent* size)
-{
-    int maxWidth = getRollupContents()->maximumWidth();
-    int minHeight = getRollupContents()->minimumHeight() + getAdditionalHeight();
-    resize(width() < maxWidth ? width() : maxWidth, minHeight);
-    size->accept();
 }
 
 bool DATVDemodGUI::handleMessage(const Message& message)
@@ -507,7 +498,7 @@ void DATVDemodGUI::leaveEvent(QEvent* event)
     ChannelGUI::leaveEvent(event);
 }
 
-void DATVDemodGUI::enterEvent(QEvent* event)
+void DATVDemodGUI::enterEvent(EnterEventType* event)
 {
     blockApplySettings(true);
     m_channelMarker.setHighlighted(true);

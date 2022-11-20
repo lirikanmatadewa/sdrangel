@@ -168,7 +168,7 @@ bool StarTrackerGUI::handleMessage(const Message& message)
         bool found = false;
         for (int i = 0; i < m_lineOfSightMarkers.size(); i++)
         {
-            if (m_lineOfSightMarkers[i]->m_name == swgSettings->getName())
+            if (m_lineOfSightMarkers[i]->m_name == *swgSettings->getName())
             {
                 if (swgSettings->getD() == 0.0)
                 {
@@ -227,15 +227,6 @@ void StarTrackerGUI::onWidgetRolled(QWidget* widget, bool rollDown)
 
     RollupContents *rollupContents = getRollupContents();
 
-    if (rollupContents->hasExpandableWidgets()) {
-        setSizePolicy(sizePolicy().horizontalPolicy(), QSizePolicy::Expanding);
-    } else {
-        setSizePolicy(sizePolicy().horizontalPolicy(), QSizePolicy::Fixed);
-    }
-
-    int h = rollupContents->height() + getAdditionalHeight();
-    resize(width(), h);
-
     rollupContents->saveState(m_rollupState);
     applySettings();
 }
@@ -271,7 +262,6 @@ StarTrackerGUI::StarTrackerGUI(PluginAPI* pluginAPI, FeatureUISet *featureUISet,
     m_helpURL = "plugins/feature/startracker/readme.md";
     RollupContents *rollupContents = getRollupContents();
 	ui->setupUi(rollupContents);
-    setSizePolicy(rollupContents->sizePolicy());
     rollupContents->arrangeRollups();
 	connect(rollupContents, SIGNAL(widgetRolled(QWidget*,bool)), this, SLOT(onWidgetRolled(QWidget*,bool)));
 

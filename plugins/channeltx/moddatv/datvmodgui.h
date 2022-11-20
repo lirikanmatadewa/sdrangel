@@ -63,9 +63,6 @@ public:
 public slots:
     void channelMarkerChangedByCursor();
 
-protected:
-    void resizeEvent(QResizeEvent* size);
-
 private:
     Ui::DATVModGUI* ui;
     PluginAPI* m_pluginAPI;
@@ -107,7 +104,7 @@ private:
     void updateFEC();
 
     void leaveEvent(QEvent*);
-    void enterEvent(QEvent*);
+    void enterEvent(EnterEventType*);
 
 private slots:
     void handleSourceMessages();

@@ -60,9 +60,6 @@ public:
 public slots:
     void channelMarkerChangedByCursor();
 
-protected:
-    void resizeEvent(QResizeEvent* size);
-
 private:
     Ui::FileSourceGUI* ui;
     PluginAPI* m_pluginAPI;
@@ -103,7 +100,7 @@ private:
     void updateAbsoluteCenterFrequency();
 
     void leaveEvent(QEvent*);
-    void enterEvent(QEvent*);
+    void enterEvent(EnterEventType*);
 
     void applyInterpolation();
     void applyPosition();

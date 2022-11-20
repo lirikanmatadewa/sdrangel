@@ -314,23 +314,7 @@ void SSBDemodGUI::onWidgetRolled(QWidget* widget, bool rollDown)
     (void) widget;
     (void) rollDown;
 
-    RollupContents *rollupContents = getRollupContents();
-
-    if (rollupContents->hasExpandableWidgets())
-    {
-        qDebug("SSBDemodGUI::onWidgetRolled: set vertical policy expanding");
-        setSizePolicy(sizePolicy().horizontalPolicy(), QSizePolicy::Expanding);
-    }
-    else
-    {
-        qDebug("SSBDemodGUI::onWidgetRolled: set vertical policy fixed");
-        setSizePolicy(sizePolicy().horizontalPolicy(), QSizePolicy::Fixed);
-    }
-
-    int h = rollupContents->height() + getAdditionalHeight();
-    resize(width(), h);
-
-    rollupContents->saveState(m_rollupState);
+    getRollupContents()->saveState(m_rollupState);
     applySettings();
 }
 
@@ -683,7 +667,7 @@ void SSBDemodGUI::leaveEvent(QEvent* event)
     ChannelGUI::leaveEvent(event);
 }
 
-void SSBDemodGUI::enterEvent(QEvent* event)
+void SSBDemodGUI::enterEvent(EnterEventType* event)
 {
 	m_channelMarker.setHighlighted(true);
     ChannelGUI::enterEvent(event);

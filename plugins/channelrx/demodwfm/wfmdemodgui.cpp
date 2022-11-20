@@ -55,14 +55,6 @@ bool WFMDemodGUI::deserialize(const QByteArray& data)
     }
 }
 
-void WFMDemodGUI::resizeEvent(QResizeEvent* size)
-{
-    int maxWidth = getRollupContents()->maximumWidth();
-    int minHeight = getRollupContents()->minimumHeight() + getAdditionalHeight();
-    resize(width() < maxWidth ? width() : maxWidth, minHeight);
-    size->accept();
-}
-
 bool WFMDemodGUI::handleMessage(const Message& message)
 {
     if (WFMDemod::MsgConfigureWFMDemod::match(message))
@@ -331,7 +323,7 @@ void WFMDemodGUI::leaveEvent(QEvent* event)
     ChannelGUI::leaveEvent(event);
 }
 
-void WFMDemodGUI::enterEvent(QEvent* event)
+void WFMDemodGUI::enterEvent(EnterEventType* event)
 {
 	m_channelMarker.setHighlighted(true);
     ChannelGUI::enterEvent(event);

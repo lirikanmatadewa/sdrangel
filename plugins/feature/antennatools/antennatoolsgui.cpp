@@ -71,12 +71,6 @@ bool AntennaToolsGUI::deserialize(const QByteArray& data)
     }
 }
 
-void AntennaToolsGUI::resizeEvent(QResizeEvent* size)
-{
-    adjustSize();
-    size->accept();
-}
-
 bool AntennaToolsGUI::handleMessage(const Message& message)
 {
     if (AntennaTools::MsgConfigureAntennaTools::match(message))
@@ -113,15 +107,6 @@ void AntennaToolsGUI::onWidgetRolled(QWidget* widget, bool rollDown)
 
     RollupContents *rollupContents = getRollupContents();
 
-    if (rollupContents->hasExpandableWidgets()) {
-        setSizePolicy(sizePolicy().horizontalPolicy(), QSizePolicy::Expanding);
-    } else {
-        setSizePolicy(sizePolicy().horizontalPolicy(), QSizePolicy::Fixed);
-    }
-
-    int h = rollupContents->height() + getAdditionalHeight();
-    resize(width(), h);
-
     rollupContents->saveState(m_rollupState);
     applySettings();
 }
@@ -139,7 +124,6 @@ AntennaToolsGUI::AntennaToolsGUI(PluginAPI* pluginAPI, FeatureUISet *featureUISe
     m_helpURL = "plugins/feature/antennatools/readme.md";
     RollupContents *rollupContents = getRollupContents();
 	ui->setupUi(rollupContents);
-    setSizePolicy(rollupContents->sizePolicy());
     rollupContents->arrangeRollups();
 	connect(rollupContents, SIGNAL(widgetRolled(QWidget*,bool)), this, SLOT(onWidgetRolled(QWidget*,bool)));
 

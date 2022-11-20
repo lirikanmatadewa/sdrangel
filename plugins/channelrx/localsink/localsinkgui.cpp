@@ -16,7 +16,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
 
 #include <QLocale>
-#include <QResizeEvent>
 
 #include "device/deviceuiset.h"
 #include "gui/basicchannelsettingsdialog.h"
@@ -67,14 +66,6 @@ bool LocalSinkGUI::deserialize(const QByteArray& data)
         resetToDefaults();
         return false;
     }
-}
-
-void LocalSinkGUI::resizeEvent(QResizeEvent* size)
-{
-    int maxWidth = getRollupContents()->maximumWidth();
-    int minHeight = getRollupContents()->minimumHeight() + getAdditionalHeight();
-    resize(width() < maxWidth ? width() : maxWidth, minHeight);
-    size->accept();
 }
 
 bool LocalSinkGUI::handleMessage(const Message& message)
@@ -240,7 +231,7 @@ void LocalSinkGUI::leaveEvent(QEvent* event)
     ChannelGUI::leaveEvent(event);
 }
 
-void LocalSinkGUI::enterEvent(QEvent* event)
+void LocalSinkGUI::enterEvent(EnterEventType* event)
 {
     m_channelMarker.setHighlighted(true);
     ChannelGUI::enterEvent(event);

@@ -50,7 +50,9 @@ QDataStream& operator<<(QDataStream& ds, const AudioDeviceManager::OutputDeviceI
         << info.udpUseRTP
         << (int) info.udpChannelMode
         << (int) info.udpChannelCodec
-        << info.udpDecimationFactor;
+        << info.udpDecimationFactor
+        << info.fileRecordName
+        << info.recordSilenceTime;
     return ds;
 }
 
@@ -66,7 +68,9 @@ QDataStream& operator>>(QDataStream& ds, AudioDeviceManager::OutputDeviceInfo& i
         >> info.udpUseRTP
         >> intChannelMode
         >> intChannelCodec
-        >> info.udpDecimationFactor;
+        >> info.udpDecimationFactor
+        >> info.fileRecordName
+        >> info.recordSilenceTime;
     info.udpChannelMode = (AudioOutputDevice::UDPChannelMode) intChannelMode;
     info.udpChannelCodec = (AudioOutputDevice::UDPChannelCodec) intChannelCodec;
     return ds;
@@ -75,14 +79,15 @@ QDataStream& operator>>(QDataStream& ds, AudioDeviceManager::OutputDeviceInfo& i
 AudioDeviceManager::AudioDeviceManager()
 {
     qDebug("AudioDeviceManager::AudioDeviceManager: scan input devices");
-    m_inputDevicesInfo = QAudioDeviceInfo::availableDevices(QAudio::AudioInput);
+    m_inputDevicesInfo = AudioDeviceInfo::availableInputDevices();
 
     for (int i = 0; i < m_inputDevicesInfo.size(); i++) {
         qDebug("AudioDeviceManager::AudioDeviceManager: input device #%d: %s", i, qPrintable(m_inputDevicesInfo[i].deviceName()));
     }
 
     qDebug("AudioDeviceManager::AudioDeviceManager: scan output devices");
-    m_outputDevicesInfo = QAudioDeviceInfo::availableDevices(QAudio::AudioOutput);
+
+    m_outputDevicesInfo = AudioDeviceInfo::availableOutputDevices();
 
     for (int i = 0; i < m_outputDevicesInfo.size(); i++) {
         qDebug("AudioDeviceManager::AudioDeviceManager: output device #%d: %s", i, qPrintable(m_outputDevicesInfo[i].deviceName()));
@@ -641,6 +646,9 @@ void AudioDeviceManager::setOutputDeviceInfo(int outputDeviceIndex, const Output
     audioOutput->setUdpChannelMode(deviceInfo.udpChannelMode);
     audioOutput->setUdpChannelFormat(deviceInfo.udpChannelCodec, deviceInfo.udpChannelMode == AudioOutputDevice::UDPChannelStereo, deviceInfo.sampleRate);
     audioOutput->setUdpDecimation(deviceInfo.udpDecimationFactor);
+    audioOutput->setFileRecordName(deviceInfo.fileRecordName);
+    audioOutput->setRecordToFile(deviceInfo.recordToFile);
+    audioOutput->setRecordSilenceTime(deviceInfo.recordSilenceTime);
 
     qDebug("AudioDeviceManager::setOutputDeviceInfo: index: %d device: %s updated",
             outputDeviceIndex, qPrintable(deviceName));
@@ -730,7 +738,7 @@ void AudioDeviceManager::inputInfosCleanup()
 {
     QSet<QString> deviceNames;
     deviceNames.insert(m_defaultDeviceName);
-    QList<QAudioDeviceInfo>::const_iterator itd = m_inputDevicesInfo.begin();
+    QList<AudioDeviceInfo>::const_iterator itd = m_inputDevicesInfo.begin();
 
     for (; itd != m_inputDevicesInfo.end(); ++itd)
     {
@@ -758,7 +766,7 @@ void AudioDeviceManager::outputInfosCleanup()
 {
     QSet<QString> deviceNames;
     deviceNames.insert(m_defaultDeviceName);
-    QList<QAudioDeviceInfo>::const_iterator itd = m_outputDevicesInfo.begin();
+    QList<AudioDeviceInfo>::const_iterator itd = m_outputDevicesInfo.begin();
 
     for (; itd != m_outputDevicesInfo.end(); ++itd)
     {

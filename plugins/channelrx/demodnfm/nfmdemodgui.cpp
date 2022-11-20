@@ -55,14 +55,6 @@ bool NFMDemodGUI::deserialize(const QByteArray& data)
     }
 }
 
-void NFMDemodGUI::resizeEvent(QResizeEvent* size)
-{
-    int maxWidth = getRollupContents()->maximumWidth();
-    int minHeight = getRollupContents()->minimumHeight() + getAdditionalHeight();
-    resize(width() < maxWidth ? width() : maxWidth, minHeight);
-    size->accept();
-}
-
 bool NFMDemodGUI::handleMessage(const Message& message)
 {
     if (NFMDemodReport::MsgReportCTCSSFreq::match(message))
@@ -547,7 +539,7 @@ void NFMDemodGUI::leaveEvent(QEvent* event)
     ChannelGUI::leaveEvent(event);
 }
 
-void NFMDemodGUI::enterEvent(QEvent* event)
+void NFMDemodGUI::enterEvent(EnterEventType* event)
 {
 	m_channelMarker.setHighlighted(true);
     ChannelGUI::enterEvent(event);
