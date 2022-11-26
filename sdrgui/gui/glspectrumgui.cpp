@@ -86,6 +86,35 @@ GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
     ui->colorMap->addItems(ColorMap::getColorMapNames());
     ui->colorMap->setCurrentText("Angel");
 
+    ui->grid->hide();
+    ui->gridIntensity->hide();
+    ui->truncateScale->hide();
+    ui->clearSpectrum->hide();
+    ui->maxHold->hide();
+    ui->decay->hide();
+    ui->currentLine->hide();
+    ui->currentFill->hide();
+    ui->currentGradient->hide();
+    ui->traceIntensity->hide();
+    ui->colorMap->hide();
+    ui->invertWaterfall->hide();
+    ui->spectrogram->hide();
+    ui->spectrogramStyle->hide();
+    ui->fftWindow->hide();
+    ui->fftOverlap->hide();
+    ui->linscale->hide();
+    ui->freeze->hide();
+    ui->save->hide();
+    ui->wsSpectrum->hide();
+    ui->markers->hide();
+    ui->measure->hide();
+    ui->calibration->hide();
+    ui->gotoMarker->hide();
+    ui->histogram->hide();
+    ui->stroke->hide();
+    ui->waterfall->hide();
+    ui->averagingMode->hide();
+
     connect(&m_messageQueue, SIGNAL(messageEnqueued()), this, SLOT(handleInputMessages()));
 
     CRightClickEnabler *wsSpectrumRightClickEnabler = new CRightClickEnabler(ui->wsSpectrum);

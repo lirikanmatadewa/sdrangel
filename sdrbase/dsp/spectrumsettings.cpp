@@ -34,28 +34,28 @@ SpectrumSettings::~SpectrumSettings()
 
 void SpectrumSettings::resetToDefaults()
 {
-	m_fftSize = 1024;
+	m_fftSize = 4096;
 	m_fftOverlap = 0;
 	m_fftWindow = FFTWindow::Hanning;
 	m_refLevel = 0;
 	m_powerRange = 100;
-	m_fpsPeriodMs = 50;
+	m_fpsPeriodMs = 5;
 	m_decay = 1;
-	m_decayDivisor = 1;
-	m_histogramStroke = 30;
+	m_decayDivisor = 10;
+	m_histogramStroke = 8;
 	m_displayGridIntensity = 5;
 	m_displayTraceIntensity = 50;
 	m_waterfallShare = 0.66;
 	m_displayCurrent = true;
-	m_displayWaterfall = true;
-	m_invertedWaterfall = true;
+	m_displayWaterfall = false;
+	m_invertedWaterfall = false;
     m_display3DSpectrogram = false;
 	m_displayMaxHold = false;
-	m_displayHistogram = false;
+	m_displayHistogram = true;
 	m_displayGrid = false;
     m_truncateFreqScale = false;
-	m_averagingMode = AvgModeNone;
-	m_averagingIndex = 0;
+	m_averagingMode = AvgModeMoving;
+	m_averagingIndex = 3;
     m_averagingValue = 1;
 	m_linear = false;
     m_ssb = false;
