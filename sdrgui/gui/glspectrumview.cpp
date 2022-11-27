@@ -83,7 +83,7 @@ GLSpectrumView::GLSpectrumView(QWidget* parent) :
     m_waterfallBufferPos(0),
     m_waterfallTextureHeight(-1),
     m_waterfallTexturePos(0),
-    m_displayWaterfall(true),
+    m_displayWaterfall(false),
     m_ssbSpectrum(false),
     m_lsbDisplay(false),
     m_3DSpectrogramBuffer(nullptr),

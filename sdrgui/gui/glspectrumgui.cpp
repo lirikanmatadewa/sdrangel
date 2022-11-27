@@ -42,7 +42,7 @@
 #include "util/db.h"
 #include "ui_glspectrumgui.h"
 
-const int GLSpectrumGUI::m_fpsMs[] = {500, 200, 100, 50, 20, 10, 5};
+const int GLSpectrumGUI::m_fpsMs[] = {500, 200, 100, 50, 20, 10, 5, 2};
 
 GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
     QWidget(parent),
@@ -82,6 +82,7 @@ GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
     ui->refLevel->setStyleSheet(levelStyle);
     ui->levelRange->setStyleSheet(levelStyle);
     ui->fftOverlap->setStyleSheet(levelStyle);
+    ui->decayDivisor->setStyleSheet(levelStyle);
 
     ui->colorMap->addItems(ColorMap::getColorMapNames());
     ui->colorMap->setCurrentText("Angel");
@@ -200,7 +201,7 @@ void GLSpectrumGUI::displaySettings()
     ui->refLevel->setValue(m_settings.m_refLevel + m_calibrationShiftdB);
     ui->levelRange->setValue(m_settings.m_powerRange);
     ui->decay->setSliderPosition(m_settings.m_decay);
-    ui->decayDivisor->setSliderPosition(m_settings.m_decayDivisor);
+    ui->decayDivisor->setValue(m_settings.m_decayDivisor);
     ui->stroke->setSliderPosition(m_settings.m_histogramStroke);
     ui->waterfall->setChecked(m_settings.m_displayWaterfall);
     ui->spectrogram->setChecked(m_settings.m_display3DSpectrogram);
