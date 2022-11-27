@@ -111,7 +111,7 @@ MainWindow::MainWindow(qtwebapp::LoggerWithFile *logger, const MainParser& parse
     m_fftWisdomProcess(nullptr)
 {
 	qDebug() << "MainWindow::MainWindow: start";
-    setWindowTitle("SDRangel");
+    setWindowTitle("BWE Solutions - SDR Analyzer");
 
     m_instance = this;
     m_mainCore->m_logger = logger;
@@ -126,7 +126,7 @@ MainWindow::MainWindow(qtwebapp::LoggerWithFile *logger, const MainParser& parse
     font.setPointSize(9);
     qApp->setFont(font);
 
-    QPixmap logoPixmap(":/sdrangel_logo.png");
+    QPixmap logoPixmap(":/bwe-solutions_black.png");
     SDRangelSplash *splash = new SDRangelSplash(logoPixmap);
     splash->setMessageRect(QRect(10, 80, 350, 16));
     splash->show();
@@ -1529,8 +1529,8 @@ void MainWindow::createMenuBar()
     QAction *loadedPluginsAction = helpMenu->addAction("Loaded &Plugins...");
     loadedPluginsAction->setToolTip("List available plugins");
     QObject::connect(loadedPluginsAction, &QAction::triggered, this, &MainWindow::on_action_Loaded_Plugins_triggered);
-    QAction *aboutAction = helpMenu->addAction("&About SDRangel...");
-    aboutAction->setToolTip("SDRangel application details");
+    QAction *aboutAction = helpMenu->addAction("&About SDR Analyzer...");
+    aboutAction->setToolTip("SDR Analyzer application details");
     QObject::connect(aboutAction, &QAction::triggered, this, &MainWindow::on_action_About_triggered);
 }
 
@@ -1539,10 +1539,10 @@ void MainWindow::createStatusBar()
     QString qtVersionStr = QString("Qt %1 ").arg(QT_VERSION_STR);
     QString openGLVersionStr = QString("OpenGL %1 ").arg(openGLVersion());
 #if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
-    m_showSystemWidget = new QLabel("SDRangel " + qApp->applicationVersion() + " " + qtVersionStr + openGLVersionStr
+    m_showSystemWidget = new QLabel("SDR Analyzer " + qApp->applicationVersion() + " " + qtVersionStr + openGLVersionStr
             + QSysInfo::currentCpuArchitecture() + " " + QSysInfo::prettyProductName(), this);
 #else
-    m_showSystemWidget = new QLabel("SDRangel " + qApp->applicationVersion() + " " + qtVersionStr + openGLVersionStr, this);
+    m_showSystemWidget = new QLabel("SDR Analyzer " + qApp->applicationVersion() + " " + qtVersionStr + openGLVersionStr, this);
 #endif
     statusBar()->addPermanentWidget(m_showSystemWidget);
 

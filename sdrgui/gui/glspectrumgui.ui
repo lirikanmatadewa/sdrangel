@@ -203,15 +203,24 @@
       </widget>
      </item>
      <item>
-      <widget class="QDial" name="decayDivisor">
+      <widget class="QSpinBox" name="decayDivisor">
+       <property name="minimumSize">
+        <size>
+         <width>45</width>
+         <height>24</height>
+        </size>
+       </property>
        <property name="maximumSize">
         <size>
-         <width>24</width>
-         <height>24</height>
+         <width>45</width>
+         <height>16777215</height>
         </size>
        </property>
        <property name="toolTip">
         <string>Decay divisor:</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
        <property name="minimum">
         <number>1</number>
@@ -219,8 +228,8 @@
        <property name="maximum">
         <number>20</number>
        </property>
-       <property name="pageStep">
-        <number>1</number>
+       <property name="value">
+        <number>10</number>
        </property>
       </widget>
      </item>
@@ -986,6 +995,11 @@
        <item>
         <property name="text">
          <string>200</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>500</string>
         </property>
        </item>
       </widget>

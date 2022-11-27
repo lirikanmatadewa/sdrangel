@@ -42,7 +42,7 @@
 #include "util/db.h"
 #include "ui_glspectrumgui.h"
 
-const int GLSpectrumGUI::m_fpsMs[] = {500, 200, 100, 50, 20, 10, 5};
+const int GLSpectrumGUI::m_fpsMs[] = {500, 200, 100, 50, 20, 10, 5, 2};
 
 GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
     QWidget(parent),
@@ -82,9 +82,39 @@ GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
     ui->refLevel->setStyleSheet(levelStyle);
     ui->levelRange->setStyleSheet(levelStyle);
     ui->fftOverlap->setStyleSheet(levelStyle);
+    ui->decayDivisor->setStyleSheet(levelStyle);
 
     ui->colorMap->addItems(ColorMap::getColorMapNames());
     ui->colorMap->setCurrentText("Angel");
+
+    ui->grid->hide();
+    ui->gridIntensity->hide();
+    ui->truncateScale->hide();
+    ui->clearSpectrum->hide();
+    ui->maxHold->hide();
+    ui->decay->hide();
+    ui->currentLine->hide();
+    ui->currentFill->hide();
+    ui->currentGradient->hide();
+    ui->traceIntensity->hide();
+    ui->colorMap->hide();
+    ui->invertWaterfall->hide();
+    ui->spectrogram->hide();
+    ui->spectrogramStyle->hide();
+    ui->fftWindow->hide();
+    ui->fftOverlap->hide();
+    ui->linscale->hide();
+    ui->freeze->hide();
+    ui->save->hide();
+    ui->wsSpectrum->hide();
+    ui->markers->hide();
+    ui->measure->hide();
+    ui->calibration->hide();
+    ui->gotoMarker->hide();
+    ui->histogram->hide();
+    ui->stroke->hide();
+    ui->waterfall->hide();
+    ui->averagingMode->hide();
 
     connect(&m_messageQueue, SIGNAL(messageEnqueued()), this, SLOT(handleInputMessages()));
 
@@ -171,7 +201,7 @@ void GLSpectrumGUI::displaySettings()
     ui->refLevel->setValue(m_settings.m_refLevel + m_calibrationShiftdB);
     ui->levelRange->setValue(m_settings.m_powerRange);
     ui->decay->setSliderPosition(m_settings.m_decay);
-    ui->decayDivisor->setSliderPosition(m_settings.m_decayDivisor);
+    ui->decayDivisor->setValue(m_settings.m_decayDivisor);
     ui->stroke->setSliderPosition(m_settings.m_histogramStroke);
     ui->waterfall->setChecked(m_settings.m_displayWaterfall);
     ui->spectrogram->setChecked(m_settings.m_display3DSpectrogram);
