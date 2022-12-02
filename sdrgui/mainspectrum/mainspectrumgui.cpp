@@ -135,8 +135,8 @@ MainSpectrumGUI::MainSpectrumGUI(GLSpectrum *spectrum, GLSpectrumGUI *spectrumGU
     m_bottomLayout->addWidget(m_sizeGripBottomRight, 0, Qt::AlignBottom | Qt::AlignRight);
 
     m_layouts->addLayout(m_topLayout);
-    m_layouts->addLayout(m_spectrumLayout);
     m_layouts->addLayout(m_spectrumGUILayout);
+    m_layouts->addLayout(m_spectrumLayout);
     m_layouts->addLayout(m_bottomLayout);
 
     QObjectCleanupHandler().add(layout());
