@@ -138,11 +138,6 @@ void FeatureUISet::loadFeatureSetSettings(
     Workspace *currentWorkspace
 )
 {
-    qDebug("FeatureUISet::loadFeatureSetSettings: Loading preset [%s | %s]",
-        qPrintable(preset->getGroup()),
-        qPrintable(preset->getDescription())
-    );
-
     // Available feature plugins
     PluginAPI::FeatureRegistrations *featureRegistrations = pluginAPI->getFeatureRegistrations();
 
@@ -153,14 +148,9 @@ void FeatureUISet::loadFeatureSetSettings(
 
     for (int i = 0; i < openFeatures.count(); i++)
     {
-        qDebug("FeatureUISet::loadFeatureSetSettings: destroying old feature [%s]",
-            qPrintable(openFeatures.at(i).m_feature->getURI())
-        );
         openFeatures[i].m_feature->destroy();
         openFeatures[i].m_gui->destroy();
     }
-
-    qDebug("FeatureUISet::loadFeatureSetSettings: %d feature(s) in preset", preset->getFeatureCount());
 
     for (int i = 0; i < preset->getFeatureCount(); i++)
     {
@@ -174,10 +164,6 @@ void FeatureUISet::loadFeatureSetSettings(
         {
             if (FeatureUtils::compareFeatureURIs((*featureRegistrations)[i].m_featureIdURI, featureConfig.m_featureIdURI))
             {
-                qDebug("FeatureUISet::loadFeatureSetSettings: creating new feature [%s] from config [%s]",
-                    qPrintable((*featureRegistrations)[i].m_featureIdURI),
-                    qPrintable(featureConfig.m_featureIdURI)
-                );
                 PluginInterface *pluginInterface = (*featureRegistrations)[i].m_plugin;
                 feature = pluginInterface->createFeature(apiAdapter);
                 featureGUI = pluginInterface->createFeatureGUI(this, feature);
@@ -189,8 +175,6 @@ void FeatureUISet::loadFeatureSetSettings(
 
         if (featureGUI)
         {
-            qDebug("FeatureUISet::loadFeatureSetSettings: deserializing feature [%s]",
-                qPrintable(featureConfig.m_featureIdURI));
             featureGUI->deserialize(featureConfig.m_config);
             featureGUI->setIndex(feature->getIndexInFeatureSet());
             int originalWorkspaceIndex = featureGUI->getWorkspaceIndex();

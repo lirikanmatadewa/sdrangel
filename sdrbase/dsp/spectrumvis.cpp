@@ -785,16 +785,12 @@ bool SpectrumVis::handleMessage(const Message& message)
     {
         // This is coming from device engine and will apply to main spectrum
         DSPSignalNotification& notif = (DSPSignalNotification&) message;
-        qDebug() << "SpectrumVis::handleMessage: DSPSignalNotification:"
-            << " centerFrequency: " << notif.getCenterFrequency()
-            << " sampleRate: " << notif.getSampleRate();
         handleConfigureDSP(notif.getCenterFrequency(), notif.getSampleRate());
         return true;
     }
 	else if (MsgConfigureSpectrumVis::match(message))
 	{
         MsgConfigureSpectrumVis& cfg = (MsgConfigureSpectrumVis&) message;
-        qDebug() << "SpectrumVis::handleMessage: MsgConfigureSpectrumVis";
         applySettings(cfg.getSettings(), cfg.getForce());
 		return true;
 	}
@@ -843,22 +839,6 @@ void SpectrumVis::applySettings(const SpectrumSettings& settings, bool force)
         settings.m_fftSize < (1<<SpectrumSettings::m_log2FFTSizeMin) ?
             (1<<SpectrumSettings::m_log2FFTSizeMin) :
             settings.m_fftSize;
-
-    qDebug() << "SpectrumVis::applySettings:"
-        << " m_fftSize: " << fftSize
-        << " m_fftWindow: " << settings.m_fftWindow
-        << " m_fftOverlap: " << settings.m_fftOverlap
-        << " m_averagingIndex: " << settings.m_averagingIndex
-        << " m_averagingMode: " << settings.m_averagingMode
-        << " m_refLevel: " << settings.m_refLevel
-        << " m_powerRange: " << settings.m_powerRange
-        << " m_fpsPeriodMs: " << settings.m_fpsPeriodMs
-        << " m_linear: " << settings.m_linear
-        << " m_ssb: " << settings.m_ssb
-        << " m_usb: " << settings.m_usb
-        << " m_wsSpectrumAddress: " << settings.m_wsSpectrumAddress
-        << " m_wsSpectrumPort: " << settings.m_wsSpectrumPort
-        << " force: " << force;
 
     if ((fftSize != m_settings.m_fftSize) || force)
     {

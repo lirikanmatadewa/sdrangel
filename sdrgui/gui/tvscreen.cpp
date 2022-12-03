@@ -111,19 +111,15 @@ void TVScreen::initializeGL()
     {
         if (QOpenGLContext::currentContext()->isValid())
         {
-            qDebug() << "TVScreen::initializeGL: context:"
-                << " major: " << (QOpenGLContext::currentContext()->format()).majorVersion()
-                << " minor: " << (QOpenGLContext::currentContext()->format()).minorVersion()
-                << " ES: " << (QOpenGLContext::currentContext()->isOpenGLES() ? "yes" : "no");
+            ;
         }
         else
         {
-            qDebug() << "TVScreen::initializeGL: current context is invalid";
+            ;
         }
     }
     else
     {
-        qCritical() << "TVScreen::initializeGL: no current context";
         return;
     }
 
@@ -131,22 +127,17 @@ void TVScreen::initializeGL()
 
     if (surface == nullptr)
     {
-        qCritical() << "TVScreen::initializeGL: no surface attached";
         return;
     }
     else
     {
         if (surface->surfaceType() != QSurface::OpenGLSurface)
         {
-            qCritical() << "TVScreen::initializeGL: surface is not an OpenGLSurface: "
-                << surface->surfaceType()
-                << " cannot use an OpenGL context";
             return;
         }
         else
         {
-            qDebug() << "TVScreen::initializeGL: OpenGL surface:"
-                << " class: " << (surface->surfaceClass() == QSurface::Window ? "Window" : "Offscreen");
+            ;
         }
     }
 

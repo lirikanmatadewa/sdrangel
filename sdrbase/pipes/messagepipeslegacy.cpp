@@ -44,13 +44,11 @@ MessagePipesLegacy::~MessagePipesLegacy()
 
 MessageQueue *MessagePipesLegacy::registerChannelToFeature(const PipeEndPoint *source, PipeEndPoint *dest, const QString& type)
 {
-	qDebug("MessagePipesLegacy::registerChannelToFeature: %p %p %s", source, dest, qPrintable(type));
 	return m_registrations.registerProducerToConsumer(source, dest, type);
 }
 
 MessageQueue *MessagePipesLegacy::unregisterChannelToFeature(const PipeEndPoint *source, PipeEndPoint *dest, const QString& type)
 {
-	qDebug("MessagePipesLegacy::unregisterChannelToFeature: %p %p %s", source, dest, qPrintable(type));
 	MessageQueue *messageQueue = m_registrations.unregisterProducerToConsumer(source, dest, type);
 	m_gcWorker->addMessageQueueToDelete(messageQueue);
 	return messageQueue;
@@ -71,8 +69,7 @@ void MessagePipesLegacy::startGC()
 
 void MessagePipesLegacy::stopGC()
 {
-    qDebug("MessagePipesLegacy::stopGC");
-	m_gcWorker->stopWork();
+    m_gcWorker->stopWork();
 	m_gcThread.quit();
 	m_gcThread.wait();
 }

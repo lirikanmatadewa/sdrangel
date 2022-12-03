@@ -25,7 +25,6 @@ bool DevicePerseusScan::scan(int nbDevices)
 {
 	if (nbDevices == 0)
     {
-		qInfo("DevicePerseusScan::scan: no Perseus devices");
 		return true;
 	}
 
@@ -37,26 +36,23 @@ bool DevicePerseusScan::scan(int nbDevices)
 	{
         if ((descr = perseus_open(deviceIndex)) == 0)
         {
-            qCritical("DevicePerseusScan::scan: device #%d open error: %s", deviceIndex, perseus_errorstr());
             perseus_close(descr);
             continue;
         }
 
         if (perseus_firmware_download(descr, 0) < 0)
         {
-            qCritical("DevicePerseusScan::scan: device #%d firmware download error: %s", deviceIndex, perseus_errorstr());
             perseus_close(descr);
             done = false;
             continue;
         }
         else
         {
-            qInfo("DevicePerseusScan::scan: device #%d firmware downloaded", deviceIndex);
+            ;
         }
 
 		if (perseus_get_product_id(descr,&prodid) < 0)
         {
-			qCritical("DevicePerseusScan::scan: device #%d get product id error: %s", deviceIndex, perseus_errorstr());
 			perseus_close(descr);
 			continue;
 		}

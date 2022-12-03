@@ -224,14 +224,12 @@ void XTRXOutputGUI::handleInputMessages()
             DSPSignalNotification* notif = (DSPSignalNotification*) message;
             m_sampleRate = notif->getSampleRate();
             m_deviceCenterFrequency = notif->getCenterFrequency();
-            qDebug("XTRXOutputGUI::handleInputMessages: DSPSignalNotification: SampleRate: %d, CenterFrequency: %llu", notif->getSampleRate(), notif->getCenterFrequency());
             updateSampleRateAndFrequency();
 
             delete message;
         }
         else if (XTRXOutput::MsgConfigureXTRX::match(*message))
         {
-            qDebug("XTRXOutputGUI::handleInputMessages: MsgConfigureXTRX");
             const XTRXOutput::MsgConfigureXTRX& cfg = (XTRXOutput::MsgConfigureXTRX&) *message;
 
             if (cfg.getForce()) {

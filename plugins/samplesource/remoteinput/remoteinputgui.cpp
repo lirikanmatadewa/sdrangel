@@ -267,8 +267,6 @@ void RemoteInputGui::handleInputMessages()
 
             m_streamCenterFrequency = notif->getCenterFrequency();
 
-            qDebug("RemoteInputGui::handleInputMessages: DSPSignalNotification: SampleRate:%d, CenterFrequency:%llu", notif->getSampleRate(), notif->getCenterFrequency());
-
             updateSampleRateAndFrequency();
             DSPSignalNotification *fwd = new DSPSignalNotification(*notif);
             m_sampleSource->getInputMessageQueue()->push(fwd);

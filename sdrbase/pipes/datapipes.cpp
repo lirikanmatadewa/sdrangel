@@ -52,16 +52,13 @@ void DataPipes::getDataPipes(const QObject *producer, const QString& type, QList
 
 void DataPipes::startGC()
 {
-	qDebug("DataPipes::startGC");
-
-    m_gcWorker->startWork();
+	m_gcWorker->startWork();
     m_gcThread.start();
 }
 
 void DataPipes::stopGC()
 {
-    qDebug("DataPipes::stopGC");
-	m_gcWorker->stopWork();
+    m_gcWorker->stopWork();
 	m_gcThread.quit();
 	m_gcThread.wait();
 }

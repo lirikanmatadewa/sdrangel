@@ -38,7 +38,6 @@ void DeviceUSRP::enumOriginDevices(const QString& hardwareId, PluginInterface::O
 
         if (dev_addrs.size() <= 0)
         {
-            qDebug("DeviceUSRP::enumOriginDevices: Could not find any USRP device");
             return;
         }
 
@@ -48,8 +47,6 @@ void DeviceUSRP::enumOriginDevices(const QString& hardwareId, PluginInterface::O
             QString name = QString::fromStdString(dev_addrs[i].get("name", "N/A"));
             QString serial = QString::fromStdString(dev_addrs[i].get("serial", "N/A"));
             QString displayedName(QString("%1[%2:$1] %3").arg(name).arg(i).arg(serial));
-
-            qDebug() << "DeviceUSRP::enumOriginDevices: found USRP device " << displayedName;
 
             DeviceUSRPParams usrpParams;
             usrpParams.open(id, true);
@@ -67,7 +64,7 @@ void DeviceUSRP::enumOriginDevices(const QString& hardwareId, PluginInterface::O
     }
     catch (const std::exception& e)
     {
-        qDebug() << "DeviceUSRP::enumOriginDevices: exception: " << e.what();
+        ;
     }
 }
 

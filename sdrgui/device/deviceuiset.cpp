@@ -203,8 +203,6 @@ void DeviceUISet::loadDeviceSetSettings(
     Workspace *currentWorkspace
 )
 {
-    qDebug("DeviceUISet::loadDeviceSetSettings: preset: [%s, %s]",
-        qPrintable(preset->getGroup()), qPrintable(preset->getDescription()));
     m_spectrumGUI->deserialize(preset->getSpectrumConfig());
     m_mainSpectrumGUI->restoreGeometry(preset->getSpectrumGeometry());
     m_deviceGUI->restoreGeometry(preset->getDeviceGeometry());
@@ -225,8 +223,6 @@ void DeviceUISet::loadDeviceSetSettings(
 
 void DeviceUISet::saveDeviceSetSettings(Preset* preset) const
 {
-    qDebug("DeviceUISet::saveDeviceSetSettings: preset: [%s, %s]",
-        qPrintable(preset->getGroup()), qPrintable(preset->getDescription()));
     preset->setSpectrumConfig(m_spectrumGUI->serialize());
     preset->setSpectrumWorkspaceIndex(m_mainSpectrumGUI->getWorkspaceIndex());
     preset->setSpectrumGeometry(m_mainSpectrumGUI->saveGeometry());
@@ -264,17 +260,12 @@ void DeviceUISet::loadRxChannelSettings(const Preset *preset, PluginAPI *pluginA
 {
     if (preset->isSourcePreset())
     {
-        qDebug("DeviceUISet::loadRxChannelSettings: Loading preset [%s | %s]",
-            qPrintable(preset->getGroup()), qPrintable(preset->getDescription()));
-
         // Available channel plugins
         PluginAPI::ChannelRegistrations *channelRegistrations = pluginAPI->getRxChannelRegistrations();
 
         // clear list
         for (int i = 0; i < m_channelInstanceRegistrations.count(); i++)
         {
-            qDebug("DeviceUISet::loadRxChannelSettings: destroying old channel [%s]",
-                qPrintable(m_channelInstanceRegistrations[i].m_channelAPI->getURI()));
             m_channelInstanceRegistrations[i].m_channelAPI->setMessageQueueToGUI(nullptr); // have channel stop sending messages to its GUI
             m_channelInstanceRegistrations[i].m_gui->destroy();
             m_channelInstanceRegistrations[i].m_channelAPI->destroy();
@@ -282,8 +273,7 @@ void DeviceUISet::loadRxChannelSettings(const Preset *preset, PluginAPI *pluginA
 
         m_channelInstanceRegistrations.clear();
         m_deviceSet->clearChannels();
-        qDebug("DeviceUISet::loadRxChannelSettings: %d channel(s) in preset", preset->getChannelCount());
-
+        
         for (int i = 0; i < preset->getChannelCount(); i++)
         {
             const Preset::ChannelConfig& channelConfig = preset->getChannelConfig(i);
@@ -297,9 +287,6 @@ void DeviceUISet::loadRxChannelSettings(const Preset *preset, PluginAPI *pluginA
                 //if((*channelRegistrations)[i].m_channelIdURI == channelConfig.m_channelIdURI)
                 if (ChannelUtils::compareChannelURIs((*channelRegistrations)[i].m_channelIdURI, channelConfig.m_channelIdURI))
                 {
-                    qDebug("DeviceUISet::loadRxChannelSettings: creating new channel [%s] from config [%s]",
-                            qPrintable((*channelRegistrations)[i].m_channelIdURI),
-                            qPrintable(channelConfig.m_channelIdURI));
                     BasebandSampleSink *rxChannel;
                     PluginInterface *pluginInterface = (*channelRegistrations)[i].m_plugin;
                     pluginInterface->createRxChannel(m_deviceAPI, &rxChannel, &channelAPI);
@@ -319,7 +306,6 @@ void DeviceUISet::loadRxChannelSettings(const Preset *preset, PluginAPI *pluginA
 
             if (rxChannelGUI && channelAPI)
             {
-                qDebug("DeviceUISet::loadRxChannelSettings: deserializing channel [%s]", qPrintable(channelConfig.m_channelIdURI));
                 rxChannelGUI->deserialize(channelConfig.m_config);
                 int originalWorkspaceIndex = rxChannelGUI->getWorkspaceIndex();
 
@@ -367,7 +353,7 @@ void DeviceUISet::loadRxChannelSettings(const Preset *preset, PluginAPI *pluginA
     }
     else
     {
-        qDebug("DeviceUISet::loadRxChannelSettings: Loading preset [%s | %s] not a source preset", qPrintable(preset->getGroup()), qPrintable(preset->getDescription()));
+        ;
     }
 }
 
@@ -378,7 +364,6 @@ void DeviceUISet::saveRxChannelSettings(Preset *preset) const
         for (int i = 0; i < m_channelInstanceRegistrations.count(); i++)
         {
             ChannelGUI *channelGUI = m_channelInstanceRegistrations[i].m_gui;
-            qDebug("DeviceUISet::saveRxChannelSettings: saving channel [%s]", qPrintable(m_channelInstanceRegistrations[i].m_channelAPI->getURI()));
             channelGUI->setGeometryBytes(channelGUI->saveGeometry());
             channelGUI->zetHidden(channelGUI->isHidden());
             preset->addChannel(m_channelInstanceRegistrations[i].m_channelAPI->getURI(), channelGUI->serialize());
@@ -386,7 +371,7 @@ void DeviceUISet::saveRxChannelSettings(Preset *preset) const
     }
     else
     {
-        qDebug("DeviceUISet::saveRxChannelSettings: not a source preset");
+        ;
     }
 }
 
@@ -394,17 +379,12 @@ void DeviceUISet::loadTxChannelSettings(const Preset *preset, PluginAPI *pluginA
 {
     if (preset->isSinkPreset())
     {
-        qDebug("DeviceUISet::loadTxChannelSettings: Loading preset [%s | %s]",
-            qPrintable(preset->getGroup()), qPrintable(preset->getDescription()));
-
         // Available channel plugins
         PluginAPI::ChannelRegistrations *channelRegistrations = pluginAPI->getTxChannelRegistrations();
 
         //  clear list
         for (int i = 0; i < m_channelInstanceRegistrations.count(); i++)
         {
-            qDebug("DeviceUISet::loadTxChannelSettings: destroying old channel [%s]",
-                qPrintable(m_channelInstanceRegistrations[i].m_channelAPI->getURI()));
             m_channelInstanceRegistrations[i].m_channelAPI->setMessageQueueToGUI(nullptr); // have channel stop sending messages to its GUI
             m_channelInstanceRegistrations[i].m_gui->destroy();
             m_channelInstanceRegistrations[i].m_channelAPI->destroy();
@@ -412,8 +392,7 @@ void DeviceUISet::loadTxChannelSettings(const Preset *preset, PluginAPI *pluginA
 
         m_channelInstanceRegistrations.clear();
         m_deviceSet->clearChannels();
-        qDebug("DeviceUISet::loadTxChannelSettings: %d channel(s) in preset", preset->getChannelCount());
-
+        
         for (int i = 0; i < preset->getChannelCount(); i++)
         {
             const Preset::ChannelConfig& channelConfig = preset->getChannelConfig(i);
@@ -426,9 +405,6 @@ void DeviceUISet::loadTxChannelSettings(const Preset *preset, PluginAPI *pluginA
             {
                 if ((*channelRegistrations)[i].m_channelIdURI == channelConfig.m_channelIdURI)
                 {
-                    qDebug("DeviceUISet::loadTxChannelSettings: creating new channel [%s] from config [%s]",
-                            qPrintable((*channelRegistrations)[i].m_channelIdURI),
-                            qPrintable(channelConfig.m_channelIdURI));
                     BasebandSampleSource *txChannel;
                     PluginInterface *pluginInterface = (*channelRegistrations)[i].m_plugin;
                     pluginInterface->createTxChannel(m_deviceAPI, &txChannel, &channelAPI);
@@ -448,7 +424,6 @@ void DeviceUISet::loadTxChannelSettings(const Preset *preset, PluginAPI *pluginA
 
             if (txChannelGUI && channelAPI)
             {
-                qDebug("DeviceUISet::loadTxChannelSettings: deserializing channel [%s]", qPrintable(channelConfig.m_channelIdURI));
                 txChannelGUI->deserialize(channelConfig.m_config);
                 int originalWorkspaceIndex = txChannelGUI->getWorkspaceIndex();
 
@@ -496,7 +471,7 @@ void DeviceUISet::loadTxChannelSettings(const Preset *preset, PluginAPI *pluginA
     }
     else
     {
-        qDebug("DeviceUISet::loadTxChannelSettings: Loading preset [%s | %s] not a sink preset", qPrintable(preset->getGroup()), qPrintable(preset->getDescription()));
+        ;
     }
 
 }
@@ -508,7 +483,6 @@ void DeviceUISet::saveTxChannelSettings(Preset *preset) const
         for (int i = 0; i < m_channelInstanceRegistrations.count(); i++)
         {
             ChannelGUI *channelGUI = m_channelInstanceRegistrations[i].m_gui;
-            qDebug("DeviceUISet::saveTxChannelSettings: saving channel [%s]", qPrintable(m_channelInstanceRegistrations[i].m_channelAPI->getURI()));
             channelGUI->setGeometryBytes(channelGUI->saveGeometry());
             channelGUI->zetHidden(channelGUI->isHidden());
             preset->addChannel(m_channelInstanceRegistrations[i].m_channelAPI->getURI(), channelGUI->serialize());
@@ -516,7 +490,7 @@ void DeviceUISet::saveTxChannelSettings(Preset *preset) const
     }
     else
     {
-        qDebug("DeviceUISet::saveTxChannelSettings: not a sink preset");
+        ;
     }
 }
 
@@ -524,22 +498,16 @@ void DeviceUISet::loadMIMOChannelSettings(const Preset *preset, PluginAPI *plugi
 {
     if (preset->isMIMOPreset())
     {
-        qDebug("DeviceUISet::loadMIMOChannelSettings: Loading preset [%s | %s]",
-            qPrintable(preset->getGroup()), qPrintable(preset->getDescription()));
-
         // clear list
         for (int i = 0; i < m_channelInstanceRegistrations.count(); i++)
         {
-            qDebug("DeviceUISet::loadMIMOChannelSettings: destroying old channel [%s]",
-                qPrintable(m_channelInstanceRegistrations[i].m_channelAPI->getURI()));
             m_channelInstanceRegistrations[i].m_gui->destroy(); // stop GUI first (issue #1427)
             m_channelInstanceRegistrations[i].m_channelAPI->destroy(); // stop channel before (issue #860)
         }
 
         m_channelInstanceRegistrations.clear();
         m_deviceSet->clearChannels();
-        qDebug("DeviceUISet::loadMIMOChannelSettings: %d channel(s) in preset", preset->getChannelCount());
-
+        
         for (int i = 0; i < preset->getChannelCount(); i++)
         {
             const Preset::ChannelConfig& channelConfig = preset->getChannelConfig(i);
@@ -553,9 +521,6 @@ void DeviceUISet::loadMIMOChannelSettings(const Preset *preset, PluginAPI *plugi
             {
                 if (ChannelUtils::compareChannelURIs((*channelMIMORegistrations)[i].m_channelIdURI, channelConfig.m_channelIdURI))
                 {
-                    qDebug("DeviceUISet::loadMIMOChannelSettings: creating new MIMO channel [%s] from config [%s]",
-                            qPrintable((*channelMIMORegistrations)[i].m_channelIdURI),
-                            qPrintable(channelConfig.m_channelIdURI));
                     MIMOChannel *mimoChannel;
                     PluginInterface *pluginInterface = (*channelMIMORegistrations)[i].m_plugin;
                     pluginInterface->createMIMOChannel(m_deviceAPI, &mimoChannel, &channelAPI);
@@ -580,9 +545,6 @@ void DeviceUISet::loadMIMOChannelSettings(const Preset *preset, PluginAPI *plugi
             {
                 if (ChannelUtils::compareChannelURIs((*channelRxRegistrations)[i].m_channelIdURI, channelConfig.m_channelIdURI))
                 {
-                    qDebug("DeviceUISet::loadMIMOChannelSettings: creating new Rx channel [%s] from config [%s]",
-                            qPrintable((*channelRxRegistrations)[i].m_channelIdURI),
-                            qPrintable(channelConfig.m_channelIdURI));
                     BasebandSampleSink *rxChannel;
                     PluginInterface *pluginInterface = (*channelRxRegistrations)[i].m_plugin;
                     pluginInterface->createRxChannel(m_deviceAPI, &rxChannel, &channelAPI);
@@ -607,9 +569,6 @@ void DeviceUISet::loadMIMOChannelSettings(const Preset *preset, PluginAPI *plugi
             {
                 if (ChannelUtils::compareChannelURIs((*channelTxRegistrations)[i].m_channelIdURI, channelConfig.m_channelIdURI))
                 {
-                    qDebug("DeviceUISet::loadMIMOChannelSettings: creating new Tx channel [%s] from config [%s]",
-                            qPrintable((*channelTxRegistrations)[i].m_channelIdURI),
-                            qPrintable(channelConfig.m_channelIdURI));
                     BasebandSampleSource *txChannel;
                     PluginInterface *pluginInterface = (*channelTxRegistrations)[i].m_plugin;
                     pluginInterface->createTxChannel(m_deviceAPI, &txChannel, &channelAPI);
@@ -622,7 +581,6 @@ void DeviceUISet::loadMIMOChannelSettings(const Preset *preset, PluginAPI *plugi
 
             if (channelGUI && channelAPI)
             {
-                qDebug("DeviceUISet::loadMIMOChannelSettings: deserializing channel [%s]", qPrintable(channelConfig.m_channelIdURI));
                 channelGUI->deserialize(channelConfig.m_config);
                 int originalWorkspaceIndex = channelGUI->getWorkspaceIndex();
 
@@ -677,7 +635,7 @@ void DeviceUISet::loadMIMOChannelSettings(const Preset *preset, PluginAPI *plugi
     }
     else
     {
-        qDebug("DeviceUISet::loadMIMOChannelSettings: Loading preset [%s | %s] not a MIMO preset", qPrintable(preset->getGroup()), qPrintable(preset->getDescription()));
+        ;
     }
 }
 
@@ -688,7 +646,6 @@ void DeviceUISet::saveMIMOChannelSettings(Preset *preset) const
         for (int i = 0; i < m_channelInstanceRegistrations.count(); i++)
         {
             ChannelGUI *channelGUI = m_channelInstanceRegistrations[i].m_gui;
-            qDebug("DeviceUISet::saveMIMOChannelSettings: saving channel [%s]", qPrintable(m_channelInstanceRegistrations[i].m_channelAPI->getURI()));
             channelGUI->setGeometryBytes(channelGUI->saveGeometry());
             channelGUI->zetHidden(channelGUI->isHidden());
             preset->addChannel(m_channelInstanceRegistrations[i].m_channelAPI->getURI(), channelGUI->serialize());
@@ -696,7 +653,7 @@ void DeviceUISet::saveMIMOChannelSettings(Preset *preset) const
     }
     else
     {
-        qDebug("DeviceUISet::saveMIMOChannelSettings: not a MIMO preset");
+        ;
     }
 }
 

@@ -85,7 +85,6 @@ bool AudioInput::openDevice()
 {
     if (!openAudioDevice(m_settings.m_deviceName, m_settings.m_sampleRate))
     {
-        qCritical("AudioInput::openDevice: could not open audio source");
         return false;
     }
     else
@@ -130,7 +129,6 @@ bool AudioInput::start()
         return false;
     }
 
-    qDebug() << "AudioInput::start";
     applySettings(m_settings, QList<QString>(), true, true);
 
     m_workerThread = new QThread();
@@ -146,7 +144,6 @@ bool AudioInput::start()
     m_worker->startWork();
     m_workerThread->start();
 
-    qDebug("AudioInput::started");
     m_running = true;
 
     return true;
@@ -225,7 +222,6 @@ bool AudioInput::handleMessage(const Message& message)
 {
     if (MsgConfigureAudioInput::match(message))
     {
-        qDebug() << "AudioInput::handleMessage: MsgConfigureAudioInput";
         MsgConfigureAudioInput& conf = (MsgConfigureAudioInput&) message;
         applySettings(conf.getSettings(), conf.getSettingsKeys(), conf.getForce());
         return true;
@@ -233,8 +229,7 @@ bool AudioInput::handleMessage(const Message& message)
     else if (MsgStartStop::match(message))
     {
         MsgStartStop& cmd = (MsgStartStop&) message;
-        qDebug() << "AudioInput::handleMessage: MsgStartStop: " << (cmd.getStartStop() ? "start" : "stop");
-
+        
         if (cmd.getStartStop())
         {
             if (m_deviceAPI->initDeviceEngine())
@@ -263,10 +258,6 @@ void AudioInput::applySettings(const AudioInputSettings& settings, QList<QString
 {
     bool forwardChange = false;
 
-    qDebug() << "AudioInput::applySettings: "
-        << " force:" << force
-        << settings.getDebugString(settingsKeys, force);
-
     if (settingsKeys.contains("deviceName")
         || settingsKeys.contains("sampleRate") || force)
     {
@@ -276,9 +267,9 @@ void AudioInput::applySettings(const AudioInputSettings& settings, QList<QString
         {
             closeDevice();
             if (openAudioDevice(settings.m_deviceName, settings.m_sampleRate))
-                qDebug() << "AudioInput::applySettings: opened device " << settings.m_deviceName << " with sample rate " << m_audioInput.getRate();
+                ;
             else
-                qCritical() << "AudioInput::applySettings: failed to open device " << settings.m_deviceName;
+                ;
             }
     }
 
@@ -289,7 +280,6 @@ void AudioInput::applySettings(const AudioInputSettings& settings, QList<QString
     if (settingsKeys.contains("volume") || force)
     {
         m_audioInput.setVolume(settings.m_volume);
-        qDebug() << "AudioInput::applySettings: set volume to " << settings.m_volume;
     }
 
     if (settingsKeys.contains("log2Decim") || force)
@@ -299,7 +289,6 @@ void AudioInput::applySettings(const AudioInputSettings& settings, QList<QString
         if (m_running)
         {
             m_worker->setLog2Decimation(settings.m_log2Decim);
-            qDebug() << "AudioInput::applySettings: set decimation to " << (1<<settings.m_log2Decim);
         }
     }
 
@@ -548,7 +537,6 @@ void AudioInput::networkManagerFinished(QNetworkReply *reply)
     {
         QString answer = reply->readAll();
         answer.chop(1); // remove last \n
-        qDebug("AudioInput::networkManagerFinished: reply:\n%s", answer.toStdString().c_str());
     }
 
     reply->deleteLater();
