@@ -98,8 +98,6 @@ GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
     ui->currentGradient->hide();
     ui->traceIntensity->hide();
     ui->colorMap->hide();
-    ui->invertWaterfall->hide();
-    ui->spectrogram->hide();
     ui->spectrogramStyle->hide();
     ui->fftWindow->hide();
     ui->fftOverlap->hide();
@@ -111,9 +109,7 @@ GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
     ui->measure->hide();
     ui->calibration->hide();
     ui->gotoMarker->hide();
-    ui->histogram->hide();
     ui->stroke->hide();
-    ui->waterfall->hide();
     ui->averagingMode->hide();
 
     connect(&m_messageQueue, SIGNAL(messageEnqueued()), this, SLOT(handleInputMessages()));

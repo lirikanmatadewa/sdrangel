@@ -140,7 +140,7 @@
      <item>
       <widget class="ButtonSwitch" name="histogram">
        <property name="toolTip">
-        <string>Display phosphor effect spectrum</string>
+        <string>Display persistence spectrum</string>
        </property>
        <property name="text">
         <string>Histogram</string>
