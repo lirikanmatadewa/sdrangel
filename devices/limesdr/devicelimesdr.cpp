@@ -31,7 +31,6 @@ void DeviceLimeSDR::enumOriginDevices(const QString& hardwareId, PluginInterface
 
     if ((nbDevices = LMS_GetDeviceList(0)) <= 0)
     {
-        qDebug("DeviceLimeSDR::enumOriginDevices: Could not find any LimeSDR device");
         return; // do nothing
     }
 
@@ -39,7 +38,6 @@ void DeviceLimeSDR::enumOriginDevices(const QString& hardwareId, PluginInterface
 
     if (LMS_GetDeviceList(deviceList) < 0)
     {
-        qDebug("DeviceLimeSDR::enumOriginDevices: Could not obtain LimeSDR devices information");
         delete[] deviceList;
         return; // do nothing
     }

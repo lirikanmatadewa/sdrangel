@@ -503,13 +503,6 @@ void MetisMISOGui::handleInputMessages()
                 m_settings.m_txCenterFrequency = frequency;
             }
 
-            qDebug() << "MetisMISOGui::handleInputMessages: DSPMIMOSignalNotification: "
-                << "sourceOrSink:" << sourceOrSink
-                << "istream:" << istream
-                << "m_rxSampleRate:" << m_rxSampleRate
-                << "m_txSampleRate:" << m_txSampleRate
-                << "frequency:" << frequency;
-
             displayFrequency();
             displaySampleRate();
             updateSpectrum();

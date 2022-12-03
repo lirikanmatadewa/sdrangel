@@ -96,7 +96,6 @@ void PluginManager::loadPluginsPart(const QString& pluginsSubDir)
     {
         QDir d(dir);
         if (d.entryList(QDir::Files).count() == 0) {
-            qDebug("PluginManager::loadPluginsPart folder %s is empty", qPrintable(dir));
             continue;
         }
 
@@ -133,38 +132,21 @@ void PluginManager::loadPluginsNonDiscoverable(const DeviceUserArgs& deviceUserA
 
 void PluginManager::registerRxChannel(const QString& channelIdURI, const QString& channelId, PluginInterface* plugin)
 {
-    qDebug() << "PluginManager::registerRxChannel "
-            << plugin->getPluginDescriptor().displayedName.toStdString().c_str()
-            << " with channel name " << channelIdURI;
-
 	m_rxChannelRegistrations.append(PluginAPI::ChannelRegistration(channelIdURI, channelId, plugin));
 }
 
 void PluginManager::registerTxChannel(const QString& channelIdURI, const QString& channelId, PluginInterface* plugin)
 {
-    qDebug() << "PluginManager::registerTxChannel "
-            << plugin->getPluginDescriptor().displayedName.toStdString().c_str()
-            << " with channel name " << channelIdURI;
-
-	m_txChannelRegistrations.append(PluginAPI::ChannelRegistration(channelIdURI, channelId, plugin));
+    m_txChannelRegistrations.append(PluginAPI::ChannelRegistration(channelIdURI, channelId, plugin));
 }
 
 void PluginManager::registerMIMOChannel(const QString& channelIdURI, const QString& channelId, PluginInterface* plugin)
 {
-    qDebug() << "PluginManager::registerMIMOChannel "
-            << plugin->getPluginDescriptor().displayedName.toStdString().c_str()
-            << " with channel name " << channelIdURI;
-
-	m_mimoChannelRegistrations.append(PluginAPI::ChannelRegistration(channelIdURI, channelId, plugin));
+    m_mimoChannelRegistrations.append(PluginAPI::ChannelRegistration(channelIdURI, channelId, plugin));
 }
 
 void PluginManager::registerSampleSource(const QString& sourceName, PluginInterface* plugin)
 {
-	qDebug() << "PluginManager::registerSampleSource "
-			<< plugin->getPluginDescriptor().displayedName.toStdString().c_str()
-			<< " with source name " << sourceName.toStdString().c_str()
-            << " and hardware id " << plugin->getPluginDescriptor().hardwareId;
-
 	m_sampleSourceRegistrations.append(PluginAPI::SamplingDeviceRegistration(
         plugin->getPluginDescriptor().hardwareId,
         sourceName,
@@ -174,11 +156,6 @@ void PluginManager::registerSampleSource(const QString& sourceName, PluginInterf
 
 void PluginManager::registerSampleSink(const QString& sinkName, PluginInterface* plugin)
 {
-	qDebug() << "PluginManager::registerSampleSink "
-			<< plugin->getPluginDescriptor().displayedName.toStdString().c_str()
-			<< " with sink name " << sinkName.toStdString().c_str()
-            << " and hardware id " << plugin->getPluginDescriptor().hardwareId;
-
 	m_sampleSinkRegistrations.append(PluginAPI::SamplingDeviceRegistration(
         plugin->getPluginDescriptor().hardwareId,
         sinkName,
@@ -188,11 +165,6 @@ void PluginManager::registerSampleSink(const QString& sinkName, PluginInterface*
 
 void PluginManager::registerSampleMIMO(const QString& mimoName, PluginInterface* plugin)
 {
-	qDebug() << "PluginManager::registerSampleMIMO "
-			<< plugin->getPluginDescriptor().displayedName.toStdString().c_str()
-			<< " with MIMO name " << mimoName.toStdString().c_str()
-            << " and hardware id " << plugin->getPluginDescriptor().hardwareId;
-
 	m_sampleMIMORegistrations.append(PluginAPI::SamplingDeviceRegistration(
         plugin->getPluginDescriptor().hardwareId,
         mimoName,
@@ -202,11 +174,7 @@ void PluginManager::registerSampleMIMO(const QString& mimoName, PluginInterface*
 
 void PluginManager::registerFeature(const QString& featureIdURI, const QString& featureId, PluginInterface* plugin)
 {
-    qDebug() << "PluginManager::registerFeature "
-            << plugin->getPluginDescriptor().displayedName.toStdString().c_str()
-            << " with channel name " << featureIdURI;
-
-	m_featureRegistrations.append(PluginAPI::FeatureRegistration(featureIdURI, featureId, plugin));
+    m_featureRegistrations.append(PluginAPI::FeatureRegistration(featureIdURI, featureId, plugin));
 }
 
 void PluginManager::loadPluginsDir(const QDir& dir)
@@ -219,16 +187,12 @@ void PluginManager::loadPluginsDir(const QDir& dir)
         {
             if (!m_enableSoapy && fileName.contains("soapysdr"))
             {
-                qInfo("PluginManager::loadPluginsDir: Soapy SDR disabled skipping %s", qPrintable(fileName));
                 continue;
             }
-
-            qDebug("PluginManager::loadPluginsDir: fileName: %s", qPrintable(fileName));
 
             QPluginLoader* pluginLoader = new QPluginLoader(pluginsDir.absoluteFilePath(fileName));
             if (!pluginLoader->load())
             {
-                qWarning("PluginManager::loadPluginsDir: %s", qPrintable(pluginLoader->errorString()));
                 delete pluginLoader;
                 continue;
             }
@@ -236,14 +200,12 @@ void PluginManager::loadPluginsDir(const QDir& dir)
             PluginInterface* instance = qobject_cast<PluginInterface*>(pluginLoader->instance());
             if (instance == nullptr)
             {
-                qWarning("PluginManager::loadPluginsDir: Unable to get main instance of plugin: %s", qPrintable(fileName) );
                 delete pluginLoader;
                 continue;
             }
 
             delete(pluginLoader);
 
-            qInfo("PluginManager::loadPluginsDir: loaded plugin %s", qPrintable(fileName));
             m_plugins.append(Plugin(fileName, instance));
        }
     }

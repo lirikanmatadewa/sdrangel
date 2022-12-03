@@ -213,17 +213,11 @@ void TVScreenAnalog::initializeGL()
     {
         if (!m_shader->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderSource))
         {
-            qWarning()
-                << "TVScreenAnalog::initializeGL: error in vertex shader:"
-                << m_shader->log();
             return;
         }
 
         if (!m_shader->addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShaderSource))
         {
-            qWarning()
-                << "TVScreenAnalog::initializeGL: error in fragment shader:"
-                << m_shader->log();
             return;
         }
 
@@ -235,26 +229,17 @@ void TVScreenAnalog::initializeGL()
     {
         if (!m_shader->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderSource2))
         {
-            qWarning()
-                << "TVScreenAnalog::initializeGL: error in vertex shader:"
-                << m_shader->log();
             return;
         }
 
         if (!m_shader->addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShaderSource2))
         {
-            qWarning()
-                << "TVScreenAnalog::initializeGL: error in fragment shader:"
-                << m_shader->log();
             return;
         }
     }
 
 	if (!m_shader->link())
 	{
-		qWarning()
-			<< "TVScreenAnalog::initializeGL: error linking shader:"
-			<< m_shader->log();
 		return;
 	}
 

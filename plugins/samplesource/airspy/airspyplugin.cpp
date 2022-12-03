@@ -76,7 +76,7 @@ void AirspyPlugin::enumOriginDevices(QStringList& listedHwIds, OriginDevices& or
 
 	if (rc != AIRSPY_SUCCESS)
 	{
-		qCritical("AirspyPlugin::enumOriginDevices: failed to initiate Airspy library: %s", airspy_error_name(rc));
+		;
 	}
 
 	for (i=0; i < m_maxDevices; i++)
@@ -85,13 +85,10 @@ void AirspyPlugin::enumOriginDevices(QStringList& listedHwIds, OriginDevices& or
 
 		if (rc == AIRSPY_SUCCESS)
 		{
-			qDebug("AirspyPlugin::enumOriginDevices: try to enumerate Airspy device #%d", i);
-
 			rc = (airspy_error) airspy_board_partid_serialno_read(devinfo, &read_partid_serialno);
 
 			if (rc != AIRSPY_SUCCESS)
 			{
-				qDebug("AirspyPlugin::enumOriginDevices: failed to read serial no: %s", airspy_error_name(rc));
 				airspy_close(devinfo);
 				continue; // next
 			}
@@ -113,22 +110,18 @@ void AirspyPlugin::enumOriginDevices(QStringList& listedHwIds, OriginDevices& or
                     1,
                     0
                 ));
-
-				qDebug("AirspyPlugin::enumOriginDevices: enumerated Airspy device #%d", i);
 			}
 
 			airspy_close(devinfo);
 		}
 		else
 		{
-			qDebug("AirspyPlugin::enumOriginDevices: enumerated %d Airspy devices %s", i, airspy_error_name(rc));
 			break; // finished
 		}
 	}
 
 	rc = (airspy_error) airspy_exit();
-	qDebug("AirspyPlugin::enumOriginDevices: airspy_exit: %s", airspy_error_name(rc));
-
+	
     listedHwIds.append(m_hardwareID);
 }
 
@@ -151,7 +144,6 @@ PluginInterface::SamplingDevices AirspyPlugin::enumSampleSources(const OriginDev
                 1,
                 0
             ));
-            qDebug("AirspyPlugin::enumSampleSources: enumerated Airspy device #%d", it->sequence);
         }
     }
 

@@ -43,7 +43,6 @@ DeviceGUI::DeviceGUI(QWidget *parent) :
     m_currentDeviceIndex(-1),
     m_resizer(this)
 {
-    qDebug("DeviceGUI::DeviceGUI: %p", parent);
     setWindowFlags(windowFlags() | Qt::FramelessWindowHint);
     setObjectName("DeviceGUI");
     setStyleSheet(QString(tr("#DeviceGUI { border: 1px solid %1; background-color: %2; }")
@@ -211,7 +210,6 @@ DeviceGUI::DeviceGUI(QWidget *parent) :
 
 DeviceGUI::~DeviceGUI()
 {
-    qDebug("DeviceGUI::~DeviceGUI");
     delete m_sizeGripBottomRight;
     delete m_bottomLayout;
     delete m_centerLayout;
@@ -232,7 +230,6 @@ DeviceGUI::~DeviceGUI()
     delete m_changeDeviceButton;
     delete m_settingsButton;
     delete m_indexLabel;
-    qDebug("DeviceGUI::~DeviceGUI: end");
 }
 
 // Size the window according to the size of the m_contents widget
@@ -280,7 +277,6 @@ void DeviceGUI::setWorkspaceIndex(int index)
 
 void DeviceGUI::closeEvent(QCloseEvent *event)
 {
-    qDebug("DeviceGUI::closeEvent");
     emit closing();
     event->accept();
 }
@@ -394,7 +390,6 @@ void DeviceGUI::showAllChannelsHandler()
 
 void DeviceGUI::shrinkWindow()
 {
-    qDebug("DeviceGUI::shrinkWindow");
     showNormal(); // In case it had been maximized
     adjustSize();
 }

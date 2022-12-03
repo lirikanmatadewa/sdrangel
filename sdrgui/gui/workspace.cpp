@@ -260,7 +260,6 @@ Workspace::Workspace(int index, QWidget *parent, Qt::WindowFlags flags) :
 
 Workspace::~Workspace()
 {
-    qDebug("Workspace::~Workspace");
     delete m_closeButton;
     delete m_normalButton;
     delete m_autoStackSubWindows;
@@ -278,9 +277,7 @@ Workspace::~Workspace()
     delete m_titleLabel;
     delete m_titleBarLayout;
     delete m_titleBar;
-    qDebug("Workspace::~Workspace: about to delete MDI");
     delete m_mdi;
-    qDebug("Workspace::~Workspace: end");
 }
 
 void Workspace::setIndex(int index)
