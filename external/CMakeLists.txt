@@ -13,7 +13,7 @@ set(CM256CC_TAG c0e92b92aca3d1d36c990b642b937c64d363c559)
 set(MBELIB_TAG fe83b32c6a60cdd7bce8cecf3c7a0b9ec87a7667)
 set(SERIALDV_TAG "v1.1.4")
 set(DSDCC_TAG "v1.9.3")
-set(LIMESUITE_TAG "v20.01.0")
+set(LIMESUITE_TAG "v22.09.0")
 set(BLADERF_TAG "2021.02")
 set(LIBIIO_TAG 826563e41b5ce9890b75506f672017de8d76d52d)
 set(AIRSPYHF_TAG "1af81c0ca18944b8c9897c3c98dc0a991815b686")
@@ -1110,8 +1110,8 @@ if (WIN32 OR APPLE)
             set(LIMESUITE_LIBRARY "${SDRANGEL_BINARY_LIB_DIR}/LimeSuite.lib" CACHE INTERNAL "")
         endif ()
         ExternalProject_Add(limesuite
-                GIT_REPOSITORY https://github.com/f4exb/LimeSuite.git
-                GIT_TAG "msvc_fix"
+                GIT_REPOSITORY https://github.com/myriadrf/LimeSuite.git
+                GIT_TAG ${LIMESUITE_TAG}
                 DEPENDS ${LIBUSB_DEPENDS}
                 PREFIX "${EXTERNAL_BUILD_LIBRARIES}/limesuite"
                 CMAKE_ARGS ${COMMON_CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
