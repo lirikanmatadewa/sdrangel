@@ -54,12 +54,13 @@ LocalSink::LocalSink(DeviceAPI *deviceAPI) :
         m_thread(nullptr),
         m_basebandSink(nullptr),
         m_running(false),
+        m_spectrumVis(SDR_RX_SCALEF),
         m_centerFrequency(0),
         m_frequencyOffset(0),
         m_basebandSampleRate(48000)
 {
     setObjectName(m_channelId);
-    applySettings(m_settings, true);
+    applySettings(m_settings, QList<QString>(), true);
 
     m_deviceAPI->addChannelSink(this);
     m_deviceAPI->addChannelSinkAPI(this);
@@ -147,6 +148,7 @@ void LocalSink::startProcessing()
 	qDebug("LocalSink::startProcessing");
     m_thread = new QThread(this);
     m_basebandSink = new LocalSinkBaseband();
+    m_basebandSink->setSpectrumSink(&m_spectrumVis);
     m_basebandSink->moveToThread(m_thread);
 
     QObject::connect(m_thread, &QThread::finished, m_basebandSink, &QObject::deleteLater);
@@ -160,8 +162,14 @@ void LocalSink::startProcessing()
         LocalSinkBaseband::MsgConfigureLocalDeviceSampleSource::create(deviceSource);
     m_basebandSink->getInputMessageQueue()->push(msgDevice);
 
-    LocalSinkBaseband::MsgConfigureLocalSinkBaseband *msgConfig = LocalSinkBaseband::MsgConfigureLocalSinkBaseband::create(m_settings, true);
+    LocalSinkBaseband::MsgConfigureLocalSinkBaseband *msgConfig = LocalSinkBaseband::MsgConfigureLocalSinkBaseband::create(m_settings, QList<QString>(), true);
     m_basebandSink->getInputMessageQueue()->push(msgConfig);
+
+    LocalSinkBaseband::MsgSetSpectrumSampleRateAndFrequency *msgSpectrum = LocalSinkBaseband::MsgSetSpectrumSampleRateAndFrequency::create(
+        m_basebandSampleRate / (1 << m_settings.m_log2Decim),
+        m_centerFrequency + m_frequencyOffset
+    );
+    m_basebandSink->getInputMessageQueue()->push(msgSpectrum);
 
     m_running = true;
 }
@@ -198,6 +206,12 @@ bool LocalSink::handleMessage(const Message& cmd)
         {
             DSPSignalNotification *msg = new DSPSignalNotification(notif.getSampleRate(), notif.getCenterFrequency());
             m_basebandSink->getInputMessageQueue()->push(msg);
+            LocalSinkBaseband::MsgSetSpectrumSampleRateAndFrequency *msgSpectrum =
+                LocalSinkBaseband::MsgSetSpectrumSampleRateAndFrequency::create(
+                    m_basebandSampleRate / (1 << m_settings.m_log2Decim),
+                    m_centerFrequency + m_frequencyOffset
+                );
+            m_basebandSink->getInputMessageQueue()->push(msgSpectrum);
         }
 
         if (getMessageQueueToGUI()) {
@@ -210,7 +224,7 @@ bool LocalSink::handleMessage(const Message& cmd)
     {
         MsgConfigureLocalSink& cfg = (MsgConfigureLocalSink&) cmd;
         qDebug() << "LocalSink::handleMessage: MsgConfigureLocalSink";
-        applySettings(cfg.getSettings(), cfg.getForce());
+        applySettings(cfg.getSettings(), cfg.getSettingsKeys(), cfg.getForce());
 
         return true;
     }
@@ -230,14 +244,14 @@ bool LocalSink::deserialize(const QByteArray& data)
     (void) data;
     if (m_settings.deserialize(data))
     {
-        MsgConfigureLocalSink *msg = MsgConfigureLocalSink::create(m_settings, true);
+        MsgConfigureLocalSink *msg = MsgConfigureLocalSink::create(m_settings, QList<QString>(), true);
         m_inputMessageQueue.push(msg);
         return true;
     }
     else
     {
         m_settings.resetToDefaults();
-        MsgConfigureLocalSink *msg = MsgConfigureLocalSink::create(m_settings, true);
+        MsgConfigureLocalSink *msg = MsgConfigureLocalSink::create(m_settings, QList<QString>(), true);
         m_inputMessageQueue.push(msg);
         return false;
     }
@@ -300,26 +314,12 @@ void LocalSink::propagateSampleRateAndFrequency(int index, uint32_t log2Decim)
     }
 }
 
-void LocalSink::applySettings(const LocalSinkSettings& settings, bool force)
+void LocalSink::applySettings(const LocalSinkSettings& settings, const QList<QString>& settingsKeys, bool force)
 {
-    qDebug() << "LocalSink::applySettings:"
-            << "m_localDeviceIndex: " << settings.m_localDeviceIndex
-            << "m_streamIndex: " << settings.m_streamIndex
-            << "m_play:" << settings.m_play
-            << "force: " << force;
+    qDebug() << "LocalSink::applySettings:" << settings.getDebugString(settingsKeys, force) << "force: " << force;
 
-    QList<QString> reverseAPIKeys;
-
-    if ((settings.m_log2Decim != m_settings.m_log2Decim) || force) {
-        reverseAPIKeys.append("log2Decim");
-    }
-    if ((settings.m_filterChainHash != m_settings.m_filterChainHash) || force) {
-        reverseAPIKeys.append("filterChainHash");
-    }
-
-    if ((settings.m_localDeviceIndex != m_settings.m_localDeviceIndex) || force)
+    if (settingsKeys.contains("localDeviceIndex") || force)
     {
-        reverseAPIKeys.append("localDeviceIndex");
         propagateSampleRateAndFrequency(settings.m_localDeviceIndex, settings.m_log2Decim);
 
         if (m_running)
@@ -331,17 +331,25 @@ void LocalSink::applySettings(const LocalSinkSettings& settings, bool force)
         }
     }
 
-    if ((settings.m_log2Decim != m_settings.m_log2Decim)
-     || (settings.m_filterChainHash != m_settings.m_filterChainHash) || force)
+    if (settingsKeys.contains("log2Decim")
+     || settingsKeys.contains("filterChainHash") || force)
     {
         calculateFrequencyOffset(settings.m_log2Decim, settings.m_filterChainHash);
         propagateSampleRateAndFrequency(m_settings.m_localDeviceIndex, settings.m_log2Decim);
+
+        if (m_running)
+        {
+            LocalSinkBaseband::MsgSetSpectrumSampleRateAndFrequency *msgSpectrum =
+                LocalSinkBaseband::MsgSetSpectrumSampleRateAndFrequency::create(
+                    m_basebandSampleRate / (1 << m_settings.m_log2Decim),
+                    m_centerFrequency + m_frequencyOffset
+                );
+            m_basebandSink->getInputMessageQueue()->push(msgSpectrum);
+        }
     }
 
-    if ((settings.m_play != m_settings.m_play) || force)
+    if (settingsKeys.contains("play") || force)
     {
-        reverseAPIKeys.append("play");
-
         if (settings.m_play) {
             startProcessing();
         } else {
@@ -349,7 +357,7 @@ void LocalSink::applySettings(const LocalSinkSettings& settings, bool force)
         }
     }
 
-    if (m_settings.m_streamIndex != settings.m_streamIndex)
+    if (settingsKeys.contains("streamIndex"))
     {
         if (m_deviceAPI->getSampleMIMO()) // change of stream is possible for MIMO devices only
         {
@@ -358,31 +366,29 @@ void LocalSink::applySettings(const LocalSinkSettings& settings, bool force)
             m_deviceAPI->addChannelSink(this, settings.m_streamIndex);
             m_deviceAPI->addChannelSinkAPI(this);
         }
-
-        reverseAPIKeys.append("streamIndex");
     }
 
     if (m_running)
     {
-        LocalSinkBaseband::MsgConfigureLocalSinkBaseband *msg = LocalSinkBaseband::MsgConfigureLocalSinkBaseband::create(settings, force);
+        LocalSinkBaseband::MsgConfigureLocalSinkBaseband *msg = LocalSinkBaseband::MsgConfigureLocalSinkBaseband::create(settings, settingsKeys, force);
         m_basebandSink->getInputMessageQueue()->push(msg);
     }
 
-    if ((settings.m_useReverseAPI) && (reverseAPIKeys.size() != 0))
+    if (settingsKeys.contains("useReverseAPI"))
     {
-        bool fullUpdate = ((m_settings.m_useReverseAPI != settings.m_useReverseAPI) && settings.m_useReverseAPI) ||
-                (m_settings.m_reverseAPIAddress != settings.m_reverseAPIAddress) ||
-                (m_settings.m_reverseAPIPort != settings.m_reverseAPIPort) ||
-                (m_settings.m_reverseAPIDeviceIndex != settings.m_reverseAPIDeviceIndex) ||
-                (m_settings.m_reverseAPIChannelIndex != settings.m_reverseAPIChannelIndex);
-        webapiReverseSendSettings(reverseAPIKeys, settings, fullUpdate || force);
+        bool fullUpdate = (settingsKeys.contains("useReverseAPI") && settings.m_useReverseAPI) ||
+                settingsKeys.contains("reverseAPIAddress") ||
+                settingsKeys.contains("reverseAPIPort") ||
+                settingsKeys.contains("reverseAPIFeatureSetIndex") ||
+                settingsKeys.contains("m_reverseAPIFeatureIndex");
+        webapiReverseSendSettings(settingsKeys, settings, fullUpdate || force);
     }
 
     QList<ObjectPipe*> pipes;
     MainCore::instance()->getMessagePipes().getMessagePipes(this, "settings", pipes);
 
     if (pipes.size() > 0) {
-        sendChannelSettings(pipes, reverseAPIKeys, settings, force);
+        sendChannelSettings(pipes, settingsKeys, settings, force);
     }
 
     m_settings = settings;
@@ -435,13 +441,13 @@ int LocalSink::webapiSettingsPutPatch(
     LocalSinkSettings settings = m_settings;
     webapiUpdateChannelSettings(settings, channelSettingsKeys, response);
 
-    MsgConfigureLocalSink *msg = MsgConfigureLocalSink::create(settings, force);
+    MsgConfigureLocalSink *msg = MsgConfigureLocalSink::create(settings, channelSettingsKeys, force);
     m_inputMessageQueue.push(msg);
 
     qDebug("LocalSink::webapiSettingsPutPatch: forward to GUI: %p", m_guiMessageQueue);
     if (m_guiMessageQueue) // forward to GUI if any
     {
-        MsgConfigureLocalSink *msgToGUI = MsgConfigureLocalSink::create(settings, force);
+        MsgConfigureLocalSink *msgToGUI = MsgConfigureLocalSink::create(settings, channelSettingsKeys, force);
         m_guiMessageQueue->push(msgToGUI);
     }
 
@@ -477,6 +483,35 @@ void LocalSink::webapiUpdateChannelSettings(
     if (channelSettingsKeys.contains("play")) {
         settings.m_play = response.getLocalSinkSettings()->getPlay() != 0;
     }
+    if (channelSettingsKeys.contains("dsp")) {
+        settings.m_dsp = response.getLocalSinkSettings()->getDsp() != 0;
+    }
+    if (channelSettingsKeys.contains("gaindB")) {
+        settings.m_gaindB = response.getLocalSinkSettings()->getGaindB();
+    }
+    if (channelSettingsKeys.contains("fftOn")) {
+        settings.m_fftOn = response.getLocalSinkSettings()->getFftOn() != 0;
+    }
+    if (channelSettingsKeys.contains("log2FFT")) {
+        settings.m_log2FFT = response.getLocalSinkSettings()->getLog2Fft();
+    }
+    if (channelSettingsKeys.contains("fftWindow")) {
+        settings.m_fftWindow = (FFTWindow::Function) response.getLocalSinkSettings()->getFftWindow();
+    }
+    if (channelSettingsKeys.contains("reverseFilter")) {
+        settings.m_reverseFilter = response.getLocalSinkSettings()->getReverseFilter() != 0;
+    }
+
+    if (channelSettingsKeys.contains("fftBands"))
+    {
+        QList<SWGSDRangel::SWGFFTBand *> *fftBands = response.getLocalSinkSettings()->getFftBands();
+        settings.m_fftBands.clear();
+
+        for (const auto& fftBand : *fftBands) {
+            settings.m_fftBands.push_back(std::pair<float, float>{fftBand->getFstart(), fftBand->getBandwidth()});
+        }
+    }
+
     if (channelSettingsKeys.contains("streamIndex")) {
         settings.m_streamIndex = response.getLocalSinkSettings()->getStreamIndex();
     }
@@ -517,6 +552,26 @@ void LocalSink::webapiFormatChannelSettings(SWGSDRangel::SWGChannelSettings& res
     response.getLocalSinkSettings()->setLog2Decim(settings.m_log2Decim);
     response.getLocalSinkSettings()->setFilterChainHash(settings.m_filterChainHash);
     response.getLocalSinkSettings()->setPlay(settings.m_play ? 1 : 0);
+    response.getLocalSinkSettings()->setDsp(settings.m_dsp ? 1 : 0);
+    response.getLocalSinkSettings()->setGaindB(settings.m_gaindB);
+    response.getLocalSinkSettings()->setFftOn(settings.m_fftOn ? 1 : 0);
+    response.getLocalSinkSettings()->setLog2Fft(settings.m_log2FFT);
+    response.getLocalSinkSettings()->setFftWindow((int) settings.m_fftWindow);
+    response.getLocalSinkSettings()->setReverseFilter(settings.m_reverseFilter ? 1 : 0);
+
+    if (!response.getLocalSinkSettings()->getFftBands()) {
+        response.getLocalSinkSettings()->setFftBands(new QList<SWGSDRangel::SWGFFTBand *>());
+    }
+
+    response.getLocalSinkSettings()->getFftBands()->clear();
+
+    for (const auto& fftBand : settings.m_fftBands)
+    {
+        response.getLocalSinkSettings()->getFftBands()->push_back(new SWGSDRangel::SWGFFTBand);
+        response.getLocalSinkSettings()->getFftBands()->back()->setFstart(fftBand.first);
+        response.getLocalSinkSettings()->getFftBands()->back()->setBandwidth(fftBand.second);
+    }
+
     response.getLocalSinkSettings()->setStreamIndex(settings.m_streamIndex);
     response.getLocalSinkSettings()->setUseReverseApi(settings.m_useReverseAPI ? 1 : 0);
 
@@ -559,7 +614,7 @@ void LocalSink::webapiFormatChannelSettings(SWGSDRangel::SWGChannelSettings& res
     }
 }
 
-void LocalSink::webapiReverseSendSettings(QList<QString>& channelSettingsKeys, const LocalSinkSettings& settings, bool force)
+void LocalSink::webapiReverseSendSettings(const QList<QString>& channelSettingsKeys, const LocalSinkSettings& settings, bool force)
 {
     SWGSDRangel::SWGChannelSettings *swgChannelSettings = new SWGSDRangel::SWGChannelSettings();
     webapiFormatChannelSettings(channelSettingsKeys, swgChannelSettings, settings, force);
@@ -586,7 +641,7 @@ void LocalSink::webapiReverseSendSettings(QList<QString>& channelSettingsKeys, c
 
 void LocalSink::sendChannelSettings(
     const QList<ObjectPipe*>& pipes,
-    QList<QString>& channelSettingsKeys,
+    const QList<QString>& channelSettingsKeys,
     const LocalSinkSettings& settings,
     bool force)
 {
@@ -610,7 +665,7 @@ void LocalSink::sendChannelSettings(
 }
 
 void LocalSink::webapiFormatChannelSettings(
-        QList<QString>& channelSettingsKeys,
+        const QList<QString>& channelSettingsKeys,
         SWGSDRangel::SWGChannelSettings *swgChannelSettings,
         const LocalSinkSettings& settings,
         bool force
@@ -643,6 +698,37 @@ void LocalSink::webapiFormatChannelSettings(
     if (channelSettingsKeys.contains("play") || force) {
         swgLocalSinkSettings->setPlay(settings.m_play ? 1 : 0);
     }
+    if (channelSettingsKeys.contains("dsp") || force) {
+        swgLocalSinkSettings->setDsp(settings.m_dsp ? 1 : 0);
+    }
+    if (channelSettingsKeys.contains("gaindB") || force) {
+        swgLocalSinkSettings->setGaindB(settings.m_gaindB);
+    }
+    if (channelSettingsKeys.contains("log2FFT") || force) {
+        swgLocalSinkSettings->setLog2Fft(settings.m_log2FFT);
+    }
+    if (channelSettingsKeys.contains("fftWindow") || force) {
+        swgLocalSinkSettings->setFftWindow((int) settings.m_fftWindow);
+    }
+    if (channelSettingsKeys.contains("fftOn") || force) {
+        swgLocalSinkSettings->setFftOn(settings.m_fftOn ? 1 : 0);
+    }
+    if (channelSettingsKeys.contains("reverseFilter") || force) {
+        swgLocalSinkSettings->setReverseFilter(settings.m_reverseFilter ? 1 : 0);
+    }
+
+    if (channelSettingsKeys.contains("fftBands") || force)
+    {
+        swgLocalSinkSettings->setFftBands(new QList<SWGSDRangel::SWGFFTBand *>());
+
+        for (const auto& fftBand : settings.m_fftBands)
+        {
+            swgLocalSinkSettings->getFftBands()->push_back(new SWGSDRangel::SWGFFTBand);
+            swgLocalSinkSettings->getFftBands()->back()->setFstart(fftBand.first);
+            swgLocalSinkSettings->getFftBands()->back()->setBandwidth(fftBand.second);
+        }
+    }
+
     if (channelSettingsKeys.contains("streamIndex") || force) {
         swgLocalSinkSettings->setStreamIndex(settings.m_streamIndex);
     }
@@ -751,11 +837,11 @@ void LocalSink::updateDeviceSetList()
     }
 
     qDebug("LocalSink::updateDeviceSetLists: new device index: %d device: %d", newIndexInList, settings.m_localDeviceIndex);
-    applySettings(settings);
+    applySettings(settings, QList<QString>{"localDeviceIndex"});
 
     if (m_guiMessageQueue)
     {
-        MsgConfigureLocalSink *msg = MsgConfigureLocalSink::create(m_settings, false);
+        MsgConfigureLocalSink *msg = MsgConfigureLocalSink::create(m_settings, QList<QString>{"localDeviceIndex"}, false);
         m_guiMessageQueue->push(msg);
     }
 }

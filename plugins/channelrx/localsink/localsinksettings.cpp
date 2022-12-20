@@ -38,6 +38,12 @@ void LocalSinkSettings::resetToDefaults()
     m_channelMarker = nullptr;
     m_rollupState = nullptr;
     m_play = false;
+    m_dsp = false;
+    m_gaindB = 0;
+    m_fftOn = false;
+    m_log2FFT = 10;
+    m_fftWindow = FFTWindow::Function::Rectangle;
+    m_reverseFilter = false;
     m_streamIndex = 0;
     m_useReverseAPI = false;
     m_reverseAPIAddress = "127.0.0.1";
@@ -75,6 +81,30 @@ QByteArray LocalSinkSettings::serialize() const
     s.writeS32(16, m_workspaceIndex);
     s.writeBlob(17, m_geometryBytes);
     s.writeBool(18, m_hidden);
+    s.writeBool(19, m_dsp);
+    s.writeS32(20, m_gaindB);
+
+    if (m_spectrumGUI) {
+        s.writeBlob(21, m_spectrumGUI->serialize());
+    }
+
+    s.writeBool(22, m_fftOn);
+    s.writeU32(23, (int) m_fftWindow);
+    s.writeBool(24, m_reverseFilter);
+
+    s.writeU32(99, m_fftBands.size());
+    int i = 0;
+
+    for (auto fftBand : m_fftBands)
+    {
+        s.writeFloat(100 + 2*i, fftBand.first);
+        s.writeFloat(101 + 2*i, fftBand.second);
+        i++;
+
+        if (i == m_maxFFTBands) {
+            break;
+        }
+    }
 
     return s.final();
 }
@@ -91,7 +121,7 @@ bool LocalSinkSettings::deserialize(const QByteArray& data)
 
     if(d.getVersion() == 1)
     {
-        uint32_t tmp;
+        uint32_t utmp;
         QString strtmp;
         QByteArray bytetmp;
 
@@ -107,20 +137,20 @@ bool LocalSinkSettings::deserialize(const QByteArray& data)
         d.readString(6, &m_title, "Local sink");
         d.readBool(7, &m_useReverseAPI, false);
         d.readString(8, &m_reverseAPIAddress, "127.0.0.1");
-        d.readU32(9, &tmp, 0);
+        d.readU32(9, &utmp, 0);
 
-        if ((tmp > 1023) && (tmp < 65535)) {
-            m_reverseAPIPort = tmp;
+        if ((utmp > 1023) && (utmp < 65535)) {
+            m_reverseAPIPort = utmp;
         } else {
             m_reverseAPIPort = 8888;
         }
 
-        d.readU32(10, &tmp, 0);
-        m_reverseAPIDeviceIndex = tmp > 99 ? 99 : tmp;
-        d.readU32(11, &tmp, 0);
-        m_reverseAPIChannelIndex = tmp > 99 ? 99 : tmp;
-        d.readU32(12, &tmp, 0);
-        m_log2Decim = tmp > 6 ? 6 : tmp;
+        d.readU32(10, &utmp, 0);
+        m_reverseAPIDeviceIndex = utmp > 99 ? 99 : utmp;
+        d.readU32(11, &utmp, 0);
+        m_reverseAPIChannelIndex = utmp > 99 ? 99 : utmp;
+        d.readU32(12, &utmp, 0);
+        m_log2Decim = utmp > 6 ? 6 : utmp;
         d.readU32(13, &m_filterChainHash, 0);
         d.readS32(14, &m_streamIndex, 0);
 
@@ -133,6 +163,33 @@ bool LocalSinkSettings::deserialize(const QByteArray& data)
         d.readS32(16, &m_workspaceIndex, 0);
         d.readBlob(17, &m_geometryBytes);
         d.readBool(18, &m_hidden, false);
+        d.readBool(19, &m_dsp, false);
+        d.readS32(20, &m_gaindB, 0);
+
+        if (m_spectrumGUI)
+        {
+            d.readBlob(21, &bytetmp);
+            m_spectrumGUI->deserialize(bytetmp);
+        }
+
+        d.readBool(22, &m_fftOn, false);
+        d.readU32(23, &utmp, 0);
+        m_fftWindow = (utmp > (uint32_t) FFTWindow::Function::BlackmanHarris7) ?
+            FFTWindow::Function::BlackmanHarris7 :
+            (FFTWindow::Function) utmp;
+        d.readBool(24, &m_reverseFilter, false);
+
+        uint32_t nbBands;
+        d.readU32(99, &nbBands, 0);
+        m_fftBands.clear();
+
+        for (uint32_t i = 0; i < std::min(nbBands, m_maxFFTBands); i++)
+        {
+            float f1, w;
+            d.readFloat(100 + 2*i, &f1, 0);
+            d.readFloat(101 + 2*i, &w, 0);
+            m_fftBands.push_back(std::pair<float, float>{f1, w});
+        }
 
         return true;
     }
@@ -143,7 +200,147 @@ bool LocalSinkSettings::deserialize(const QByteArray& data)
     }
 }
 
+void LocalSinkSettings::applySettings(const QStringList& settingsKeys, const LocalSinkSettings& settings)
+{
+    if (settingsKeys.contains("localDeviceIndex")) {
+        m_localDeviceIndex = settings.m_localDeviceIndex;
+    }
+    if (settingsKeys.contains("rgbColor")) {
+        m_rgbColor = settings.m_rgbColor;
+    }
+    if (settingsKeys.contains("title")) {
+        m_title = settings.m_title;
+    }
+    if (settingsKeys.contains("log2Decim")) {
+        m_log2Decim = settings.m_log2Decim;
+    }
+    if (settingsKeys.contains("filterChainHash")) {
+        m_filterChainHash = settings.m_filterChainHash;
+    }
+    if (settingsKeys.contains("play")) {
+        m_play = settings.m_play;
+    }
+    if (settingsKeys.contains("dsp")) {
+        m_dsp = settings.m_dsp;
+    }
+    if (settingsKeys.contains("gaindB")) {
+        m_gaindB = settings.m_gaindB;
+    }
+    if (settingsKeys.contains("fftOn")) {
+        m_fftOn = settings.m_fftOn;
+    }
+    if (settingsKeys.contains("log2FFT")) {
+        m_log2FFT = settings.m_log2FFT;
+    }
+    if (settingsKeys.contains("fftWindow")) {
+        m_fftWindow = settings.m_fftWindow;
+    }
+    if (settingsKeys.contains("reverseFilter")) {
+        m_reverseFilter = settings.m_reverseFilter;
+    }
+    if (settingsKeys.contains("streamIndex")) {
+        m_streamIndex = settings.m_streamIndex;
+    }
+    if (settingsKeys.contains("useReverseAPI")) {
+        m_useReverseAPI = settings.m_useReverseAPI;
+    }
+    if (settingsKeys.contains("reverseAPIAddress")) {
+        m_reverseAPIAddress = settings.m_reverseAPIAddress;
+    }
+    if (settingsKeys.contains("reverseAPIPort")) {
+        m_reverseAPIPort = settings.m_reverseAPIPort;
+    }
+    if (settingsKeys.contains("reverseAPIDeviceIndex")) {
+        m_reverseAPIDeviceIndex = settings.m_reverseAPIDeviceIndex;
+    }
+    if (settingsKeys.contains("reverseAPIChannelIndex")) {
+        m_reverseAPIChannelIndex = settings.m_reverseAPIChannelIndex;
+    }
+    if (settingsKeys.contains("workspaceIndex")) {
+        m_workspaceIndex = settings.m_workspaceIndex;
+    }
+    if (settingsKeys.contains("hidden")) {
+        m_hidden = settings.m_hidden;
+    }
+    if (settingsKeys.contains("fftBands")) {
+        m_fftBands = settings.m_fftBands;
+    }
+}
 
+QString LocalSinkSettings::getDebugString(const QStringList& settingsKeys, bool force) const
+{
+    std::ostringstream ostr;
 
+    if (settingsKeys.contains("localDeviceIndex") || force) {
+        ostr << " m_localDeviceIndex: " << m_localDeviceIndex;
+    }
+    if (settingsKeys.contains("rgbColor") || force) {
+        ostr << " m_rgbColor: " << m_rgbColor;
+    }
+    if (settingsKeys.contains("title") || force) {
+        ostr << " m_title: " << m_title.toStdString();
+    }
+    if (settingsKeys.contains("log2Decim") || force) {
+        ostr << " m_log2Decim: " << m_log2Decim;
+    }
+    if (settingsKeys.contains("play") || force) {
+        ostr << " m_play: " << m_play;
+    }
+    if (settingsKeys.contains("dsp") || force) {
+        ostr << " m_dsp: " << m_dsp;
+    }
+    if (settingsKeys.contains("gaindB") || force) {
+        ostr << " m_gaindB: " << m_gaindB;
+    }
+    if (settingsKeys.contains("fftOn") || force) {
+        ostr << " m_fftOn: " << m_fftOn;
+    }
+    if (settingsKeys.contains("log2FFT") || force) {
+        ostr << " m_log2FFT: " << m_log2FFT;
+    }
+    if (settingsKeys.contains("fftWindow") || force) {
+        ostr << " m_fftWindow: " << m_fftWindow;
+    }
+    if (settingsKeys.contains("reverseFilter") || force) {
+        ostr << " m_reverseFilter: " << m_reverseFilter;
+    }
+    if (settingsKeys.contains("streamIndex") || force) {
+        ostr << " m_streamIndex: " << m_streamIndex;
+    }
+    if (settingsKeys.contains("useReverseAPI") || force) {
+        ostr << " m_useReverseAPI: " << m_useReverseAPI;
+    }
+    if (settingsKeys.contains("reverseAPIAddress") || force) {
+        ostr << " m_reverseAPIAddress: " << m_reverseAPIAddress.toStdString();
+    }
+    if (settingsKeys.contains("reverseAPIPort") || force) {
+        ostr << " m_reverseAPIPort: " << m_reverseAPIPort;
+    }
+    if (settingsKeys.contains("reverseAPIDeviceIndex") || force) {
+        ostr << " m_reverseAPIDeviceIndex: " << m_reverseAPIDeviceIndex;
+    }
+    if (settingsKeys.contains("reverseAPIChannelIndex") || force) {
+        ostr << " m_reverseAPIChannelIndex: " << m_reverseAPIChannelIndex;
+    }
+    if (settingsKeys.contains("workspaceIndex") || force) {
+        ostr << " m_workspaceIndex: " << m_workspaceIndex;
+    }
+    if (settingsKeys.contains("hidden") || force) {
+        ostr << " m_hidden: " << m_hidden;
+    }
 
+    if (settingsKeys.contains("fftBands") || force)
+    {
+        ostr << " m_fftBands: [";
 
+        for (const auto& fftBand : m_fftBands)
+        {
+            ostr << fftBand.first;
+            ostr << ":" << fftBand.second << " ";
+        }
+
+        ostr << "]";
+    }
+
+    return QString(ostr.str().c_str());
+}

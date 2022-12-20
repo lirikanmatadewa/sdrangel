@@ -27,6 +27,8 @@
 
 class DeviceSampleSource;
 class LocalSinkWorker;
+class SpectrumVis;
+class fftfilt;
 
 class LocalSinkSink : public QObject, public ChannelSampleSink {
     Q_OBJECT
@@ -36,7 +38,8 @@ public:
 
 	virtual void feed(const SampleVector::const_iterator& begin, const SampleVector::const_iterator& end);
 
-    void applySettings(const LocalSinkSettings& settings, bool force = false);
+    void setSpectrumSink(SpectrumVis* spectrumSink) { m_spectrumSink = spectrumSink; }
+    void applySettings(const LocalSinkSettings& settings, const QList<QString>& settingsKeys, bool force = false);
     void start(DeviceSampleSource *deviceSource);
     void stop();
     bool isRunning() const { return m_running; }
@@ -48,7 +51,11 @@ private:
     LocalSinkSettings m_settings;
     LocalSinkWorker *m_sinkWorker;
     QThread m_sinkWorkerThread;
+    SpectrumVis* m_spectrumSink;
+    SampleVector m_spectrumBuffer;
     bool m_running;
+    float m_gain; //!< Amplitude gain
+    fftfilt* m_fftFilter;
 
     uint64_t m_centerFrequency;
     int64_t m_frequencyOffset;

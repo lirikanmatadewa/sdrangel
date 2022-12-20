@@ -21,6 +21,8 @@
 #include <QByteArray>
 #include <QString>
 
+#include "dsp/fftwindow.h"
+
 class Serializable;
 
 struct LocalSinkSettings
@@ -31,6 +33,14 @@ struct LocalSinkSettings
     uint32_t m_log2Decim;
     uint32_t m_filterChainHash;
     bool m_play;
+    bool m_dsp;
+    int m_gaindB;
+    bool m_fftOn;
+    uint32_t m_log2FFT;
+    FFTWindow::Function m_fftWindow;
+    bool m_reverseFilter;
+    static const uint32_t m_maxFFTBands = 20;
+    std::vector<std::pair<float, float>> m_fftBands;
     int m_streamIndex; //!< MIMO channel. Not relevant when connected to SI (single Rx).
     bool m_useReverseAPI;
     QString m_reverseAPIAddress;
@@ -41,15 +51,19 @@ struct LocalSinkSettings
     QByteArray m_geometryBytes;
     bool m_hidden;
 
+    Serializable *m_spectrumGUI;
     Serializable *m_channelMarker;
     Serializable *m_rollupState;
 
     LocalSinkSettings();
     void resetToDefaults();
+    void setSpectrumGUI(Serializable *spectrumGUI) { m_spectrumGUI = spectrumGUI; }
     void setChannelMarker(Serializable *channelMarker) { m_channelMarker = channelMarker; }
     void setRollupState(Serializable *rollupState) { m_rollupState = rollupState; }
     QByteArray serialize() const;
     bool deserialize(const QByteArray& data);
+    void applySettings(const QStringList& settingsKeys, const LocalSinkSettings& settings);
+    QString getDebugString(const QStringList& settingsKeys, bool force=false) const;
 };
 
 #endif /* INCLUDE_LOCALSINKSETTINGS_H_ */
