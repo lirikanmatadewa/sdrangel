@@ -25,6 +25,8 @@
 #include "gui/glspectrum.h"
 #include "gui/glscope.h"
 #include "gui/basicchannelsettingsdialog.h"
+#include "gui/dialpopup.h"
+#include "gui/dialogpositioner.h"
 #include "plugin/pluginapi.h"
 #include "util/simpleserializer.h"
 #include "util/db.h"
@@ -479,6 +481,7 @@ void ChannelAnalyzerGUI::onMenuDialogCalled(const QPoint& p)
         }
 
         dialog.move(p);
+        new DialogPositioner(&dialog, false);
         dialog.exec();
 
         m_settings.m_rgbColor = m_channelMarker.getColor().rgb();
@@ -580,6 +583,7 @@ ChannelAnalyzerGUI::ChannelAnalyzerGUI(PluginAPI* pluginAPI, DeviceUISet *device
 	displaySettings();
     makeUIConnections();
 	applySettings(true);
+    DialPopup::addPopupsToChildDials(this);
 }
 
 ChannelAnalyzerGUI::~ChannelAnalyzerGUI()

@@ -2,9 +2,6 @@
 // Copyright (C) 2016 F4EXB                                                      //
 // written by Edouard Griffiths                                                  //
 //                                                                               //
-// OpenGL interface modernization.                                               //
-// See: http://doc.qt.io/qt-5/qopenglshaderprogram.html                          //
-//                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
 // the Free Software Foundation as version 3 of the License, or                  //
@@ -43,6 +40,7 @@ private:
 
 private slots:
 	void accept();
+	void on_gps_clicked();
 };
 
 #endif /* SDRBASE_GUI_MYPOSITIONDIALOG_H_ */
