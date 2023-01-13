@@ -42,7 +42,6 @@ MainSpectrumGUI::MainSpectrumGUI(GLSpectrum *spectrum, GLSpectrumGUI *spectrumGU
     m_resizer(this),
     m_mdi(nullptr)
 {
-    qDebug("MainSpectrumGUI::MainSpectrumGUI: %p", parent);
     setWindowFlags(windowFlags() | Qt::FramelessWindowHint);
     m_helpURL = "sdrgui/mainspectrum/readme.md";
     setObjectName("MainSpectrumGUI");
@@ -160,7 +159,6 @@ MainSpectrumGUI::MainSpectrumGUI(GLSpectrum *spectrum, GLSpectrumGUI *spectrumGU
 
 MainSpectrumGUI::~MainSpectrumGUI()
 {
-    qDebug("MainSpectrumGUI::~MainSpectrumGUI");
     m_spectrumLayout->removeWidget(m_spectrum);
     m_spectrumGUILayout->removeWidget(m_spectrumGUI);
     delete m_sizeGripBottomRight;
@@ -178,7 +176,6 @@ MainSpectrumGUI::~MainSpectrumGUI()
     delete m_titleLabel;
     delete m_spacerLabel;
     delete m_indexLabel;
-    qDebug("MainSpectrumGUI::~MainSpectrumGUI: end");
 }
 
 void MainSpectrumGUI::setWorkspaceIndex(int index)
@@ -189,7 +186,6 @@ void MainSpectrumGUI::setWorkspaceIndex(int index)
 
 void MainSpectrumGUI::closeEvent(QCloseEvent *event)
 {
-    qDebug("MainSpectrumGUI::closeEvent");
     emit closing();
     event->accept();
 }
@@ -275,15 +271,14 @@ void MainSpectrumGUI::maximizeWindow()
     }
     else
     {
-        showMaximized();
+    showMaximized();
         m_shrinkButton->setToolTip("Restore window to normal");
         m_maximizeButton->setToolTip("Make window full screen");
-    }
+}
 }
 
 void MainSpectrumGUI::shrinkWindow()
 {
-    qDebug("MainSpectrumGUI::shrinkWindow");
     if (m_mdi)
     {
         showNormal();

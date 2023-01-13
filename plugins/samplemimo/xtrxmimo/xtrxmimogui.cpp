@@ -153,7 +153,7 @@ void XTRXMIMOGUI::handleInputMessages()
         if (handleMessage(*message)) {
             delete message;
         } else {
-            qDebug("LimeSDRMIMOGUI::handleInputMessages: unhandled message: %s", message->getIdentifier());
+            ;
         }
     }
 }
@@ -176,12 +176,6 @@ bool XTRXMIMOGUI::handleMessage(const Message& message)
             m_txBasebandSampleRate = notif.getSampleRate();
             m_txDeviceCenterFrequency = notif.getCenterFrequency();
         }
-
-        qDebug("XTRXMIMOGUI::handleInputMessages: DSPMIMOSignalNotification: %s stream: %d SampleRate:%d, CenterFrequency:%llu",
-                sourceOrSink ? "source" : "sink",
-                istream,
-                notif.getSampleRate(),
-                notif.getCenterFrequency());
 
         updateSampleRateAndFrequency();
 

@@ -52,16 +52,13 @@ void MessagePipes::getMessagePipes(const QObject *producer, const QString& type,
 
 void MessagePipes::startGC()
 {
-	qDebug("MessagePipes::startGC");
-
-    m_gcWorker->startWork();
+	m_gcWorker->startWork();
     m_gcThread.start();
 }
 
 void MessagePipes::stopGC()
 {
-    qDebug("MessagePipes::stopGC");
-	m_gcWorker->stopWork();
+    m_gcWorker->stopWork();
 	m_gcThread.quit();
 	m_gcThread.wait();
 }

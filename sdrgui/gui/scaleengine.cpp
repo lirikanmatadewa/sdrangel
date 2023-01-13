@@ -711,7 +711,6 @@ float ScaleEngine::getScaleWidth()
 
 void ScaleEngine::setTruncateMode(bool mode)
 {
-    qDebug("ScaleEngine::setTruncateMode: %s", (mode ? "on" : "off"));
     m_truncateMode = mode;
     m_recalc = true;
     reCalc();
@@ -750,6 +749,4 @@ void ScaleEngine::updateTruncation()
             break;
         }
     }
-
-    qDebug("ScaleEngine::updateTruncation: m_truncationValue: %f", m_truncationValue);
 }

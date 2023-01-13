@@ -200,7 +200,6 @@ void RemoteOutputSinkGui::handleInputMessages()
         {
             DSPSignalNotification* notif = (DSPSignalNotification*) message;
             m_sampleRate = notif->getSampleRate();
-            qDebug("RemoteOutputSinkGui::handleInputMessages: DSPSignalNotification: SampleRate:%d, CenterFrequency:%llu", notif->getSampleRate(), notif->getCenterFrequency());
             updateSampleRate();
 
             delete message;

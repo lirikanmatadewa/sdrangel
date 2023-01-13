@@ -40,8 +40,8 @@ static int runQtApplication(int argc, char* argv[], qtwebapp::LoggerWithFile *lo
 	QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8"));
 	QTextCodec::setCodecForCStrings(QTextCodec::codecForName("UTF-8"));
 */
-	QCoreApplication::setOrganizationName(COMPANY);
-	QCoreApplication::setApplicationName(APPLICATION_NAME);
+	QCoreApplication::setOrganizationName("BWE Solutions");
+	QCoreApplication::setApplicationName("SDR Analyzer");
     QCoreApplication::setApplicationVersion(SDRANGEL_VERSION);
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)
@@ -64,8 +64,8 @@ static int runQtApplication(int argc, char* argv[], qtwebapp::LoggerWithFile *lo
 	QPalette palette;
 	palette.setColor(QPalette::Window, QColor(64,64,64));
 	palette.setColor(QPalette::WindowText, Qt::white);
-	palette.setColor(QPalette::Base, QColor(25,25,25));
-	palette.setColor(QPalette::AlternateBase, QColor(53,53,53));
+	palette.setColor(QPalette::Base, QColor(64,64,64));
+	palette.setColor(QPalette::AlternateBase, QColor(221,221,221));
 	palette.setColor(QPalette::ToolTipBase, Qt::white);
 	palette.setColor(QPalette::ToolTipText, Qt::black);
 	palette.setColor(QPalette::Text, Qt::white);
@@ -73,13 +73,13 @@ static int runQtApplication(int argc, char* argv[], qtwebapp::LoggerWithFile *lo
 	palette.setColor(QPalette::ButtonText, Qt::white);
 	palette.setColor(QPalette::BrightText, Qt::red);
 
-	palette.setColor(QPalette::Light, QColor(64,64,64).lighter(125).lighter());
-	palette.setColor(QPalette::Mid, QColor(64,64,64).lighter(125));
-	palette.setColor(QPalette::Dark, QColor(64,64,64).lighter(125).darker());
+	palette.setColor(QPalette::Light, QColor(219,219,221).lighter(125).lighter());
+	palette.setColor(QPalette::Mid, QColor(219,219,221).lighter(125));
+	palette.setColor(QPalette::Dark, QColor(219,219,221).lighter(125).darker());
 
 	palette.setColor(QPalette::Link, QColor(0,0xa0,0xa0));
 	palette.setColor(QPalette::LinkVisited, QColor(0,0xa0,0xa0).lighter());
-	palette.setColor(QPalette::Highlight, QColor(0xff, 0x8c, 0x00));
+	palette.setColor(QPalette::Highlight, Qt::cyan);
 	palette.setColor(QPalette::HighlightedText, Qt::black);
 
 	palette.setColor(QPalette::Disabled, QPalette::WindowText, Qt::gray);
@@ -184,14 +184,13 @@ int main(int argc, char* argv[])
     qtwebapp::LoggerWithFile *logger = nullptr;
     qInstallMessageHandler(Android::messageHandler);
 #else
-    qtwebapp::LoggerWithFile *logger = new qtwebapp::LoggerWithFile(qApp);
+	qtwebapp::LoggerWithFile *logger = new qtwebapp::LoggerWithFile(qApp);
     logger->installMsgHandler();
 #endif
 
 	int res = runQtApplication(argc, argv, logger);
 
 	delete logger;
-
-	qWarning("SDRangel quit.");
+	qWarning("SDR Analyzer quit.");
 	return res;
 }

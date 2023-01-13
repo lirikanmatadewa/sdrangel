@@ -269,8 +269,6 @@ void ChannelAnalyzerGUI::handleInputMessages()
 
     while ((message = getInputMessageQueue()->pop()) != 0)
     {
-        qDebug("ChannelAnalyzerGUI::handleInputMessages: message: %s", message->getIdentifier());
-
         if (handleMessage(*message))
         {
             delete message;

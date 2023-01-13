@@ -142,14 +142,11 @@ void AudioOutputGui::handleInputMessages()
 
     while ((message = m_inputMessageQueue.pop()) != 0)
     {
-        qDebug("AudioOutputGui::handleInputMessages: message: %s", message->getIdentifier());
-
         if (DSPSignalNotification::match(*message))
         {
             DSPSignalNotification* notif = (DSPSignalNotification*) message;
             m_sampleRate = notif->getSampleRate();
             m_centerFrequency = notif->getCenterFrequency();
-            qDebug("AudioOutputGui::handleInputMessages: DSPSignalNotification: SampleRate: %d", notif->getSampleRate());
             updateSampleRateAndFrequency();
 
             delete message;

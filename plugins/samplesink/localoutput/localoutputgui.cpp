@@ -192,8 +192,6 @@ void LocalOutputGui::handleInputMessages()
 
             m_streamCenterFrequency = notif->getCenterFrequency();
 
-            qDebug("LocalOutputGui::handleInputMessages: DSPSignalNotification: SampleRate:%d, CenterFrequency:%llu", notif->getSampleRate(), notif->getCenterFrequency());
-
             updateSampleRateAndFrequency();
             DSPSignalNotification *fwd = new DSPSignalNotification(*notif);
             m_sampleSink->getInputMessageQueue()->push(fwd);

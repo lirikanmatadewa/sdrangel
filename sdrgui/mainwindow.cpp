@@ -142,23 +142,23 @@ MainWindow::MainWindow(qtwebapp::LoggerWithFile *logger, const MainParser& parse
     font.setPointSize(9);
     qApp->setFont(font);
 
-    QPixmap logoPixmap(":/sdrangel_logo.png");
+    QPixmap logoPixmap(":/bwe-solutions_black.png");
     SDRangelSplash *splash = new SDRangelSplash(logoPixmap);
     splash->setMessageRect(QRect(10, 80, 350, 16));
     splash->show();
     splash->showStatusMessage("starting...", Qt::white);
     splash->showStatusMessage("starting...", Qt::white);
 
-    setWindowIcon(QIcon(":/sdrangel_icon.png"));
+    setWindowIcon(QIcon(":/bwe-solutions_icon.png"));
 #ifndef ANDROID
     // To save screen space on Android, don't have menu bar. Instead menus are accessed via toolbar button
     createMenuBar(nullptr);
-    createStatusBar();
+	createStatusBar();
 #endif
 
 #ifdef ANDROID
     if (screen()->isLandscape(screen()->primaryOrientation())) {
-        setTabPosition(Qt::LeftDockWidgetArea, QTabWidget::West);
+    setTabPosition(Qt::LeftDockWidgetArea, QTabWidget::West);
     } else {
         setTabPosition(Qt::LeftDockWidgetArea, QTabWidget::South);
     }
@@ -206,13 +206,11 @@ MainWindow::MainWindow(qtwebapp::LoggerWithFile *logger, const MainParser& parse
     m_dspEngine->preAllocateFFTs();
 
     splash->showStatusMessage("load settings...", Qt::white);
-    qDebug() << "MainWindow::MainWindow: load settings...";
-
+    
     loadSettings();
 
     splash->showStatusMessage("load plugins...", Qt::white);
-    qDebug() << "MainWindow::MainWindow: load plugins...";
-
+    
     m_pluginManager = new PluginManager(this);
     m_mainCore->m_pluginManager = m_pluginManager;
     m_pluginManager->setEnableSoapy(parser.getSoapy());
@@ -230,24 +228,22 @@ MainWindow::MainWindow(qtwebapp::LoggerWithFile *logger, const MainParser& parse
 
     if (parser.getScratch())
     {
-        qDebug() << "MainWindow::MainWindow: scratch mode: do not load current configuration";
+        ;
     }
     else
     {
         splash->showStatusMessage("load current configuration...", Qt::white);
-        qDebug() << "MainWindow::MainWindow: load current configuration...";
         loadConfiguration(m_mainCore->m_settings.getWorkingConfiguration());
 
         if (m_workspaces.size() == 0)
         {
-            qDebug() << "MainWindow::MainWindow: no or empty current configuration, creating empty workspace...";
             addWorkspace();
 
             // If no configurations, load some basic examples
             if (m_mainCore->m_settings.getConfigurations()->size() == 0) {
                 loadDefaultConfigurations();
-            }
         }
+    }
         else
         {
             // Only show welcome dialog first time program is run
@@ -261,9 +257,9 @@ MainWindow::MainWindow(qtwebapp::LoggerWithFile *logger, const MainParser& parse
 
 #ifdef _MSC_VER
     if (QResource::registerResource(applicationDirPath + "/sdrbase.rcc")) {
-        qDebug("MainWindow::MainWindow: registered resource file %s/%s", qPrintable(applicationDirPath), "sdrbase.rcc");
+        ;
     } else {
-        qWarning("MainWindow::MainWindow: could not register resource file %s/%s", qPrintable(applicationDirPath), "sdrbase.rcc");
+        ;
     }
 #endif
 
@@ -298,9 +294,7 @@ MainWindow::MainWindow(qtwebapp::LoggerWithFile *logger, const MainParser& parse
 
 MainWindow::~MainWindow()
 {
-	qDebug() << "MainWindow::~MainWindow";
-
-    m_statusTimer.stop();
+	m_statusTimer.stop();
     m_mainCore->m_settings.save();
     m_apiServer->stop();
     delete m_apiServer;
@@ -318,8 +312,6 @@ MainWindow::~MainWindow()
     for (const auto& workspace : m_workspaces) {
         delete workspace;
     }
-
-	qDebug() << "MainWindow::~MainWindow: end";
 }
 
 void MainWindow::sampleSourceAdd(Workspace *deviceWorkspace, Workspace *spectrumWorkspace, int deviceIndex)
@@ -419,18 +411,8 @@ void MainWindow::sampleSourceCreate(
     deviceAPI->setSamplingDeviceDisplayName(samplingDevice->displayedName);
     deviceAPI->setSamplingDevicePluginInterface(DeviceEnumerator::instance()->getRxPluginInterface(deviceIndex));
 
-    qDebug() << "MainWindow::sampleSourceCreate:"
-        << "deviceSetIndex:" << deviceSetIndex
-        << "deviceIndex:" << deviceIndex
-        << "hardwareId:" << samplingDevice->hardwareId
-        << "sequence:" << samplingDevice->sequence
-        << "id:" << samplingDevice->id
-        << "serial:" << samplingDevice->serial
-        << "displayedName:" << samplingDevice->displayedName;
-
     if (deviceAPI->getSamplingDeviceId().size() == 0) // non existent device => replace by default
     {
-        qDebug("MainWindow::sampleSourceCreate: non existent device replaced by File Input");
         int fileInputDeviceIndex = DeviceEnumerator::instance()->getFileInputDeviceIndex();
         selectedDeviceIndex = fileInputDeviceIndex;
         samplingDevice = DeviceEnumerator::instance()->getRxSamplingDevice(fileInputDeviceIndex);
@@ -649,18 +631,8 @@ void MainWindow::sampleSinkCreate(
     deviceAPI->setSamplingDeviceDisplayName(samplingDevice->displayedName);
     deviceAPI->setSamplingDevicePluginInterface(DeviceEnumerator::instance()->getTxPluginInterface(deviceIndex));
 
-    qDebug() << "MainWindow::sampleSinkCreate:"
-        << "deviceSetIndex:" << deviceSetIndex
-        << "newDeviceIndex:" << deviceIndex
-        << "hardwareId:" << samplingDevice->hardwareId
-        << "sequence:" << samplingDevice->sequence
-        << "id:" << samplingDevice->id
-        << "serial:" << samplingDevice->serial
-        << "displayedName:" << samplingDevice->displayedName;
-
     if (deviceAPI->getSamplingDeviceId().size() == 0) // non existent device => replace by default
     {
-        qDebug("MainWindow::sampleSinkCreate: non existent device replaced by File Sink");
         int fileSinkDeviceIndex = DeviceEnumerator::instance()->getFileOutputDeviceIndex();
         selectedDeviceIndex = fileSinkDeviceIndex;
         const PluginInterface::SamplingDevice *samplingDevice = DeviceEnumerator::instance()->getTxSamplingDevice(fileSinkDeviceIndex);
@@ -880,18 +852,8 @@ void MainWindow::sampleMIMOCreate(
     deviceAPI->setSamplingDeviceDisplayName(samplingDevice->displayedName);
     deviceAPI->setSamplingDevicePluginInterface(DeviceEnumerator::instance()->getMIMOPluginInterface(deviceIndex));
 
-    qDebug() << "MainWindow::sampleMIMOCreate:"
-        << "deviceSetIndex" << deviceSetIndex
-        << "newDeviceIndex:" << deviceIndex
-        << "hardwareId:" << samplingDevice->hardwareId
-        << "sequence:" << samplingDevice->sequence
-        << "id:" << samplingDevice->id
-        << "serial:" << samplingDevice->serial
-        << "displayedName:" << samplingDevice->displayedName;
-
     if (deviceAPI->getSamplingDeviceId().size() == 0) // non existent device => replace by default
     {
-        qDebug("MainWindow::sampleMIMOCreate: non existent device replaced by Test MIMO");
         int testMIMODeviceIndex = DeviceEnumerator::instance()->getTestMIMODeviceIndex();
         selectedDeviceIndex = testMIMODeviceIndex;
         const PluginInterface::SamplingDevice *samplingDevice = DeviceEnumerator::instance()->getMIMOSamplingDevice(testMIMODeviceIndex);
@@ -990,7 +952,6 @@ void MainWindow::sampleMIMOCreate(
 
 void MainWindow::removeDeviceSet(int deviceSetIndex)
 {
-    qDebug("MainWindow::removeDeviceSet: index: %d", deviceSetIndex);
     if (deviceSetIndex >= (int) m_deviceUIs.size()) {
         return;
     }
@@ -1177,7 +1138,6 @@ void MainWindow::addFeatureSet()
 
     if (newFeatureSetIndex != 0)
     {
-        qWarning("MainWindow::addFeatureSet: attempt to add more than one feature set (%d)", newFeatureSetIndex);
         return;
     }
 
@@ -1218,22 +1178,16 @@ void MainWindow::deleteChannel(int deviceSetIndex, int channelIndex)
 
 void MainWindow::loadSettings()
 {
-	qDebug() << "MainWindow::loadSettings";
-
-    m_mainCore->m_settings.load();
+	m_mainCore->m_settings.load();
     m_mainCore->m_settings.sortPresets();
     m_mainCore->m_settings.sortCommands();
     if (m_mainCore->m_logger) {
-        m_mainCore->setLoggingOptions();
-    }
+    m_mainCore->setLoggingOptions();
+}
 }
 
 void MainWindow::loadDeviceSetPresetSettings(const Preset* preset, int deviceSetIndex)
 {
-	qDebug("MainWindow::loadDeviceSetPresetSettings: preset [%s | %s]",
-		qPrintable(preset->getGroup()),
-		qPrintable(preset->getDescription()));
-
 	if (deviceSetIndex >= 0)
 	{
         DeviceUISet *deviceUISet = m_deviceUIs[deviceSetIndex];
@@ -1250,11 +1204,7 @@ void MainWindow::loadDeviceSetPresetSettings(const Preset* preset, int deviceSet
 
 void MainWindow::saveDeviceSetPresetSettings(Preset* preset, int deviceSetIndex)
 {
-	qDebug("MainWindow::saveDeviceSetPresetSettings: preset [%s | %s]",
-		qPrintable(preset->getGroup()),
-		qPrintable(preset->getDescription()));
-
-    // Save from currently selected source tab
+	// Save from currently selected source tab
     //int currentSourceTabIndex = ui->tabInputsView->currentIndex();
     DeviceUISet *deviceUISet = m_deviceUIs[deviceSetIndex];
     deviceUISet->saveDeviceSetSettings(preset);
@@ -1264,25 +1214,16 @@ void MainWindow::saveDeviceSetPresetSettings(Preset* preset, int deviceSetIndex)
 
 void MainWindow::loadFeatureSetPresetSettings(const FeatureSetPreset* preset, int featureSetIndex, Workspace *workspace)
 {
-	qDebug("MainWindow::loadFeatureSetPresetSettings: preset [%s | %s]",
-		qPrintable(preset->getGroup()),
-		qPrintable(preset->getDescription()));
-
 	if (featureSetIndex >= 0)
 	{
         FeatureUISet *featureSetUI = m_featureUIs[featureSetIndex];
-        qDebug("MainWindow::loadFeatureSetPresetSettings: m_apiAdapter: %p", m_apiAdapter);
         featureSetUI->loadFeatureSetSettings(preset, m_pluginManager->getPluginAPI(), m_apiAdapter, &m_workspaces, workspace);
 	}
 }
 
 void MainWindow::saveFeatureSetPresetSettings(FeatureSetPreset* preset, int featureSetIndex)
 {
-	qDebug("MainWindow::saveFeatureSetPresetSettings: preset [%s | %s]",
-		qPrintable(preset->getGroup()),
-		qPrintable(preset->getDescription()));
-
-    // Save from currently selected source tab
+	// Save from currently selected source tab
     //int currentSourceTabIndex = ui->tabInputsView->currentIndex();
     FeatureUISet *featureUI = m_featureUIs[featureSetIndex];
 
@@ -1345,14 +1286,6 @@ void MainWindow::loadDefaultConfigurations()
 
 void MainWindow::loadConfiguration(const Configuration *configuration, bool fromDialog)
 {
-	qDebug("MainWindow::loadConfiguration: configuration [%s | %s] %d workspace(s) - %d device set(s) - %d feature(s)",
-		qPrintable(configuration->getGroup()),
-		qPrintable(configuration->getDescription()),
-        configuration->getNumberOfWorkspaceGeometries(),
-        configuration->getDeviceSetPresets().size(),
-        configuration->getFeatureSetPreset().getFeatureCount()
-    );
-
     QProgressDialog *waitBox = nullptr;
 
     if (fromDialog)
@@ -1419,10 +1352,6 @@ void MainWindow::loadConfiguration(const Configuration *configuration, bool from
                 deviceSetPreset.getSelectedDevice().m_deviceSequence,
                 deviceSetPreset.getSelectedDevice().m_deviceItemIndex
             );
-            qDebug("MainWindow::loadConfiguration: add source %s in workspace %d spectrum in %d",
-                qPrintable(deviceSetPreset.getSelectedDevice().m_deviceId),
-                deviceSetPreset.getDeviceWorkspaceIndex(),
-                deviceSetPreset.getSpectrumWorkspaceIndex());
             int deviceWorkspaceIndex = deviceSetPreset.getDeviceWorkspaceIndex() < m_workspaces.size() ?
                 deviceSetPreset.getDeviceWorkspaceIndex() :
                 0;
@@ -1439,10 +1368,6 @@ void MainWindow::loadConfiguration(const Configuration *configuration, bool from
                 deviceSetPreset.getSelectedDevice().m_deviceSequence,
                 deviceSetPreset.getSelectedDevice().m_deviceItemIndex
             );
-            qDebug("MainWindow::loadConfiguration: add sink %s in workspace %d spectrum in %d",
-                qPrintable(deviceSetPreset.getSelectedDevice().m_deviceId),
-                deviceSetPreset.getDeviceWorkspaceIndex(),
-                deviceSetPreset.getSpectrumWorkspaceIndex());
             int deviceWorkspaceIndex = deviceSetPreset.getDeviceWorkspaceIndex() < m_workspaces.size() ?
                 deviceSetPreset.getDeviceWorkspaceIndex() :
                 0;
@@ -1458,10 +1383,6 @@ void MainWindow::loadConfiguration(const Configuration *configuration, bool from
                 deviceSetPreset.getSelectedDevice().m_deviceSerial,
                 deviceSetPreset.getSelectedDevice().m_deviceSequence
             );
-            qDebug("MainWindow::loadConfiguration: add MIMO %s in workspace %d spectrum in %d",
-                qPrintable(deviceSetPreset.getSelectedDevice().m_deviceId),
-                deviceSetPreset.getDeviceWorkspaceIndex(),
-                deviceSetPreset.getSpectrumWorkspaceIndex());
             int deviceWorkspaceIndex = deviceSetPreset.getDeviceWorkspaceIndex() < m_workspaces.size() ?
                 deviceSetPreset.getDeviceWorkspaceIndex() :
                 0;
@@ -1479,7 +1400,7 @@ void MainWindow::loadConfiguration(const Configuration *configuration, bool from
         {
             waitBox->setValue(waitBox->value() + 50/deviceSetPresets.size());
             QApplication::processEvents();
-        }
+    }
     }
 
     // Features
@@ -1537,13 +1458,7 @@ void MainWindow::loadConfiguration(const Configuration *configuration, bool from
 
 void MainWindow::saveConfiguration(Configuration *configuration)
 {
-	qDebug("MainWindow::saveConfiguration: configuration [%s | %s] %d workspaces",
-		qPrintable(configuration->getGroup()),
-		qPrintable(configuration->getDescription()),
-        m_workspaces.size()
-    );
-
-    configuration->clearData();
+	configuration->clearData();
     QList<Preset>& deviceSetPresets = configuration->getDeviceSetPresets();
 
     for (const auto& deviceUISet : m_deviceUIs)
@@ -1554,10 +1469,6 @@ void MainWindow::saveConfiguration(Configuration *configuration)
         deviceSetPresets.back().setSpectrumWorkspaceIndex(deviceUISet->m_mainSpectrumGUI->getWorkspaceIndex());
         deviceSetPresets.back().setDeviceGeometry(deviceUISet->m_deviceGUI->saveGeometry());
         deviceSetPresets.back().setDeviceWorkspaceIndex(deviceUISet->m_deviceGUI->getWorkspaceIndex());
-        qDebug("MainWindow::saveConfiguration: %s device in workspace %d spectrum in %d",
-            qPrintable(deviceUISet->m_deviceAPI->getSamplingDeviceId()),
-            deviceUISet->m_deviceGUI->getWorkspaceIndex(),
-            deviceUISet->m_mainSpectrumGUI->getWorkspaceIndex());
     }
 
     m_featureUIs[0]->saveFeatureSetSettings(&configuration->getFeatureSetPreset());
@@ -1604,7 +1515,7 @@ void MainWindow::createMenuBar(QToolButton *button)
 
     if (button == nullptr)
     {
-        QMenuBar *menuBar = this->menuBar();
+    QMenuBar *menuBar = this->menuBar();
         fileMenu = menuBar->addMenu("&File");
         viewMenu = menuBar->addMenu("&View");
         workspacesMenu = menuBar->addMenu("&Workspaces");
@@ -1677,17 +1588,8 @@ void MainWindow::createMenuBar(QToolButton *button)
     saveAllAction->setToolTip("Save all current settings");
     QObject::connect(saveAllAction, &QAction::triggered, this, &MainWindow::on_action_saveAll_triggered);
 
-    QAction *quickStartAction = helpMenu->addAction("&Quick start...");
-    quickStartAction->setToolTip("Instructions for quick start");
-    QObject::connect(quickStartAction, &QAction::triggered, this, &MainWindow::on_action_Quick_Start_triggered);
-    QAction *mainWindowAction = helpMenu->addAction("&Main Window...");
-    mainWindowAction->setToolTip("Help on main window details");
-    QObject::connect(mainWindowAction, &QAction::triggered, this, &MainWindow::on_action_Main_Window_triggered);
-    QAction *loadedPluginsAction = helpMenu->addAction("Loaded &Plugins...");
-    loadedPluginsAction->setToolTip("List available plugins");
-    QObject::connect(loadedPluginsAction, &QAction::triggered, this, &MainWindow::on_action_Loaded_Plugins_triggered);
-    QAction *aboutAction = helpMenu->addAction("&About SDRangel...");
-    aboutAction->setToolTip("SDRangel application details");
+    QAction *aboutAction = helpMenu->addAction("&About SDR Analyzer...");
+    aboutAction->setToolTip("SDR Analyzer application details");
     QObject::connect(aboutAction, &QAction::triggered, this, &MainWindow::on_action_About_triggered);
 }
 
@@ -1696,10 +1598,10 @@ void MainWindow::createStatusBar()
     QString qtVersionStr = QString("Qt %1 ").arg(QT_VERSION_STR);
     QString openGLVersionStr = QString("OpenGL %1 ").arg(openGLVersion());
 #if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
-    m_showSystemWidget = new QLabel("SDRangel " + qApp->applicationVersion() + " " + qtVersionStr + openGLVersionStr
+    m_showSystemWidget = new QLabel("SDR Analyzer " + qApp->applicationVersion() + " " + qtVersionStr + openGLVersionStr
             + QSysInfo::currentCpuArchitecture() + " " + QSysInfo::prettyProductName(), this);
 #else
-    m_showSystemWidget = new QLabel("SDRangel " + qApp->applicationVersion() + " " + qtVersionStr + openGLVersionStr, this);
+    m_showSystemWidget = new QLabel("SDR Analyzer " + qApp->applicationVersion() + " " + qtVersionStr + openGLVersionStr, this);
 #endif
     statusBar()->addPermanentWidget(m_showSystemWidget);
 
@@ -1710,8 +1612,6 @@ void MainWindow::createStatusBar()
 
 void MainWindow::closeEvent(QCloseEvent *closeEvent)
 {
-    qDebug("MainWindow::closeEvent");
-
     // Save window size and position
     QSettings s;
     s.setValue("mainWindowGeometry", qCompress(saveGeometry()).toBase64());
@@ -2023,7 +1923,6 @@ void MainWindow::handleMessages()
 
 	while ((message = m_inputMessageQueue.pop()) != 0)
 	{
-		qDebug("MainWindow::handleMessages: message: %s", message->getIdentifier());
 		handleMessage(*message);
 		delete message;
 	}
@@ -2031,8 +1930,6 @@ void MainWindow::handleMessages()
 
 void MainWindow::handleWorkspaceVisibility(Workspace *workspace, bool visibility)
 {
-    qDebug("MainWindow::handleWorkspaceHasFocus: index: %d %s",
-        workspace->getIndex(), visibility ? "visible" : "non visible");
     m_currentWorkspace = workspace;
 }
 
@@ -2119,7 +2016,7 @@ void MainWindow::addWorkspace()
         //     tabBars.back()->setStyleSheet("QTabBar::tab:selected { background: rgb(128,70,0); }"); // change text color so it is visible
         // }
     }
- }
+}
 
 void MainWindow::viewAllWorkspaces()
 {
@@ -2179,7 +2076,7 @@ void MainWindow::removeEmptyWorkspaces()
     // Need at least one workspace on Android, as no menus without
     if (m_workspaces.size() == 0) {
         addWorkspace();
-    }
+}
 #endif
 }
 
@@ -2293,7 +2190,6 @@ void MainWindow::on_action_My_Position_triggered()
 
 void MainWindow::on_action_DeviceUserArguments_triggered()
 {
-    qDebug("MainWindow::on_action_DeviceUserArguments_triggered");
     DeviceUserArgsDialog deviceUserArgsDialog(DeviceEnumerator::instance(), m_mainCore->m_settings.getDeviceUserArgs(), this);
     new DialogPositioner(&deviceUserArgsDialog, true);
     deviceUserArgsDialog.exec();
@@ -2301,7 +2197,6 @@ void MainWindow::on_action_DeviceUserArguments_triggered()
 
 void MainWindow::on_action_commands_triggered()
 {
-    qDebug("MainWindow::on_action_commands_triggered");
     CommandsDialog commandsDialog(this);
     commandsDialog.setApiHost(m_apiServer->getHost());
     commandsDialog.setApiPort(m_apiServer->getPort());
@@ -2313,8 +2208,6 @@ void MainWindow::on_action_commands_triggered()
 
 void MainWindow::on_action_FFT_triggered()
 {
-    qDebug("MainWindow::on_action_FFT_triggered");
-
     if (m_fftWisdomProcess)
     {
         QMessageBox::information(this, "FFTW Wisdom", QString("Process %1 is already running").arg(m_fftWisdomProcess->processId()));
@@ -2346,8 +2239,6 @@ void MainWindow::on_action_FFT_triggered()
 
 void MainWindow::fftWisdomProcessFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
-    qDebug("MainWindow::fftWisdomProcessFinished: process finished rc=%d (%d)", exitCode, (int) exitStatus);
-
     if ((exitCode != 0) || (exitStatus != QProcess::NormalExit))
     {
         QMessageBox::critical(this, "FFTW Wisdom", "fftwf-widdsom program failed");
@@ -2373,8 +2264,6 @@ void MainWindow::samplingDeviceChangeHandler(DeviceGUI *deviceGUI, int newDevice
 
 void MainWindow::sampleDeviceChange(int deviceType, int deviceSetIndex, int newDeviceIndex, Workspace *workspace)
 {
-    qDebug("MainWindow::sampleDeviceChange: deviceType: %d deviceSetIndex: %d newDeviceIndex: %d",
-        deviceType, deviceSetIndex, newDeviceIndex);
     if (deviceType == 0) {
         sampleSourceChange(deviceSetIndex, newDeviceIndex, workspace);
     } else if (deviceType == 1) {
@@ -2390,7 +2279,6 @@ void MainWindow::sampleSourceChange(int deviceSetIndex, int newDeviceIndex, Work
 {
     if (deviceSetIndex >= 0)
     {
-        qDebug("MainWindow::sampleSourceChange: deviceSet %d workspace: %d", deviceSetIndex, workspace->getIndex());
         DeviceUISet *deviceUISet = m_deviceUIs[deviceSetIndex];
         QPoint p = deviceUISet->m_deviceGUI->pos();
         workspace->removeFromMdiArea(deviceUISet->m_deviceGUI);
@@ -2423,7 +2311,6 @@ void MainWindow::sampleSinkChange(int deviceSetIndex, int newDeviceIndex, Worksp
 {
     if (deviceSetIndex >= 0)
     {
-        qDebug("MainWindow::sampleSinkChange: deviceSet %d workspace: %d", deviceSetIndex, workspace->getIndex());
         DeviceUISet *deviceUISet = m_deviceUIs[deviceSetIndex];
         QPoint p = deviceUISet->m_deviceGUI->pos();
         workspace->removeFromMdiArea(deviceUISet->m_deviceGUI);
@@ -2455,7 +2342,6 @@ void MainWindow::sampleMIMOChange(int deviceSetIndex, int newDeviceIndex, Worksp
 {
     if (deviceSetIndex >= 0)
     {
-        qDebug("MainWindow::sampleSinkChange: deviceSet %d workspace: %d", deviceSetIndex, workspace->getIndex());
         DeviceUISet *deviceUISet = m_deviceUIs[deviceSetIndex];
         QPoint p = deviceUISet->m_deviceGUI->pos();
         workspace->removeFromMdiArea(deviceUISet->m_deviceGUI);
@@ -2486,9 +2372,7 @@ void MainWindow::channelMoveToDeviceSet(ChannelGUI *gui, int dsIndexDestination)
 {
     int deviceSetIndex = gui->getDeviceSetIndex();
     int channelIndex = gui->getIndex();
-    qDebug("MainWindow::channelMoveToDeviceSet: %s at %d:%d to %d",
-        qPrintable(gui->getTitle()), deviceSetIndex, channelIndex, dsIndexDestination);
-
+    
     if ((deviceSetIndex < (int) m_deviceUIs.size()) && (dsIndexDestination < (int) m_deviceUIs.size()))
     {
         DeviceUISet *deviceUI = m_deviceUIs[deviceSetIndex];
@@ -2528,9 +2412,6 @@ void MainWindow::channelDuplicateToDeviceSet(ChannelGUI *sourceChannelGUI, int d
 {
     int dsIndexSource = sourceChannelGUI->getDeviceSetIndex();
     int sourceChannelIndex = sourceChannelGUI->getIndex();
-
-    qDebug("MainWindow::channelDuplicateToDeviceSet: %s at %d:%d to %d in workspace %d",
-        qPrintable(sourceChannelGUI->getTitle()), dsIndexSource, sourceChannelIndex, dsIndexDestination, sourceChannelGUI->getWorkspaceIndex());
 
     if ((dsIndexSource < (int) m_deviceUIs.size()) && (dsIndexDestination < (int) m_deviceUIs.size()))
     {
@@ -2699,8 +2580,6 @@ void MainWindow::channelDuplicateToDeviceSet(ChannelGUI *sourceChannelGUI, int d
             destChannelGUI->setDeviceSetIndex(dsIndexDestination);
             destChannelGUI->setIndexToolTip(destDeviceAPI->getSamplingDeviceDisplayName());
             destChannelGUI->setWorkspaceIndex(workspace->getIndex());
-            qDebug("MainWindow::channelDuplicate: adding %s to workspace #%d",
-                qPrintable(destChannelGUI->getTitle()), workspace->getIndex());
             workspace->addToMdiArea((QMdiSubWindow*) destChannelGUI);
         }
     }
@@ -2745,9 +2624,7 @@ void MainWindow::channelAddClicked(Workspace *workspace, int deviceSetIndex, int
             int nbMIMOChannels = deviceUI->getNumberOfAvailableMIMOChannels();
             int nbRxChannels = deviceUI->getNumberOfAvailableRxChannels();
             int nbTxChannels = deviceUI->getNumberOfAvailableTxChannels();
-            qDebug("MainWindow::channelAddClicked: MIMO: dev %d : nbMIMO: %d nbRx: %d nbTx: %d selected: %d",
-                deviceSetIndex, nbMIMOChannels, nbRxChannels, nbTxChannels, channelPluginIndex);
-
+            
             if (channelPluginIndex < nbMIMOChannels)
             {
                 PluginAPI::ChannelRegistrations *channelRegistrations = m_pluginManager->getMIMOChannelRegistrations(); // Available channel plugins
@@ -2812,8 +2689,6 @@ void MainWindow::channelAddClicked(Workspace *workspace, int deviceSetIndex, int
             gui->setDeviceSetIndex(deviceSetIndex);
             gui->setIndexToolTip(deviceAPI->getSamplingDeviceDisplayName());
             gui->setWorkspaceIndex(workspace->getIndex());
-            qDebug("MainWindow::channelAddClicked: adding %s to workspace #%d",
-                qPrintable(gui->getTitle()), workspace->getIndex());
             workspace->addToMdiArea((QMdiSubWindow*) gui);
             //gui->restoreGeometry(gui->getGeometryBytes());
         }
@@ -2822,11 +2697,8 @@ void MainWindow::channelAddClicked(Workspace *workspace, int deviceSetIndex, int
 
 void MainWindow::featureAddClicked(Workspace *workspace, int featureIndex)
 {
-    qDebug("MainWindow::featureAddClicked: W%d feature at %d", workspace->getIndex(), featureIndex);
-
     int currentFeatureSetIndex = 0; // Do it in the unique set
     FeatureUISet *featureUISet = m_featureUIs[currentFeatureSetIndex];
-    qDebug("MainWindow::featureAddClicked: m_apiAdapter: %p", m_apiAdapter);
     PluginAPI::FeatureRegistrations *featureRegistrations = m_pluginManager->getFeatureRegistrations(); // Available feature plugins
     PluginInterface *pluginInterface = (*featureRegistrations)[featureIndex].m_plugin;
     Feature *feature = pluginInterface->createFeature(m_apiAdapter);
@@ -2861,9 +2733,7 @@ void MainWindow::featureMove(FeatureGUI *gui, int wsIndexDestnation)
 void MainWindow::deviceMove(DeviceGUI *gui, int wsIndexDestnation)
 {
     int wsIndexOrigin = gui->getWorkspaceIndex();
-    qDebug("MainWindow::deviceMove: %s from %d to %d",
-        qPrintable(gui->getTitle()), wsIndexOrigin, wsIndexDestnation);
-
+    
     if (wsIndexOrigin == wsIndexDestnation) {
         return;
     }
@@ -2889,9 +2759,7 @@ void MainWindow::channelMove(ChannelGUI *gui, int wsIndexDestnation)
 void MainWindow::mainSpectrumMove(MainSpectrumGUI *gui, int wsIndexDestnation)
 {
     int wsIndexOrigin = gui->getWorkspaceIndex();
-    qDebug("MainWindow::mainSpectrumMove: %s from %d to %d",
-        qPrintable(gui->getTitle()), wsIndexOrigin, wsIndexDestnation);
-
+    
     if (wsIndexOrigin == wsIndexDestnation) {
         return;
     }
@@ -3031,13 +2899,12 @@ void MainWindow::on_action_About_triggered()
 void MainWindow::updateStatus()
 {
     if (m_dateTimeWidget) {
-        m_dateTimeWidget->setText(QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss t"));
-    }
+    m_dateTimeWidget->setText(QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss t"));
+}
 }
 
 void MainWindow::commandKeyPressed(Qt::Key key, Qt::KeyboardModifiers keyModifiers, bool release)
 {
-    qDebug("MainWindow::commandKeyPressed: key: %x mod: %x %s", (int) key, (int) keyModifiers, release ? "release" : "press");
     int currentDeviceSetIndex = 0;
 
     for (int i = 0; i < m_mainCore->m_settings.getCommandCount(); ++i)

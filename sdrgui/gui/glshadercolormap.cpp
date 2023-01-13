@@ -54,16 +54,15 @@ void GLShaderColorMap::initializeGL(int majorVersion, int minorVersion)
 {
     initializeOpenGLFunctions();
     m_useImmutableStorage = useImmutableStorage();
-    qDebug() << "GLShaderColorMap::initializeGL: m_useImmutableStorage: " << m_useImmutableStorage;
-
+    
     m_program = new QOpenGLShaderProgram;
     if ((majorVersion > 3) || ((majorVersion == 3) && (minorVersion >= 3)))
     {
         if (!m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, m_vertexShaderSourceColorMap)) {
-            qDebug() << "GLShaderColorMap::initializeGL: error in vertex shader: " << m_program->log();
+            ;
         }
         if (!m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, m_fragmentShaderSourceColorMap)) {
-            qDebug() << "GLShaderColorMap::initializeGL: error in fragment shader: " << m_program->log();
+            ;
         }
 
         m_vao = new QOpenGLVertexArrayObject();
@@ -73,17 +72,17 @@ void GLShaderColorMap::initializeGL(int majorVersion, int minorVersion)
     else
     {
         if (!m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, m_vertexShaderSourceColorMap2)) {
-            qDebug() << "GLShaderColorMap::initializeGL: error in vertex shader: " << m_program->log();
+            ;
         }
         if (!m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, m_fragmentShaderSourceColorMap2)) {
-            qDebug() << "GLShaderColorMap::initializeGL: error in fragment shader: " << m_program->log();
+            ;
         }
     }
 
     m_program->bindAttributeLocation("vertex", 0);
 
     if (!m_program->link()) {
-        qDebug() << "GLShaderColorMap::initializeGL: error linking shader: " << m_program->log();
+        ;
     }
 
     m_program->bind();

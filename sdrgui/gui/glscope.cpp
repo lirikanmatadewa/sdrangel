@@ -163,21 +163,16 @@ void GLScope::initializeGL()
     {
         if (QOpenGLContext::currentContext()->isValid())
         {
-            qDebug() << "GLScope::initializeGL: context:"
-                << " major: " << (QOpenGLContext::currentContext()->format()).majorVersion()
-                << " minor: " << (QOpenGLContext::currentContext()->format()).minorVersion()
-                << " ES: " << (QOpenGLContext::currentContext()->isOpenGLES() ? "yes" : "no");
             majorVersion = (QOpenGLContext::currentContext()->format()).majorVersion();
             minorVersion = (QOpenGLContext::currentContext()->format()).minorVersion();
         }
         else
         {
-            qDebug() << "GLScope::initializeGL: current context is invalid";
+            ;
         }
     }
     else
     {
-        qCritical() << "GLScope::initializeGL: no current context";
         return;
     }
 
@@ -185,21 +180,17 @@ void GLScope::initializeGL()
 
     if (surface == 0)
     {
-        qCritical() << "GLScope::initializeGL: no surface attached";
         return;
     }
     else
     {
         if (surface->surfaceType() != QSurface::OpenGLSurface)
         {
-            qCritical() << "GLScope::initializeGL: surface is not an OpenGLSurface: " << surface->surfaceType()
-                << " cannot use an OpenGL context";
             return;
         }
         else
         {
-            qDebug() << "GLScope::initializeGL: OpenGL surface:"
-                << " class: " << (surface->surfaceClass() == QSurface::Window ? "Window" : "Offscreen");
+            ;
         }
     }
 

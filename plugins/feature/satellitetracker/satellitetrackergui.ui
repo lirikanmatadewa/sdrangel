@@ -261,7 +261,7 @@
           </property>
           <property name="icon">
            <iconset resource="../../../sdrgui/resources/res.qrc">
-            <normaloff>:/sdrangel_icon.png</normaloff>:/sdrangel_icon.png</iconset>
+            <normaloff>:/bwe-solutions_icon.png</normaloff>:/bwe-solutions_icon.png</iconset>
           </property>
          </widget>
         </item>

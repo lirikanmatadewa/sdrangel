@@ -525,11 +525,6 @@ void TestMIGui::handleInputMessages()
             m_deviceSampleRates[istream] = notif->getSampleRate();
             m_deviceCenterFrequencies[istream] = notif->getCenterFrequency();
             // Do not consider multiple sources at this time
-            qDebug("TestMIGui::handleInputMessages: DSPMIMOSignalNotification: %s stream: %d SampleRate:%d, CenterFrequency:%llu",
-                    sourceOrSink ? "source" : "sink",
-                    istream,
-                    notif->getSampleRate(),
-                    notif->getCenterFrequency());
             updateSampleRateAndFrequency();
 
             delete message;

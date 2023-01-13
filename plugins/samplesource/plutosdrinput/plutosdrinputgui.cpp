@@ -566,14 +566,11 @@ void PlutoSDRInputGui::handleInputMessages()
 
     while ((message = m_inputMessageQueue.pop()) != 0)
     {
-        qDebug("PlutoSDRInputGui::handleInputMessages: message: %s", message->getIdentifier());
-
         if (DSPSignalNotification::match(*message))
         {
             DSPSignalNotification* notif = (DSPSignalNotification*) message;
             m_sampleRate = notif->getSampleRate();
             m_deviceCenterFrequency = notif->getCenterFrequency();
-            qDebug("PlutoSDRInputGui::handleInputMessages: DSPSignalNotification: SampleRate: %d, CenterFrequency: %llu", notif->getSampleRate(), notif->getCenterFrequency());
             updateSampleRateAndFrequency();
             setFIRBWLimits();
 

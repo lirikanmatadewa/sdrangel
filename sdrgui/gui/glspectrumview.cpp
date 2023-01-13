@@ -875,15 +875,11 @@ void GLSpectrumView::initializeGL()
     {
         if (QOpenGLContext::currentContext()->isValid())
         {
-            qDebug() << "GLSpectrumView::initializeGL: context:"
-                << " major: " << (QOpenGLContext::currentContext()->format()).majorVersion()
-                << " minor: " << (QOpenGLContext::currentContext()->format()).minorVersion()
-                << " ES: " << (QOpenGLContext::currentContext()->isOpenGLES() ? "yes" : "no");
             majorVersion = (QOpenGLContext::currentContext()->format()).majorVersion();
             minorVersion = (QOpenGLContext::currentContext()->format()).minorVersion();
         }
         else {
-            qDebug() << "GLSpectrumView::initializeGL: current context is invalid";
+            ;
         }
 
         // Enable OpenGL debugging
@@ -904,13 +900,12 @@ void GLSpectrumView::initializeGL()
             }
             else
             {
-                qDebug() << "GLSpectrumView::initializeGL: GL_KHR_debug not available";
+                ;
             }
         }
     }
     else
     {
-        qCritical() << "GLSpectrumView::initializeGL: no current context";
         return;
     }
 

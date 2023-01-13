@@ -101,16 +101,13 @@ void GLShaderTVArray::initializeGL(int majorVersion, int minorVersion, int intCo
             if (!m_objProgram->addShaderFromSourceCode(QOpenGLShader::Vertex,
                     m_strVertexShaderSourceArray))
             {
-                qDebug() << "GLShaderArray::initializeGL: error in vertex shader: "
-                        << m_objProgram->log();
+                ;
             }
 
             if (!m_objProgram->addShaderFromSourceCode(QOpenGLShader::Fragment,
                     m_strFragmentShaderSourceColored))
             {
-                qDebug()
-                        << "GLShaderArray::initializeGL: error in fragment shader: "
-                        << m_objProgram->log();
+                ;
             }
 
             m_vao = new QOpenGLVertexArrayObject();
@@ -122,16 +119,13 @@ void GLShaderTVArray::initializeGL(int majorVersion, int minorVersion, int intCo
             if (!m_objProgram->addShaderFromSourceCode(QOpenGLShader::Vertex,
                     m_strVertexShaderSourceArray2))
             {
-                qDebug() << "GLShaderArray::initializeGL: error in vertex shader: "
-                        << m_objProgram->log();
+                ;
             }
 
             if (!m_objProgram->addShaderFromSourceCode(QOpenGLShader::Fragment,
                     m_strFragmentShaderSourceColored2))
             {
-                qDebug()
-                        << "GLShaderArray::initializeGL: error in fragment shader: "
-                        << m_objProgram->log();
+                ;
             }
         }
 
@@ -139,8 +133,7 @@ void GLShaderTVArray::initializeGL(int majorVersion, int minorVersion, int intCo
 
         if (!m_objProgram->link())
         {
-            qDebug() << "GLShaderArray::initializeGL: error linking shader: "
-                    << m_objProgram->log();
+            ;
         }
 
         m_objProgram->bind();

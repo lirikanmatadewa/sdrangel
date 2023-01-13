@@ -369,7 +369,6 @@ void GLSpectrumGUI::applySpectrumSettings()
 
     Real refLevel = m_settings.m_linear ? pow(10.0, m_settings.m_refLevel/10.0) : m_settings.m_refLevel;
     Real powerRange = m_settings.m_linear ? pow(10.0, m_settings.m_refLevel/10.0) :  m_settings.m_powerRange;
-    qDebug("GLSpectrumGUI::applySettings: refLevel: %e powerRange: %e", refLevel, powerRange);
     m_glSpectrum->setReferenceLevel(refLevel);
     m_glSpectrum->setPowerRange(powerRange);
     m_glSpectrum->setFPSPeriodMs(m_settings.m_fpsPeriodMs);
@@ -387,14 +386,12 @@ void GLSpectrumGUI::applySpectrumSettings()
 
 void GLSpectrumGUI::on_fftWindow_currentIndexChanged(int index)
 {
-    qDebug("GLSpectrumGUI::on_fftWindow_currentIndexChanged: %d", index);
     m_settings.m_fftWindow = (FFTWindow::Function) index;
     applySettings();
 }
 
 void GLSpectrumGUI::on_fftSize_currentIndexChanged(int index)
 {
-    qDebug("GLSpectrumGUI::on_fftSize_currentIndexChanged: %d", index);
     m_settings.m_fftSize = 1 << (SpectrumSettings::m_log2FFTSizeMin + index);
     setAveragingCombo();
     setMaximumOverlap();
@@ -405,7 +402,6 @@ void GLSpectrumGUI::on_fftSize_currentIndexChanged(int index)
 
 void GLSpectrumGUI::on_fftOverlap_valueChanged(int value)
 {
-    qDebug("GLSpectrumGUI::on_fftOverlap_valueChanged: %d", value);
     m_settings.m_fftOverlap = value;
     setMaximumOverlap();
     applySettings();
@@ -452,7 +448,6 @@ void GLSpectrumGUI::on_autoscale_clicked(bool checked)
 
 void GLSpectrumGUI::on_averagingMode_currentIndexChanged(int index)
 {
-    qDebug("GLSpectrumGUI::on_averagingMode_currentIndexChanged: %d", index);
     m_settings.m_averagingMode = index < 0 ?
         SpectrumSettings::AvgModeNone :
         index > 3 ?
@@ -466,7 +461,6 @@ void GLSpectrumGUI::on_averagingMode_currentIndexChanged(int index)
 
 void GLSpectrumGUI::on_averaging_currentIndexChanged(int index)
 {
-    qDebug("GLSpectrumGUI::on_averaging_currentIndexChanged: %d", index);
     m_settings.m_averagingIndex = index;
     applySettings();
     setAveragingToolitp();
@@ -474,7 +468,6 @@ void GLSpectrumGUI::on_averaging_currentIndexChanged(int index)
 
 void GLSpectrumGUI::on_linscale_toggled(bool checked)
 {
-    qDebug("GLSpectrumGUI::on_averaging_currentIndexChanged: %s", checked ? "lin" : "log");
     m_settings.m_linear = checked;
     applySettings();
 }
@@ -595,7 +588,6 @@ void GLSpectrumGUI::on_levelRange_valueChanged(int value)
 void GLSpectrumGUI::on_fps_currentIndexChanged(int index)
 {
     m_settings.m_fpsPeriodMs = m_fpsMs[index];
-    qDebug("GLSpectrumGUI::on_fps_currentIndexChanged: %d ms", m_settings.m_fpsPeriodMs);
     applySettings();
 }
 
@@ -738,7 +730,6 @@ void GLSpectrumGUI::on_gridIntensity_valueChanged(int index)
 void GLSpectrumGUI::on_truncateScale_toggled(bool checked)
 {
     m_settings.m_truncateFreqScale = checked;
-    qDebug("GLSpectrumGUI::on_truncateScale_toggled: m_truncateFreqScale: %s", (m_settings.m_truncateFreqScale ? "on" : "off"));
     applySettings();
 }
 
@@ -1016,8 +1007,6 @@ void GLSpectrumGUI::handleInputMessages()
 
     while ((message = m_messageQueue.pop()) != 0)
     {
-        qDebug("GLSpectrumGUI::handleInputMessages: message: %s", message->getIdentifier());
-
         if (handleMessage(*message))
         {
             delete message;

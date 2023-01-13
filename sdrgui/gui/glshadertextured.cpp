@@ -53,16 +53,15 @@ void GLShaderTextured::initializeGL(int majorVersion, int minorVersion)
 {
     initializeOpenGLFunctions();
     m_useImmutableStorage = useImmutableStorage();
-    qDebug() << "GLShaderTextured::initializeGL: m_useImmutableStorage: " << m_useImmutableStorage;
-
+    
     m_program = new QOpenGLShaderProgram;
     if ((majorVersion > 3) || ((majorVersion == 3) && (minorVersion >= 3)))
     {
         if (!m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, m_vertexShaderSourceTextured)) {
-            qDebug() << "GLShaderTextured::initializeGL: error in vertex shader: " << m_program->log();
+            ;
         }
         if (!m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, m_fragmentShaderSourceTextured)) {
-            qDebug() << "GLShaderTextured::initializeGL: error in fragment shader: " << m_program->log();
+            ;
         }
 
         m_vao = new QOpenGLVertexArrayObject();
@@ -72,10 +71,10 @@ void GLShaderTextured::initializeGL(int majorVersion, int minorVersion)
     else
     {
         if (!m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, m_vertexShaderSourceTextured2)) {
-            qDebug() << "GLShaderTextured::initializeGL: error in vertex shader: " << m_program->log();
+            ;
         }
         if (!m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, m_fragmentShaderSourceTextured2)) {
-            qDebug() << "GLShaderTextured::initializeGL: error in fragment shader: " << m_program->log();
+            ;
         }
     }
 
@@ -83,7 +82,7 @@ void GLShaderTextured::initializeGL(int majorVersion, int minorVersion)
     m_program->bindAttributeLocation("texCoord", 1);
 
     if (!m_program->link()) {
-        qDebug() << "GLShaderTextured::initializeGL: error linking shader: " << m_program->log();
+        ;
     }
 
     m_program->bind();

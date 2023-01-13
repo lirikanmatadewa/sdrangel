@@ -416,12 +416,6 @@ bool PlutoSDRMIMOGUI::handleMessage(const Message& message)
             m_txDeviceCenterFrequency = notif.getCenterFrequency();
         }
 
-        qDebug("PlutoSDRMIMOGUI::handleInputMessages: DSPMIMOSignalNotification: %s stream: %d SampleRate:%d, CenterFrequency:%llu",
-                sourceOrSink ? "source" : "sink",
-                istream,
-                notif.getSampleRate(),
-                notif.getCenterFrequency());
-
         updateSampleRateAndFrequency();
 
         return true;
@@ -453,7 +447,7 @@ void PlutoSDRMIMOGUI::handleInputMessages()
         if (handleMessage(*message)) {
             delete message;
         } else {
-            qDebug("PlutoSDRMIMOGUI::handleInputMessages: unhandled message: %s", message->getIdentifier());
+            ;
         }
     }
 }

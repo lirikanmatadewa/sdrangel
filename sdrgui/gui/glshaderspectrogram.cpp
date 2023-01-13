@@ -86,33 +86,32 @@ void GLShaderSpectrogram::initializeGL(int majorVersion, int minorVersion)
 {
     initializeOpenGLFunctions();
     m_useImmutableStorage = useImmutableStorage();
-    qDebug() << "GLShaderSpectrogram::initializeGL: m_useImmutableStorage: " << m_useImmutableStorage;
-
+    
     if ((majorVersion > 3) || ((majorVersion == 3) && (minorVersion >= 3)))
     {
         m_programShaded = new QOpenGLShaderProgram;
         if (!m_programShaded->addShaderFromSourceCode(QOpenGLShader::Vertex, m_vertexShader)) {
-            qDebug() << "GLShaderSpectrogram::initializeGL: error in vertex shader: " << m_programShaded->log();
+            ;
         }
         if (!m_programShaded->addShaderFromSourceCode(QOpenGLShader::Geometry, m_geometryShader)) {
-            qDebug() << "GLShaderSpectrogram::initializeGL: error in geometry shader: " << m_programShaded->log();
+            ;
         }
         if (!m_programShaded->addShaderFromSourceCode(QOpenGLShader::Fragment, m_fragmentShaderShaded)) {
-            qDebug() << "GLShaderSpectrogram::initializeGL: error in fragment shader: " << m_programShaded->log();
+            ;
         }
         if (!m_programShaded->link()) {
-            qDebug() << "GLShaderSpectrogram::initializeGL: error linking shader: " << m_programShaded->log();
+            ;
         }
 
         m_programSimple = new QOpenGLShaderProgram;
         if (!m_programSimple->addShaderFromSourceCode(QOpenGLShader::Vertex, m_vertexShader)) {
-            qDebug() << "GLShaderSpectrogram::initializeGL: error in vertex shader: " << m_programSimple->log();
+            ;
         }
         if (!m_programSimple->addShaderFromSourceCode(QOpenGLShader::Fragment, m_fragmentShaderSimple)) {
-            qDebug() << "GLShaderSpectrogram::initializeGL: error in fragment shader: " << m_programSimple->log();
+            ;
         }
         if (!m_programSimple->link()) {
-            qDebug() << "GLShaderSpectrogram::initializeGL: error linking shader: " << m_programSimple->log();
+            ;
         }
 
         m_vao = new QOpenGLVertexArrayObject();
@@ -123,13 +122,13 @@ void GLShaderSpectrogram::initializeGL(int majorVersion, int minorVersion)
     {
         m_programSimple = new QOpenGLShaderProgram;
         if (!m_programSimple->addShaderFromSourceCode(QOpenGLShader::Vertex, m_vertexShader2)) {
-            qDebug() << "GLShaderSpectrogram::initializeGL: error in vertex shader: " << m_programSimple->log();
+            ;
         }
         if (!m_programSimple->addShaderFromSourceCode(QOpenGLShader::Fragment, m_fragmentShaderSimple2)) {
-            qDebug() << "GLShaderSpectrogram::initializeGL: error in fragment shader: " << m_programSimple->log();
+            ;
         }
         if (!m_programSimple->link()) {
-            qDebug() << "GLShaderSpectrogram::initializeGL: error linking shader: " << m_programSimple->log();
+            ;
         }
     }
 
@@ -151,7 +150,6 @@ void GLShaderSpectrogram::initializeGL(int majorVersion, int minorVersion)
 void GLShaderSpectrogram::initGrid(int elements)
 {
     m_gridElements = std::min(elements, 4096); // Limit to keep memory requirements realistic
-    qDebug() << "GLShaderSpectrogram::initGrid: requested: " << elements << " actual: " << m_gridElements;
     int e1 = m_gridElements+1;
 
     // Grid vertices

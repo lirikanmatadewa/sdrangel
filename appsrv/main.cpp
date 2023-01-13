@@ -106,6 +106,6 @@ static int runQtApplication(int argc, char* argv[], qtwebapp::LoggerWithFile *lo
         logger->installMsgHandler();
         int res = runQtApplication(argc, argv, logger);
         delete logger;
-        qWarning("SDRangel quit.");
+        qWarning("SDR Analyzer quit.");
         return res;
       }

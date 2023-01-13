@@ -32,7 +32,6 @@ void DeviceMetisScan::scan()
     }
     else
     {
-        qDebug() << "DeviceMetisScan::scan: cannot bind socket";
         return;
     }
 
@@ -65,13 +64,11 @@ void DeviceMetisScan::scan()
     {
         if (m_udpSocket.writeDatagram((const char*) buffer, sizeof(buffer), *brIt, 1024) < 0)
         {
-            qDebug("DeviceMetisScan::scan: discovery writeDatagram to %s failed: %s ",
-                qPrintable(brIt->toString()), qPrintable(m_udpSocket.errorString()));
             continue;
         }
         else
         {
-            qDebug("DeviceMetisScan::scan: discovery writeDatagram sent to %s", qPrintable(brIt->toString()));
+            ;
         }
     }
 
@@ -81,7 +78,6 @@ void DeviceMetisScan::scan()
     connect(timer, SIGNAL(timeout()), &loop, SLOT(quit()));
     timer->start(500); // 500 ms timeout
 
-    qDebug() << "DeviceMetisScan::scan: start 0.5 second timeout loop";
     // Execute the event loop here and wait for the timeout to trigger
     // which in turn will trigger event loop quit.
     loop.exec();

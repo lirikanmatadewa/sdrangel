@@ -17,11 +17,11 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>SDRangel</string>
+   <string>BWE Solutions - SDR Analyzer</string>
   </property>
   <property name="windowIcon">
    <iconset resource="resources/res.qrc">
-    <normaloff>:/sdrangel_icon.png</normaloff>:/sdrangel_icon.png</iconset>
+    <normaloff>:/bwe-solutions_icon.png</normaloff>:/bwe-solutions_icon.png</iconset>
   </property>
   <property name="animated">
    <bool>true</bool>
@@ -64,7 +64,7 @@
      <x>0</x>
      <y>0</y>
      <width>1012</width>
-     <height>27</height>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -812,7 +812,7 @@
   </action>
   <action name="action_About">
    <property name="text">
-    <string>&amp;About SDRangel...</string>
+    <string>&amp;About SDR Analyzer...</string>
    </property>
    <property name="font">
     <font>

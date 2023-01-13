@@ -33,7 +33,6 @@ DeviceEnumerator::~DeviceEnumerator()
 
 void DeviceEnumerator::addNonDiscoverableDevices(PluginManager *pluginManager, const DeviceUserArgs& deviceUserArgs)
 {
-    qDebug("DeviceEnumerator::addNonDiscoverableDevices: start");
     const QList<DeviceUserArgs::Args>& args = deviceUserArgs.getArgsByDevice();
     QList<DeviceUserArgs::Args>::const_iterator argsIt = args.begin();
     unsigned int rxIndex = m_rxEnumeration.size();
@@ -59,7 +58,6 @@ void DeviceEnumerator::addNonDiscoverableDevices(PluginManager *pluginManager, c
             for (int deviceIndex = 0; deviceIndex < deviceNbItems; deviceIndex++)
             {
                 QString description = QString("%1[%2:%3] user defined").arg(argsIt->m_id).arg(argsIt->m_sequence).arg(deviceIndex);
-                qDebug("DeviceEnumerator::addNonDiscoverableDevices: Rx: %s", qPrintable(description));
                 PluginInterface::SamplingDevice ndDevice(
                     description,
                     argsIt->m_id,
@@ -92,7 +90,6 @@ void DeviceEnumerator::addNonDiscoverableDevices(PluginManager *pluginManager, c
             for (int deviceIndex = 0; deviceIndex < deviceNbItems; deviceIndex++)
             {
                 QString description = QString("%1[%2:%3] user defined").arg(argsIt->m_id).arg(argsIt->m_sequence).arg(deviceIndex);
-                qDebug("DeviceEnumerator::addNonDiscoverableDevices: Tx: %s", qPrintable(description));
                 PluginInterface::SamplingDevice ndDevice(
                     description,
                     argsIt->m_id,
@@ -125,7 +122,6 @@ void DeviceEnumerator::addNonDiscoverableDevices(PluginManager *pluginManager, c
             for (int deviceIndex = 0; deviceIndex < deviceNbItems; deviceIndex++)
             {
                 QString description = QString("%1[%2:%3] user defined").arg(argsIt->m_id).arg(argsIt->m_sequence).arg(deviceIndex);
-                qDebug("DeviceEnumerator::addNonDiscoverableDevices: MIMO: %s", qPrintable(description));
                 PluginInterface::SamplingDevice ndDevice(
                     description,
                     argsIt->m_id,
@@ -288,7 +284,7 @@ void DeviceEnumerator::enumerateDevices(PluginAPI::SamplingDeviceRegistrations& 
             {
                 found = true;
                 break;
-            }
+}
         }
         if (!found) {
             it->m_samplingDevice.removed = true;
@@ -298,18 +294,18 @@ void DeviceEnumerator::enumerateDevices(PluginAPI::SamplingDeviceRegistrations& 
     // Add new entries and update existing (in case re-added or sequence number has changed)
     int index = enumeration.size();
     for (DevicesEnumeration::iterator it = tempEnumeration.begin(); it != tempEnumeration.end(); ++it)
-    {
+{
 
         bool found = false;
         for (DevicesEnumeration::iterator it2 = enumeration.begin(); it2 != enumeration.end(); ++it2)
+    {
+        if (it->m_samplingDevice == it2->m_samplingDevice)
         {
-            if (it->m_samplingDevice == it2->m_samplingDevice)
-            {
-                it2->m_samplingDevice.removed = false;
-                it2->m_samplingDevice.displayedName = it->m_samplingDevice.displayedName;
-                found = true;
-                break;
-            }
+            it2->m_samplingDevice.removed = false;
+            it2->m_samplingDevice.displayedName = it->m_samplingDevice.displayedName;
+            found = true;
+            break;
+        }
 
         }
         if (!found)
@@ -326,14 +322,14 @@ void DeviceEnumerator::enumerateRxDevices(PluginManager *pluginManager)
 }
 
 void DeviceEnumerator::enumerateTxDevices(PluginManager *pluginManager)
-{
+    {
     enumerateDevices(pluginManager->getSinkDeviceRegistrations(), m_txEnumeration, PluginInterface::SamplingDevice::StreamSingleTx);
 }
 
 void DeviceEnumerator::enumerateMIMODevices(PluginManager *pluginManager)
-{
+        {
     enumerateDevices(pluginManager->getMIMODeviceRegistrations(), m_mimoEnumeration, PluginInterface::SamplingDevice::StreamMIMO);
-}
+        }
 
 void DeviceEnumerator::listRxDeviceNames(QList<QString>& list, std::vector<int>& indexes) const
 {
@@ -579,30 +575,19 @@ int DeviceEnumerator::getBestSamplingDeviceIndex(
 	{
 		if (itMatchSequence != devicesEnumeration.end()) // match sequence and device type ?
 		{
-			qDebug("DeviceEnumerator::getBestSamplingDeviceIndex: sequence matched: id: %s ser: %s seq: %d",
-				qPrintable(itMatchSequence->m_samplingDevice.id),
-                qPrintable(itMatchSequence->m_samplingDevice.serial),
-                itMatchSequence->m_samplingDevice.sequence);
-            return itMatchSequence - devicesEnumeration.begin();
+			return itMatchSequence - devicesEnumeration.begin();
 		}
 		else if (itFirstOfKind != devicesEnumeration.end()) // match just device type ?
 		{
-			qDebug("DeviceEnumerator::getBestSamplingDeviceIndex: first of kind matched: id: %s ser: %s seq: %d",
-				qPrintable(itFirstOfKind->m_samplingDevice.id),
-                qPrintable(itFirstOfKind->m_samplingDevice.serial),
-                itFirstOfKind->m_samplingDevice.sequence);
-            return itFirstOfKind - devicesEnumeration.begin();
+			return itFirstOfKind - devicesEnumeration.begin();
 		}
 		else // definitely not found !
 		{
-			qDebug("DeviceEnumerator::getBestSamplingDeviceIndex: no match");
 			return -1;
 		}
 	}
 	else // exact match
 	{
-		qDebug("DeviceEnumerator::getBestSamplingDeviceIndex: serial matched (exact): id: %s ser: %s",
-			qPrintable(it->m_samplingDevice.id), qPrintable(it->m_samplingDevice.serial));
-        return it - devicesEnumeration.begin();
+		return it - devicesEnumeration.begin();
 	}
 }
