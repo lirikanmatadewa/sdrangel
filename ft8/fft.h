@@ -67,8 +67,9 @@ public:
         int uses_;
     }; // Plan
 
-    FFTEngine() : nplans(0)
-    {}
+    FFTEngine(FFTEngine& other) = delete;
+    void operator=(const FFTEngine &) = delete;
+    static FFTEngine *GetInstance();
 
     Plan *get_plan(int n, const char *why);
 
@@ -82,14 +83,20 @@ public:
     std::vector<std::complex<float>> analytic(const std::vector<float> &x, const char *why);
     std::vector<float> hilbert_shift(const std::vector<float> &x, float hz0, float hz1, int rate);
 
+protected:
+    FFTEngine() :
+        m_nplans(0)
+    {}
+    static FFTEngine *m_instance;
+
 private:
     void fft_stats();
-    QMutex plansmu;
-    QMutex plansmu2;
-    Plan *plans[1000];
-    int nplans;
+    QMutex m_plansmu;
+    QMutex m_plansmu2;
+    Plan *m_plans[1000];
+    int m_nplans;
     // MEASURE=0, ESTIMATE=64, PATIENT=32
-    static const int fftw_type = FFTW_ESTIMATE;
+    static const int M_FFTW_TYPE = FFTW_ESTIMATE;
 }; // FFTEngine
 
 } // namespace FT8
