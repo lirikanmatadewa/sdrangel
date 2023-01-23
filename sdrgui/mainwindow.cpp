@@ -127,7 +127,7 @@ MainWindow::MainWindow(qtwebapp::LoggerWithFile *logger, const MainParser& parse
 #endif
 
 	qDebug() << "MainWindow::MainWindow: start";
-    setWindowTitle("SDRangel");
+    setWindowTitle("SDR Analyzer");
 
     m_instance = this;
     m_mainCore->m_logger = logger;
