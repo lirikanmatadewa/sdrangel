@@ -3517,6 +3517,9 @@ margin-bottom: 20px;
     "FreqTrackerReport" : {
       "$ref" : "#/definitions/FreqTrackerReport"
     },
+    "FT8DemodReport" : {
+      "$ref" : "#/definitions/FT8DemodReport"
+    },
     "M17DemodReport" : {
       "$ref" : "#/definitions/M17DemodReport"
     },
@@ -3668,6 +3671,9 @@ margin-bottom: 20px;
     },
     "FreqTrackerSettings" : {
       "$ref" : "#/definitions/FreqTrackerSettings"
+    },
+    "FT8DemodSettings" : {
+      "$ref" : "#/definitions/FT8DemodSettings"
     },
     "InterferometerSettings" : {
       "$ref" : "#/definitions/InterferometerSettings"
@@ -5555,6 +5561,109 @@ margin-bottom: 20px;
     }
   },
   "description" : "FFT filter band definition"
+};
+            defs.FT8DemodReport = {
+  "properties" : {
+    "channelPowerDB" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "power received in channel (dB)"
+    },
+    "squelch" : {
+      "type" : "integer",
+      "description" : "Audio squelch status (1 if open else 0)"
+    },
+    "channelSampleRate" : {
+      "type" : "integer"
+    }
+  },
+  "description" : "FT8Demod"
+};
+            defs.FT8DemodSettings = {
+  "properties" : {
+    "inputFrequencyOffset" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "filterIndex" : {
+      "type" : "integer"
+    },
+    "spanLog2" : {
+      "type" : "integer"
+    },
+    "rfBandwidth" : {
+      "type" : "number",
+      "format" : "float"
+    },
+    "lowCutoff" : {
+      "type" : "number",
+      "format" : "float"
+    },
+    "fftWindow" : {
+      "type" : "integer",
+      "description" : "FFT Window index (FFTWindow::Function):\n  * 0 - Bartlett\n  * 1 - Blackman-Harris 4 term\n  * 2 - Flattop\n  * 3 - Hamming\n  * 4 - Hanning\n  * 5 - Rectangle\n  * 6 - Kaiser\n  * 7 - Blackman 3 term\n  * 8 - Blackman-Harris 7 term\n"
+    },
+    "volume" : {
+      "type" : "number",
+      "format" : "float"
+    },
+    "agc" : {
+      "type" : "integer",
+      "description" : "AGC (1 if AGC active else 0)"
+    },
+    "recordWav" : {
+      "type" : "integer",
+      "description" : "Record received audio as 12000S/s 16 bit .wav file\n  * 0 - Do not record\n  * 1 - Record as sdrangel/ft8/save/YYYYMMDD_HHMMSS.wav in writable location\n"
+    },
+    "logMessages" : {
+      "type" : "integer",
+      "description" : "Log decoded messages in WSJT CALL.TXT format\n  * 0 - Do not log messages\n  * 1 - Log messages as sdrangel/ft8/logs/YYYYMMDD_call.txt in writable location (daily files)\n"
+    },
+    "nbDecoderThreads" : {
+      "type" : "integer",
+      "description" : "Number of threads in the FT8 decoder"
+    },
+    "decoderTimeBudget" : {
+      "type" : "number",
+      "format" : "float"
+    },
+    "rgbColor" : {
+      "type" : "integer"
+    },
+    "title" : {
+      "type" : "string"
+    },
+    "streamIndex" : {
+      "type" : "integer",
+      "description" : "MIMO channel. Not relevant when connected to SI (single Rx)."
+    },
+    "useReverseAPI" : {
+      "type" : "integer",
+      "description" : "Synchronize with reverse API (1 for yes, 0 for no)"
+    },
+    "reverseAPIAddress" : {
+      "type" : "string"
+    },
+    "reverseAPIPort" : {
+      "type" : "integer"
+    },
+    "reverseAPIDeviceIndex" : {
+      "type" : "integer"
+    },
+    "reverseAPIChannelIndex" : {
+      "type" : "integer"
+    },
+    "spectrumConfig" : {
+      "$ref" : "#/definitions/GLSpectrum"
+    },
+    "channelMarker" : {
+      "$ref" : "#/definitions/ChannelMarker"
+    },
+    "rollupState" : {
+      "$ref" : "#/definitions/RollupState"
+    }
+  },
+  "description" : "FT8Demod"
 };
             defs.Feature = {
   "required" : [ "id", "index", "title", "uid" ],
@@ -56780,7 +56889,7 @@ except ApiException as e:
           </div>
           <div id="generator">
             <div class="content">
-              Generated 2022-12-16T06:50:35.932+01:00
+              Generated 2023-01-19T23:18:51.935+01:00
             </div>
           </div>
       </div>

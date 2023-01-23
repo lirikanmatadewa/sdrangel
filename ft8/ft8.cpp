@@ -3269,10 +3269,11 @@ void FT8::subtract(
         // ???
         while (fabs(target - actual) > M_PI)
         {
-            if (target < actual)
-                target += 2 * M_PI;
-            else
-                target -= 2 * M_PI;
+            if (target < actual) {
+                target += (2 * M_PI) - 1e-3; // plus epsilonn to break possible infinite loop
+            } else {
+                target -= (2 * M_PI) + 1e-3; // plus epsilonn to break possible infinite loop
+            }
         }
 
         // adj is to be spread evenly over the off-ramp and on-ramp samples.
@@ -3533,13 +3534,14 @@ void FT8Decoder::entry(
             final_deadline,
             cb,
             prevdecs,
-            &fftEngine
+            FFTEngine::GetInstance()
         );
         ft8->getParams() = getParams(); // transfer parameters
 
         int npasses = nprevdecs > 0 ? params.npasses_two : params.npasses_one;
         ft8->set_npasses(npasses);
         QThread *th = new QThread();
+        th->setObjectName(tr("ft8:%1:%2").arg(cb->get_name()).arg(i));
         threads.push_back(th);
         // std::thread *th = new std::thread([ft8, npasses] () { ft8->go(npasses); });
         // thv.push_back(std::pair<FT8*, std::thread*>(ft8, th));
