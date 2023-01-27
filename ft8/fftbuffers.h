@@ -5,10 +5,6 @@
 // written by Robert Morris, AB1HL                                               //
 // reformatted and adapted to Qt and SDRangel context                            //
 //                                                                               //
-// Caution: this is intentionally not thread safe and one such engine should     //
-// be allocated by thread. Due to optimization of FFT buffers these buffers are  //
-// not shared among threads.                                                     //
-//                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
 // the Free Software Foundation as version 3 of the License, or                  //
@@ -23,39 +19,34 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.          //
 ///////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FFT_H
-#define FFT_H
+#ifndef FFTBUFFERS_H
+#define FFTBUFFERS_H
 
-#include <QMutex>
-#include <vector>
-#include <complex>
+#include <map>
+#include <fftw3.h>
 
 #include "export.h"
 
 namespace FT8
 {
-    class FFTBuffers;
 
-class FT8_API FFTEngine
+class FT8_API FFTBuffers
 {
 public:
-    std::vector<std::complex<float>> one_fft(const std::vector<float> &samples, int i0, int block);
-    std::vector<float> one_ifft(const std::vector<std::complex<float>> &bins);
-    typedef std::vector<std::vector<std::complex<float>>> ffts_t;
-    ffts_t ffts(const std::vector<float> &samples, int i0, int block);
-    std::vector<std::complex<float>> one_fft_c(const std::vector<float> &samples, int i0, int block);
-    std::vector<std::complex<float>> one_fft_cc(const std::vector<std::complex<float>> &samples, int i0, int block);
-    std::vector<std::complex<float>> one_ifft_cc(const std::vector<std::complex<float>> &bins);
-    std::vector<float> hilbert_shift(const std::vector<float> &x, float hz0, float hz1, int rate);
+    ~FFTBuffers();
 
-    FFTEngine();
-    ~FFTEngine();
+    float* getR(int n);
+    fftwf_complex *getC(int n);
+    fftwf_complex *getCCI(int n);
+    fftwf_complex *getCCO(int n);
 
 private:
-    std::vector<std::complex<float>> analytic(const std::vector<float> &x);
-    FFTBuffers *m_fftBuffers;
-}; // FFTEngine
+    std::map<int, float*> m_rs; //!< R2C inputs or C2R inputs by size
+    std::map<int, fftwf_complex*> m_cs; //!< R2C outputs or C2R inputs by size
+    std::map<int, fftwf_complex*> m_ccis; //!< C2C inputs/outputs by size
+    std::map<int, fftwf_complex*> m_ccos; //!< C2C outputs/inputs by size
+};
 
-} // namespace FT8
+} // FFTBuffers
 
-#endif
+#endif // FFTBUFFERS_H

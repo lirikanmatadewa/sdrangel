@@ -29,7 +29,7 @@
 //
 
 #include <stdio.h>
-#include <assert.h>
+// #include <assert.h>
 #include <math.h>
 #include <complex>
 #include <fftw3.h>
@@ -352,7 +352,6 @@ FT8::FT8(
     hack_off_ = -1;
     hack_len_ = -1;
 
-    plan32_ = nullptr;
     fftEngine_ = fftEngine;
     npasses_ = 1;
 }
@@ -373,8 +372,8 @@ float FT8::one_coarse_strength(const FFTEngine::ffts_t &bins, int bi0, int si0)
 {
     int costas[] = {3, 1, 4, 0, 6, 5, 2};
 
-    assert(si0 >= 0 && si0 + 72 + 8 <= (int)bins.size());
-    assert(bi0 >= 0 && bi0 + 8 <= (int)bins[0].size());
+    // assert(si0 >= 0 && si0 + 72 + 8 <= (int)bins.size());
+    // assert(bi0 >= 0 && bi0 + 8 <= (int)bins[0].size());
 
     float sig = 0.0;
     float noise = 0.0;
@@ -486,8 +485,7 @@ float FT8::one_coarse_strength(const FFTEngine::ffts_t &bins, int bi0, int si0)
 int FT8::blocksize(int rate)
 {
     // FT8 symbol length is 1920 at 12000 samples/second.
-    int xblock = 1920 / (12000.0 / rate);
-    assert(xblock == (int)xblock);
+    int xblock = (1920*rate) / 12000;
     int block = xblock;
     return block;
 }
@@ -561,8 +559,8 @@ std::vector<float> FT8::reduce_rate(
     float &delta_hz
 )
 {
-    assert(brate < arate);
-    assert(hz1 - hz0 <= brate / 2);
+    // assert(brate < arate);
+    // assert(hz1 - hz0 <= brate / 2);
 
     // the pass band is hz0..hz1
     // stop bands are 0..hz00 and hz11..nyquist.
@@ -586,8 +584,7 @@ std::vector<float> FT8::reduce_rate(
     }
 
     int alen = a.size();
-    std::vector<std::complex<float>> bins1 = fftEngine_->one_fft(
-        a, 0, alen, "reduce_rate1", 0);
+    std::vector<std::complex<float>> bins1 = fftEngine_->one_fft(a, 0, alen);
     int nbins1 = bins1.size();
     float bin_hz = arate / (float)alen;
 
@@ -621,7 +618,7 @@ std::vector<float> FT8::reduce_rate(
     int nmid = (brate / 4.0) / bin_hz;
 
     int delta = omid - nmid; // amount to move down
-    assert(delta < nbins1);
+    // assert(delta < nbins1);
     int blen = round(alen * (brate / (float)arate));
     std::vector<std::complex<float>> bbins(blen / 2 + 1);
     for (int i = 0; i < (int)bbins.size(); i++)
@@ -637,8 +634,7 @@ std::vector<float> FT8::reduce_rate(
     }
 
     // use ifft to reduce the rate.
-    std::vector<float> vvv = fftEngine_->one_ifft(bbins, "reduce_rate2");
-
+    std::vector<float> vvv = fftEngine_->one_ifft(bbins);
     delta_hz = delta * bin_hz;
 
     return vvv;
@@ -646,9 +642,6 @@ std::vector<float> FT8::reduce_rate(
 
 void FT8::go(int npasses)
 {
-    // cache to avoid cost of fftw planner mutex.
-    plan32_ = fftEngine_->get_plan(32, "cache32");
-
     if (0)
     {
         fprintf(stderr, "go: %.0f .. %.0f, %.0f, rate=%d\n",
@@ -677,7 +670,7 @@ void FT8::go(int npasses)
         samples_.resize(nice);
     }
 
-    assert(min_hz_ >= 0 && max_hz_ + 50 <= rate_ / 2);
+    // assert(min_hz_ >= 0 && max_hz_ + 50 <= rate_ / 2);
 
     // can we reduce the sample rate?
     int nrate = -1;
@@ -742,8 +735,8 @@ void FT8::go(int npasses)
             }
         }
 
-        assert(max_hz_ + 50 < nrate / 2);
-        assert(min_hz_ >= 0);
+        // assert(max_hz_ + 50 < nrate / 2);
+        // assert(min_hz_ >= 0);
 
         float ratio = nrate / (float)rate_;
         rate_ = nrate;
@@ -839,7 +832,7 @@ void FT8::go(int npasses)
         // just do this once, re-use for every fractional fft_shift
         // and down_v7_f() to 200 sps.
         std::vector<std::complex<float>> bins = fftEngine_->one_fft(
-            samples_, 0, samples_.size(), "go1", 0);
+            samples_, 0, samples_.size());
 
         for (int hz_frac_i = 0; hz_frac_i < params.coarse_hz_n; hz_frac_i++)
         {
@@ -858,7 +851,7 @@ void FT8::go(int npasses)
             for (int off_frac_i = 0; off_frac_i < params.coarse_off_n; off_frac_i++)
             {
                 int off_frac = off_frac_i * (block / params.coarse_off_n);
-                FFTEngine::ffts_t bins = fftEngine_->ffts(samples1, off_frac, block, "go2");
+                FFTEngine::ffts_t bins = fftEngine_->ffts(samples1, off_frac, block);
                 std::vector<Strength> oo = coarse(bins, si0, si1);
                 for (int i = 0; i < (int)oo.size(); i++)
                 {
@@ -934,7 +927,7 @@ float FT8::one_strength(const std::vector<float> &samples200, float hz, int off)
         int start = starts[which];
         for (int si = 0; si < 7; si++)
         {
-            auto fft = fftEngine_->one_fft(samples200, off + (si + start) * 32, 32, "one_strength", plan32_);
+            auto fft = fftEngine_->one_fft(samples200, off + (si + start) * 32, 32);
             for (int bi = 0; bi < 8; bi++)
             {
                 float x = std::abs(fft[bin0 + bi]);
@@ -999,7 +992,7 @@ float FT8::one_strength_known(
 )
 {
     int block = blocksize(rate);
-    assert(syms.size() == 79);
+    // assert(syms.size() == 79);
 
     int bin0 = round(hz / 6.25);
 
@@ -1011,7 +1004,7 @@ float FT8::one_strength_known(
 
     for (int si = 0; si < 79; si += params.known_sparse)
     {
-        auto fft = fftEngine_->one_fft(samples, off + si * block, block, "one_strength_known", 0);
+        auto fft = fftEngine_->one_fft(samples, off + si * block, block);
 
         if (params.known_strength_how == 7)
         {
@@ -1118,7 +1111,7 @@ int FT8::search_time_fine(
     }
 
     str = best_sum;
-    assert(best_off >= 0);
+    // assert(best_off >= 0);
     return off0 + best_off;
 }
 
@@ -1181,7 +1174,7 @@ std::vector<Strength> FT8::search_both(
     int off_win
 )
 {
-    assert(hz0 >= 25 - 6.25 / 2 && hz0 <= 25 + 6.25 / 2);
+    // assert(hz0 >= 25 - 6.25 / 2 && hz0 <= 25 + 6.25 / 2);
 
     std::vector<Strength> strengths;
 
@@ -1218,7 +1211,7 @@ void FT8::search_both_known(
     float &off_out
 )
 {
-    assert(hz0 >= 0 && hz0 + 50 < rate / 2);
+    // assert(hz0 >= 0 && hz0 + 50 < rate / 2);
 
     int off0 = round(off_secs0 * (float)rate);
 
@@ -1234,7 +1227,7 @@ void FT8::search_both_known(
     int best_off = 0;
     float best_strength = 0;
 
-    std::vector<std::complex<float>> bins = fftEngine_->one_fft(samples, 0, samples.size(), "stfk", 0);
+    std::vector<std::complex<float>> bins = fftEngine_->one_fft(samples, 0, samples.size());
 
     float hz_start, hz_inc, hz_end;
     if (params.third_hz_n > 1)
@@ -1298,7 +1291,7 @@ std::vector<float> FT8::fft_shift(
     }
     else
     {
-        bins = fftEngine_->one_fft(samples, off, len, "fft_shift", 0);
+        bins = fftEngine_->one_fft(samples, off, len);
         hack_bins_ = bins;
         hack_size_ = samples.size();
         hack_off_ = off;
@@ -1339,7 +1332,7 @@ std::vector<float> FT8::fft_shift_f(
             bins1[i] = 0;
         }
     }
-    std::vector<float> out = fftEngine_->one_ifft(bins1, "fft_shift");
+    std::vector<float> out = fftEngine_->one_ifft(bins1);
     return out;
 }
 
@@ -1367,7 +1360,7 @@ std::vector<float> FT8::shift200(
 FFTEngine::ffts_t FT8::extract(const std::vector<float> &samples200, float, int off)
 {
 
-    FFTEngine::ffts_t bins3 = fftEngine_->ffts(samples200, off, 32, "extract");
+    FFTEngine::ffts_t bins3 = fftEngine_->ffts(samples200, off, 32);
     FFTEngine::ffts_t m79(79);
 
     for (int si = 0; si < 79; si++)
@@ -1976,7 +1969,7 @@ void FT8::soft_decode(const FFTEngine::ffts_t &c79, float ll174[])
             ll174[lli++] = ll;
         }
     }
-    assert(lli == 174);
+    // assert(lli == 174);
 }
 
 //
@@ -2153,7 +2146,7 @@ void FT8::c_soft_decode(const FFTEngine::ffts_t &c79x, float ll174[])
             ll174[lli++] = ll;
         }
     }
-    assert(lli == 174);
+    // assert(lli == 174);
 }
 
 //
@@ -2168,8 +2161,8 @@ void FT8::c_soft_decode(const FFTEngine::ffts_t &c79x, float ll174[])
 //
 std::vector<float> FT8::extract_bits(const std::vector<int> &syms, const std::vector<float> str)
 {
-    assert(syms.size() == 79);
-    assert(str.size() == 79);
+    // assert(syms.size() == 79);
+    // assert(str.size() == 79);
 
     std::vector<float> bits;
     for (int si = 0; si < 79; si++)
@@ -2323,7 +2316,7 @@ void FT8::soft_decode_pairs(
             ll174[lli++] = ll;
         }
     }
-    assert(lli == 174);
+    // assert(lli == 174);
 }
 
 void FT8::soft_decode_triples(
@@ -2485,7 +2478,7 @@ void FT8::soft_decode_triples(
             ll174[lli++] = ll;
         }
     }
-    assert(lli == 174);
+    // assert(lli == 174);
 }
 
 //
@@ -2552,11 +2545,9 @@ std::vector<std::complex<float>> FT8::fbandpass(
     float high_outer  // end of transition
 )
 {
-    // assert(low_outer >= 0);
-    assert(low_outer <= low_inner);
-    assert(low_inner <= high_inner);
-    assert(high_inner <= high_outer);
-    // assert(high_outer <= bin_hz * bins0.size());
+    // assert(low_outer <= low_inner);
+    // assert(low_inner <= high_inner);
+    // assert(high_inner <= high_outer);
 
     int nbins = bins0.size();
     std::vector<std::complex<float>> bins1(nbins);
@@ -2618,7 +2609,7 @@ std::vector<std::complex<float>> FT8::fbandpass(
 std::vector<float> FT8::down_v7(const std::vector<float> &samples, float hz)
 {
     int len = samples.size();
-    std::vector<std::complex<float>> bins = fftEngine_->one_fft(samples, 0, len, "down_v7a", 0);
+    std::vector<std::complex<float>> bins = fftEngine_->one_fft(samples, 0, len);
 
     return down_v7_f(bins, len, hz);
 }
@@ -2663,7 +2654,7 @@ std::vector<float> FT8::down_v7_f(const std::vector<std::complex<float>> &bins, 
     std::vector<std::complex<float>> bbins(blen / 2 + 1);
     for (int i = 0; i < (int)bbins.size(); i++)
         bbins[i] = bins1[i];
-    std::vector<float> out = fftEngine_->one_ifft(bbins, "down_v7b");
+    std::vector<float> out = fftEngine_->one_ifft(bbins);
 
     return out;
 }
@@ -3167,7 +3158,7 @@ void FT8::subtract(
     float diff1 = (bin0 * bin_hz) - hz1;
     std::vector<float> moved = fftEngine_->hilbert_shift(nsamples_, diff0, diff1, rate_);
 
-    FFTEngine::ffts_t bins = fftEngine_->ffts(moved, off0, block, "subtract");
+    FFTEngine::ffts_t bins = fftEngine_->ffts(moved, off0, block);
 
     if (bin0 + 8 > (int)bins[0].size())
         return;
@@ -3449,14 +3440,18 @@ std::vector<int> FT8::recode(int a174[])
             out79.push_back(sym);
         }
     }
-    assert(out79.size() == 79);
-    assert(i174 == 174);
+    // assert(out79.size() == 79);
+    // assert(i174 == 174);
     return out79;
 }
 
 FT8Decoder::~FT8Decoder()
 {
     forceQuit(); // stop all remaining running threads if any
+
+    for (auto& fftEngine : fftEngines) {
+        delete fftEngine;
+    }
 }
 
 //
@@ -3522,6 +3517,10 @@ void FT8Decoder::entry(
         hz0 = std::max(hz0, 0.0f);
         hz1 = std::min(hz1, (rate / 2.0f) - 50);
 
+        if (i == (int) fftEngines.size()) {
+            fftEngines.push_back(new FFTEngine());
+        }
+
         FT8 *ft8 = new FT8(
             samples,
             hz0,
@@ -3534,7 +3533,7 @@ void FT8Decoder::entry(
             final_deadline,
             cb,
             prevdecs,
-            FFTEngine::GetInstance()
+            fftEngines[i]
         );
         ft8->getParams() = getParams(); // transfer parameters
 

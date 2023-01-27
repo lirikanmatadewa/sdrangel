@@ -5,10 +5,6 @@
 // written by Robert Morris, AB1HL                                               //
 // reformatted and adapted to Qt and SDRangel context                            //
 //                                                                               //
-// Caution: this is intentionally not thread safe and one such engine should     //
-// be allocated by thread. Due to optimization of FFT buffers these buffers are  //
-// not shared among threads.                                                     //
-//                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
 // the Free Software Foundation as version 3 of the License, or                  //
@@ -23,39 +19,50 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.          //
 ///////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FFT_H
-#define FFT_H
+#include <QMutexLocker>
 
-#include <QMutex>
-#include <vector>
-#include <complex>
-
-#include "export.h"
+#include "ft8plan.h"
+#include "ft8plans.h"
 
 namespace FT8
 {
-    class FFTBuffers;
 
-class FT8_API FFTEngine
+FT8Plans* FT8Plans::m_instance= nullptr;
+QMutex FT8Plans::m_globalPlanMutex;
+
+FT8Plans::FT8Plans()
+{}
+
+FT8Plans::~FT8Plans()
 {
-public:
-    std::vector<std::complex<float>> one_fft(const std::vector<float> &samples, int i0, int block);
-    std::vector<float> one_ifft(const std::vector<std::complex<float>> &bins);
-    typedef std::vector<std::vector<std::complex<float>>> ffts_t;
-    ffts_t ffts(const std::vector<float> &samples, int i0, int block);
-    std::vector<std::complex<float>> one_fft_c(const std::vector<float> &samples, int i0, int block);
-    std::vector<std::complex<float>> one_fft_cc(const std::vector<std::complex<float>> &samples, int i0, int block);
-    std::vector<std::complex<float>> one_ifft_cc(const std::vector<std::complex<float>> &bins);
-    std::vector<float> hilbert_shift(const std::vector<float> &x, float hz0, float hz1, int rate);
+    qDebug("FT8::FT8Plans::~FT8Plans: %lu plans to delete", m_plans.size());
 
-    FFTEngine();
-    ~FFTEngine();
+    for (auto& plan : m_plans) {
+        delete plan.second;
+    }
+}
 
-private:
-    std::vector<std::complex<float>> analytic(const std::vector<float> &x);
-    FFTBuffers *m_fftBuffers;
-}; // FFTEngine
+FT8Plans *FT8Plans::GetInstance()
+{
+    if (!m_instance) {
+        m_instance = new FT8Plans();
+    }
 
-} // namespace FT8
+    return m_instance;
+}
 
-#endif
+Plan *FT8Plans::getPlan(int n)
+{
+    QMutexLocker mlock(&m_globalPlanMutex);
+
+    if (m_plans.find(n) != m_plans.end()) {
+        return m_plans[n];
+    }
+
+    fftwf_set_timelimit(5);
+
+    m_plans[n] = new Plan(n);
+    return m_plans[n];
+}
+
+}

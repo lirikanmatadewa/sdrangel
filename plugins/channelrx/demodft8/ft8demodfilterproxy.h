@@ -1,9 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2023 Edouard Griffiths, F4EXB.                                  //
-//                                                                               //
-// This is the code from ft8mon: https://github.com/rtmrtmrtmrtm/ft8mon          //
-// written by Robert Morris, AB1HL                                               //
-// reformatted and adapted to Qt and SDRangel context                            //
+// Copyright (C) 2023 Edouard Griffiths, F4EXB                                   //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -18,46 +14,42 @@
 // You should have received a copy of the GNU General Public License             //
 // along with this program. If not, see <http://www.gnu.org/licenses/>.          //
 ///////////////////////////////////////////////////////////////////////////////////
-#include "unpack0.h"
-#include "unpack0.h"
+#ifndef INCLUDE_FT8DEMODFILTERPROXY_H
+#define INCLUDE_FT8DEMODFILTERPROXY_H
 
-namespace FT8 {
+#include <QSortFilterProxyModel>
 
-//
-// turn bits into a 128-bit integer.
-// most significant bit first.
-//
-
-boost::multiprecision::int128_t un128(int a77[], int start, int len)
+class FT8DemodFilterProxy : public QSortFilterProxyModel
 {
-    boost::multiprecision::int128_t x = 0;
+    Q_OBJECT
+public:
+    FT8DemodFilterProxy(QObject *parent = nullptr);
 
-    // assert(len < (int)sizeof(x) * 8 && start >= 0 && start + len <= 77);
-    for (int i = 0; i < len; i++)
+    void resetFilter();
+    void setFilterUTC(const QString& utcString);
+    void setFilterDf(int df);
+    void setFilterCall(const QString& utcString);
+    void setFilterLoc(const QString& utcString);
+
+protected:
+    bool filterAcceptsRow(int sourceRow, const QModelIndex &sourceParent) const override;
+
+private:
+    enum filterActive
     {
-        x <<= 1;
-        x |= a77[start + i];
-    }
+        FILTER_NONE,
+        FILTER_UTC,
+        FILTER_DF,
+        FILTER_CALL,
+        FILTER_LOC
+    };
 
-    return x;
-}
+    bool dfInRange(int df) const;
+    filterActive m_filterActive;
+    QString m_utc;
+    int m_df;
+    QString m_call;
+    QString m_loc;
+};
 
-//
-// turn bits into a 64-bit integer.
-// most significant bit first.
-//
-uint64_t un64(int a77[], int start, int len)
-{
-    uint64_t x = 0;
-
-    // assert(len < (int)sizeof(x) * 8 && start >= 0 && start + len <= 63);
-    for (int i = 0; i < len; i++)
-    {
-        x <<= 1;
-        x |= a77[start + i];
-    }
-
-    return x;
-}
-
-} // namespace FT8
+#endif // INCLUDE_FT8DEMODFILTERPROXY_H

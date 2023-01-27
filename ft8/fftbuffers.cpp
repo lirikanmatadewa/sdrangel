@@ -5,10 +5,6 @@
 // written by Robert Morris, AB1HL                                               //
 // reformatted and adapted to Qt and SDRangel context                            //
 //                                                                               //
-// Caution: this is intentionally not thread safe and one such engine should     //
-// be allocated by thread. Due to optimization of FFT buffers these buffers are  //
-// not shared among threads.                                                     //
-//                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
 // the Free Software Foundation as version 3 of the License, or                  //
@@ -22,40 +18,61 @@
 // You should have received a copy of the GNU General Public License             //
 // along with this program. If not, see <http://www.gnu.org/licenses/>.          //
 ///////////////////////////////////////////////////////////////////////////////////
-
-#ifndef FFT_H
-#define FFT_H
-
-#include <QMutex>
-#include <vector>
-#include <complex>
-
-#include "export.h"
+#include "fftbuffers.h"
 
 namespace FT8
 {
-    class FFTBuffers;
 
-class FT8_API FFTEngine
+FFTBuffers::~FFTBuffers()
 {
-public:
-    std::vector<std::complex<float>> one_fft(const std::vector<float> &samples, int i0, int block);
-    std::vector<float> one_ifft(const std::vector<std::complex<float>> &bins);
-    typedef std::vector<std::vector<std::complex<float>>> ffts_t;
-    ffts_t ffts(const std::vector<float> &samples, int i0, int block);
-    std::vector<std::complex<float>> one_fft_c(const std::vector<float> &samples, int i0, int block);
-    std::vector<std::complex<float>> one_fft_cc(const std::vector<std::complex<float>> &samples, int i0, int block);
-    std::vector<std::complex<float>> one_ifft_cc(const std::vector<std::complex<float>> &bins);
-    std::vector<float> hilbert_shift(const std::vector<float> &x, float hz0, float hz1, int rate);
+    for (auto& mapitem : m_rs) {
+        fftwf_free(mapitem.second);
+    }
+    for (auto& mapitem : m_cs) {
+        fftwf_free(mapitem.second);
+    }
+    for (auto& mapitem : m_ccis) {
+        fftwf_free(mapitem.second);
+    }
+    for (auto& mapitem : m_ccos) {
+        fftwf_free(mapitem.second);
+    }
+}
 
-    FFTEngine();
-    ~FFTEngine();
+float* FFTBuffers::getR(int n)
+{
+    if (m_rs.find(n) == m_rs.end()) {
+        m_rs[n] = (float *) fftwf_malloc(sizeof(float) * n);
+    }
 
-private:
-    std::vector<std::complex<float>> analytic(const std::vector<float> &x);
-    FFTBuffers *m_fftBuffers;
-}; // FFTEngine
+    return  m_rs[n];
+}
 
-} // namespace FT8
+fftwf_complex *FFTBuffers::getC(int n)
+{
+    if (m_cs.find(n) == m_cs.end()) {
+        m_cs[n] = (fftwf_complex *) fftwf_malloc(sizeof(fftwf_complex) * ((n / 2) + 1));
+    }
 
-#endif
+    return m_cs[n];
+}
+
+fftwf_complex *FFTBuffers::getCCI(int n)
+{
+    if (m_ccis.find(n) == m_ccis.end()) {
+        m_ccis[n] = (fftwf_complex *) fftwf_malloc(n * sizeof(fftwf_complex));
+    }
+
+    return m_ccis[n];
+}
+
+fftwf_complex *FFTBuffers::getCCO(int n)
+{
+    if (m_ccos.find(n) == m_ccos.end()) {
+        m_ccos[n] = (fftwf_complex *) fftwf_malloc(n * sizeof(fftwf_complex));
+    }
+
+    return m_ccos[n];
+}
+
+} // nemespace FT8
