@@ -1,6 +1,10 @@
 ///////////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2023 Edouard Griffiths, F4EXB.                                  //
 //                                                                               //
+// This is the code from ft8mon: https://github.com/rtmrtmrtmrtm/ft8mon          //
+// written by Robert Morris, AB1HL                                               //
+// reformatted and adapted to Qt and SDRangel context                            //
+//                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
 // the Free Software Foundation as version 3 of the License, or                  //
@@ -14,49 +18,45 @@
 // You should have received a copy of the GNU General Public License             //
 // along with this program. If not, see <http://www.gnu.org/licenses/>.          //
 ///////////////////////////////////////////////////////////////////////////////////
-#ifndef INCLUDE_FT8MESSAGE_H
-#define INCLUDE_FT8MESSAGE_H
 
-#include <QString>
-#include <QDateTime>
-#include <QList>
+#ifndef FFTPLAN_H
+#define FFTPLAN_H
 
-#include "export.h"
-#include "message.h"
+#include <fftw3.h>
 
-struct SDRBASE_API FT8Message
+namespace FT8
 {
-    QDateTime ts;
-    QString type;
-    int pass;
-    int snr;
-    int nbCorrectBits;
-    float dt;
-    float df;
-    QString call1;
-    QString call2;
-    QString loc;
-    QString decoderInfo;
-};
 
-class SDRBASE_API MsgReportFT8Messages : public Message {
-    MESSAGE_CLASS_DECLARATION
-public:
-    QList<FT8Message>& getFT8Messages() { return m_ft8Messages; }
-    void setBaseFrequency(qint64 baseFrequency) { m_baseFrequency = baseFrequency; }
+    // a cached fftw plan, for both of:
+    // fftwf_plan_dft_r2c_1d(n, m_in, m_out, FFTW_ESTIMATE);
+    // fftwf_plan_dft_c2r_1d(n, m_in, m_out, FFTW_ESTIMATE);
+    class Plan
+    {
+    public:
+        int n_;
+        int type_;
 
-    static MsgReportFT8Messages* create() {
-        return new MsgReportFT8Messages();
-    }
+        //
+        // real -> complex
+        //
+        fftwf_complex *c_; // (n_ / 2) + 1 of these
+        float *r_;         // n_ of these
+        fftwf_plan fwd_;   // forward plan
+        fftwf_plan rev_;   // reverse plan
 
-private:
-    QList<FT8Message> m_ft8Messages;
-    qint64 m_baseFrequency;
+        //
+        // complex -> complex
+        //
+        fftwf_complex *cc1_; // n
+        fftwf_complex *cc2_; // n
+        fftwf_plan cfwd_;    // forward plan
+        fftwf_plan crev_;    // reverse plan
 
-    MsgReportFT8Messages() :
-        Message(),
-        m_baseFrequency(0)
-    { }
-};
+        static const int M_FFTW_TYPE = FFTW_ESTIMATE;
+    }; // Plan
 
-#endif // INCLUDE_FT8MESSAGE_H
+    // MEASURE=0, ESTIMATE=64, PATIENT=32
+
+} // namespace FT8
+
+#endif // FFTPLAN_H

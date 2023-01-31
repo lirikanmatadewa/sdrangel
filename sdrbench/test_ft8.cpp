@@ -71,7 +71,8 @@ int TestFT8Callback::hcb(
     std::string call1;
     std::string call2;
     std::string loc;
-    std::string msg = packing.unpack(a91, call1, call2, loc);
+    std::string type;
+    std::string msg = packing.unpack(a91, call1, call2, loc, type);
 
     cycle_mu.lock();
 
@@ -86,7 +87,8 @@ int TestFT8Callback::hcb(
 
     cycle_mu.unlock();
 
-    qDebug("TestFT8Callback::hcb: %d %3d %3d %5.2f %6.1f %s [%s:%s:%s] (%s)",
+    qDebug("TestFT8Callback::hcb: %3s %d %3d %3d %5.2f %6.1f %s [%s:%s:%s] (%s)",
+        type.c_str(),
         pass,
         (int)snr,
         correct_bits,
@@ -205,6 +207,7 @@ void MainBench::testFT8(const QString& wavFile, const QString& argsStr)
 
     FT8::FT8Decoder decoder;
     decoder.getParams().nthreads = nthreads;
+    decoder.getParams().use_osd = 0;
 
     decoder.entry(
         samples.data(),

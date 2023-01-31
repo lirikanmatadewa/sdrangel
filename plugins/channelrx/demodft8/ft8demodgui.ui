@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>520</width>
+    <width>542</width>
     <height>731</height>
    </rect>
   </property>
@@ -18,7 +18,7 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>520</width>
+    <width>542</width>
     <height>0</height>
    </size>
   </property>
@@ -36,7 +36,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>501</width>
+     <width>531</width>
      <height>181</height>
     </rect>
    </property>
@@ -159,24 +159,6 @@
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
        </widget>
-      </item>
-      <item>
-       <widget class="Line" name="line">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="audioOptionsLayout">
-        <item>
-         <widget class="Line" name="line_4">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-         </widget>
-        </item>
-       </layout>
       </item>
      </layout>
     </item>
@@ -666,9 +648,9 @@
   <widget class="QWidget" name="spectrumContainer" native="true">
    <property name="geometry">
     <rect>
-     <x>10</x>
+     <x>0</x>
      <y>193</y>
-     <width>218</width>
+     <width>531</width>
      <height>261</height>
     </rect>
    </property>
@@ -737,12 +719,12 @@
     </item>
    </layout>
   </widget>
-  <widget class="QWidget" name="tft8Container" native="true">
+  <widget class="QWidget" name="ft8Container" native="true">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>460</y>
-     <width>501</width>
+     <width>531</width>
      <height>251</height>
     </rect>
    </property>
@@ -772,7 +754,7 @@
      <number>3</number>
     </property>
     <property name="rightMargin">
-     <number>2</number>
+     <number>0</number>
     </property>
     <property name="bottomMargin">
      <number>3</number>
@@ -796,13 +778,6 @@
         <property name="icon">
          <iconset resource="../../../sdrgui/resources/res.qrc">
           <normaloff>:/tool.png</normaloff>:/tool.png</iconset>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="Line" name="line_5">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
         </property>
        </widget>
       </item>
@@ -848,7 +823,7 @@
          </size>
         </property>
         <property name="toolTip">
-         <string>Total number of decodes displayed</string>
+         <string>Total number of decodes since start</string>
         </property>
         <property name="text">
          <string>0</string>

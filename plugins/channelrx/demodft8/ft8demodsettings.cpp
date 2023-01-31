@@ -47,6 +47,10 @@ void FT8DemodSettings::resetToDefaults()
     m_logMessages = false;
     m_nbDecoderThreads = 3;
     m_decoderTimeBudget = 0.5;
+    m_useOSD = false;
+    m_osdDepth = 0;
+    m_osdLDPCThreshold = 70;
+    m_verifyOSD = false;
     m_volume = 1.0;
     m_inputFrequencyOffset = 0;
     m_rgbColor = QColor(0, 192, 255).rgb();
@@ -60,41 +64,27 @@ void FT8DemodSettings::resetToDefaults()
     m_workspaceIndex = 0;
     m_hidden = false;
     m_filterIndex = 0;
-    m_bandPresets.push_back(FT8DemodBandPreset{"160m",   1840, 0});
-    m_bandPresets.push_back(FT8DemodBandPreset{ "80m",   3573, 0});
-    m_bandPresets.push_back(FT8DemodBandPreset{ "60m",   5357, 0});
-    m_bandPresets.push_back(FT8DemodBandPreset{ "40m",   7074, 0});
-    m_bandPresets.push_back(FT8DemodBandPreset{ "30m",  10136, 0});
-    m_bandPresets.push_back(FT8DemodBandPreset{ "20m",  14074, 0});
-    m_bandPresets.push_back(FT8DemodBandPreset{ "17m",  18100, 0});
-    m_bandPresets.push_back(FT8DemodBandPreset{ "15m",  21074, 0});
-    m_bandPresets.push_back(FT8DemodBandPreset{ "12m",  24915, 0});
-    m_bandPresets.push_back(FT8DemodBandPreset{ "10m",  28074, 0});
-    m_bandPresets.push_back(FT8DemodBandPreset{  "6m",  50313, 0});
-    m_bandPresets.push_back(FT8DemodBandPreset{  "4m",  70100, 0});
-    m_bandPresets.push_back(FT8DemodBandPreset{  "2m", 144120, 0});
-    m_bandPresets.push_back(FT8DemodBandPreset{"1.2m", 222065, 0});
-    m_bandPresets.push_back(FT8DemodBandPreset{"70cm", 432065, 0});
+    resetBandPresets();
 }
 
 void FT8DemodSettings::resetBandPresets()
 {
     m_bandPresets.clear();
-    m_bandPresets.push_back(FT8DemodBandPreset{"160m",   1840, 0});
-    m_bandPresets.push_back(FT8DemodBandPreset{ "80m",   3573, 0});
-    m_bandPresets.push_back(FT8DemodBandPreset{ "60m",   5357, 0});
-    m_bandPresets.push_back(FT8DemodBandPreset{ "40m",   7074, 0});
-    m_bandPresets.push_back(FT8DemodBandPreset{ "30m",  10136, 0});
-    m_bandPresets.push_back(FT8DemodBandPreset{ "20m",  14074, 0});
-    m_bandPresets.push_back(FT8DemodBandPreset{ "17m",  18100, 0});
-    m_bandPresets.push_back(FT8DemodBandPreset{ "15m",  21074, 0});
-    m_bandPresets.push_back(FT8DemodBandPreset{ "12m",  24915, 0});
-    m_bandPresets.push_back(FT8DemodBandPreset{ "10m",  28074, 0});
-    m_bandPresets.push_back(FT8DemodBandPreset{  "6m",  50313, 0});
-    m_bandPresets.push_back(FT8DemodBandPreset{  "4m",  70100, 0});
-    m_bandPresets.push_back(FT8DemodBandPreset{  "2m", 144120, 0});
-    m_bandPresets.push_back(FT8DemodBandPreset{"1.2m", 222065, 0});
-    m_bandPresets.push_back(FT8DemodBandPreset{"70cm", 432065, 0});
+    m_bandPresets.push_back(FT8DemodBandPreset{ "160m",   1840, 0});
+    m_bandPresets.push_back(FT8DemodBandPreset{  "80m",   3573, 0});
+    m_bandPresets.push_back(FT8DemodBandPreset{  "60m",   5357, 0});
+    m_bandPresets.push_back(FT8DemodBandPreset{  "40m",   7074, 0});
+    m_bandPresets.push_back(FT8DemodBandPreset{  "30m",  10136, 0});
+    m_bandPresets.push_back(FT8DemodBandPreset{  "20m",  14074, 0});
+    m_bandPresets.push_back(FT8DemodBandPreset{  "17m",  18100, 0});
+    m_bandPresets.push_back(FT8DemodBandPreset{  "15m",  21074, 0});
+    m_bandPresets.push_back(FT8DemodBandPreset{  "12m",  24915, 0});
+    m_bandPresets.push_back(FT8DemodBandPreset{  "10m",  28074, 0});
+    m_bandPresets.push_back(FT8DemodBandPreset{   "6m",  50313, 0});
+    m_bandPresets.push_back(FT8DemodBandPreset{   "4m",  70100, 0});
+    m_bandPresets.push_back(FT8DemodBandPreset{   "2m", 144120, 0});
+    m_bandPresets.push_back(FT8DemodBandPreset{"1.25m", 222065, 0});
+    m_bandPresets.push_back(FT8DemodBandPreset{ "70cm", 432065, 0});
 }
 
 QByteArray FT8DemodSettings::serialize() const
@@ -121,6 +111,10 @@ QByteArray FT8DemodSettings::serialize() const
     s.writeS32(8, m_nbDecoderThreads);
     s.writeFloat(9, m_decoderTimeBudget);
     s.writeBool(11, m_agc);
+    s.writeBool(12, m_useOSD);
+    s.writeS32(13, m_osdDepth);
+    s.writeS32(14, m_osdLDPCThreshold);
+    s.writeBool(15, m_verifyOSD);
     s.writeString(16, m_title);
     s.writeBool(18, m_useReverseAPI);
     s.writeString(19, m_reverseAPIAddress);
@@ -186,6 +180,10 @@ bool FT8DemodSettings::deserialize(const QByteArray& data)
         d.readS32(8, &m_nbDecoderThreads, 3);
         d.readFloat(9, &m_decoderTimeBudget, 0.5);
         d.readBool(11, &m_agc, false);
+        d.readBool(12, &m_useOSD, false);
+        d.readS32(13, &m_osdDepth, 0);
+        d.readS32(14, &m_osdLDPCThreshold, 70);
+        d.readBool(15, &m_verifyOSD, false);
         d.readString(16, &m_title, "SSB Demodulator");
         d.readBool(18, &m_useReverseAPI, false);
         d.readString(19, &m_reverseAPIAddress, "127.0.0.1");

@@ -24,7 +24,7 @@
 #include <string>
 #include <map>
 
-#include <QRecursiveMutex>
+#include <QMutex>
 
 #include "export.h"
 
@@ -33,20 +33,27 @@ namespace FT8 {
 class FT8_API Packing
 {
 public:
-    std::string unpack(int a91[], std::string& call1str, std::string& call2str, std::string& locstr);
+    std::string unpack(int a91[], std::string& call1str, std::string& call2str, std::string& locstr, std::string& type);
 
 private:
     static int ihashcall(std::string call, int m);
     std::string unpackcall(int x);
-    std::string unpackgrid(int ng, int ir, int i3);
+    std::string unpackgrid15(int ng, int ir);
+    std::string unpackgrid25(int ng);
     void remember_call(std::string call);
-    std::string unpack_4(int a77[], std::string& call1str, std::string& call2str, std::string& locstr);
-    std::string unpack_1(int a77[], std::string& call1str, std::string& call2str, std::string& locstr);
     std::string unpack_0_0(int a77[], std::string& call1str, std::string& call2str, std::string& locstr);
-    std::string unpack_3(int a77[], std::string& call1str, std::string& call2str, std::string& locstr);
+    std::string unpack_0_1(int a77[], std::string& call1str, std::string& call2str, std::string& locstr);
+    // 0.3 and 0.4
     std::string unpack_0_3(int a77[], int n3, std::string& call1str, std::string& call2str, std::string& locstr);
+    std::string unpack_0_5(int a77[], std::string& call1str, std::string& call2str, std::string& locstr);
+    // 1 and 2
+    std::string unpack_1(int a77[], std::string& call1str, std::string& call2str, std::string& locstr);
+    std::string unpack_3(int a77[], std::string& call1str, std::string& call2str, std::string& locstr);
+    std::string unpack_4(int a77[], std::string& call1str, std::string& call2str, std::string& locstr);
+    std::string unpack_5(int a77[], std::string& call1str, std::string& call2str, std::string& locstr);
 
-    QRecursiveMutex hashes_mu;
+    QMutex hashes_mu;
+    std::map<int, std::string> hashes10;
     std::map<int, std::string> hashes12;
     std::map<int, std::string> hashes22;
 

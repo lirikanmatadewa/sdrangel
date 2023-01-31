@@ -69,6 +69,8 @@ QVariant FT8MessagesTableModel::data(const QModelIndex &index, int role) const
         switch (index.column()) {
             case FT8DemodSettings::MESSAGE_COL_UTC:
                 return ft8Message.m_utc;
+            case FT8DemodSettings::MESSAGE_COL_TYPE:
+                return ft8Message.m_type;
             case FT8DemodSettings::MESSAGE_COL_PASS:
                 return ft8Message.m_pass;
             case FT8DemodSettings::MESSAGE_COL_OKBITS:
@@ -95,6 +97,7 @@ QVariant FT8MessagesTableModel::data(const QModelIndex &index, int role) const
     if (role == Qt::TextAlignmentRole)
     {
         switch (index.column()) {
+            case FT8DemodSettings::MESSAGE_COL_TYPE:
             case FT8DemodSettings::MESSAGE_COL_DT:
             case FT8DemodSettings::MESSAGE_COL_DF:
             case FT8DemodSettings::MESSAGE_COL_SNR:
@@ -114,6 +117,8 @@ QVariant FT8MessagesTableModel::headerData(int section, Qt::Orientation orientat
         switch (section) {
             case FT8DemodSettings::MESSAGE_COL_UTC:
                 return tr("UTC");
+            case FT8DemodSettings::MESSAGE_COL_TYPE:
+                return tr("Typ");
             case FT8DemodSettings::MESSAGE_COL_PASS:
                 return tr("P");
             case FT8DemodSettings::MESSAGE_COL_OKBITS:
@@ -142,6 +147,8 @@ QVariant FT8MessagesTableModel::headerData(int section, Qt::Orientation orientat
         switch (section) {
             case FT8DemodSettings::MESSAGE_COL_UTC:
                 return tr("Sequence UTC time HHMMSS");
+            case FT8DemodSettings::MESSAGE_COL_TYPE:
+                return tr("Message type (see documentation)");
             case FT8DemodSettings::MESSAGE_COL_PASS:
                 return tr("Successful decoder pass index");
             case FT8DemodSettings::MESSAGE_COL_OKBITS:
@@ -183,6 +190,7 @@ void FT8MessagesTableModel::messagesReceived(const QList<FT8Message>& messages)
     {
         m_ft8Messages.push_back(FT8MesssageData{
             message.ts.toString("HHmmss"),
+            message.type,
             message.pass,
             message.nbCorrectBits,
             message.dt,
@@ -207,6 +215,7 @@ void FT8MessagesTableModel::setDefaultMessage()
     beginInsertRows(QModelIndex(), 0, 0);
     m_ft8Messages.push_back(FT8MesssageData{
         "000000",
+        "0.0",
         0,
         174,
         -8.0,
@@ -475,6 +484,30 @@ void FT8DemodGUI::on_settings_clicked()
             changed = true;
         }
 
+        if (settingsKeys.contains("useOSD"))
+        {
+            m_settings.m_useOSD = settings.m_useOSD;
+            changed = true;
+        }
+
+        if (settingsKeys.contains("osdDepth"))
+        {
+            m_settings.m_osdDepth = settings.m_osdDepth;
+            changed = true;
+        }
+
+        if (settingsKeys.contains("osdLDPCThreshold"))
+        {
+            m_settings.m_osdLDPCThreshold = settings.m_osdLDPCThreshold;
+            changed = true;
+        }
+
+        if (settingsKeys.contains("verifyOSD"))
+        {
+            m_settings.m_verifyOSD = settings.m_verifyOSD;
+            changed = true;
+        }
+
         if (settingsKeys.contains("bandPresets"))
         {
             m_settings.m_bandPresets = settings.m_bandPresets;
@@ -562,7 +595,7 @@ FT8DemodGUI::FT8DemodGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, Baseban
     m_filterMessages(false)
 {
 	setAttribute(Qt::WA_DeleteOnClose, true);
-    m_helpURL = "plugins/channelrx/demodssb/readme.md";
+    m_helpURL = "plugins/channelrx/demodft8/readme.md";
     RollupContents *rollupContents = getRollupContents();
 	ui->setupUi(rollupContents);
     setSizePolicy(rollupContents->sizePolicy());
@@ -735,12 +768,15 @@ void FT8DemodGUI::displaySettings()
     m_channelMarker.setTitle(m_settings.m_title);
     m_channelMarker.setLowCutoff(m_settings.m_filterBank[m_settings.m_filterIndex].m_lowCutoff);
 
-    if (m_settings.m_filterBank[m_settings.m_filterIndex].m_rfBandwidth < 0)
+    if (m_deviceUISet->m_deviceMIMOEngine)
     {
-        m_channelMarker.setSidebands(ChannelMarker::lsb);
+        m_channelMarker.clearStreamIndexes();
+        m_channelMarker.addStreamIndex(m_settings.m_streamIndex);
     }
-    else
-    {
+
+    if (m_settings.m_filterBank[m_settings.m_filterIndex].m_rfBandwidth < 0) {
+        m_channelMarker.setSidebands(ChannelMarker::lsb);
+    } else {
         m_channelMarker.setSidebands(ChannelMarker::usb);
     }
 
@@ -907,6 +943,8 @@ void FT8DemodGUI::filterMessages()
         m_messagesFilterProxy.setFilterUTC(m_selectedData.toString());
     } else if (m_selectedColumn == FT8DemodSettings::MESSAGE_COL_DF) {
         m_messagesFilterProxy.setFilterDf(m_selectedData.toInt());
+    } else if (m_selectedColumn == FT8DemodSettings::MESSAGE_COL_INFO) {
+        m_messagesFilterProxy.setFilterInfo(m_selectedData.toString());
     }
 }
 

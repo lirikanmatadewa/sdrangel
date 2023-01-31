@@ -39,7 +39,8 @@ FT8DemodWorker::FT8Callback::FT8Callback(
     m_packing(packing),
     m_periodTS(periodTS),
     m_baseFrequency(baseFrequency),
-    m_name(name)
+    m_name(name),
+    m_validCallsigns(nullptr)
 {
     m_msgReportFT8Messages = MsgReportFT8Messages::create();
     m_msgReportFT8Messages->setBaseFrequency(baseFrequency);
@@ -58,7 +59,8 @@ int FT8DemodWorker::FT8Callback::hcb(
     std::string call1;
     std::string call2;
     std::string loc;
-    std::string msg = m_packing.unpack(a91, call1, call2, loc);
+    std::string type;
+    std::string msg = m_packing.unpack(a91, call1, call2, loc, type);
 
     cycle_mu.lock();
 
@@ -70,21 +72,51 @@ int FT8DemodWorker::FT8Callback::hcb(
     }
 
     cycle_already[msg] = true;
+    QString call2Str(call2.c_str());
+    QString info(comment);
+
+    if (m_validCallsigns && info.startsWith("OSD") && !m_validCallsigns->contains(call2Str))
+    {
+        cycle_mu.unlock();
+        return 2; // leave without reporting. Set as new decode.
+    }
 
     QList<FT8Message>& ft8Messages = m_msgReportFT8Messages->getFT8Messages();
-    ft8Messages.push_back(FT8Message());
-    FT8Message& ft8Message = ft8Messages.back();
+    FT8Message baseMessage{
+        m_periodTS,
+        QString(type.c_str()),
+        pass,
+        (int) snr,
+        correct_bits,
+        off - 0.5f,
+        hz0,
+        QString(call1.c_str()).simplified(),
+        call2Str,
+        QString(loc.c_str()).simplified(),
+        info
+    };
 
-    ft8Message.ts = m_periodTS;
-    ft8Message.pass = pass;
-    ft8Message.snr = (int) snr;
-    ft8Message.nbCorrectBits = correct_bits;
-    ft8Message.dt = off - 0.5;
-    ft8Message.df = hz0;
-    ft8Message.call1 = QString(call1.c_str()).simplified();
-    ft8Message.call2 = QString(call2.c_str()).simplified();
-    ft8Message.loc = QString(loc.c_str()).simplified();
-    ft8Message.decoderInfo = QString(comment);
+    // DXpedition packs two messages in one with the two callees in the first call area separated by a semicolon
+    if (type == "0.1")
+    {
+        QStringList callees = QString(call1.c_str()).simplified().split(";");
+
+        for (int i = 0; i < 2; i++)
+        {
+            baseMessage.call1 = callees[i];
+
+            if (i == 0) { // first is with RR73 greetings in locator area
+                baseMessage.loc = "RR73";
+            }
+
+            ft8Messages.push_back(baseMessage);
+        }
+    }
+    else
+    {
+        ft8Messages.push_back(baseMessage);
+    }
+
     cycle_mu.unlock();
 
     // qDebug("FT8DemodWorker::FT8Callback::hcb: %6.3f %d %3d %3d %5.2f %6.1f %s (%s)",
@@ -110,6 +142,10 @@ FT8DemodWorker::FT8DemodWorker() :
     m_recordSamples(false),
     m_nbDecoderThreads(6),
     m_decoderTimeBudget(0.5),
+    m_useOSD(false),
+    m_osdDepth(0),
+    m_osdLDPCThreshold(70),
+    m_verifyOSD(false),
     m_lowFreq(200),
     m_highFreq(3000),
     m_invalidSequence(true),
@@ -117,12 +153,12 @@ FT8DemodWorker::FT8DemodWorker() :
     m_reportingMessageQueue(nullptr),
     m_channel(nullptr)
 {
-    QString relPath = "sdrangel/ft8/save";
-    QDir dir(QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation));
+    QString relPath = "ft8/save";
+    QDir dir(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation));
     dir.mkpath(relPath);
     m_samplesPath = dir.absolutePath() + "/" + relPath;
     qDebug("FT8DemodWorker::FT8DemodWorker: samples path: %s", qPrintable(m_samplesPath));
-    relPath = "sdrangel/ft8/logs";
+    relPath = "ft8/logs";
     m_logsPath = dir.absolutePath() + "/" + relPath;
     qDebug("FT8DemodWorker::FT8DemodWorker: logs path: %s", qPrintable(m_logsPath));
 }
@@ -156,7 +192,11 @@ void FT8DemodWorker::processBuffer(int16_t *buffer, QDateTime periodTS)
 
     int hints[2] = { 2, 0 }; // CQ
     FT8Callback ft8Callback(periodTS, m_baseFrequency, m_packing, channelReference);
+    ft8Callback.setValidCallsigns((m_useOSD && m_verifyOSD) ? &m_validCallsigns : nullptr);
     m_ft8Decoder.getParams().nthreads = m_nbDecoderThreads;
+    m_ft8Decoder.getParams().use_osd = m_useOSD ? 1 : 0;
+    m_ft8Decoder.getParams().osd_depth = m_osdDepth;
+    m_ft8Decoder.getParams().osd_ldpc_thresh = m_osdLDPCThreshold;
     std::vector<float> samples(15*FT8DemodSettings::m_ft8SampleRate);
 
     std::transform(
@@ -187,7 +227,7 @@ void FT8DemodWorker::processBuffer(int16_t *buffer, QDateTime periodTS)
         m_baseFrequency / 1000000.0, ft8Callback.getReportMessage()->getFT8Messages().size());
 
     if (m_reportingMessageQueue) {
-        m_reportingMessageQueue->push(ft8Callback.getReportMessage());
+        m_reportingMessageQueue->push(new MsgReportFT8Messages(*ft8Callback.getReportMessage()));
     }
 
     QList<ObjectPipe*> mapPipes;
@@ -269,11 +309,23 @@ void FT8DemodWorker::processBuffer(int16_t *buffer, QDateTime periodTS)
                 }
             }
         }
+
+        if (m_verifyOSD && !ft8Message.decoderInfo.startsWith("OSD"))
+        {
+            if ((ft8Message.type == "1") || (ft8Message.type == "2"))
+            {
+                if (!ft8Message.call2.startsWith("<")) {
+                    m_validCallsigns.insert(ft8Message.call2);
+                }
+
+                if (!ft8Message.call1.startsWith("CQ") && !ft8Message.call1.startsWith("<")) {
+                    m_validCallsigns.insert(ft8Message.call1);
+                }
+            }
+        }
     }
 
-    if (!m_reportingMessageQueue) {
-        delete m_reportingMessageQueue;
-    }
+    delete ft8Callback.getReportMessage();
 
     if (m_recordSamples)
     {
