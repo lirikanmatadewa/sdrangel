@@ -160,6 +160,8 @@
 #include "SWGIEEE_802_15_4_ModActions.h"
 #include "SWGIEEE_802_15_4_ModReport.h"
 #include "SWGIEEE_802_15_4_ModSettings.h"
+#include "SWGILSDemodReport.h"
+#include "SWGILSDemodSettings.h"
 #include "SWGInstanceChannelsResponse.h"
 #include "SWGInstanceConfigResponse.h"
 #include "SWGInstanceDevicesResponse.h"
@@ -205,6 +207,8 @@
 #include "SWGNFMModReport.h"
 #include "SWGNFMModSettings.h"
 #include "SWGNamedEnum.h"
+#include "SWGNavtexDemodReport.h"
+#include "SWGNavtexDemodSettings.h"
 #include "SWGNoiseFigureReport.h"
 #include "SWGNoiseFigureSettings.h"
 #include "SWGPERTesterActions.h"
@@ -238,6 +242,8 @@
 #include "SWGPresets.h"
 #include "SWGRDSReport.h"
 #include "SWGRDSReport_altFrequencies.h"
+#include "SWGRTTYDemodReport.h"
+#include "SWGRTTYDemodSettings.h"
 #include "SWGRadioAstronomyActions.h"
 #include "SWGRadioAstronomyReport.h"
 #include "SWGRadioAstronomySettings.h"
@@ -1077,6 +1083,16 @@ namespace SWGSDRangel {
       obj->init();
       return obj;
     }
+    if(QString("SWGILSDemodReport").compare(type) == 0) {
+      SWGILSDemodReport *obj = new SWGILSDemodReport();
+      obj->init();
+      return obj;
+    }
+    if(QString("SWGILSDemodSettings").compare(type) == 0) {
+      SWGILSDemodSettings *obj = new SWGILSDemodSettings();
+      obj->init();
+      return obj;
+    }
     if(QString("SWGInstanceChannelsResponse").compare(type) == 0) {
       SWGInstanceChannelsResponse *obj = new SWGInstanceChannelsResponse();
       obj->init();
@@ -1302,6 +1318,16 @@ namespace SWGSDRangel {
       obj->init();
       return obj;
     }
+    if(QString("SWGNavtexDemodReport").compare(type) == 0) {
+      SWGNavtexDemodReport *obj = new SWGNavtexDemodReport();
+      obj->init();
+      return obj;
+    }
+    if(QString("SWGNavtexDemodSettings").compare(type) == 0) {
+      SWGNavtexDemodSettings *obj = new SWGNavtexDemodSettings();
+      obj->init();
+      return obj;
+    }
     if(QString("SWGNoiseFigureReport").compare(type) == 0) {
       SWGNoiseFigureReport *obj = new SWGNoiseFigureReport();
       obj->init();
@@ -1464,6 +1490,16 @@ namespace SWGSDRangel {
     }
     if(QString("SWGRDSReport_altFrequencies").compare(type) == 0) {
       SWGRDSReport_altFrequencies *obj = new SWGRDSReport_altFrequencies();
+      obj->init();
+      return obj;
+    }
+    if(QString("SWGRTTYDemodReport").compare(type) == 0) {
+      SWGRTTYDemodReport *obj = new SWGRTTYDemodReport();
+      obj->init();
+      return obj;
+    }
+    if(QString("SWGRTTYDemodSettings").compare(type) == 0) {
+      SWGRTTYDemodSettings *obj = new SWGRTTYDemodSettings();
       obj->init();
       return obj;
     }

@@ -34,6 +34,7 @@
 
 #include "dsp/dspengine.h"
 #include "dsp/dspcommands.h"
+#include "dsp/morsedemod.h"
 #include "device/deviceapi.h"
 #include "feature/feature.h"
 #include "settings/serializable.h"
@@ -215,14 +216,14 @@ bool VORDemod::handleMessage(const Message& cmd)
 
         return true;
     }
-    else if (VORDemodReport::MsgReportIdent::match(cmd))
+    else if (MorseDemod::MsgReportIdent::match(cmd))
     {
-        VORDemodReport::MsgReportIdent& report = (VORDemodReport::MsgReportIdent&) cmd;
+        MorseDemod::MsgReportIdent& report = (MorseDemod::MsgReportIdent&) cmd;
         m_morseIdent = report.getIdent();
 
         if (m_guiMessageQueue)
         {
-            VORDemodReport::MsgReportIdent *msg = new VORDemodReport::MsgReportIdent(report);
+            MorseDemod::MsgReportIdent *msg = new MorseDemod::MsgReportIdent(report);
             m_guiMessageQueue->push(msg);
         }
 
@@ -262,6 +263,7 @@ void VORDemod::applySettings(const VORDemodSettings& settings, bool force)
             << " m_navId: " << settings.m_navId
             << " m_volume: " << settings.m_volume
             << " m_squelch: " << settings.m_squelch
+            << " m_identBandpassEnable: " << settings.m_identBandpassEnable
             << " m_audioMute: " << settings.m_audioMute
             << " m_audioDeviceName: " << settings.m_audioDeviceName
             << " m_streamIndex: " << settings.m_streamIndex
@@ -296,7 +298,9 @@ void VORDemod::applySettings(const VORDemodSettings& settings, bool force)
     if ((m_settings.m_audioMute != settings.m_audioMute) || force) {
         reverseAPIKeys.append("audioMute");
     }
-
+    if ((m_settings.m_identBandpassEnable != settings.m_identBandpassEnable) || force) {
+        reverseAPIKeys.append("identBandpassEnable");
+    }
     if ((m_settings.m_volume != settings.m_volume) || force) {
         reverseAPIKeys.append("volume");
     }
@@ -431,6 +435,9 @@ void VORDemod::webapiUpdateChannelSettings(
     if (channelSettingsKeys.contains("squelch")) {
         settings.m_squelch = response.getVorDemodSettings()->getSquelch();
     }
+    if (channelSettingsKeys.contains("identBandpassEnable")) {
+        settings.m_identBandpassEnable = response.getVorDemodSettings()->getIdentBandpassEnable();
+    }
     if (channelSettingsKeys.contains("title")) {
         settings.m_title = *response.getVorDemodSettings()->getTitle();
     }
@@ -487,6 +494,7 @@ void VORDemod::webapiFormatChannelSettings(SWGSDRangel::SWGChannelSettings& resp
     response.getVorDemodSettings()->setAudioMute(settings.m_audioMute ? 1 : 0);
     response.getVorDemodSettings()->setRgbColor(settings.m_rgbColor);
     response.getVorDemodSettings()->setSquelch(settings.m_squelch);
+    response.getVorDemodSettings()->setIdentBandpassEnable(settings.m_identBandpassEnable);
     response.getVorDemodSettings()->setVolume(settings.m_volume);
 
     if (response.getVorDemodSettings()->getTitle()) {
@@ -674,6 +682,9 @@ void VORDemod::webapiFormatChannelSettings(
     }
     if (channelSettingsKeys.contains("squelch") || force) {
         swgVORDemodSettings->setSquelch(settings.m_squelch);
+    }
+    if (channelSettingsKeys.contains("identBandpassEnable") || force) {
+        swgVORDemodSettings->setIdentBandpassEnable(settings.m_identBandpassEnable);
     }
     if (channelSettingsKeys.contains("title") || force) {
         swgVORDemodSettings->setTitle(new QString(settings.m_title));

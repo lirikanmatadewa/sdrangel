@@ -25,14 +25,15 @@
 #include "dsp/agc.h"
 #include "dsp/firfilter.h"
 #include "dsp/goertzel.h"
+#include "dsp/morsedemod.h"
 #include "audio/audiofifo.h"
 #include "util/movingaverage.h"
 #include "util/doublebufferfifo.h"
 #include "util/messagequeue.h"
+#include <QFile>
+#include <QTextStream>
 
 #include "vordemodsettings.h"
-
-#include <vector>
 
 class VORDemodSCSink : public ChannelSampleSink {
 public:
@@ -43,7 +44,7 @@ public:
 
     void applyChannelSettings(int channelSampleRate, int channelFrequencyOffset, bool force = false);
     void applySettings(const VORDemodSettings& settings, bool force = false);
-    void setMessageQueueToChannel(MessageQueue *messageQueue) { m_messageQueueToChannel = messageQueue; }
+    void setMessageQueueToChannel(MessageQueue *messageQueue);
     void applyAudioSampleRate(int sampleRate);
 
     int getAudioSampleRate() const { return m_audioSampleRate; }
@@ -116,26 +117,12 @@ private:
     AudioFifo m_audioFifo;
     uint32_t m_audioBufferFill;
 
-    NCO m_ncoIdent;
     NCO m_ncoRef;
     Lowpass<Complex> m_lowpassRef;
-    Lowpass<Complex> m_lowpassIdent;
     Complex m_refPrev;
-    MovingAverageUtilVar<Real, double> m_movingAverageIdent;
-    static const int m_identBins = 10;
-    Real m_identMins[m_identBins];
-    Real m_identMin;
-    Real m_identMaxs[m_identBins];
-    Real m_identNoise;
-    int m_binSampleCnt;
-    int m_binCnt;
-    int m_samplesPerDot7wpm;
-    int m_samplesPerDot10wpm;
-    int m_prevBit;
-    int m_bitTime;
-    QString m_ident;
     Goertzel m_varGoertzel;
     Goertzel m_refGoertzel;
+    MorseDemod m_morseDemod;
 
     void processOneSample(Complex &ci);
     void processOneAudioSample(Complex &ci);

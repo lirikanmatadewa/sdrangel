@@ -118,6 +118,7 @@ set(sdrbase_SOURCES
     dsp/hbfilterchainconverter.cpp
     dsp/hbfiltertraits.cpp
     dsp/mimochannel.cpp
+    dsp/morsedemod.cpp
     dsp/nco.cpp
     dsp/ncof.cpp
     dsp/phaselock.cpp
@@ -176,6 +177,7 @@ set(sdrbase_SOURCES
     util/aprs.cpp
     util/astronomy.cpp
     util/azel.cpp
+    util/baudot.cpp
     util/colormap.cpp
     util/coordinates.cpp
     util/crc.cpp
@@ -195,6 +197,7 @@ set(sdrbase_SOURCES
     util/message.cpp
     util/messagequeue.cpp
     util/morse.cpp
+    util/navtex.cpp
     util/openaip.cpp
     util/osndb.cpp
     util/ourairportsdb.cpp
@@ -334,6 +337,7 @@ set(sdrbase_HEADERS
     dsp/mimochannel.h
     dsp/misc.h
     dsp/movingaverage.h
+    dsp/morsedemod.h
     dsp/nco.h
     dsp/ncof.h
     dsp/phasediscri.h
@@ -399,6 +403,7 @@ set(sdrbase_HEADERS
     util/aprs.h
     util/astronomy.h
     util/azel.h
+    util/baudot.h
     util/colormap.h
     util/coordinates.h
     util/CRC64.h
@@ -423,6 +428,8 @@ set(sdrbase_HEADERS
     util/messagequeue.h
     util/morse.h
     util/movingaverage.h
+    util/movingmaximum.h
+    util/navtex.h
     util/openaip.h
     util/osndb.h
     util/outairportsdb.h

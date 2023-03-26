@@ -37,6 +37,7 @@ void VORDemodSettings::resetToDefaults()
     m_squelch = -60.0;
     m_volume = 2.0;
     m_audioMute = false;
+    m_identBandpassEnable = false;
     m_rgbColor = QColor(255, 255, 102).rgb();
     m_title = "VOR Demodulator";
     m_audioDeviceName = AudioDeviceManager::m_defaultDeviceName;
@@ -49,7 +50,7 @@ void VORDemodSettings::resetToDefaults()
     m_workspaceIndex = 0;
     m_hidden = false;
 
-    m_identThreshold = 2.0;
+    m_identThreshold = 4.0;
     m_refThresholdDB = -45.0;
     m_varThresholdDB = -90.0;
 }
@@ -61,10 +62,12 @@ QByteArray VORDemodSettings::serialize() const
     s.writeS32(3, m_streamIndex);
     s.writeS32(4, m_volume*10);
     s.writeS32(5, m_squelch);
+    s.writeBool(10, m_audioMute);
 
     if (m_channelMarker) {
         s.writeBlob(6, m_channelMarker->serialize());
     }
+    s.writeBool(8, m_identBandpassEnable);
 
     s.writeU32(7, m_rgbColor);
     s.writeString(9, m_title);
@@ -112,12 +115,14 @@ bool VORDemodSettings::deserialize(const QByteArray& data)
         m_volume = tmp * 0.1;
         d.readS32(5, &tmp, -40);
         m_squelch = tmp;
+        d.readBool(10, &m_audioMute, false);
 
         if (m_channelMarker)
         {
             d.readBlob(6, &bytetmp);
             m_channelMarker->deserialize(bytetmp);
         }
+        d.readBool(8, &m_identBandpassEnable, false);
 
         d.readU32(7, &m_rgbColor, QColor(255, 255, 102).rgb());
         d.readString(9, &m_title, "VOR Demodulator");
@@ -136,7 +141,7 @@ bool VORDemodSettings::deserialize(const QByteArray& data)
         m_reverseAPIDeviceIndex = utmp > 99 ? 99 : utmp;
         d.readU32(18, &utmp, 0);
         m_reverseAPIChannelIndex = utmp > 99 ? 99 : utmp;
-        d.readReal(20, &m_identThreshold, 2.0);
+        d.readReal(20, &m_identThreshold, 4.0);
         d.readReal(21, &m_refThresholdDB, -45.0);
         d.readReal(22, &m_varThresholdDB, -90.0);
 

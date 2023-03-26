@@ -48,6 +48,7 @@
 #include "SWGFreqTrackerSettings.h"
 #include "SWGHeatMapSettings.h"
 #include "SWGIEEE_802_15_4_ModSettings.h"
+#include "SWGILSDemodSettings.h"
 #include "SWGInterferometerSettings.h"
 #include "SWGLocalSinkSettings.h"
 #include "SWGLocalSourceSettings.h"
@@ -55,10 +56,12 @@
 #include "SWGM17ModSettings.h"
 #include "SWGNFMDemodSettings.h"
 #include "SWGNFMModSettings.h"
+#include "SWGNavtexDemodSettings.h"
 #include "SWGNoiseFigureSettings.h"
 #include "SWGPacketDemodSettings.h"
 #include "SWGPacketModSettings.h"
 #include "SWGPagerDemodSettings.h"
+#include "SWGRTTYDemodSettings.h"
 #include "SWGRadioAstronomySettings.h"
 #include "SWGRadioClockSettings.h"
 #include "SWGRadiosondeDemodSettings.h"
@@ -177,8 +180,14 @@ public:
     SWGFT8DemodSettings* getFt8DemodSettings();
     void setFt8DemodSettings(SWGFT8DemodSettings* ft8_demod_settings);
 
+    SWGRTTYDemodSettings* getRttyDemodSettings();
+    void setRttyDemodSettings(SWGRTTYDemodSettings* rtty_demod_settings);
+
     SWGHeatMapSettings* getHeatMapSettings();
     void setHeatMapSettings(SWGHeatMapSettings* heat_map_settings);
+
+    SWGILSDemodSettings* getIlsDemodSettings();
+    void setIlsDemodSettings(SWGILSDemodSettings* ils_demod_settings);
 
     SWGInterferometerSettings* getInterferometerSettings();
     void setInterferometerSettings(SWGInterferometerSettings* interferometer_settings);
@@ -191,6 +200,9 @@ public:
 
     SWGM17ModSettings* getM17ModSettings();
     void setM17ModSettings(SWGM17ModSettings* m17_mod_settings);
+
+    SWGNavtexDemodSettings* getNavtexDemodSettings();
+    void setNavtexDemodSettings(SWGNavtexDemodSettings* navtex_demod_settings);
 
     SWGNFMDemodSettings* getNfmDemodSettings();
     void setNfmDemodSettings(SWGNFMDemodSettings* nfm_demod_settings);
@@ -346,8 +358,14 @@ private:
     SWGFT8DemodSettings* ft8_demod_settings;
     bool m_ft8_demod_settings_isSet;
 
+    SWGRTTYDemodSettings* rtty_demod_settings;
+    bool m_rtty_demod_settings_isSet;
+
     SWGHeatMapSettings* heat_map_settings;
     bool m_heat_map_settings_isSet;
+
+    SWGILSDemodSettings* ils_demod_settings;
+    bool m_ils_demod_settings_isSet;
 
     SWGInterferometerSettings* interferometer_settings;
     bool m_interferometer_settings_isSet;
@@ -360,6 +378,9 @@ private:
 
     SWGM17ModSettings* m17_mod_settings;
     bool m_m17_mod_settings_isSet;
+
+    SWGNavtexDemodSettings* navtex_demod_settings;
+    bool m_navtex_demod_settings_isSet;
 
     SWGNFMDemodSettings* nfm_demod_settings;
     bool m_nfm_demod_settings_isSet;

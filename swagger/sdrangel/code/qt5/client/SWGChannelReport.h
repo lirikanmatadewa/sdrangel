@@ -43,14 +43,17 @@
 #include "SWGFreqTrackerReport.h"
 #include "SWGHeatMapReport.h"
 #include "SWGIEEE_802_15_4_ModReport.h"
+#include "SWGILSDemodReport.h"
 #include "SWGM17DemodReport.h"
 #include "SWGM17ModReport.h"
 #include "SWGNFMDemodReport.h"
 #include "SWGNFMModReport.h"
+#include "SWGNavtexDemodReport.h"
 #include "SWGNoiseFigureReport.h"
 #include "SWGPacketDemodReport.h"
 #include "SWGPacketModReport.h"
 #include "SWGPagerDemodReport.h"
+#include "SWGRTTYDemodReport.h"
 #include "SWGRadioAstronomyReport.h"
 #include "SWGRadioClockReport.h"
 #include "SWGRadiosondeDemodReport.h"
@@ -149,14 +152,23 @@ public:
     SWGFT8DemodReport* getFt8DemodReport();
     void setFt8DemodReport(SWGFT8DemodReport* ft8_demod_report);
 
+    SWGRTTYDemodReport* getRttyDemodReport();
+    void setRttyDemodReport(SWGRTTYDemodReport* rtty_demod_report);
+
     SWGHeatMapReport* getHeatMapReport();
     void setHeatMapReport(SWGHeatMapReport* heat_map_report);
+
+    SWGILSDemodReport* getIlsDemodReport();
+    void setIlsDemodReport(SWGILSDemodReport* ils_demod_report);
 
     SWGM17DemodReport* getM17DemodReport();
     void setM17DemodReport(SWGM17DemodReport* m17_demod_report);
 
     SWGM17ModReport* getM17ModReport();
     void setM17ModReport(SWGM17ModReport* m17_mod_report);
+
+    SWGNavtexDemodReport* getNavtexDemodReport();
+    void setNavtexDemodReport(SWGNavtexDemodReport* navtex_demod_report);
 
     SWGNFMDemodReport* getNfmDemodReport();
     void setNfmDemodReport(SWGNFMDemodReport* nfm_demod_report);
@@ -282,14 +294,23 @@ private:
     SWGFT8DemodReport* ft8_demod_report;
     bool m_ft8_demod_report_isSet;
 
+    SWGRTTYDemodReport* rtty_demod_report;
+    bool m_rtty_demod_report_isSet;
+
     SWGHeatMapReport* heat_map_report;
     bool m_heat_map_report_isSet;
+
+    SWGILSDemodReport* ils_demod_report;
+    bool m_ils_demod_report_isSet;
 
     SWGM17DemodReport* m17_demod_report;
     bool m_m17_demod_report_isSet;
 
     SWGM17ModReport* m17_mod_report;
     bool m_m17_mod_report_isSet;
+
+    SWGNavtexDemodReport* navtex_demod_report;
+    bool m_navtex_demod_report_isSet;
 
     SWGNFMDemodReport* nfm_demod_report;
     bool m_nfm_demod_report_isSet;

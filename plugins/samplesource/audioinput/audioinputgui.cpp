@@ -239,7 +239,21 @@ void AudioInputGui::displaySettings()
     ui->volume->setValue((int)(m_settings.m_volume*10.0f));
     ui->volumeText->setText(QString("%1").arg(m_settings.m_volume, 3, 'f', 1));
     ui->channels->setCurrentIndex((int)m_settings.m_iqMapping);
+	ui->dcOffset->setChecked(m_settings.m_dcBlock);
+	ui->iqImbalance->setChecked(m_settings.m_iqImbalance);
     refreshSampleRates(ui->device->currentText());
+    displayFcTooltip();
+}
+
+void AudioInputGui::displayFcTooltip()
+{
+    int32_t fShift = DeviceSampleSource::calculateFrequencyShift(
+        m_settings.m_log2Decim,
+        (DeviceSampleSource::fcPos_t) m_settings.m_fcPos,
+        m_settings.m_sampleRate,
+        DeviceSampleSource::FrequencyShiftScheme::FSHIFT_STD
+    );
+    ui->fcPos->setToolTip(tr("Relative position of device center frequency: %1 kHz").arg(QString::number(fShift / 1000.0f, 'g', 5)));
 }
 
 void AudioInputGui::on_device_currentIndexChanged(int index)
@@ -255,6 +269,7 @@ void AudioInputGui::on_sampleRate_currentIndexChanged(int index)
 {
     (void) index;
     m_settings.m_sampleRate = ui->sampleRate->currentText().toInt();
+    displayFcTooltip();
     m_settingsKeys.append("sampleRate");
     sendSettings();
 }
@@ -266,6 +281,7 @@ void AudioInputGui::on_decim_currentIndexChanged(int index)
     }
 
     m_settings.m_log2Decim = index;
+    displayFcTooltip();
     m_settingsKeys.append("log2Decim");
     sendSettings();
 }
@@ -283,6 +299,28 @@ void AudioInputGui::on_channels_currentIndexChanged(int index)
     m_settings.m_iqMapping = (AudioInputSettings::IQMapping)index;
     updateSampleRateAndFrequency();
     m_settingsKeys.append("iqMapping");
+    sendSettings();
+}
+
+void AudioInputGui::on_dcOffset_toggled(bool checked)
+{
+	m_settings.m_dcBlock = checked;
+    m_settingsKeys.append("dcBlock");
+	sendSettings();
+}
+
+void AudioInputGui::on_iqImbalance_toggled(bool checked)
+{
+	m_settings.m_iqImbalance = checked;
+    m_settingsKeys.append("iqImbalance");
+	sendSettings();
+}
+
+void AudioInputGui::on_fcPos_currentIndexChanged(int index)
+{
+    m_settings.m_fcPos = (AudioInputSettings::fcPos_t) (index < 0 ? 0 : index > 2 ? 2 : index);
+    displayFcTooltip();
+    m_settingsKeys.append("fcPos");
     sendSettings();
 }
 
@@ -373,5 +411,8 @@ void AudioInputGui::makeUIConnections()
     QObject::connect(ui->decim, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &AudioInputGui::on_decim_currentIndexChanged);
     QObject::connect(ui->volume, &QDial::valueChanged, this, &AudioInputGui::on_volume_valueChanged);
     QObject::connect(ui->channels, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &AudioInputGui::on_channels_currentIndexChanged);
+    QObject::connect(ui->dcOffset, &ButtonSwitch::toggled, this, &AudioInputGui::on_dcOffset_toggled);
+    QObject::connect(ui->iqImbalance, &ButtonSwitch::toggled, this, &AudioInputGui::on_iqImbalance_toggled);
+    QObject::connect(ui->fcPos, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &AudioInputGui::on_fcPos_currentIndexChanged);
     QObject::connect(ui->startStop, &ButtonSwitch::toggled, this, &AudioInputGui::on_startStop_toggled);
 }

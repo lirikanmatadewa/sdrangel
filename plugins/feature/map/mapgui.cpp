@@ -38,6 +38,7 @@
 #include "util/units.h"
 #include "util/maidenhead.h"
 #include "util/morse.h"
+#include "util/navtex.h"
 #include "maplocationdialog.h"
 #include "mapmaidenheaddialog.h"
 #include "mapsettingsdialog.h"
@@ -307,6 +308,7 @@ MapGUI::MapGUI(PluginAPI* pluginAPI, FeatureUISet *featureUISet, Feature *featur
     addNavAids();
     addAirspace();
     addAirports();
+    addNavtex();
 
     displaySettings();
     applySettings(true);
@@ -985,6 +987,50 @@ void MapGUI::airportsUpdated()
     addAirports();
 }
 
+
+void MapGUI::addNavtex()
+{
+    for (int i = 0; i < NavtexTransmitter::m_navtexTransmitters.size(); i++)
+    {
+        SWGSDRangel::SWGMapItem navtexMapItem;
+        QString name = QString("%1").arg(NavtexTransmitter::m_navtexTransmitters[i].m_station);
+        navtexMapItem.setName(new QString(name));
+        navtexMapItem.setLatitude(NavtexTransmitter::m_navtexTransmitters[i].m_latitude);
+        navtexMapItem.setLongitude(NavtexTransmitter::m_navtexTransmitters[i].m_longitude);
+        navtexMapItem.setAltitude(0.0);
+        navtexMapItem.setImage(new QString("antenna.png"));
+        navtexMapItem.setImageRotation(0);
+        QString text = QString("Navtex Transmitter\nStation: %1\nArea: %2")
+                                .arg(NavtexTransmitter::m_navtexTransmitters[i].m_station)
+                                .arg(NavtexTransmitter::m_navtexTransmitters[i].m_area);
+        QStringList schedules;
+        for (const auto& schedule : NavtexTransmitter::m_navtexTransmitters[i].m_schedules)
+        {
+            QString scheduleText = QString("\nFrequency: %1 kHz\nID: %2").arg(schedule.m_frequency / 1000).arg(schedule.m_id);
+            if (schedule.m_times.size() > 0)
+            {
+                QStringList times;
+                for (const auto& time : schedule.m_times) {
+                    times.append(time.toString("hh:mm"));
+                }
+                scheduleText.append("\nTimes: ");
+                scheduleText.append(times.join(" "));
+                scheduleText.append(" UTC");
+            }
+            schedules.append(scheduleText);
+        }
+        text.append(schedules.join(""));
+        navtexMapItem.setText(new QString(text));
+        navtexMapItem.setModel(new QString("antenna.glb"));
+        navtexMapItem.setFixedPosition(true);
+        navtexMapItem.setOrientation(0);
+        navtexMapItem.setLabel(new QString(name));
+        navtexMapItem.setLabelAltitudeOffset(4.5);
+        navtexMapItem.setAltitudeReference(1);
+        update(m_map, &navtexMapItem, "Navtex");
+    }
+}
+
 void MapGUI::blockApplySettings(bool block)
 {
     m_doApplySettings = !block;
@@ -1597,6 +1643,7 @@ void MapGUI::on_displaySettings_clicked()
         }
         applyMap2DSettings(dialog.m_map2DSettingsChanged);
         applyMap3DSettings(dialog.m_map3DSettingsChanged);
+        m_settingsKeys.append(dialog.m_settingsKeysChanged);
         applySettings();
         m_objectMapModel.allUpdated();
         m_imageMapModel.allUpdated();

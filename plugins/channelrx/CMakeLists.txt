@@ -113,6 +113,18 @@ if (ENABLE_CHANNELRX_DEMODFT8 AND FT8_SUPPORT)
     add_subdirectory(demodft8)
 endif()
 
+if (ENABLE_CHANNELRX_DEMODNAVTEX)
+    add_subdirectory(demodnavtex)
+endif()
+
+if (ENABLE_CHANNELRX_DEMODRTTY)
+    add_subdirectory(demodrtty)
+endif()
+
+if (ENABLE_CHANNELRX_DEMODILS)
+    add_subdirectory(demodils)
+endif()
+
 if(NOT SERVER_MODE)
     add_subdirectory(heatmap)
 

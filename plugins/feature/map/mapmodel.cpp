@@ -271,9 +271,16 @@ QVariant PolygonMapModel::data(const QModelIndex &index, int role) const
     case borderColorRole:
          return QVariant::fromValue(QColor(0x00, 0x00, 0x00, 0x00)); // Transparent
     case fillColorRole:
-        if (m_items[row]->m_itemSettings->m_display2DTrack) {
-            return QVariant::fromValue(QColor::fromRgba(m_items[row]->m_itemSettings->m_2DTrackColor));
-        } else {
+        if (polygonItem->m_itemSettings->m_display2DTrack)
+        {
+            if (polygonItem->m_colorValid) {
+                return QVariant::fromValue(QColor::fromRgba(polygonItem->m_color));
+            } else {
+                return QVariant::fromValue(QColor::fromRgba(polygonItem->m_itemSettings->m_2DTrackColor));
+            }
+        }
+        else
+        {
             return QVariant::fromValue(QColor(0x00, 0x00, 0x00, 0x00)); // Transparent
         }
     case polygonRole:
@@ -308,7 +315,11 @@ QVariant PolylineMapModel::data(const QModelIndex &index, int role) const
     switch (role)
     {
     case lineColorRole:
-        return QVariant::fromValue(QColor::fromRgba(m_items[row]->m_itemSettings->m_2DTrackColor));
+        if (polylineItem->m_colorValid) {
+            return QVariant::fromValue(QColor::fromRgba(polylineItem->m_color));
+        } else {
+            return QVariant::fromValue(QColor::fromRgba(polylineItem->m_itemSettings->m_2DTrackColor));
+        }
     case coordinatesRole:
         return QVariant::fromValue(polylineItem->m_polyline);
     case boundsRole:
@@ -586,7 +597,7 @@ ObjectMapItem *ObjectMapModel::findMapItem(const QString& name)
     while (i.hasNext())
     {
         MapItem *item = i.next();
-        if (item->m_name == name) {
+        if (!item->m_name.compare(name, Qt::CaseInsensitive)) {
             return (ObjectMapItem *)item;
         }
     }

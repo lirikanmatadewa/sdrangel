@@ -12,16 +12,19 @@ On top of this, it can plot data from other plugins, such as:
 * Weather imagery from APT Demodulator,
 * The Sun, Moon and Stars from the Star Tracker,
 * Weather ballons from the RadioSonde feature,
-* Radials and estimated position from the VOR localizer feature.
+* RF Heat Maps from the Heap Map channel,
+* Radials and estimated position from the VOR localizer feature,
+* ILS course line and glide path from the ILS Demodulator.
 
-As well as other data sources:
+As well as internet data sources:
 
-* AM, FM and DAB transmitters in the UK,
+* AM, FM and DAB transmitters in the UK and DAB transmitters in France,
 * Airports, NavAids and airspaces,
 * Beacons based on the IARU Region 1 beacon database and International Beacon Project,
 * Radio time transmitters,
 * GRAVES radar,
-* Ionosonde station data.
+* Ionosonde station data,
+* Navtex transmitters.
 
 It can also create tracks showing the path aircraft, ships and APRS objects have taken, as well as predicted paths for satellites.
 
@@ -166,6 +169,7 @@ The map feature displays a 2D and a 3D map overlaid with objects reported by oth
   * Setting the Device center frequency to the first frequency found in the text bubble for the object.
   * Changing the order in which the objects are drawn, which can help to cycle through multiple objects that are at the same location on the map.
   * Setting the object as the tracking target on the 3D map.
+* Left double clicking while holding shift on the 3D map will place a marker showing the position. Right clicking will clear it.
 
 The 2D map will only display the last reported positions for objects.
 The 3D map, however, has a timeline that allows replaying how objects have moved over time.

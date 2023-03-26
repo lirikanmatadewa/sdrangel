@@ -15,7 +15,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # configure version
 set(sdrangel_VERSION_MAJOR "7")
-set(sdrangel_VERSION_MINOR "10")
+set(sdrangel_VERSION_MINOR "11")
 set(sdrangel_VERSION_PATCH "0")
 set(sdrangel_VERSION_SUFFIX "")
 
@@ -81,6 +81,9 @@ option(ENABLE_CHANNELRX_DEMODPACKET "Enable channelrx demodpacket plugin" ON)
 option(ENABLE_CHANNELRX_DEMODAPT "Enable channelrx demodapt plugin" ON)
 option(ENABLE_CHANNELRX_DEMODDSD "Enable channelrx demoddsd plugin" ON)
 option(ENABLE_CHANNELRX_DEMODFT8 "Enable channelrx demodft8 plugin" ON)
+option(ENABLE_CHANNELRX_DEMODNAVTEX "Enable channelrx demodnavtex plugin" ON)
+option(ENABLE_CHANNELRX_DEMODRTTY "Enable channelrx demodrtty plugin" ON)
+option(ENABLE_CHANNELRX_DEMODILS "Enable channelrx demodils plugin" ON)
 
 # Channel Tx enablers
 option(ENABLE_CHANNELTX "Enable channeltx plugins" ON)
