@@ -30,7 +30,7 @@
 
 #include "datvdemodreport.h"
 
-const unsigned int DATVDemodSink::m_rfFilterFftLength = 1024;
+const unsigned int DATVDemodSink::m_rfFilterFftLength = 512;
 
 DATVDemodSink::DATVDemodSink() :
     m_blnNeedConfigUpdate(false),
@@ -95,6 +95,7 @@ void DATVDemodSink::SetVideoRender(DATVideoRender *screen)
     m_videoRender = screen;
     m_videoRender->setAudioFIFO(&m_audioFifo);
     m_videoThread = new DATVideoRenderThread(m_videoRender, m_videoStream);
+    m_videoThread->setObjectName("vtDATVDemodSink");
 }
 
 bool DATVDemodSink::audioActive()
@@ -630,7 +631,7 @@ void DATVDemodSink::InitDATVFramework()
 
     //***************
     p_rawiq = new leansdr::pipebuf<leansdr::cf32>(m_objScheduler, "rawiq", BUF_BASEBAND);
-    p_rawiq_writer = new leansdr::pipewriter<leansdr::cf32>(*p_rawiq);
+    p_rawiq_writer = new leansdr::pipewriter<leansdr::cf32>(*p_rawiq, m_RawIQMinWrite);
     p_preprocessed = p_rawiq;
 
     // NOTCH FILTER
@@ -961,7 +962,7 @@ void DATVDemodSink::InitDATVS2Framework()
 
     //***************
     p_rawiq = new leansdr::pipebuf<leansdr::cf32>(m_objScheduler, "rawiq", BUF_BASEBAND);
-    p_rawiq_writer = new leansdr::pipewriter<leansdr::cf32>(*p_rawiq);
+    p_rawiq_writer = new leansdr::pipewriter<leansdr::cf32>(*p_rawiq, m_RawIQMinWrite);
     p_preprocessed = p_rawiq;
 
     // NOTCH FILTER
@@ -1148,7 +1149,7 @@ void DATVDemodSink::InitDATVS2Framework()
             p_verrcount)
         ;
         leansdr::s2_fecdec_helper<leansdr::llr_t, leansdr::llr_sb> *fecdec = (leansdr::s2_fecdec_helper<leansdr::llr_t, leansdr::llr_sb> *) r_fecdechelper;
-        const int nhelpers = 6;
+        const int nhelpers = 2;
         fecdec->nhelpers = nhelpers;
         fecdec->must_buffer = false;
         fecdec->max_trials = m_settings.m_softLDPCMaxTrials;
@@ -1199,10 +1200,8 @@ void DATVDemodSink::feed(const SampleVector::const_iterator& begin, const Sample
 {
     float fltI;
     float fltQ;
-    leansdr::cf32 objIQ;
     fftfilt::cmplx *objRF;
     int intRFOut;
-    double magSq;
     int lngWritable=0;
     leansdr::s2_frame_receiver<leansdr::f32, leansdr::llr_ss> *objDemodulatorDVBS2 =
         (leansdr::s2_frame_receiver<leansdr::f32, leansdr::llr_ss> *) m_objDemodulatorDVBS2;
@@ -1305,20 +1304,16 @@ void DATVDemodSink::feed(const SampleVector::const_iterator& begin, const Sample
         objC *= m_objNCO.nextIQ();
         intRFOut = m_objRFFilter->runFilt(objC, &objRF); // filter RF before demod
 
-        for (int intI = 0 ; intI < intRFOut; intI++)
+        for (int intI = 0 ; intI < intRFOut; intI++, objRF++)
         {
-            objIQ.real(objRF->real());
-            objIQ.imag(objRF->imag());
-            magSq = objIQ.real() * objIQ.real() + objIQ.imag() * objIQ.imag();
-            m_objMagSqAverage(magSq);
-
-            objRF ++;
+            m_objMagSqAverage(norm(*objRF));
 
             if (m_blnDVBInitialized
                 && (p_rawiq_writer != nullptr)
                 && (m_objScheduler != nullptr))
             {
-                p_rawiq_writer->write(objIQ);
+
+                p_rawiq_writer->write(*objRF);
                 m_lngReadIQ++;
 
                 lngWritable = p_rawiq_writer->writable();
@@ -1330,8 +1325,7 @@ void DATVDemodSink::feed(const SampleVector::const_iterator& begin, const Sample
                     m_objScheduler->step();
 
                     m_lngReadIQ = 0;
-                    delete p_rawiq_writer;
-                    p_rawiq_writer = new leansdr::pipewriter<leansdr::cf32>(*p_rawiq);
+                    p_rawiq_writer->reset(m_RawIQMinWrite);
                 }
             }
         }
