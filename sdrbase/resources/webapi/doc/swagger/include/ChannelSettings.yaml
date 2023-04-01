@@ -69,6 +69,8 @@ ChannelSettings:
       $ref: "/doc/swagger/include/RTTYDemod.yaml#/RTTYDemodSettings"
     HeatMapSettings:
       $ref: "/doc/swagger/include/HeatMap.yaml#/HeatMapSettings"
+    ILSDemodSettings:
+      $ref: "/doc/swagger/include/ILSDemod.yaml#/ILSDemodSettings"
     InterferometerSettings:
       $ref: "/doc/swagger/include/Interferometer.yaml#/InterferometerSettings"
     IEEE_802_15_4_ModSettings:

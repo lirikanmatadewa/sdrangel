@@ -55,6 +55,8 @@ ChannelReport:
       $ref: "/doc/swagger/include/RTTYDemod.yaml#/RTTYDemodReport"
     HeatMapReport:
       $ref: "/doc/swagger/include/HeatMap.yaml#/HeatMapReport"
+    ILSDemodReport:
+      $ref: "/doc/swagger/include/ILSDemod.yaml#/ILSDemodReport"
     M17DemodReport:
       $ref: "/doc/swagger/include/M17Demod.yaml#/M17DemodReport"
     M17ModReport:

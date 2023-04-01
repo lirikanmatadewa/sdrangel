@@ -1895,8 +1895,8 @@ struct cnr_fft : runnable
     {
         fprintf(stderr, "cnr_fft::cnr_fft: bw: %f FFT: %d\n", bandwidth, fft.size());
 
-        if (bandwidth > 0.25) {
-            fail("cnr_fft::cnr_fft: CNR estimator requires Fsampling > 4x Fsignal");
+        if (bandwidth != 0.5) {
+            fail("cnr_fft::cnr_fft: CNR estimator requires Fsampling = 2x Fsymbol");
         }
     }
 
@@ -1998,7 +1998,7 @@ struct cnr_fft : runnable
         float n2 = (avgslots(icf - nstop, icf - nstart) +
             avgslots(icf + nstart, icf + nstop)) / 2;
 #elif LEANDVB_SDR_CNR_METHOD == 2
-        int bw = bandwidth * 0.75 * fft.size();
+        int bw = bandwidth * 0.6 * fft.size();
         float c2plusn2 = 0;
         float n2 = 0;
         minmax(icf - bw, icf + bw, n2, c2plusn2);
