@@ -95,7 +95,7 @@ On the Settings tab, you can set:
 * The maximum elevation angle in degrees supported by your rotator. 180 degree support is beneficial for passes that pass through 360/0 degrees, to avoid the rotator having to do a complete rotation mid pass.
 * A speech warning to be given on AOS. See below for a list of variable substitutions.
 * A speech warning to be given on LOS.
-* A command/script to be executed on AOS. This applies to all satellites. It is also possible to set a per-satellite command in the SDRangel Control dialog. See below for a list of variable substitions.
+* A command/script to be executed on AOS. This applies to all satellites. It is also possible to set a per-satellite command in the SDRangel Control dialog. See below for a list of variable substitutions.
 * A command/script to be executed on LOS. This applies to all satellites. It is also possible to set a per-satellite command in the SDRangel Control dialog.
 * The Doppler correction period in seconds, which controls how frequently Doppler correction is applied. Which channels have Doppler correction applied is set on a per-channel basis in the SDRangel Control dialog.
 
@@ -116,7 +116,10 @@ On the display tab, you can set:
 * The default frequency in MHz that is used for calculating Doppler and free space path loss in the Satellite Data table.
 * The units used to display azimuth and elevation to the target satellite. This can be in degrees, minutes and seconds or decimal degrees.
 * The number of points used for ground tracks on the map. More points result in smoother tracks, but require more processing.
-* Whether times are displayrf in the local time zone or UTC.
+* Which rotators are displayed on the polar chart. This can be All, None or Matching target. When Matching target is selected, the rotator will
+only be displayed if the source in the Rotator Controller is set to this Satellite Tracker and Track is enabled.
+* The format used for displaying dates. E.g. yyyy/MM/dd
+* Whether times are displayed in the local time zone or UTC.
 * Whether to draw the satellites on the map.
 
 <h3>9: Latitude</h3>
