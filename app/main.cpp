@@ -22,12 +22,16 @@
 #include <QStyleFactory>
 #include <QFontDatabase>
 #include <QSysInfo>
+#include <QSettings>
 #ifdef __APPLE__
 #include <QGLFormat>
 #include <QSurfaceFormat>
 #endif
 #ifdef ANDROID
 #include "util/android.h"
+#endif
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 4, 0))
+#include <QQuickWindow>
 #endif
 
 #include "loggerwithfile.h"
@@ -42,24 +46,42 @@ static int runQtApplication(int argc, char* argv[], qtwebapp::LoggerWithFile *lo
 */
 	QCoreApplication::setOrganizationName("BWE Solutions");
 	QCoreApplication::setApplicationName("SDR Analyzer");
-    QCoreApplication::setApplicationVersion(SDRANGEL_VERSION);
+	QCoreApplication::setApplicationVersion(SDRANGEL_VERSION);
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)
 	QApplication::setAttribute(Qt::AA_EnableHighDpiScaling); // DPI support
-    QCoreApplication::setAttribute(Qt::AA_UseHighDpiPixmaps); //HiDPI pixmaps
-    QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts); // Needed for WebGL in QWebEngineView and MainWindow::openGLVersion
+	QCoreApplication::setAttribute(Qt::AA_UseHighDpiPixmaps); //HiDPI pixmaps
+	QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts); // Needed for WebGL in QWebEngineView and MainWindow::openGLVersion
 #endif
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)) && (QT_VERSION <= QT_VERSION_CHECK(6, 0, 0))
-    QApplication::setAttribute(Qt::AA_DisableWindowContextHelpButton);
+	QApplication::setAttribute(Qt::AA_DisableWindowContextHelpButton);
+#endif
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 4, 0))
+	// Only use OpenGL, to easily combine QOpenGLWidget, QQuickWidget and QWebEngine
+	// in a single window
+	// See https://www.qt.io/blog/qt-quick-and-widgets-qt-6.4-edition
+	// This prevents Direct3D/Vulcan being used on Windows/Mac though for QQuickWidget
+	// and QWebEngine, so possibly should be reviewed in the future
+	QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 #endif
 #ifndef ANDROID
-     QApplication::setAttribute(Qt::AA_DontUseNativeDialogs); // Don't use on Android, otherwise we can't access files on internal storage
+	 QApplication::setAttribute(Qt::AA_DontUseNativeDialogs); // Don't use on Android, otherwise we can't access files on internal storage
 #endif
+
+	// Set UI scale factor for High DPI displays
+	QSettings settings;
+	QString uiScaleFactor = "graphics.ui_scale_factor";
+	if (settings.contains(uiScaleFactor))
+	{
+		QString scaleFactor = settings.value(uiScaleFactor).toString();
+		qDebug() << "Setting QT_SCALE_FACTOR to" << scaleFactor;
+		qputenv("QT_SCALE_FACTOR", scaleFactor.toLatin1());
+	}
 
 	QApplication a(argc, argv);
 
 #if 1
-    qApp->setStyle(QStyleFactory::create("fusion"));
+	qApp->setStyle(QStyleFactory::create("fusion"));
 
 	QPalette palette;
 	palette.setColor(QPalette::Window, QColor(64,64,64));
@@ -119,16 +141,16 @@ static int runQtApplication(int argc, char* argv[], qtwebapp::LoggerWithFile *lo
 #endif
 
 #ifdef ANDROID
-    // Default sized sliders can be hard to move using touch GUIs, so increase szie
-    // FIXME: How can we do a double border around the handle, as Fusion style seems to use?
-    // Dialog borders are hard to see as is (perhaps as Android doesn't have a title bar), so use same color as for MDI
-    qApp->setStyleSheet("QSlider {min-height: 20px; } "
-                        "QSlider::groove:horizontal { border: 1px solid #2e2e2e; height: 1px; background: #444444; margin: 1px 0;}"
-                        "QSlider::handle:horizontal { background: #585858; border: 1px double  #676767; width: 16px; margin: -8px 0px; border-radius: 3px;}"
-                        "QSlider::sub-page {background: #ff8c00; border: 1px solid #2e2e2e;border-top-right-radius: 0px;border-bottom-right-radius: 0px;border-top-left-radius: 5px;border-bottom-left-radius: 5px;}"
-                        "QSlider::add-page {background: #444444; border: 1px solid #2e2e2e;border-top-right-radius: 5px;border-bottom-right-radius: 5px;border-top-left-radius: 0px;border-bottom-left-radius: 0px;}"
-                        "QDialog { border: 1px solid #ff8c00;}"
-                        );
+	// Default sized sliders can be hard to move using touch GUIs, so increase szie
+	// FIXME: How can we do a double border around the handle, as Fusion style seems to use?
+	// Dialog borders are hard to see as is (perhaps as Android doesn't have a title bar), so use same color as for MDI
+	qApp->setStyleSheet("QSlider {min-height: 20px; } "
+						"QSlider::groove:horizontal { border: 1px solid #2e2e2e; height: 1px; background: #444444; margin: 1px 0;}"
+						"QSlider::handle:horizontal { background: #585858; border: 1px double  #676767; width: 16px; margin: -8px 0px; border-radius: 3px;}"
+						"QSlider::sub-page {background: #ff8c00; border: 1px solid #2e2e2e;border-top-right-radius: 0px;border-bottom-right-radius: 0px;border-top-left-radius: 5px;border-bottom-left-radius: 5px;}"
+						"QSlider::add-page {background: #444444; border: 1px solid #2e2e2e;border-top-right-radius: 5px;border-bottom-right-radius: 5px;border-top-left-radius: 0px;border-bottom-left-radius: 0px;}"
+						"QDialog { border: 1px solid #ff8c00;}"
+						);
 #endif
 
 	MainParser parser;
@@ -136,24 +158,24 @@ static int runQtApplication(int argc, char* argv[], qtwebapp::LoggerWithFile *lo
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
 	qInfo("%s %s Qt %s %db %s %s DSP Rx:%db Tx:%db PID %lld",
-	        qPrintable(qApp->applicationName()),
-	        qPrintable(qApp->applicationVersion()),
-	        qPrintable(QString(QT_VERSION_STR)),
-	        QT_POINTER_SIZE*8,
-	        qPrintable(QSysInfo::currentCpuArchitecture()),
-	        qPrintable(QSysInfo::prettyProductName()),
-	        SDR_RX_SAMP_SZ,
-	        SDR_TX_SAMP_SZ,
-	        qApp->applicationPid());
+			qPrintable(qApp->applicationName()),
+			qPrintable(qApp->applicationVersion()),
+			qPrintable(QString(QT_VERSION_STR)),
+			QT_POINTER_SIZE*8,
+			qPrintable(QSysInfo::currentCpuArchitecture()),
+			qPrintable(QSysInfo::prettyProductName()),
+			SDR_RX_SAMP_SZ,
+			SDR_TX_SAMP_SZ,
+			qApp->applicationPid());
 #else
-    qInfo("%s %s Qt %s %db DSP Rx:%db Tx:%db PID: %lld",
-            qPrintable(qApp->applicationName()),
-            qPrintable((qApp->applicationVersion()),
-            qPrintable(QString(QT_VERSION_STR)),
-            QT_POINTER_SIZE*8,
-            SDR_RX_SAMP_SZ,
-            SDR_TX_SAMP_SZ,
-            applicationPid);
+	qInfo("%s %s Qt %s %db DSP Rx:%db Tx:%db PID: %lld",
+			qPrintable(qApp->applicationName()),
+			qPrintable(qApp->applicationVersion()),
+			qPrintable(QString(QT_VERSION_STR)),
+			QT_POINTER_SIZE*8,
+			SDR_RX_SAMP_SZ,
+			SDR_TX_SAMP_SZ,
+			applicationPid);
 #endif
 
 	MainWindow w(logger, parser);
@@ -165,32 +187,33 @@ static int runQtApplication(int argc, char* argv[], qtwebapp::LoggerWithFile *lo
 int main(int argc, char* argv[])
 {
 #ifdef __APPLE__
-    // Request OpenGL 3.3 context, needed for glspectrum and 3D Map feature
-    // Note that Mac only supports CoreProfile, so any deprecated OpenGL 2 features
-    // will not work. Because of this, we have two versions of the shaders:
-    // OpenGL 2 versions for compatiblity with older drivers and OpenGL 3.3
-    // versions for newer drivers
-    QGLFormat fmt;
-    fmt.setVersion(3, 3);
-    fmt.setProfile(QGLFormat::CoreProfile);
-    QGLFormat::setDefaultFormat(fmt);
-    QSurfaceFormat sfc;
-    sfc.setVersion(3, 3);
-    sfc.setProfile(QSurfaceFormat::CoreProfile);
-    QSurfaceFormat::setDefaultFormat(sfc);
+	// Request OpenGL 3.3 context, needed for glspectrum and 3D Map feature
+	// Note that Mac only supports CoreProfile, so any deprecated OpenGL 2 features
+	// will not work. Because of this, we have two versions of the shaders:
+	// OpenGL 2 versions for compatiblity with older drivers and OpenGL 3.3
+	// versions for newer drivers
+	QGLFormat fmt;
+	fmt.setVersion(3, 3);
+	fmt.setProfile(QGLFormat::CoreProfile);
+	QGLFormat::setDefaultFormat(fmt);
+	QSurfaceFormat sfc;
+	sfc.setVersion(3, 3);
+	sfc.setProfile(QSurfaceFormat::CoreProfile);
+	QSurfaceFormat::setDefaultFormat(sfc);
 #endif
 
 #ifdef ANDROID
-    qtwebapp::LoggerWithFile *logger = nullptr;
-    qInstallMessageHandler(Android::messageHandler);
+	qtwebapp::LoggerWithFile *logger = nullptr;
+	qInstallMessageHandler(Android::messageHandler);
 #else
 	qtwebapp::LoggerWithFile *logger = new qtwebapp::LoggerWithFile(qApp);
-    logger->installMsgHandler();
+	logger->installMsgHandler();
 #endif
 
 	int res = runQtApplication(argc, argv, logger);
 
 	delete logger;
+	
 	qWarning("SDR Analyzer quit.");
 	return res;
 }

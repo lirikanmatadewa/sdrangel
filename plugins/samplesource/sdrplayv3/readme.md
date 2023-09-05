@@ -97,7 +97,7 @@ This selects the IF frequency between these values:
 
   - **0 for zero IF**
   - 450 kHz.
-    - Move center frequency by -450 kHZ (3).
+    - Move center frequency by -450 kHz (3).
       - Direct frequency reading is -450 kHz off from real Rx frequency.
       - You may use the transverter mode (7) with a shift of +450 kHz to correct the frequency reading
       - If you already use the transverter mode for transverter work just add 450 kHz to the current shift
@@ -129,7 +129,7 @@ Sets the ADC IQ sample rats from 2M to 10.66M Hz.
 
 Decimation in powers of two from 1 (no decimation) to 64.
 
-<h3>19: Decimated bandpass center frequency position relative the SDRplay center frequency</h3>
+<h3>19: Decimated bandpass center frequency position relative to the SDRplay center frequency</h3>
 
   - **Cen**: the decimation operation takes place around the SDRplay center frequency Fs.
   - **Inf**: the decimation operation takes place around Fs - Fc.

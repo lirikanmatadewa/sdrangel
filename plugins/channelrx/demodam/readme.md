@@ -22,7 +22,7 @@ When the PLL is locked the icon lights up in green. The frequency shift from car
 
 <h3>3: DSB/SSB selection</h2>
 
-Use the left mouse button to toggle DSB/SSB operation. Soemtimes one of the two sidebands is affected by interference. Selecting SSB may help by using only the sideband without interference. Right click to open a dialog to select which sideband is used (LSB or USB).
+Use the left mouse button to toggle DSB/SSB operation. Sometimes one of the two sidebands is affected by interference. Selecting SSB may help by using only the sideband without interference. Right click to open a dialog to select which sideband is used (LSB or USB).
 
 <h3>4: Channel power</h3>
 
@@ -32,7 +32,7 @@ Average total power in dB relative to a +/- 1.0 amplitude signal received in the
 
 Left click on this button to toggle audio mute for this channel. The button will light up in green if the squelch is open. This helps identifying which channels are active in a multi-channel configuration.
 
-If you right click on it it will open a dialog to select the audio output device. See [audio management documentation](../../../sdrgui/audio.md) for details.
+If you right click on it, it will open a dialog to select the audio output device. See [audio management documentation](../../../sdrgui/audio.md) for details.
 
 <h3>6: Level meter in dB</h3>
 

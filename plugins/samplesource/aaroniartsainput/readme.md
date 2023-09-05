@@ -2,7 +2,7 @@
 
 <h2>Introduction</h2>
 
-You can use this plugin to interface with a http server block in the Aaronia RTSA suite connected to a Spectran V6 device. It is assumed that you have prior knowledge of the Aaronia RTSA suite software and operation of the Spectran V6 RTSA (Real Time Spectrum Analyzer). However in this context there are some specificities i.e. it assumes that the "mission" (in RTSA suite terms) that is the equivalent of a "configuration" in SDRangel has a `HTTP Server` block preceded by a `IQ Demodulator` block (the equivalent of the "Frequency translating FIR filter" in GNU radio). The center frequency and span (equal to decimated sample rate) can be controlled from either RTSA sutie or SDRangel.
+You can use this plugin to interface with a http server block in the Aaronia RTSA suite connected to a Spectran V6 device. It is assumed that you have prior knowledge of the Aaronia RTSA suite software and operation of the Spectran V6 RTSA (Real Time Spectrum Analyzer). However in this context there are some specificities i.e. it assumes that the "mission" (in RTSA suite terms) that is the equivalent of a "configuration" in SDRangel has a `HTTP Server` block preceded by a `IQ Demodulator` block (the equivalent of the "Frequency translating FIR filter" in GNU radio). The center frequency and span (equal to decimated sample rate) can be controlled from either RTSA suite or SDRangel.
 
 An example flow graph could be the following (with two http servers) hence two possible Aaronia receivers in SDRangel:
 
@@ -39,11 +39,11 @@ This is the stream sample rate in S/s with multiplier. It should be equal to wha
 
 <h3>3: Frequency</h3>
 
-This is the center frequency received in he stream meta data. When setting it it will try to set the center frequency of the `IQ Demodulator` in RTSA suite the closest to the `HTTP server`.
+This is the center frequency received in he stream meta data. When setting it, it will try to set the center frequency of the `IQ Demodulator` in RTSA suite the closest to the `HTTP server`.
 
 <h3>4: Stream sample rate</h3>
 
-This is sample rate (actually the frequency span) received in the stream meta data. When setting it it will try to set the sample rate and frequency span of the IQ Demodulator` in RTSA suite the closest to the `HTTP server`.
+This is sample rate (actually the frequency span) received in the stream meta data. When setting it, it will try to set the sample rate and frequency span of the IQ Demodulator` in RTSA suite the closest to the `HTTP server`.
 
 <h3>5: Remote address and port</h3>
 

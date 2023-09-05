@@ -108,9 +108,7 @@ bool StarTrackerGUI::handleMessage(const Message& message)
             m_settings.applySettings(cfg.getSettingsKeys(), cfg.getSettings());
         }
 
-        blockApplySettings(true);
         displaySettings();
-        blockApplySettings(false);
 
         return true;
     }
@@ -118,8 +116,10 @@ bool StarTrackerGUI::handleMessage(const Message& message)
     {
         StarTrackerReport::MsgReportAzAl& azAl = (StarTrackerReport::MsgReportAzAl&) message;
         blockApplySettings(true);
+        blockPlotChart();
         ui->azimuth->setValue(azAl.getAzimuth());
         ui->elevation->setValue(azAl.getElevation());
+        unblockPlotChartAndPlot();
         blockApplySettings(false);
         return true;
     }
@@ -131,8 +131,10 @@ bool StarTrackerGUI::handleMessage(const Message& message)
         {
             m_settings.m_ra = Units::decimalHoursToHoursMinutesAndSeconds(raDec.getRA());
             m_settings.m_dec = Units::decimalDegreesToDegreeMinutesAndSeconds(raDec.getDec());
+            blockPlotChart();
             ui->rightAscension->setText(m_settings.m_ra);
             ui->declination->setText(m_settings.m_dec);
+            unblockPlotChartAndPlot();
         }
         else if (target == "sun")
         {
@@ -151,8 +153,10 @@ bool StarTrackerGUI::handleMessage(const Message& message)
     {
         StarTrackerReport::MsgReportGalactic& galactic = (StarTrackerReport::MsgReportGalactic&) message;
         blockApplySettings(true);
+        blockPlotChart();
         ui->galacticLongitude->setValue(galactic.getL());
         ui->galacticLatitude->setValue(galactic.getB());
+        unblockPlotChartAndPlot();
         blockApplySettings(false);
         return true;
     }
@@ -166,8 +170,10 @@ bool StarTrackerGUI::handleMessage(const Message& message)
             QDateTime dt = QDateTime::fromString(*swgSettings->getDateTime(), Qt::ISODateWithMs);
             ui->dateTime->setDateTime(dt);
             ui->target->setCurrentText("Custom Az/El");
+            blockPlotChart();
             ui->azimuth->setValue(swgSettings->getAzimuth());
             ui->elevation->setValue(swgSettings->getElevation());
+            unblockPlotChartAndPlot();
         }
         return true;
     }
@@ -214,8 +220,65 @@ bool StarTrackerGUI::handleMessage(const Message& message)
         }
         return true;
     }
+    else if (StarTracker::MsgReportAvailableSatelliteTrackers::match(message))
+    {
+        StarTracker::MsgReportAvailableSatelliteTrackers& report = (StarTracker::MsgReportAvailableSatelliteTrackers&) message;
+        updateSatelliteTrackerList(report.getFeatures());
+        return true;
+    }
 
     return false;
+}
+
+void StarTrackerGUI::updateSatelliteTrackerList(const QList<StarTrackerSettings::AvailableFeature>& satelliteTrackers)
+{
+    // Update list of satellite trackers
+    ui->target->blockSignals(true);
+
+    // Remove Satellite Trackers no longer available
+    for (int i = 0; i < ui->target->count(); )
+    {
+        QString text = ui->target->itemText(i);
+        bool found = false;
+        if (text.contains("SatelliteTracker"))
+        {
+            for (const auto& satelliteTracker : satelliteTrackers)
+            {
+                if (satelliteTracker.getName() == text)
+                {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                ui->target->removeItem(i);
+            } else {
+                i++;
+            }
+        }
+        else
+        {
+            i++;
+        }
+    }
+
+    // Add new Satellite Trackers
+    for (const auto& satelliteTracker : satelliteTrackers)
+    {
+        QString name = satelliteTracker.getName();
+        if (ui->target->findText(name) == -1) {
+            ui->target->addItem(name);
+        }
+    }
+
+    // Satellite Tracker feature can be created after this plugin, so select it
+    // if the chosen tracker appears
+    int index = ui->target->findText(m_settings.m_target);
+    if (index >= 0) {
+        ui->target->setCurrentIndex(index);
+    }
+
+    ui->target->blockSignals(false);
 }
 
 void StarTrackerGUI::handleInputMessages()
@@ -247,6 +310,7 @@ StarTrackerGUI::StarTrackerGUI(PluginAPI* pluginAPI, FeatureUISet *featureUISet,
     m_pluginAPI(pluginAPI),
     m_featureUISet(featureUISet),
     m_doApplySettings(true),
+    m_doPlotChart(true),
     m_lastFeatureState(0),
     m_azElLineChart(nullptr),
     m_azElPolarChart(nullptr),
@@ -342,6 +406,7 @@ StarTrackerGUI::StarTrackerGUI(PluginAPI* pluginAPI, FeatureUISet *featureUISet,
     ui->dateTime->setDateTime(QDateTime::currentDateTime());
     displaySettings();
     applySettings(true);
+    disconnect(ui->azimuth, SIGNAL(valueChanged(double)), this, SLOT(on_azimuth_valueChanged(double)));
     makeUIConnections();
 
     // Populate subchart menu
@@ -414,12 +479,24 @@ void StarTrackerGUI::blockApplySettings(bool block)
     m_doApplySettings = !block;
 }
 
+void StarTrackerGUI::blockPlotChart()
+{
+    m_doPlotChart = false;
+}
+
+void StarTrackerGUI::unblockPlotChartAndPlot()
+{
+    m_doPlotChart = true;
+    plotChart();
+}
+
 void StarTrackerGUI::displaySettings()
 {
     setTitleColor(m_settings.m_rgbColor);
     setWindowTitle(m_settings.m_title);
     setTitle(m_settings.m_title);
     blockApplySettings(true);
+    blockPlotChart();
     ui->darkTheme->setChecked(m_settings.m_chartsDarkTheme);
 
     if (m_solarFluxChart) {
@@ -479,7 +556,7 @@ void StarTrackerGUI::displaySettings()
     ui->beamwidth->setValue(m_settings.m_beamwidth);
     updateForTarget();
     getRollupContents()->restoreState(m_rollupState);
-    plotChart();
+    unblockPlotChartAndPlot();
     blockApplySettings(false);
 }
 
@@ -568,7 +645,7 @@ void StarTrackerGUI::on_declination_editingFinished()
 void StarTrackerGUI::on_azimuth_valueChanged(double value)
 {
     m_settings.m_az = value;
-    m_settingsKeys.append("az");
+    m_settingsKeys.append("azimuth");
     applySettings();
     plotChart();
 }
@@ -576,7 +653,7 @@ void StarTrackerGUI::on_azimuth_valueChanged(double value)
 void StarTrackerGUI::on_elevation_valueChanged(double value)
 {
     m_settings.m_el = value;
-    m_settingsKeys.append("el");
+    m_settingsKeys.append("elevation");
     applySettings();
     plotChart();
 }
@@ -691,7 +768,14 @@ void StarTrackerGUI::updateForTarget()
         on_rightAscension_editingFinished();
         on_declination_editingFinished();
     }
-    if (m_settings.m_target != "Custom Az/El")
+    if (m_settings.m_target.contains("SatelliteTracker"))
+    {
+        ui->azimuth->setReadOnly(true);
+        ui->elevation->setReadOnly(true);
+        ui->rightAscension->setReadOnly(true);
+        ui->declination->setReadOnly(true);
+    }
+    else if (m_settings.m_target != "Custom Az/El")
     {
         ui->azimuth->setReadOnly(true);
         ui->elevation->setReadOnly(true);
@@ -710,11 +794,14 @@ void StarTrackerGUI::updateForTarget()
 
 void StarTrackerGUI::on_target_currentTextChanged(const QString &text)
 {
-    m_settings.m_target = text;
-    m_settingsKeys.append("target");
-    applySettings();
-    updateForTarget();
-    plotChart();
+    if (!text.isEmpty())
+    {
+        m_settings.m_target = text;
+        m_settingsKeys.append("target");
+        applySettings();
+        updateForTarget();
+        plotChart();
+    }
 }
 
 void StarTrackerGUI::updateLST()
@@ -856,6 +943,9 @@ void StarTrackerGUI::on_dateTime_dateTimeChanged(const QDateTime &datetime)
 
 void StarTrackerGUI::plotChart()
 {
+    if (!m_doPlotChart) {
+        return;
+    }
     if (ui->chartSelect->currentIndex() == 0)
     {
         if (ui->chartSubSelect->currentIndex() == 0) {
@@ -1540,12 +1630,14 @@ void StarTrackerGUI::plotElevationLineChart()
     azSeries->setPen(pen);
 
     QDateTime dt;
+    QDateTime currentTime;
 
     if (m_settings.m_dateTime.isEmpty()) {
-        dt = QDateTime::currentDateTime();
+        currentTime = QDateTime::currentDateTime();
     } else {
-        dt = QDateTime::fromString(m_settings.m_dateTime, Qt::ISODateWithMs);
+        currentTime = QDateTime::fromString(m_settings.m_dateTime, Qt::ISODateWithMs);
     }
+    dt = currentTime;
 
     dt.setTime(QTime(0,0));
     QDateTime startTime = dt;
@@ -1578,32 +1670,8 @@ void StarTrackerGUI::plotElevationLineChart()
             maxElevation = aa.alt;
         }
 
-        // Adjust for refraction
-        if (m_settings.m_refraction == "Positional Astronomy Library")
-        {
-            aa.alt += Astronomy::refractionPAL(
-                aa.alt,
-                m_settings.m_pressure,
-                m_settings.m_temperature,
-                m_settings.m_humidity,
-                m_settings.m_frequency,
-                m_settings.m_latitude,
-                m_settings.m_heightAboveSeaLevel,
-                m_settings.m_temperatureLapseRate
-            );
-
-            if (aa.alt > 90.0) {
-                aa.alt = 90.0f;
-            }
-        }
-        else if (m_settings.m_refraction == "Saemundsson")
-        {
-            aa.alt += Astronomy::refractionSaemundsson(aa.alt, m_settings.m_pressure, m_settings.m_temperature);
-
-            if (aa.alt > 90.0) {
-                aa.alt = 90.0f;
-            }
-        }
+        // Skip adjusting for refraction, as it's too slow to calculate using Astronomy::refractionPAL
+        // in this loop, and doesn't typically make a visible difference in the chart
 
         if (step == 0) {
             prevAz = aa.az;
@@ -1635,6 +1703,28 @@ void StarTrackerGUI::plotElevationLineChart()
         azSeriesList[i]->attachAxis(yRightAxis);
     }
 
+    // Plot current target on elevation series
+    if (ui->azimuth->hasValue() && ui->elevation->hasValue() && (ui->elevation->value() > 0.0))
+    {
+        QScatterSeries *posSeries = new QScatterSeries();
+        posSeries->setMarkerSize(3);
+        posSeries->append(currentTime.toMSecsSinceEpoch(), ui->elevation->value());
+        if (m_settings.m_target.startsWith("Custom"))
+        {
+            posSeries->setPointLabelsVisible(false);
+            posSeries->setPointLabelsFormat("");
+        }
+        else
+        {
+            posSeries->setPointLabelsVisible(true);
+            posSeries->setPointLabelsFormat(m_settings.m_target);
+        }
+        posSeries->setPointLabelsClipping(false);
+        m_azElLineChart->addSeries(posSeries);
+        posSeries->attachAxis(xAxis);
+        posSeries->attachAxis(yLeftAxis);
+    }
+
     elSeries->attachAxis(xAxis);
     elSeries->attachAxis(yLeftAxis);
     xAxis->setTitleText(QString("%1 %2").arg(startTime.date().toString()).arg(startTime.timeZoneAbbreviation()));
@@ -1648,6 +1738,8 @@ void StarTrackerGUI::plotElevationLineChart()
 
     if (maxElevation < 0) {
         m_azElLineChart->setTitle("Not visible from this latitude");
+    } else if (m_settings.m_target.contains("SatelliteTracker")) {
+        m_azElLineChart->setTitle("See Satellite Tracker for chart that accounts for satellite's movement");
     } else {
         m_azElLineChart->setTitle("");
     }
@@ -1719,14 +1811,15 @@ void StarTrackerGUI::plotElevationPolarChart()
     double maxElevation = -90.0;
 
     QLineSeries *polarSeries = new QLineSeries();
+    QDateTime currentTime;
     QDateTime dt;
 
     if (m_settings.m_dateTime.isEmpty()) {
-        dt = QDateTime::currentDateTime();
+        currentTime = QDateTime::currentDateTime();
     } else {
-        dt = QDateTime::fromString(m_settings.m_dateTime, Qt::ISODateWithMs);
+        currentTime = QDateTime::fromString(m_settings.m_dateTime, Qt::ISODateWithMs);
     }
-
+    dt = currentTime;
     dt.setTime(QTime(0,0));
     QDateTime startTime = dt;
     QDateTime endTime = dt;
@@ -1763,32 +1856,8 @@ void StarTrackerGUI::plotElevationPolarChart()
             maxElevation = aa.alt;
         }
 
-        // Adjust for refraction
-        if (m_settings.m_refraction == "Positional Astronomy Library")
-        {
-            aa.alt += Astronomy::refractionPAL(
-                aa.alt,
-                m_settings.m_pressure,
-                m_settings.m_temperature,
-                m_settings.m_humidity,
-                m_settings.m_frequency,
-                m_settings.m_latitude,
-                m_settings.m_heightAboveSeaLevel,
-                m_settings.m_temperatureLapseRate
-            );
-
-            if (aa.alt > 90.0) {
-                aa.alt = 90.0f;
-            }
-        }
-        else if (m_settings.m_refraction == "Saemundsson")
-        {
-            aa.alt += Astronomy::refractionSaemundsson(aa.alt, m_settings.m_pressure, m_settings.m_temperature);
-
-            if (aa.alt > 90.0) {
-                aa.alt = 90.0f;
-            }
-        }
+        // Skip adjusting for refraction, as it's too slow to calculate using Astronomy::refractionPAL
+        // in this loop, and doesn't typically make a visible difference in the chart
 
         if (idx == 0) {
             prevAlt = aa.alt;
@@ -1978,8 +2047,32 @@ void StarTrackerGUI::plotElevationPolarChart()
         setSeries->attachAxis(radialAxis);
     }
 
+    // Plot target current position
+    if (ui->azimuth->hasValue() && ui->elevation->hasValue() && (ui->elevation->value() > 0.0))
+    {
+        QScatterSeries *posSeries = new QScatterSeries();
+        posSeries->setMarkerSize(3);
+        posSeries->append(ui->azimuth->value(), 90 - ui->elevation->value());
+        if (m_settings.m_target.startsWith("Custom"))
+        {
+            posSeries->setPointLabelsVisible(false);
+            posSeries->setPointLabelsFormat("");
+        }
+        else
+        {
+            posSeries->setPointLabelsVisible(true);
+            posSeries->setPointLabelsFormat(m_settings.m_target);
+        }
+        posSeries->setPointLabelsClipping(false);
+        m_azElPolarChart->addSeries(posSeries);
+        posSeries->attachAxis(angularAxis);
+        posSeries->attachAxis(radialAxis);
+    }
+
     if (maxElevation < 0) {
         m_azElPolarChart->setTitle("Not visible from this latitude");
+    } else if (m_settings.m_target.contains("SatelliteTracker")) {
+        m_azElPolarChart->setTitle("See Satellite Tracker for chart that accounts for satellite's movement");
     } else {
         m_azElPolarChart->setTitle("");
     }

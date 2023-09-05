@@ -509,6 +509,8 @@ void SatelliteTracker::webapiFormatFeatureSettings(
     response.getSatelliteTrackerSettings()->setPassStartTime(new QString(settings.m_passStartTime.toString()));
     response.getSatelliteTrackerSettings()->setPassFinishTime(new QString(settings.m_passFinishTime.toString()));
     response.getSatelliteTrackerSettings()->setDeviceSettings(getSWGSatelliteDeviceSettingsList(settings));
+    response.getSatelliteTrackerSettings()->setAzimuthOffset(settings.m_azimuthOffset);
+    response.getSatelliteTrackerSettings()->setElevationOffset(settings.m_elevationOffset);
 
     if (response.getSatelliteTrackerSettings()->getTitle()) {
         *response.getSatelliteTrackerSettings()->getTitle() = settings.m_title;
@@ -633,6 +635,12 @@ void SatelliteTracker::webapiUpdateFeatureSettings(
     if (featureSettingsKeys.contains("deviceSettings")) {
         settings.m_deviceSettings = getSatelliteDeviceSettings(response.getSatelliteTrackerSettings()->getDeviceSettings());
     }
+    if (featureSettingsKeys.contains("azimuthOffset")) {
+        settings.m_azimuthOffset = response.getSatelliteTrackerSettings()->getAzimuthOffset();
+    }
+    if (featureSettingsKeys.contains("elevationOffset")) {
+        settings.m_elevationOffset = response.getSatelliteTrackerSettings()->getElevationOffset();
+    }
     if (featureSettingsKeys.contains("title")) {
         settings.m_title = *response.getSatelliteTrackerSettings()->getTitle();
     }
@@ -745,6 +753,12 @@ void SatelliteTracker::webapiReverseSendSettings(const QList<QString>& featureSe
     if (featureSettingsKeys.contains("deviceSettings") || force) {
         swgSatelliteTrackerSettings->setDeviceSettings(getSWGSatelliteDeviceSettingsList(settings));
     }
+    if (featureSettingsKeys.contains("azimuthOffset") || force) {
+        swgSatelliteTrackerSettings->setAzimuthOffset(settings.m_azimuthOffset);
+    }
+    if (featureSettingsKeys.contains("elevationOffset") || force) {
+        swgSatelliteTrackerSettings->setElevationOffset(settings.m_elevationOffset);
+    }
     if (featureSettingsKeys.contains("title") || force) {
         swgSatelliteTrackerSettings->setTitle(new QString(settings.m_title));
     }
@@ -804,6 +818,11 @@ void SatelliteTracker::webapiFormatFeatureReport(SWGSDRangel::SWGFeatureReport& 
         }
         swgSatState->setPasses(passesList);
         list->append(swgSatState);
+        if (satState->m_name == m_settings.m_target)
+        {
+            response.getSatelliteTrackerReport()->setTargetAzimuth(satState->m_azimuth);
+            response.getSatelliteTrackerReport()->setTargetElevation(satState->m_elevation);
+        }
     }
 }
 
@@ -847,8 +866,19 @@ QString SatelliteTracker::tleURLToFilename(const QString& string)
 {
     if (string == "https://db.satnogs.org/api/tle/")
         return satNogsTLEFilename();
+
+    // Celestrak now uses the same filename with different queries, so we need to include the query
+    // in the file name, so the filenames don't clash. E.g:
+    // https://celestrak.org/NORAD/elements/gp.php?GROUP=gps-ops&FORMAT=tle
+    // https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=tle
     QUrl url(string);
-    return HttpDownloadManager::downloadDir() + "/tle_" + url.fileName();
+    QString fileName = HttpDownloadManager::downloadDir() + "/tle_" + url.fileName();
+    if (url.hasQuery())
+    {
+        QString query = url.query().replace('%', '_').replace('&', '_').replace('=', '_');
+        fileName = fileName + query;
+    }
+    return fileName;
 }
 
 void SatelliteTracker::downloadFinished(const QString& filename, bool success)

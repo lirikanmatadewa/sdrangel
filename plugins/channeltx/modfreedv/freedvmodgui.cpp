@@ -382,11 +382,17 @@ FreeDVModGUI::FreeDVModGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, Baseb
 
     resetToDefaults();
 
-	ui->glSpectrum->setCenterFrequency(m_spectrumRate/2);
+    ui->spectrumGUI->setBuddies(m_spectrumVis, ui->glSpectrum);
+
+    ui->glSpectrum->setCenterFrequency(m_spectrumRate/2);
 	ui->glSpectrum->setSampleRate(m_spectrumRate);
-	ui->glSpectrum->setDisplayWaterfall(true);
-	ui->glSpectrum->setDisplayMaxHold(true);
-	ui->glSpectrum->setSsbSpectrum(true);
+
+    SpectrumSettings spectrumSettings = m_spectrumVis->getSettings();
+    spectrumSettings.m_displayWaterfall = true;
+    spectrumSettings.m_displayMaxHold = true;
+    spectrumSettings.m_ssb = true;
+    SpectrumVis::MsgConfigureSpectrumVis *msg = SpectrumVis::MsgConfigureSpectrumVis::create(spectrumSettings, false);
+    m_spectrumVis->getInputMessageQueue()->push(msg);
 
 	connect(&MainCore::instance()->getMasterTimer(), SIGNAL(timeout()), this, SLOT(tick()));
 
@@ -405,7 +411,6 @@ FreeDVModGUI::FreeDVModGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, Baseb
     connect(&m_channelMarker, SIGNAL(changedByCursor()), this, SLOT(channelMarkerChangedByCursor()));
 
     ui->cwKeyerGUI->setCWKeyer(m_freeDVMod->getCWKeyer());
-    ui->spectrumGUI->setBuddies(m_spectrumVis, ui->glSpectrum);
 
     m_settings.setChannelMarker(&m_channelMarker);
     m_settings.setSpectrumGUI(ui->spectrumGUI);
@@ -462,10 +467,10 @@ void FreeDVModGUI::displayBandwidths(int spanLog2)
     QString spanStr = QString::number(bwMax/10.0, 'f', 1);
 
     ui->spanText->setText(tr("%1k").arg(spanStr));
-    ui->glSpectrum->setCenterFrequency(m_spectrumRate/2);
-    ui->glSpectrum->setSampleRate(m_spectrumRate);
-    ui->glSpectrum->setSsbSpectrum(true);
+    ui->glSpectrum->setCenterFrequency(0);
+    ui->glSpectrum->setSampleRate(2*m_spectrumRate);
     ui->glSpectrum->setLsbDisplay(false);
+    ui->glSpectrum->setSsbSpectrum(true);
 }
 
 void FreeDVModGUI::displaySettings()

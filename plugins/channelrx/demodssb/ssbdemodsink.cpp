@@ -60,7 +60,7 @@ SSBDemodSink::SSBDemodSink() :
 	m_channelSampleRate = 48000;
 	m_channelFrequencyOffset = 0;
 
-	m_audioBuffer.resize(1<<14);
+	m_audioBuffer.resize(m_audioSampleRate / 10);
 	m_audioBufferFill = 0;
 	m_undersampleCount = 0;
 	m_sum = 0;
@@ -241,10 +241,10 @@ void SSBDemodSink::processOneSample(Complex &ci)
 
         if (m_audioBufferFill >= m_audioBuffer.size())
         {
-            uint res = m_audioFifo.write((const quint8*)&m_audioBuffer[0], m_audioBufferFill);
+            std::size_t res = m_audioFifo.write((const quint8*)&m_audioBuffer[0], std::min(m_audioBufferFill, m_audioBuffer.size()));
 
             if (res != m_audioBufferFill) {
-                qDebug("SSBDemodSink::processOneSample: %u/%u samples written", res, m_audioBufferFill);
+                qDebug("SSBDemodSink::processOneSample: %lu/%lu samples written", res, m_audioBufferFill);
             }
 
             m_audioBufferFill = 0;
@@ -312,7 +312,8 @@ void SSBDemodSink::applyAudioSampleRate(int sampleRate)
 
     m_audioFifo.setSize(sampleRate);
     m_audioSampleRate = sampleRate;
-
+    m_audioBuffer.resize(sampleRate / 10);
+    m_audioBufferFill = 0;
 
     QList<ObjectPipe*> pipes;
     MainCore::instance()->getMessagePipes().getMessagePipes(m_channel, "reportdemod", pipes);

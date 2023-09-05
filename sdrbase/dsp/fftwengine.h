@@ -38,6 +38,8 @@ public:
 	virtual Complex* out();
 
     virtual void setReuse(bool reuse) { m_reuse = reuse; }
+    QString getName() const override;
+    static const QString m_name;
 
 protected:
 	static QMutex m_globalPlanMutex;

@@ -18,6 +18,8 @@ DeviceSettings:
       $ref: "/doc/swagger/include/Airspy.yaml#/AirspySettings"
     airspyHFSettings:
       $ref: "/doc/swagger/include/AirspyHF.yaml#/AirspyHFSettings"
+    audioCATSISOSettings:
+      $ref: "/doc/swagger/include/AudioCATSISO.yaml#/AudioCATSISOSettings"
     audioInputSettings:
       $ref: "/doc/swagger/include/AudioInput.yaml#/AudioInputSettings"
     audioOutputSettings:
@@ -102,3 +104,5 @@ DeviceSettings:
       $ref: "/doc/swagger/include/Xtrx.yaml#/XtrxMIMOSettings"
     aaroniaRTSASettings:
       $ref: "/doc/swagger/include/AaroniaRTSA.yaml#/AaroniaRTSASettings"
+    aaroniaRTSAOutputSettings:
+      $ref: "/doc/swagger/include/AaroniaRTSA.yaml#/AaroniaRTSAOutputSettings"

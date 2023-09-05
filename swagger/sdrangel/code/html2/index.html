@@ -2098,11 +2098,51 @@ margin-bottom: 20px;
   },
   "description" : "ATVMod"
 };
+            defs.AaroniaRTSAOutputReport = {
+  "properties" : {
+    "status" : {
+      "type" : "integer",
+      "description" : "Connection to RTSA server status:\n  * 0 - Idle\n  * 1 - Unstable\n  * 2 - Connected\n  * 3 - Error\n  * 4 - Disconnected\n"
+    }
+  },
+  "description" : "AaroniaRTSAOutput"
+};
+            defs.AaroniaRTSAOutputSettings = {
+  "properties" : {
+    "centerFrequency" : {
+      "type" : "integer",
+      "format" : "int64",
+      "description" : "Sets the center frequency (Hz) of the distant IQ demodulator"
+    },
+    "sampleRate" : {
+      "type" : "integer",
+      "description" : "Sets the sample rate (S/s) and span (Hz) of the distant IQ demodulator"
+    },
+    "serverAddress" : {
+      "type" : "string",
+      "description" : "Distant AaroniaRTSA instance URL or IPv4 address with port"
+    },
+    "useReverseAPI" : {
+      "type" : "integer",
+      "description" : "Synchronize with reverse API (1 for yes, 0 for no)"
+    },
+    "reverseAPIAddress" : {
+      "type" : "string"
+    },
+    "reverseAPIPort" : {
+      "type" : "integer"
+    },
+    "reverseAPIDeviceIndex" : {
+      "type" : "integer"
+    }
+  },
+  "description" : "AaroniaRTSAOutput"
+};
             defs.AaroniaRTSAReport = {
   "properties" : {
     "status" : {
       "type" : "integer",
-      "description" : "0 for Idle, 1 for Connecting, 2 for Connected, 3 for Error, 4 for Disconnected"
+      "description" : "Connection to RTSA server status:\n  * 0 - Idle\n  * 1 - Unstable\n  * 2 - Connected\n  * 3 - Error\n  * 4 - Disconnected\n"
     }
   },
   "description" : "AaroniaRTSA"
@@ -2408,6 +2448,122 @@ margin-bottom: 20px;
       "type" : "string"
     }
   }
+};
+            defs.AudioCATSISOSettings = {
+  "properties" : {
+    "rxCenterFrequency" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "txCenterFrequency" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "transverterMode" : {
+      "type" : "integer"
+    },
+    "transverterDeltaFrequency" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "iqOrder" : {
+      "type" : "integer",
+      "description" : "IQ samples order\n  * 0 - Q then I (swapped)\n  * 1 - I then Q (straight)\n"
+    },
+    "txEnable" : {
+      "type" : "integer",
+      "description" : "Enable or disable transmission\n  * 0 - Disable transmission\n  * 1 - Enable transmission\n"
+    },
+    "pttSpectrumLink" : {
+      "type" : "integer",
+      "description" : "Main spectrum display (Rx/Tx) follows PTT (GUI)\n  * 0 - Disable PTT following\n  * 1 - Enable PTT following\n"
+    },
+    "rxDeviceName" : {
+      "type" : "string",
+      "description" : "The name of the input audio device"
+    },
+    "rxIQMapping" : {
+      "type" : "integer",
+      "description" : "Audio channel to IQ mapping\n  * 0 - I=L, Q=R\n  * 1 - I=R, Q=L\n  * 2 - I=L, Q=0\n  * 3 - I=R, Q=0\n"
+    },
+    "log2Decim" : {
+      "type" : "integer",
+      "description" : "Decimation factor (Rx)"
+    },
+    "fcPosRx" : {
+      "type" : "integer",
+      "description" : "Decimated bandpass center frequency position\n  * 0 - Infradyne\n  * 1 - Supradyne\n  * 2 - Centered\n"
+    },
+    "dcBlock" : {
+      "type" : "integer",
+      "description" : "Auto DC blocking\n  * 0 - Off\n  * 1 - On\n"
+    },
+    "iqCorrection" : {
+      "type" : "integer",
+      "description" : "Auto IQ balance (you need auto DC blocking active)\n  * 0 - Off\n  * 1 - On\n"
+    },
+    "rxVolume" : {
+      "type" : "number",
+      "format" : "float"
+    },
+    "txDeviceName" : {
+      "type" : "string",
+      "description" : "The name of the output audio device"
+    },
+    "txIQMapping" : {
+      "type" : "integer",
+      "description" : "Audio channel to IQ mapping\n  * 0 - I=L, Q=R\n  * 1 - I=R, Q=L\n"
+    },
+    "txVolume" : {
+      "type" : "integer",
+      "description" : "Tx volume in dB usually negative"
+    },
+    "catSpeedIndex" : {
+      "type" : "integer"
+    },
+    "catDataBitsIndex" : {
+      "type" : "integer",
+      "description" : "CAT serial link data bits\n  * 0 - 7\n  * 1 - 8 (default)\n"
+    },
+    "catStopBitsIndex" : {
+      "type" : "integer",
+      "description" : "CAT serial linkj stop bits\n  * 0 - 1 (default)\n  * 1 - 2\n"
+    },
+    "catHandshakeIndex" : {
+      "type" : "integer",
+      "description" : "CAT serial link handshake type\n  * 0 - none (default)\n  * 1 - XON/XOFF\n  * 2 - hardware\n"
+    },
+    "catPTTMethodIndex" : {
+      "type" : "integer",
+      "description" : "CAT PTT metgod\n  * 0 - PTT (default)\n  * 1 - DTR\n  * 2 - RTS\n"
+    },
+    "catDTRHigh" : {
+      "type" : "integer",
+      "description" : "CAT DTR control\n  * 0 - low\n  * 1 - high (default)\n"
+    },
+    "catRTSHigh" : {
+      "type" : "integer",
+      "description" : "CAT RTS control\n  * 0 - low\n  * 1 - high (default)\n"
+    },
+    "catPollingMs" : {
+      "type" : "integer",
+      "description" : "CAT frequency polling interval in milliseconds"
+    },
+    "useReverseAPI" : {
+      "type" : "integer",
+      "description" : "Synchronize with reverse API (1 for yes, 0 for no)"
+    },
+    "reverseAPIAddress" : {
+      "type" : "string"
+    },
+    "reverseAPIPort" : {
+      "type" : "integer"
+    },
+    "reverseAPIDeviceIndex" : {
+      "type" : "integer"
+    }
+  },
+  "description" : "AudioCATSISO"
 };
             defs.AudioDevices = {
   "required" : [ "nbInputDevices", "nbOutputDevices" ],
@@ -3548,6 +3704,9 @@ margin-bottom: 20px;
     "DOA2Report" : {
       "$ref" : "#/definitions/DOA2Report"
     },
+    "DSCDemodReport" : {
+      "$ref" : "#/definitions/DSCDemodReport"
+    },
     "DSDDemodReport" : {
       "$ref" : "#/definitions/DSDDemodReport"
     },
@@ -3577,6 +3736,9 @@ margin-bottom: 20px;
     },
     "HeatMapReport" : {
       "$ref" : "#/definitions/HeatMapReport"
+    },
+    "ILSDemodReport" : {
+      "$ref" : "#/definitions/ILSDemodReport"
     },
     "M17DemodReport" : {
       "$ref" : "#/definitions/M17DemodReport"
@@ -3715,6 +3877,9 @@ margin-bottom: 20px;
     "DOA2Settings" : {
       "$ref" : "#/definitions/DOA2Settings"
     },
+    "DSCDemodSettings" : {
+      "$ref" : "#/definitions/DSCDemodSettings"
+    },
     "DSDDemodSettings" : {
       "$ref" : "#/definitions/DSDDemodSettings"
     },
@@ -3741,6 +3906,9 @@ margin-bottom: 20px;
     },
     "HeatMapSettings" : {
       "$ref" : "#/definitions/HeatMapSettings"
+    },
+    "ILSDemodSettings" : {
+      "$ref" : "#/definitions/ILSDemodSettings"
     },
     "InterferometerSettings" : {
       "$ref" : "#/definitions/InterferometerSettings"
@@ -4811,6 +4979,91 @@ margin-bottom: 20px;
   },
   "description" : "DOA2"
 };
+            defs.DSCDemodReport = {
+  "properties" : {
+    "channelPowerDB" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "power transmitted in channel (dB)"
+    },
+    "channelSampleRate" : {
+      "type" : "integer"
+    }
+  },
+  "description" : "DSCDemod"
+};
+            defs.DSCDemodSettings = {
+  "properties" : {
+    "inputFrequencyOffset" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "rfBandwidth" : {
+      "type" : "number",
+      "format" : "float"
+    },
+    "filterInvalid" : {
+      "type" : "integer"
+    },
+    "filterColumn" : {
+      "type" : "integer"
+    },
+    "filter" : {
+      "type" : "string"
+    },
+    "udpEnabled" : {
+      "type" : "integer"
+    },
+    "udpAddress" : {
+      "type" : "string"
+    },
+    "udpPort" : {
+      "type" : "integer"
+    },
+    "logFilename" : {
+      "type" : "string"
+    },
+    "logEnabled" : {
+      "type" : "integer"
+    },
+    "rgbColor" : {
+      "type" : "integer"
+    },
+    "title" : {
+      "type" : "string"
+    },
+    "streamIndex" : {
+      "type" : "integer",
+      "description" : "MIMO channel. Not relevant when connected to SI (single Rx)."
+    },
+    "useReverseAPI" : {
+      "type" : "integer",
+      "description" : "Synchronize with reverse API (1 for yes, 0 for no)"
+    },
+    "reverseAPIAddress" : {
+      "type" : "string"
+    },
+    "reverseAPIPort" : {
+      "type" : "integer"
+    },
+    "reverseAPIDeviceIndex" : {
+      "type" : "integer"
+    },
+    "reverseAPIChannelIndex" : {
+      "type" : "integer"
+    },
+    "scopeConfig" : {
+      "$ref" : "#/definitions/GLScope"
+    },
+    "channelMarker" : {
+      "$ref" : "#/definitions/ChannelMarker"
+    },
+    "rollupState" : {
+      "$ref" : "#/definitions/RollupState"
+    }
+  },
+  "description" : "DSCDemod"
+};
             defs.DSDDemodReport = {
   "properties" : {
     "channelPowerDB" : {
@@ -5240,8 +5493,11 @@ margin-bottom: 20px;
     "xtrxMIMOReport" : {
       "$ref" : "#/definitions/XtrxMIMOReport"
     },
-    "aaroniaSDRReport" : {
+    "AaroniaRTSAReport" : {
       "$ref" : "#/definitions/AaroniaRTSAReport"
+    },
+    "aaroniaRTSAOutputReport" : {
+      "$ref" : "#/definitions/AaroniaRTSAOutputReport"
     }
   },
   "description" : "Base device report. Only the device report corresponding to the device specified in the deviceHwType is or should be present."
@@ -5307,6 +5563,9 @@ margin-bottom: 20px;
     },
     "airspyHFSettings" : {
       "$ref" : "#/definitions/AirspyHFSettings"
+    },
+    "audioCATSISOSettings" : {
+      "$ref" : "#/definitions/AudioCATSISOSettings"
     },
     "audioInputSettings" : {
       "$ref" : "#/definitions/AudioInputSettings"
@@ -5433,6 +5692,9 @@ margin-bottom: 20px;
     },
     "aaroniaRTSASettings" : {
       "$ref" : "#/definitions/AaroniaRTSASettings"
+    },
+    "aaroniaRTSAOutputSettings" : {
+      "$ref" : "#/definitions/AaroniaRTSAOutputSettings"
     }
   },
   "description" : "Base device settings. Only the device settings corresponding to the device specified in the deviceHwType field is or should be present."
@@ -7037,7 +7299,24 @@ margin-bottom: 20px;
     },
     "protocol" : {
       "type" : "integer",
-      "description" : "(0 GS-232, 1 SPID rot2prog)"
+      "description" : "(0 GS-232, 1 SPID rot2prog, 2 rotcltd, 3 DFM)"
+    },
+    "precision" : {
+      "type" : "integer",
+      "description" : "Precision of azimuth and elevation values"
+    },
+    "coordinates" : {
+      "type" : "integer",
+      "description" : "(0 Az/El, 1 X/Y 85, 2 X/Y 30)"
+    },
+    "inputController" : {
+      "type" : "string",
+      "description" : "Name of input controller"
+    },
+    "inputSensitivity" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Input controller sensitivity"
     },
     "title" : {
       "type" : "string"
@@ -7453,6 +7732,143 @@ margin-bottom: 20px;
     }
   },
   "description" : "IEEE_802_15_4_Mod"
+};
+            defs.ILSDemodReport = {
+  "properties" : {
+    "channelPowerDB" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "power received in channel (dB)"
+    },
+    "channelSampleRate" : {
+      "type" : "integer"
+    }
+  },
+  "description" : "ILSDemod"
+};
+            defs.ILSDemodSettings = {
+  "properties" : {
+    "inputFrequencyOffset" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "rfBandwidth" : {
+      "type" : "number",
+      "format" : "float"
+    },
+    "mode" : {
+      "type" : "integer",
+      "description" : "(0 for LOC, 1 for G/S)"
+    },
+    "frequencyIndex" : {
+      "type" : "integer"
+    },
+    "squelch" : {
+      "type" : "integer"
+    },
+    "volume" : {
+      "type" : "number",
+      "format" : "float"
+    },
+    "audioMute" : {
+      "type" : "integer"
+    },
+    "average" : {
+      "type" : "integer"
+    },
+    "ddmUnits" : {
+      "type" : "integer"
+    },
+    "identThreshold" : {
+      "type" : "number",
+      "format" : "float"
+    },
+    "ident" : {
+      "type" : "string"
+    },
+    "runway" : {
+      "type" : "string"
+    },
+    "trueBearing" : {
+      "type" : "number",
+      "format" : "float"
+    },
+    "latitude" : {
+      "type" : "string"
+    },
+    "longitude" : {
+      "type" : "string"
+    },
+    "elevation" : {
+      "type" : "integer"
+    },
+    "glidePath" : {
+      "type" : "number",
+      "format" : "float"
+    },
+    "refHeight" : {
+      "type" : "number",
+      "format" : "float"
+    },
+    "courseWidth" : {
+      "type" : "number",
+      "format" : "float"
+    },
+    "udpEnabled" : {
+      "type" : "integer",
+      "description" : "Whether to forward DDM to specified UDP port"
+    },
+    "udpAddress" : {
+      "type" : "string",
+      "description" : "UDP address to forward DDM to"
+    },
+    "udpPort" : {
+      "type" : "integer",
+      "description" : "UDP port to forward DDM to"
+    },
+    "logFilename" : {
+      "type" : "string"
+    },
+    "logEnabled" : {
+      "type" : "integer"
+    },
+    "rgbColor" : {
+      "type" : "integer"
+    },
+    "title" : {
+      "type" : "string"
+    },
+    "streamIndex" : {
+      "type" : "integer",
+      "description" : "MIMO channel. Not relevant when connected to SI (single Rx)."
+    },
+    "useReverseAPI" : {
+      "type" : "integer",
+      "description" : "Synchronize with reverse API (1 for yes, 0 for no)"
+    },
+    "reverseAPIAddress" : {
+      "type" : "string"
+    },
+    "reverseAPIPort" : {
+      "type" : "integer"
+    },
+    "reverseAPIDeviceIndex" : {
+      "type" : "integer"
+    },
+    "reverseAPIChannelIndex" : {
+      "type" : "integer"
+    },
+    "scopeConfig" : {
+      "$ref" : "#/definitions/GLScope"
+    },
+    "channelMarker" : {
+      "$ref" : "#/definitions/ChannelMarker"
+    },
+    "rollupState" : {
+      "$ref" : "#/definitions/RollupState"
+    }
+  },
+  "description" : "ILSDemod"
 };
             defs.InstanceChannelsResponse = {
   "required" : [ "channelcount" ],
@@ -9112,7 +9528,7 @@ margin-bottom: 20px;
     },
     "altitudeReference" : {
       "type" : "integer",
-      "description" : "0 - NONE (Absolute), 1 - CLAMP_TO_GROUND, 2 - RELATIVE_TO_GROUND, 3 - CLIP_TO_GROUND"
+      "description" : "0 - NONE (Absolute), 1 - CLAMP_TO_GROUND, 2 - RELATIVE_TO_GROUND, 3 - CLIP_TO_GROUND."
     },
     "animations" : {
       "type" : "array",
@@ -9161,6 +9577,14 @@ margin-bottom: 20px;
     "availableUntil" : {
       "type" : "string",
       "description" : "Date and time until after which this item should no longer appear on 3D map"
+    },
+    "colorValid" : {
+      "type" : "integer",
+      "description" : "0 - Use default color, 1 - Use specified color"
+    },
+    "color" : {
+      "type" : "integer",
+      "description" : "RGBA for polygon and polyline"
     }
   },
   "description" : "An item to draw on the map. Set image to an empty string to remove item from the map."
@@ -9263,7 +9687,7 @@ margin-bottom: 20px;
     },
     "altitudeReference" : {
       "type" : "integer",
-      "description" : "0 - NONE (Absolute), 1 - CLAMP_TO_GROUND, 2 - RELATIVE_TO_GROUND, 3 - CLIP_TO_GROUND"
+      "description" : "0 - NONE (Absolute), 1 - CLAMP_TO_GROUND, 2 - RELATIVE_TO_GROUND, 3 - CLIP_TO_GROUND."
     },
     "animations" : {
       "type" : "array",
@@ -9312,6 +9736,14 @@ margin-bottom: 20px;
     "availableUntil" : {
       "type" : "string",
       "description" : "Date and time until after which this item should no longer appear on 3D map"
+    },
+    "colorValid" : {
+      "type" : "integer",
+      "description" : "0 - Use default color, 1 - Use specified color"
+    },
+    "color" : {
+      "type" : "integer",
+      "description" : "RGBA for polygon and polyline"
     }
   },
   "description" : "An item to draw on the map. Set image to an empty string to remove item from the map."
@@ -9330,6 +9762,10 @@ margin-bottom: 20px;
     "displayNames" : {
       "type" : "integer",
       "description" : "Display object names on the map (1 for yes, 0 for no)"
+    },
+    "terrain" : {
+      "type" : "string",
+      "description" : "Terrain used for 3D map (E.g: 'Ellipsoid' or 'Cesium World Terrain')"
     },
     "title" : {
       "type" : "string"
@@ -13015,6 +13451,14 @@ margin-bottom: 20px;
       "type" : "integer",
       "description" : "Running state\n  * 0 - not started\n  * 1 - idle\n  * 2 - running\n  * 3 - error\n"
     },
+    "targetAzimuth" : {
+      "type" : "number",
+      "format" : "float"
+    },
+    "targetElevation" : {
+      "type" : "number",
+      "format" : "float"
+    },
     "satelliteState" : {
       "type" : "array",
       "items" : {
@@ -13151,6 +13595,14 @@ margin-bottom: 20px;
       "items" : {
         "$ref" : "#/definitions/SatelliteDeviceSettingsList"
       }
+    },
+    "azimuthOffset" : {
+      "type" : "number",
+      "format" : "float"
+    },
+    "elevationOffset" : {
+      "type" : "number",
+      "format" : "float"
     },
     "title" : {
       "type" : "string"
@@ -13497,6 +13949,54 @@ margin-bottom: 20px;
     },
     "audioDeviceName" : {
       "type" : "string"
+    },
+    "gpioControl" : {
+      "type" : "integer",
+      "description" : "GPIO control\n  * 0 - No GPIO control\n  * 1 - Rx side controls GPIO\n  * 2 - Tx side controls GPIO\n"
+    },
+    "rx2txGPIOEnable" : {
+      "type" : "integer",
+      "description" : "Enable Rx to Tx GPIO control\n  * 0 - disable\n  * 1 - enable\n"
+    },
+    "rx2txGPIOMask" : {
+      "type" : "integer",
+      "format" : "int8",
+      "description" : "Rx to Tx change GPIO mask"
+    },
+    "rx2txGPIOValues" : {
+      "type" : "integer",
+      "format" : "int8",
+      "description" : "Rx to Tx change GPIO values"
+    },
+    "rx2txCommandEnable" : {
+      "type" : "integer",
+      "description" : "Enable Rx to Tx command\n  * 0 - disable\n  * 1 - enable\n"
+    },
+    "rx2txCommand" : {
+      "type" : "string",
+      "description" : "Command to be executed when Rx switches to Tx"
+    },
+    "tx2rxGPIOEnable" : {
+      "type" : "integer",
+      "description" : "Enable Tx to Rx GPIO control\n  * 0 - disable\n  * 1 - enable\n"
+    },
+    "tx2rxGPIOMask" : {
+      "type" : "integer",
+      "format" : "int8",
+      "description" : "Tx to Rx change GPIO mask"
+    },
+    "tx2rxGPIOValues" : {
+      "type" : "integer",
+      "format" : "int8",
+      "description" : "Tx to Rx change GPIO values"
+    },
+    "tx2rxCommandEnable" : {
+      "type" : "integer",
+      "description" : "Enable Tx to Rx command\n  * 0 - disable\n  * 1 - enable\n"
+    },
+    "tx2rxCommand" : {
+      "type" : "string",
+      "description" : "Command to be executed when Tx switches to Rx"
     },
     "useReverseAPI" : {
       "type" : "integer",
@@ -30250,7 +30750,7 @@ except ApiException as e:
                         <div class="pull-right"></div>
                         <div class="clearfix"></div>
                         <p></p>
-                        <p class="marked">Apply main spectrun settings differentially (no force)</p>
+                        <p class="marked">Apply main spectrum settings differentially (no force)</p>
                         <p></p>
                         <br />
                         <pre class="prettyprint language-html prettyprinted" data-type="patch"><code><span class="pln">/sdrangel/deviceset/{deviceSetIndex}/spectrum/settings</span></code></pre>
@@ -30720,7 +31220,7 @@ $(document).ready(function() {
                         <div class="pull-right"></div>
                         <div class="clearfix"></div>
                         <p></p>
-                        <p class="marked">Apply main spectrun settings unconditionnaly (force)</p>
+                        <p class="marked">Apply main spectrum settings unconditionnaly (force)</p>
                         <p></p>
                         <br />
                         <pre class="prettyprint language-html prettyprinted" data-type="put"><code><span class="pln">/sdrangel/deviceset/{deviceSetIndex}/spectrum/settings</span></code></pre>
@@ -57306,7 +57806,7 @@ except ApiException as e:
           </div>
           <div id="generator">
             <div class="content">
-              Generated 2023-03-23T18:22:37.731+01:00
+              Generated 2023-07-09T18:31:34.285+02:00
             </div>
           </div>
       </div>

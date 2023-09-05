@@ -34,7 +34,7 @@ public:
 	~FFTFactory();
 
     void preallocate(unsigned int minLog2Size, unsigned int maxLog2Size, unsigned int numberFFT, unsigned int numberInvFFT);
-    unsigned int getEngine(unsigned int fftSize, bool inverse, FFTEngine **engine); //!< returns an engine sequence
+    unsigned int getEngine(unsigned int fftSize, bool inverse, FFTEngine **engine, const QString& preferredEngine=""); //!< returns an engine sequence
     void releaseEngine(unsigned int fftSize, bool inverse, unsigned int engineSequence);
 
 private:

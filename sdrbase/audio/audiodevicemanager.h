@@ -22,17 +22,20 @@
 #include <QStringList>
 #include <QList>
 #include <QMap>
+#include <QObject>
 
 #include "audio/audioinputdevice.h"
 #include "audio/audiooutputdevice.h"
 #include "audio/audiodeviceinfo.h"
+#include "util/messagequeue.h"
 #include "export.h"
 
+class QThread;
 class QDataStream;
 class AudioFifo;
-class MessageQueue;
 
-class SDRBASE_API AudioDeviceManager {
+class SDRBASE_API AudioDeviceManager : public QObject {
+    Q_OBJECT
 public:
     class InputDeviceInfo
     {
@@ -121,6 +124,8 @@ public:
     void unsetOutputDeviceInfo(int outputDeviceIndex);
     void inputInfosCleanup();  //!< Remove input info from map for input devices not present
     void outputInfosCleanup(); //!< Remove output info from map for output devices not present
+    bool setInputDeviceVolume(float volume, int inputDeviceIndex);
+    bool setOutputDeviceVolume(float volume, int outputDeviceIndex);
 
     static const int m_defaultAudioSampleRate = 48000;
     static const float m_defaultAudioInputVolume;
@@ -136,16 +141,20 @@ private:
     QMap<AudioFifo*, MessageQueue*> m_audioFifoToSinkMessageQueues; //!< audio sink FIFO to attached sink message queue
     QMap<int, QList<MessageQueue*> > m_outputDeviceSinkMessageQueues; //!< sink message queues attached to device
     QMap<int, AudioOutputDevice*> m_audioOutputs; //!< audio device index to audio output map (index -1 is default device)
+    QMap<int, QThread*> m_audioOutputThreads; //!< audio device index to audio output threads map
     QMap<QString, OutputDeviceInfo> m_audioOutputInfos; //!< audio device name to audio output info
 
     QMap<AudioFifo*, int> m_audioSourceFifos; //< audio source FIFO to audio input device index-1 map
     QMap<AudioFifo*, MessageQueue*> m_audioFifoToSourceMessageQueues; //!< audio source FIFO to attached source message queue
     QMap<int, QList<MessageQueue*> > m_inputDeviceSourceMessageQueues; //!< sink message queues attached to device
     QMap<int, AudioInputDevice*> m_audioInputs; //!< audio device index to audio input map (index -1 is default device)
+    QMap<int, QThread*> m_audioInputThreads; //!< audio device index to audio input threads map
     QMap<QString, InputDeviceInfo> m_audioInputInfos; //!< audio device name to audio input device info
 
     bool m_defaultOutputStarted; //!< True if the default audio output (-1) has already been started
     bool m_defaultInputStarted;  //!< True if the default audio input (-1) has already been started
+
+    MessageQueue m_inputMessageQueue;
 
     void resetToDefaults();
     QByteArray serialize() const;
@@ -164,7 +173,12 @@ private:
     void deserializeOutputMap(QByteArray& data);
     void debugAudioOutputInfos() const;
 
+    bool handleMessage(const Message& cmd);
+
 	friend class MainSettings;
+
+private slots:
+    void handleInputMessages();
 };
 
 QDataStream& operator<<(QDataStream& ds, const AudioDeviceManager::InputDeviceInfo& info);

@@ -20,6 +20,7 @@
 
 #include <QTcpServer>
 #include <QTcpSocket>
+#include <QRegularExpression>
 #include <QDebug>
 
 class OSMTemplateServer : public QTcpServer
@@ -61,7 +62,7 @@ private slots:
         {
             QString line = socket->readLine();
             qDebug() << "HTTP Request: " << line;
-            QStringList tokens = QString(line).split(QRegExp("[ \r\n][ \r\n]*"));
+            QStringList tokens = QString(line).split(QRegularExpression("[ \r\n][ \r\n]*"));
             if (tokens[0] == "GET")
             {
                 bool hires = tokens[1].contains("hires");
@@ -71,14 +72,14 @@ private slots:
                 {
                     xml = QString("\
                     {\
-                        \"UrlTemplate\" : \"https://maps.wikimedia.org/osm-intl/%z/%x/%y%1.png\",\
+                        \"UrlTemplate\" : \"https://tile.openstreetmap.org/%z/%x/%y.png\",\
                         \"ImageFormat\" : \"png\",\
                         \"QImageFormat\" : \"Indexed8\",\
-                        \"ID\" : \"wmf-intl-%2x\",\
-                        \"MaximumZoomLevel\" : 18,\
-                        \"MapCopyRight\" : \"<a href='https://wikimediafoundation.org/wiki/Terms_of_Use'>WikiMedia Foundation</a>\",\
-                        \"DataCopyRight\" : \"<a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors\"\
-                    }").arg(hiresURL).arg(hires ? 1 : 2);
+                        \"ID\" : \"wmf-intl-1x\",\
+                        \"MaximumZoomLevel\" : 19,\
+                        \"MapCopyRight\" : \"<a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a>\",\
+                        \"DataCopyRight\" : \"\"\
+                    }");
                 }
                 else if (tokens[1] == "/satellite")
                 {
@@ -91,7 +92,7 @@ private slots:
                         \"ID\" : \"usgs-l7\",\
                         \"MaximumZoomLevel\" : 20,\
                         \"MapCopyRight\" : \"<a href='http://maptiler.com/'>Maptiler</a>\",\
-                        \"DataCopyRight\" : \"<a href='http://maptiler.com'>Maptiler</a>\"\
+                        \"DataCopyRight\" : \"\"\
                     }").arg(hiresURL).arg(m_maptilerAPIKey);
                 }
                 else if (tokens[1].contains("transit"))
@@ -110,7 +111,7 @@ private slots:
                         \"ID\" : \"%3\",\
                         \"MaximumZoomLevel\" : 20,\
                         \"MapCopyRight\" : \"<a href='https://carto.com'>CartoDB</a>\",\
-                        \"DataCopyRight\" : \"<a href='https://carto.com'>CartoDB</a>\"\
+                        \"DataCopyRight\" : \"\"\
                     }").arg(hiresURL).arg(mapUrl[idx]).arg(mapId[idx]);
                 }
                 else

@@ -90,7 +90,7 @@ Use this switch to toggle high-pass filter on the audio
 
 Left click to mute/unmute audio. This button lights in green when the squelch opens.
 
-If you right click on it it will open a dialog to select the audio output device. See [audio management documentation](../../../sdrgui/audio.md) for details.
+If you right click on it, it will open a dialog to select the audio output device. See [audio management documentation](../../../sdrgui/audio.md) for details.
 
 <h2>B: Digital common</h2>
 
@@ -197,7 +197,7 @@ Shows status information on the decoder:
 
 <h4>C1.8.1: Transition constellation or symbol synchronization signal toggle</h4>
 
-For now this is ineffective and only transition consellation is available.
+For now this is ineffective and only transition constellation is available.
 
 <h4>C1.8.2: Trace length</h4>
 
@@ -306,7 +306,7 @@ There are 4 combinations and therefore 4 possible diagrams:
 
 ![M17 Demodulator BER total BER](../../../doc/img/M17Demod_BER_total_ber.png)
 
-As expected the values decay with time if no more errors are receeived. Note that in BER mode the vertical axis has a logarithmic scale which is more convenient for BER values. The minor ticks are set at tenths of the major ticks intervals
+As expected the values decay with time if no more errors are received. Note that in BER mode the vertical axis has a logarithmic scale which is more convenient for BER values. The minor ticks are set at tenths of the major ticks intervals
 
 <h4>Current error counts display</h4>
 

@@ -12,16 +12,17 @@ set(CODEC2_TAG "v1.0.3")
 set(CM256CC_TAG c0e92b92aca3d1d36c990b642b937c64d363c559)
 set(MBELIB_TAG fe83b32c6a60cdd7bce8cecf3c7a0b9ec87a7667)
 set(SERIALDV_TAG "v1.1.4")
-set(DSDCC_TAG "v1.9.3")
+set(DSDCC_TAG "v1.9.4")
 set(LIMESUITE_TAG 70e3859a55d8d5353963a5318013c8454594769f)
 set(BLADERF_TAG "2021.02")
 set(LIBIIO_TAG 826563e41b5ce9890b75506f672017de8d76d52d)
 set(AIRSPYHF_TAG "1af81c0ca18944b8c9897c3c98dc0a991815b686")
 set(PERSEUS_TAG afefa23e3140ac79d845acb68cf0beeb86d09028)
 set(MIRISDR_TAG "v2.0.0")
+set(LIBSIGMF_TAG "new-namespaces")
 
 set(PTHREADS4W_TAG "Version-2-11-0-release")
-set(RTLSDR_TAG 5e73f90f1d85d8db2e583f3dbf1cff052d71d59b)
+set(RTLSDR_TAG 1261fbb285297da08f4620b18871b6d6d9ec2a7b)
 set(RTLSDR_UDEV OFF)
 set(SOAPYSDR_TAG "soapy-sdr-0.7.1")
 set(SOAPYSDR_SDRPLAY_TAG "soapy-sdrplay-0.2.0")
@@ -29,7 +30,7 @@ set(SOAPYSDR_AUDIO_TAG "soapy-audio-0.1.1")
 set(SOAPYSDR_REMOTE_TAG "soapy-remote-0.5.1")
 set(AIRSPY_TAG "37c768ce9997b32e7328eb48972a7fda0a1f8554")
 set(HACKRF_TAG "v2022.09.1")
-set(LIBXML2_TAG "v2.9.9")
+set(LIBXML2_TAG "v2.10.4")
 
 # For some external project macros
 include(ExternalProject)
@@ -171,30 +172,6 @@ endif (WIN32)
 
 set(MACOS_EXTERNAL_LIBS_FIXUP "${CMAKE_BINARY_DIR}/${INSTALL_LIB_DIR}")
 
-if (AUTO_EXTERNAL_LIBRARIES)
-    find_package(Codec2)
-    find_package(CM256cc)
-    find_package(LibMbe)
-    find_package(SerialDV)
-    find_package(LibDSDcc)
-    find_package(LimeSuite)
-    find_package(LibBLADERF)
-    find_package(LibMiriSDR)
-    find_package(LibIIO)
-    find_package(LibAIRSPYHF)
-    find_package(LibPerseus)
-    find_package(LibRTLSDR)
-    find_package(LibUSB)
-    find_package(Opus)
-    find_package(Boost)
-    find_package(ZLIB)
-    find_package(UHD)
-    find_package(FFmpeg COMPONENTS AVCODEC AVFORMAT AVUTIL SWSCALE)
-    find_package(FAAD)
-    find_package(FFTW3F)
-    find_package(OpenCV OPTIONAL_COMPONENTS core highgui imgproc imgcodecs videoio)
-endif (AUTO_EXTERNAL_LIBRARIES)
-
 # While some of the following projects are not installed (to save time & space), some have to
 # be so that on MacOS, the paths embedded in the libraries to other libraries are correct (as they are set to
 # install path, not build). This is required for macdeployqt to be able to find them
@@ -216,6 +193,13 @@ macro(set_global NAME VALUE)
     set(${NAME} ${VALUE} PARENT_SCOPE)
 endmacro()
 
+# Setting a cache variable doesn't update the variable in parent scope if already set,
+# so we need to set the cache and parent_scope separately
+macro(set_global_cache NAME VALUE)
+    set(${NAME} ${VALUE} CACHE INTERNAL "")
+    set(${NAME} ${VALUE} PARENT_SCOPE)
+endmacro()
+
 if (NOT LIBUSB_FOUND AND NOT USE_PRECOMPILED_LIBS)
     # Cloning git repo doesn't include configure, so we download the bz2 which does
     ExternalProject_Add(libusb
@@ -227,7 +211,7 @@ if (NOT LIBUSB_FOUND AND NOT USE_PRECOMPILED_LIBS)
             )
     ExternalProject_Get_Property(libusb install_dir)
     set_global(LIBUSB_DEPENDS libusb)
-    set(LIBUSB_FOUND ON CACHE INTERNAL "")
+    set_global_cache(LIBUSB_FOUND ON)
     set(LIBUSB_EXTERNAL ON CACHE INTERNAL "")
     set(LIBUSB_INCLUDE_DIR "${install_dir}/include/libusb-1.0" CACHE INTERNAL "")
     if (WIN32)
@@ -240,7 +224,7 @@ if (NOT LIBUSB_FOUND AND NOT USE_PRECOMPILED_LIBS)
     endif ()
 endif (NOT LIBUSB_FOUND AND NOT USE_PRECOMPILED_LIBS)
 
-if (NOT HIDAPI_FOUND AND NOT USE_PRECOMPILED_LIBS)
+if (NOT HIDAPI_FOUND AND NOT USE_PRECOMPILED_LIBS AND ENABLE_FUNCUBE)
     ExternalProject_Add(hidapi
             GIT_REPOSITORY https://github.com/libusb/hidapi.git
             PREFIX "${EXTERNAL_BUILD_LIBRARIES}/hidapi"
@@ -249,7 +233,7 @@ if (NOT HIDAPI_FOUND AND NOT USE_PRECOMPILED_LIBS)
             )
     ExternalProject_Get_Property(hidapi install_dir)
     set_global(HIDAPI_DEPENDS hidapi)
-    set(HIDAPI_FOUND ON CACHE INTERNAL "")
+    set_global_cache(HIDAPI_FOUND ON)
     set(HIDAPI_EXTERNAL ON CACHE INTERNAL "")
     set(HIDAPI_ROOT_DIR "${install_dir}" CACHE INTERNAL "")
     set(HIDAPI_INCLUDE_DIRS "${install_dir}/include/hidapi" CACHE INTERNAL "")
@@ -257,7 +241,7 @@ if (NOT HIDAPI_FOUND AND NOT USE_PRECOMPILED_LIBS)
         set(HIDAPI_LIBRARIES "${install_dir}/lib/libhidapi${CMAKE_SHARED_LIBRARY_SUFFIX}" CACHE INTERNAL "")
         set(MACOS_EXTERNAL_LIBS_FIXUP "${MACOS_EXTERNAL_LIBS_FIXUP};${install_dir}/lib")
     endif ()
-endif (NOT HIDAPI_FOUND AND NOT USE_PRECOMPILED_LIBS)
+endif ()
 
 if (NOT OPUS_FOUND AND NOT USE_PRECOMPILED_LIBS)
     ExternalProject_Add(opus
@@ -269,7 +253,7 @@ if (NOT OPUS_FOUND AND NOT USE_PRECOMPILED_LIBS)
             )
     ExternalProject_Get_Property(opus install_dir)
     set_global(OPUS_DEPENDS opus)
-    set(OPUS_FOUND ON CACHE INTERNAL "")
+    set_global_cache(OPUS_FOUND ON)
     set(OPUS_EXTERNAL ON CACHE INTERNAL "")
     set(OPUS_INCLUDE_DIRS "${install_dir}/include" CACHE INTERNAL "")
     set(OPUS_PKG_CONFIG_DIR "${install_dir}/lib/pkgconfig" CACHE INTERNAL "")
@@ -285,14 +269,14 @@ endif (NOT OPUS_FOUND AND NOT USE_PRECOMPILED_LIBS)
 
 if (NOT ZLIB_FOUND AND NOT USE_PRECOMPILED_LIBS)
     ExternalProject_Add(zlib
-            URL https://zlib.net/zlib-1.2.13.tar.gz
+            URL https://zlib.net/current/zlib.tar.gz
             PREFIX "${EXTERNAL_BUILD_LIBRARIES}/zlib"
             CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix=<INSTALL_DIR>
             TEST_COMMAND ""
             )
     ExternalProject_Get_Property(zlib install_dir)
     set_global(ZLIB_DEPENDS zlib)
-    set(ZLIB_FOUND ON CACHE INTERNAL "")
+    set_global_cache(ZLIB_FOUND ON)
     set(ZLIB_EXTERNAL ON CACHE INTERNAL "")
     set(ZLIB_INCLUDE_DIRS "${install_dir}/include" CACHE INTERNAL "")
     if (WIN32)
@@ -314,7 +298,7 @@ if (NOT FAAD_FOUND AND NOT USE_PRECOMPILED_LIBS)
             )
     ExternalProject_Get_Property(faad source_dir binary_dir install_dir)
     set_global(FAAD_DEPENDS faad)
-    set(FAAD_FOUND ON CACHE INTERNAL "")
+    set_global_cache(FAAD_FOUND ON)
     set(FAAD_EXTERNAL ON CACHE INTERNAL "")
     set(FAAD_INCLUDE_DIR "${install_dir}/include" CACHE INTERNAL "")
     if (WIN32)
@@ -338,7 +322,7 @@ if (NOT FFTW3F_FOUND AND NOT USE_PRECOMPILED_LIBS)
             )
     ExternalProject_Get_Property(fftw3f source_dir binary_dir)
     set_global(FFTW3F_DEPENDS fftw3f)
-    set(FFTW3F_FOUND ON CACHE INTERNAL "")
+    set_global_cache(FFTW3F_FOUND ON)
     set(FFTW3F_EXTERNAL ON CACHE INTERNAL "")
     set(FFTW3F_INCLUDE_DIRS "${source_dir}/api" "${binary_dir}" CACHE INTERNAL "")
     if (WIN32)
@@ -402,7 +386,7 @@ else()
     endif()
 endif()
 
-if (NOT FFMEG_FOUND AND NOT USE_PRECOMPILED_LIBS)
+if (NOT FFMPEG_FOUND AND NOT USE_PRECOMPILED_LIBS)
 
     # Libs only used by ffmpeg
 
@@ -422,7 +406,7 @@ if (NOT FFMEG_FOUND AND NOT USE_PRECOMPILED_LIBS)
         ExternalProject_Get_Property(x264 install_dir)
         set_global(X264_DEPENDS x264)
         set(X264_PKG_CONFIG_DIR "${install_dir}/lib/pkgconfig")
-        set(X264_FOUND ON CACHE INTERNAL "")
+        set_global_cache(X264_FOUND ON)
         set(X264_EXTERNAL ON CACHE INTERNAL "")
         if (APPLE)
             set(MACOS_EXTERNAL_LIBS_FIXUP "${MACOS_EXTERNAL_LIBS_FIXUP};${install_dir}/lib")
@@ -440,7 +424,7 @@ if (NOT FFMEG_FOUND AND NOT USE_PRECOMPILED_LIBS)
         ExternalProject_Get_Property(x265 install_dir)
         set_global(X265_DEPENDS x265)
         set(X265_PKG_CONFIG_DIR "${install_dir}/lib/pkgconfig")
-        set(X265_FOUND ON CACHE INTERNAL "")
+        set_global_cache(X265_FOUND ON)
         set(X265_EXTERNAL ON CACHE INTERNAL "")
         if (APPLE)
             set(MACOS_EXTERNAL_LIBS_FIXUP "${MACOS_EXTERNAL_LIBS_FIXUP};${install_dir}/lib")
@@ -457,7 +441,7 @@ if (NOT FFMEG_FOUND AND NOT USE_PRECOMPILED_LIBS)
         ExternalProject_Get_Property(fdk_aac install_dir)
         set_global(FDK_AAC_DEPENDS fdk_aac)
         set(FDK_AAC_PKG_CONFIG_DIR "${install_dir}/lib/pkgconfig")
-        set(FDK_AAC_FOUND ON CACHE INTERNAL "")
+        set_global_cache(FDK_AAC_FOUND ON)
         set(FDK_AAC_EXTERNAL ON CACHE INTERNAL "")
         if (APPLE)
             set(MACOS_EXTERNAL_LIBS_FIXUP "${MACOS_EXTERNAL_LIBS_FIXUP};${install_dir}/lib")
@@ -476,7 +460,7 @@ if (NOT FFMEG_FOUND AND NOT USE_PRECOMPILED_LIBS)
         ExternalProject_Get_Property(mpg123 install_dir)
         set_global(MPG123_DEPENDS mpg123)
         set(MPG123_PKG_CONFIG_DIR "${install_dir}/lib/pkgconfig")
-        set(MPG123_FOUND ON CACHE INTERNAL "")
+        set_global_cache(MPG123_FOUND ON)
         set(MPG123_EXTERNAL ON CACHE INTERNAL "")
         if (APPLE)
             set(MACOS_EXTERNAL_LIBS_FIXUP "${MACOS_EXTERNAL_LIBS_FIXUP};${install_dir}/lib")
@@ -499,7 +483,7 @@ if (NOT FFMEG_FOUND AND NOT USE_PRECOMPILED_LIBS)
         #set(LAME_PKG_CONFIG_DIR "${install_dir}/lib/pkgconfig")
         set(LAME_EXTRA_CFLAGS "-I${install_dir}/include")
         set(LAME_EXTRA_LDFLAGS "-L${install_dir}/lib")
-        set(LAME_FOUND ON CACHE INTERNAL "")
+        set_global_cache(LAME_FOUND ON)
         set(LAME_EXTERNAL ON CACHE INTERNAL "")
         if (APPLE)
             set(MACOS_EXTERNAL_LIBS_FIXUP "${MACOS_EXTERNAL_LIBS_FIXUP};${install_dir}/lib")
@@ -520,7 +504,7 @@ if (NOT FFMEG_FOUND AND NOT USE_PRECOMPILED_LIBS)
     ExternalProject_Get_Property(ffmpeg install_dir)
     set_global(FFMPEG_DEPENDS ffmpeg)
     set(FFMPEG_INSTALL_DIR "${install_dir}")
-    set(FFMPEG_FOUND ON CACHE INTERNAL "")
+    set_global_cache(FFMPEG_FOUND ON)
     set(FFMPEG_EXTERNAL ON CACHE INTERNAL "")
     set(FFMPEG_INCLUDE_DIRS "${install_dir}/include" CACHE INTERNAL "")
     set(AVCODEC_INCLUDE_DIRS "${install_dir}/include" CACHE INTERNAL "")
@@ -539,7 +523,8 @@ if (NOT FFMEG_FOUND AND NOT USE_PRECOMPILED_LIBS)
 
 endif (NOT FFMPEG_FOUND AND NOT USE_PRECOMPILED_LIBS)
 
-if (NOT OpenCV_FOUND AND NOT USE_PRECOMPILED_LIBS)
+# OpenCV only used by Mod ATV curently
+if (NOT OpenCV_FOUND AND NOT USE_PRECOMPILED_LIBS AND ENABLE_CHANNELTX_MODATV)
     ExternalProject_Add(opencv
             GIT_REPOSITORY https://github.com/opencv/opencv.git
             GIT_TAG 4.5.5
@@ -551,7 +536,7 @@ if (NOT OpenCV_FOUND AND NOT USE_PRECOMPILED_LIBS)
             )
     ExternalProject_Get_Property(opencv source_dir binary_dir)
     set_global(OpenCV_DEPENDS opencv)
-    set(OpenCV_FOUND ON CACHE INTERNAL "")
+    set_global_cache(OpenCV_FOUND ON)
     set(OpenCV_EXTERNAL ON CACHE INTERNAL "")
     set(OpenCV_INCLUDE_DIRS
         "${source_dir}/modules/calib3d/include"
@@ -586,7 +571,7 @@ if (NOT OpenCV_FOUND AND NOT USE_PRECOMPILED_LIBS)
         set(OpenCV_LIBS "${binary_dir}/lib/libopencv_core${CMAKE_SHARED_LIBRARY_SUFFIX};${binary_dir}/lib/libopencv_core${CMAKE_SHARED_LIBRARY_SUFFIX};${binary_dir}/lib/libopencv_highgui${CMAKE_SHARED_LIBRARY_SUFFIX};${binary_dir}/lib/libopencv_video${CMAKE_SHARED_LIBRARY_SUFFIX};${binary_dir}/lib/libopencv_videoio${CMAKE_SHARED_LIBRARY_SUFFIX};${binary_dir}/lib/libopencv_imgproc${CMAKE_SHARED_LIBRARY_SUFFIX};${binary_dir}/lib/libopencv_imgcodecs${CMAKE_SHARED_LIBRARY_SUFFIX}" CACHE INTERNAL "")
         set(MACOS_EXTERNAL_LIBS_FIXUP "${MACOS_EXTERNAL_LIBS_FIXUP};${binary_dir}/lib")
     endif ()
-endif (NOT OpenCV_FOUND AND NOT USE_PRECOMPILED_LIBS)
+endif (NOT OpenCV_FOUND AND NOT USE_PRECOMPILED_LIBS AND ENABLE_CHANNELTX_MODATV)
 
 if ((NOT CODEC2_FOUND OR CODEC2_EXTERNAL) AND NOT USE_PRECOMPILED_LIBS)
     # needs speexdsp
@@ -595,8 +580,10 @@ if ((NOT CODEC2_FOUND OR CODEC2_EXTERNAL) AND NOT USE_PRECOMPILED_LIBS)
     elseif (LINUX)
         set(CODEC2_LIBRARIES "${EXTERNAL_BUILD_LIBRARIES}/lib${LIB_SUFFIX}/libcodec2${CMAKE_SHARED_LIBRARY_SUFFIX}" CACHE INTERNAL "")
     endif ()
+    # Repo temp set to codec2-dev to use v1.0.3 tag
+    # Should revert to codec2 when we eventually update to latest (v1.2.0+) release
     ExternalProject_Add(codec2
-            GIT_REPOSITORY https://github.com/drowe67/codec2.git
+            GIT_REPOSITORY https://github.com/drowe67/codec2-dev.git
             GIT_TAG ${CODEC2_TAG}
             PREFIX "${EXTERNAL_BUILD_LIBRARIES}/codec2"
             CMAKE_ARGS ${COMMON_CMAKE_ARGS}
@@ -606,7 +593,7 @@ if ((NOT CODEC2_FOUND OR CODEC2_EXTERNAL) AND NOT USE_PRECOMPILED_LIBS)
             )
     ExternalProject_Get_Property(codec2 source_dir binary_dir)
     set_global(CODEC2_DEPENDS codec2)
-    set(CODEC2_FOUND ON CACHE INTERNAL "")
+    set_global_cache(CODEC2_FOUND ON)
     set(CODEC2_EXTERNAL ON CACHE INTERNAL "")
     set(CODEC2_INCLUDE_DIR "${source_dir}/src" "${binary_dir}" CACHE INTERNAL "")
     if (WIN32)
@@ -647,7 +634,7 @@ if (NOT CM256CC_FOUND OR CM256CC_EXTERNAL)
             )
     ExternalProject_Get_Property(cm256cc source_dir binary_dir)
     set_global(CM256CC_DEPENDS cm256cc)
-    set(CM256CC_FOUND ON CACHE INTERNAL "")
+    set_global_cache(CM256CC_FOUND ON)
     set(CM256CC_EXTERNAL ON CACHE INTERNAL "")
     # we need cm256cc/library.h
     set(CM256CC_INCLUDE_DIR "${EXTERNAL_BUILD_LIBRARIES}/cm256cc/src" CACHE INTERNAL "")
@@ -680,7 +667,7 @@ if ((NOT LIBDSDCC_FOUND OR LIBDSDCC_EXTERNAL) AND (NOT LIBMBE_FOUND OR LIBMBE_EX
     ExternalProject_Get_Property(mbelib source_dir binary_dir)
     set(USE_MBELIB ON)
     set_global(DSDCC_DEPENDS mbelib)
-    set(LIBMBE_FOUND ON CACHE INTERNAL "")
+    set_global_cache(LIBMBE_FOUND ON)
     set(LIBMBE_EXTERNAL ON CACHE INTERNAL "")
     set(LIBMBE_INCLUDE_DIR "${source_dir}" CACHE INTERNAL "")
     if (WIN32)
@@ -710,7 +697,7 @@ if (NOT LIBSERIALDV_FOUND OR LIBSERIALDV_EXTERNAL)
             TEST_COMMAND ""
             )
     ExternalProject_Get_Property(serialdv source_dir binary_dir)
-    set(LIBSERIALDV_FOUND ON CACHE INTERNAL "")
+    set_global_cache(LIBSERIALDV_FOUND ON)
     set(LIBSERIALDV_EXTERNAL ON CACHE INTERNAL "")
     set(LIBSERIALDV_INCLUDE_DIR "${source_dir}" CACHE INTERNAL "")
     if (WIN32)
@@ -751,7 +738,7 @@ if ((NOT LIBDSDCC_FOUND OR LIBDSDCC_EXTERNAL) AND LIBMBE_FOUND)
             TEST_COMMAND ""
             )
     ExternalProject_Get_Property(dsdcc source_dir binary_dir)
-    set(LIBDSDCC_FOUND ON CACHE INTERNAL "")
+    set_global_cache(LIBDSDCC_FOUND ON)
     set(LIBDSDCC_EXTERNAL ON CACHE INTERNAL "")
     set(LIBDSDCC_INCLUDE_DIR "${EXTERNAL_BUILD_LIBRARIES}/dsdcc/src" CACHE INTERNAL "")
     if (WIN32)
@@ -764,66 +751,100 @@ if ((NOT LIBDSDCC_FOUND OR LIBDSDCC_EXTERNAL) AND LIBMBE_FOUND)
     endif ()
 endif ((NOT LIBDSDCC_FOUND OR LIBDSDCC_EXTERNAL) AND LIBMBE_FOUND)
 
+if (LINUX AND (NOT LIBSIGMF_FOUND OR LIBSIGMF_EXTERNAL))
+    set(LIBSIGMF_LIBRARIES "${EXTERNAL_BUILD_LIBRARIES}/lib${LIB_SUFFIX}/liblibsigmf${CMAKE_SHARED_LIBRARY_SUFFIX}" CACHE INTERNAL "")
+    ExternalProject_Add(libsigmf
+            GIT_REPOSITORY https://github.com/f4exb/libsigmf.git
+            GIT_TAG ${LIBSIGMF_TAG}
+            PREFIX "${EXTERNAL_BUILD_LIBRARIES}/libsigmf"
+            CMAKE_ARGS ${COMMON_CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+            BUILD_BYPRODUCTS "${LIBSIGMF_LIBRARIES}"            
+            TEST_COMMAND ""
+            )
+    ExternalProject_Get_Property(libsigmf install_dir)
+    set_global(LIBSIGMF_DEPENDS libsigmf)
+    set_global_cache(LIBSIGMF_FOUND ON)
+    set(LIBSIGMF_EXTERNAL ON CACHE INTERNAL "")
+    set(LIBSIGMF_INCLUDE_DIR "${install_dir}/include" CACHE INTERNAL "")
+endif (LINUX AND (NOT LIBSIGMF_FOUND OR LIBSIGMF_EXTERNAL))
+
 # For APT demodulator
-if (WIN32)
-    set(APT_LIBRARIES "${SDRANGEL_BINARY_LIB_DIR}/apt.lib" CACHE INTERNAL "")
-elseif (LINUX)
-    set(APT_LIBRARIES "${EXTERNAL_BUILD_LIBRARIES}/lib${LIB_SUFFIX}/libapt${CMAKE_SHARED_LIBRARY_SUFFIX}" CACHE INTERNAL "")
-endif()
-ExternalProject_Add(apt
-        GIT_REPOSITORY https://github.com/srcejon/aptdec.git
-        GIT_TAG libaptdec
-        PREFIX "${EXTERNAL_BUILD_LIBRARIES}/apt"
-        CMAKE_ARGS ${COMMON_CMAKE_ARGS}
-        BUILD_BYPRODUCTS "${APT_LIBRARIES}"
+if(ENABLE_CHANNELRX_DEMODAPT)
+    if (WIN32)
+        set(APT_LIBRARIES "${SDRANGEL_BINARY_LIB_DIR}/apt.lib" CACHE INTERNAL "")
+    elseif (LINUX)
+        set(APT_LIBRARIES "${EXTERNAL_BUILD_LIBRARIES}/lib${LIB_SUFFIX}/libapt${CMAKE_SHARED_LIBRARY_SUFFIX}" CACHE INTERNAL "")
+    endif()
+    ExternalProject_Add(apt
+            GIT_REPOSITORY https://github.com/srcejon/aptdec.git
+            GIT_TAG libaptdec
+            PREFIX "${EXTERNAL_BUILD_LIBRARIES}/apt"
+            CMAKE_ARGS ${COMMON_CMAKE_ARGS}
+            BUILD_BYPRODUCTS "${APT_LIBRARIES}"
+            INSTALL_COMMAND ""
+            TEST_COMMAND ""
+            )
+    ExternalProject_Get_Property(apt source_dir binary_dir)
+    set(APT_DEPENDS apt CACHE INTERNAL "")
+    set_global_cache(APT_FOUND ON)
+    set(APT_EXTERNAL ON CACHE INTERNAL "")
+    set(APT_INCLUDE_DIR "${EXTERNAL_BUILD_LIBRARIES}/apt/src/apt/src" CACHE INTERNAL "")
+    if (WIN32)
+        install(FILES "${SDRANGEL_BINARY_BIN_DIR}/apt${CMAKE_SHARED_LIBRARY_SUFFIX}" DESTINATION "${INSTALL_LIB_DIR}")
+    elseif (APPLE)
+        set(APT_LIBRARIES "${binary_dir}/libapt${CMAKE_SHARED_LIBRARY_SUFFIX}" CACHE INTERNAL "")
+        install(DIRECTORY "${binary_dir}/" DESTINATION "${INSTALL_LIB_DIR}"
+                FILES_MATCHING PATTERN "libapt*${CMAKE_SHARED_LIBRARY_SUFFIX}")
+        set(MACOS_EXTERNAL_LIBS_FIXUP "${MACOS_EXTERNAL_LIBS_FIXUP};${binary_dir}/")
+    endif ()
+endif ()
+
+# For Satellite Tracker feature and APT demod
+if(ENABLE_FEATURE_SATELLITETRACKER OR ENABLE_CHANNELRX_DEMODAPT)
+    # No tags for this in github - but doesn't change often
+    # Fails to build with CMAKE_INTERPROCEDURAL_OPTIMIZATION=ON on Windows
+    if (WIN32)
+        set(SGP4_LIBRARIES "${SDRANGEL_BINARY_LIB_DIR}/sgp4s.lib" CACHE INTERNAL "")
+    elseif (LINUX)
+        set(SGP4_LIBRARIES "${EXTERNAL_BUILD_LIBRARIES}/lib${LIB_SUFFIX}/libsgp4s${CMAKE_SHARED_LIBRARY_SUFFIX}" CACHE INTERNAL "")
+    endif()
+    ExternalProject_Add(sgp4
+            GIT_REPOSITORY https://github.com/dnwrnr/sgp4.git
+            PREFIX "${EXTERNAL_BUILD_LIBRARIES}/sgp4"
+            CMAKE_ARGS ${COMMON_CMAKE_ARGS}
+            -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=OFF
+            BUILD_BYPRODUCTS "${SGP4_LIBRARIES}"
+            INSTALL_COMMAND ""
+            TEST_COMMAND ""
+            )
+    ExternalProject_Get_Property(sgp4 source_dir binary_dir)
+    set(SGP4_DEPENDS sgp4 CACHE INTERNAL "")
+    set_global_cache(SGP4_FOUND ON)
+    set(SGP4_EXTERNAL ON CACHE INTERNAL "")
+    set(SGP4_INCLUDE_DIR "${EXTERNAL_BUILD_LIBRARIES}/sgp4/src/sgp4/libsgp4" CACHE INTERNAL "")
+    if (WIN32)
+        install(FILES "${SDRANGEL_BINARY_BIN_DIR}/sgp4s${CMAKE_SHARED_LIBRARY_SUFFIX}" DESTINATION "${INSTALL_LIB_DIR}")
+    elseif (APPLE)
+        set(SGP4_LIBRARIES "${binary_dir}/libsgp4/libsgp4s${CMAKE_SHARED_LIBRARY_SUFFIX}" CACHE INTERNAL "")
+        install(DIRECTORY "${binary_dir}/libsgp4" DESTINATION "${INSTALL_LIB_DIR}"
+                FILES_MATCHING PATTERN "libsgp4s*${CMAKE_SHARED_LIBRARY_SUFFIX}")
+        set(MACOS_EXTERNAL_LIBS_FIXUP "${MACOS_EXTERNAL_LIBS_FIXUP};${binary_dir}/libsgp4")
+    endif ()
+endif ()
+
+# VkFFT (header only library)
+ExternalProject_Add(vkfft
+        GIT_REPOSITORY https://github.com/DTolm/VkFFT.git
+        GIT_TAG v1.3.1
+        PREFIX "${EXTERNAL_BUILD_LIBRARIES}/vkfft"
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        BUILD_BYPRODUCTS ""
         INSTALL_COMMAND ""
         TEST_COMMAND ""
         )
-ExternalProject_Get_Property(apt source_dir binary_dir)
-set(APT_DEPENDS apt CACHE INTERNAL "")
-set(APT_FOUND ON CACHE INTERNAL "")
-set(APT_EXTERNAL ON CACHE INTERNAL "")
-set(APT_INCLUDE_DIR "${EXTERNAL_BUILD_LIBRARIES}/apt/src/apt/src" CACHE INTERNAL "")
-if (WIN32)
-    install(FILES "${SDRANGEL_BINARY_BIN_DIR}/apt${CMAKE_SHARED_LIBRARY_SUFFIX}" DESTINATION "${INSTALL_LIB_DIR}")
-elseif (APPLE)
-    set(APT_LIBRARIES "${binary_dir}/libapt${CMAKE_SHARED_LIBRARY_SUFFIX}" CACHE INTERNAL "")
-    install(DIRECTORY "${binary_dir}/" DESTINATION "${INSTALL_LIB_DIR}"
-            FILES_MATCHING PATTERN "libapt*${CMAKE_SHARED_LIBRARY_SUFFIX}")
-    set(MACOS_EXTERNAL_LIBS_FIXUP "${MACOS_EXTERNAL_LIBS_FIXUP};${binary_dir}/")
-endif ()
-
-# For Satellite Tracker feature
-# No tags for this in github - but doesn't change often
-# Fails to build with CMAKE_INTERPROCEDURAL_OPTIMIZATION=ON on Windows
-if (WIN32)
-    set(SGP4_LIBRARIES "${SDRANGEL_BINARY_LIB_DIR}/sgp4s.lib" CACHE INTERNAL "")
-elseif (LINUX)
-    set(SGP4_LIBRARIES "${EXTERNAL_BUILD_LIBRARIES}/lib${LIB_SUFFIX}/libsgp4s${CMAKE_SHARED_LIBRARY_SUFFIX}" CACHE INTERNAL "")
-endif()
-ExternalProject_Add(sgp4
-        GIT_REPOSITORY https://github.com/dnwrnr/sgp4.git
-        PREFIX "${EXTERNAL_BUILD_LIBRARIES}/sgp4"
-        CMAKE_ARGS ${COMMON_CMAKE_ARGS}
-        -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=OFF
-        BUILD_BYPRODUCTS "${SGP4_LIBRARIES}"
-        INSTALL_COMMAND ""
-        TEST_COMMAND ""
-        )
-ExternalProject_Get_Property(sgp4 source_dir binary_dir)
-set(SGP4_DEPENDS sgp4 CACHE INTERNAL "")
-set(SGP4_FOUND ON CACHE INTERNAL "")
-set(SGP4_EXTERNAL ON CACHE INTERNAL "")
-set(SGP4_INCLUDE_DIR "${EXTERNAL_BUILD_LIBRARIES}/sgp4/src/sgp4/libsgp4" CACHE INTERNAL "")
-if (WIN32)
-    install(FILES "${SDRANGEL_BINARY_BIN_DIR}/sgp4s${CMAKE_SHARED_LIBRARY_SUFFIX}" DESTINATION "${INSTALL_LIB_DIR}")
-elseif (APPLE)
-    set(SGP4_LIBRARIES "${binary_dir}/libsgp4/libsgp4s${CMAKE_SHARED_LIBRARY_SUFFIX}" CACHE INTERNAL "")
-    install(DIRECTORY "${binary_dir}/libsgp4" DESTINATION "${INSTALL_LIB_DIR}"
-            FILES_MATCHING PATTERN "libsgp4s*${CMAKE_SHARED_LIBRARY_SUFFIX}")
-    set(MACOS_EXTERNAL_LIBS_FIXUP "${MACOS_EXTERNAL_LIBS_FIXUP};${binary_dir}/libsgp4")
-endif ()
-
+ExternalProject_Get_Property(vkfft source_dir)
+set(VKFFT_INCLUDE_DIR "${source_dir}/vkFFT" CACHE INTERNAL "")
 
 # requirements needed by many packages on windows
 if (WIN32)
@@ -840,7 +861,7 @@ if (WIN32)
             )
     ExternalProject_Get_Property(pthreads4w source_dir binary_dir)
     set_global(PTHREADS4W_DEPENDS pthreads4w)
-    set(PTHREADS4W_FOUND ON CACHE INTERNAL "")
+    set_global_cache(PTHREADS4W_FOUND ON)
     set(PTHREADS4W_EXTERNAL ON CACHE INTERNAL "")
     set(PTHREADS4W_INCLUDE_DIR "${source_dir}" CACHE INTERNAL "")
     set(PTHREADS4W_LIBRARIES "${source_dir}/pthreadVC2.lib" CACHE INTERNAL "")
@@ -851,7 +872,7 @@ if (WIN32)
 endif (WIN32)
 
 # For DAB demodulator
-if (ZLIB_FOUND AND FAAD_FOUND)
+if (ZLIB_FOUND AND FAAD_FOUND AND ENABLE_CHANNELRX_DEMODDAB)
     if (WIN32)
         set(DAB_LIBRARIES "${SDRANGEL_BINARY_LIB_DIR}/dab_lib.lib" CACHE INTERNAL "")
     elseif (LINUX)
@@ -897,7 +918,7 @@ if (ZLIB_FOUND AND FAAD_FOUND)
     endif(WIN32)
     ExternalProject_Get_Property(dab source_dir binary_dir)
     set_global(DAB_DEPENDS dab)
-    set(DAB_FOUND ON CACHE INTERNAL "")
+    set_global_cache(DAB_FOUND ON)
     set(DAB_EXTERNAL ON CACHE INTERNAL "")
     set(DAB_INCLUDE_DIR "${EXTERNAL_BUILD_LIBRARIES}/dab/src/dab" CACHE INTERNAL "")
     if (WIN32)
@@ -912,12 +933,12 @@ else()
     message(STATUS "Can't build DAB library as missing zlib or faad")
 endif()
 
-# Device interface libraries. Use external libraries build for these. Only Linux for now.
+# Device interface libraries.
 if (LINUX)
     # apt install liblimesuite-dev (only on ubuntu 18.04). Can be picky on version though so let's build it.
     # needs pkgconfig and libusb
-    if (NOT LIMESUITE_FOUND OR LIMESUITE_EXTERNAL)
-        set(LIMESUITE_FOUND ON CACHE INTERNAL "")
+    if (ENABLE_LIMESUITE AND (NOT LIMESUITE_FOUND OR LIMESUITE_EXTERNAL))
+        set_global_cache(LIMESUITE_FOUND ON)
         set(LIMESUITE_EXTERNAL ON CACHE INTERNAL "")
         set(LIMESUITE_INCLUDE_DIR "${EXTERNAL_BUILD_LIBRARIES}/limesuite/src/limesuite/src" CACHE INTERNAL "")
         set(LIMESUITE_LIBRARY "${EXTERNAL_BUILD_LIBRARIES}/lib${LIB_SUFFIX}/libLimeSuite.so" CACHE INTERNAL "")
@@ -941,12 +962,12 @@ if (LINUX)
                 )
         ExternalProject_Get_Property(limesuite source_dir)
         makeCopyFile("${source_dir}/src/limeRFE/limeRFE.h" "${source_dir}/src/lime/limeRFE.h" limesuite)
-    endif (NOT LIMESUITE_FOUND OR LIMESUITE_EXTERNAL)
+    endif ()
 
     # apt install libbladerf-dev
     # needs pkgconfig and libusb
-    if (NOT LIBBLADERF_FOUND OR LIBBLADERF_EXTERNAL)
-        set(LIBBLADERF_FOUND ON CACHE INTERNAL "")
+    if (ENABLE_BLADERF AND (NOT LIBBLADERF_FOUND OR LIBBLADERF_EXTERNAL))
+        set_global_cache(LIBBLADERF_FOUND ON)
         set(LIBBLADERF_EXTERNAL ON CACHE INTERNAL "")
         set(LIBBLADERF_INCLUDE_DIRS "${EXTERNAL_BUILD_LIBRARIES}/bladerf/src/bladerf/host/libraries/libbladeRF/include" CACHE INTERNAL "")
         set(LIBBLADERF_LIBRARIES "${EXTERNAL_BUILD_LIBRARIES}/bladerf/src/bladerf-build/output/libbladeRF.so.2" CACHE INTERNAL "")
@@ -962,12 +983,12 @@ if (LINUX)
                 TEST_COMMAND ""
                 )
         install(FILES "${LIBBLADERF_LIBRARIES}" DESTINATION "${INSTALL_LIB_DIR}")
-    endif (NOT LIBBLADERF_FOUND OR LIBBLADERF_EXTERNAL)
+    endif ()
 
     # apt install libiio-dev
     # needs pkgconfig, libusb, libxml2, lzma, xz, libiconv
-    if (NOT LIBIIO_FOUND OR LIBIIO_EXTERNAL)
-        set(LIBIIO_FOUND ON CACHE INTERNAL "")
+    if (ENABLE_IIO AND (NOT LIBIIO_FOUND OR LIBIIO_EXTERNAL))
+        set_global_cache(LIBIIO_FOUND ON)
         set(LIBIIO_EXTERNAL ON CACHE INTERNAL "")
         set(LIBIIO_INCLUDE_DIR "${EXTERNAL_BUILD_LIBRARIES}/libiio/src/libiio" CACHE INTERNAL "")
         set(LIBIIO_LIBRARIES "${EXTERNAL_BUILD_LIBRARIES}/lib${LIB_SUFFIX}/libiio.so" CACHE INTERNAL "")
@@ -984,12 +1005,12 @@ if (LINUX)
                 INSTALL_COMMAND ""
                 TEST_COMMAND ""
                 )
-    endif (NOT LIBIIO_FOUND OR LIBIIO_EXTERNAL)
+    endif ()
 
     # apt install libairspyhf-dev (only on ubuntu 18.04)
     # needs libusb and pkgconfig
-    if (NOT LIBAIRSPYHF_FOUND OR LIBAIRSPYHF_EXTERNAL)
-        set(LIBAIRSPYHF_FOUND ON CACHE INTERNAL "")
+    if (ENABLE_AIRSPYHF AND (NOT LIBAIRSPYHF_FOUND OR LIBAIRSPYHF_EXTERNAL))
+        set_global_cache(LIBAIRSPYHF_FOUND ON)
         set(LIBAIRSPYHF_EXTERNAL ON CACHE INTERNAL "")
         set(LIBAIRSPYHF_LIBRARIES "${EXTERNAL_BUILD_LIBRARIES}/lib${LIB_SUFFIX}/libairspyhf.so" CACHE INTERNAL "")
         ExternalProject_Add(airspyhf
@@ -1004,11 +1025,11 @@ if (LINUX)
         ExternalProject_Get_Property(airspyhf source_dir)
         set(LIBAIRSPYHF_INCLUDE_DIR "${source_dir}/.." CACHE INTERNAL "")
         makeLink("${source_dir}/libairspyhf/src" "${source_dir}/../libairspyhf" airspyhf)
-    endif (NOT LIBAIRSPYHF_FOUND OR LIBAIRSPYHF_EXTERNAL)
+    endif ()
 
     # needs pkgconfig, libusb, autoconf, automake and libtool
-    if (NOT LIBPERSEUS_FOUND OR LIBPERSEUS_EXTERNAL)
-        set(LIBPERSEUS_FOUND ON CACHE INTERNAL "")
+    if (ENABLE_PERSEUS AND (NOT LIBPERSEUS_FOUND OR LIBPERSEUS_EXTERNAL))
+        set_global_cache(LIBPERSEUS_FOUND ON)
         set(LIBPERSEUS_EXTERNAL ON CACHE INTERNAL "")
         set(LIBPERSEUS_INCLUDE_DIR "${EXTERNAL_BUILD_LIBRARIES}/perseus/src/perseus" CACHE INTERNAL "")
         set(LIBPERSEUS_LIBRARIES "${EXTERNAL_BUILD_LIBRARIES}/lib${LIB_SUFFIX}/libperseus-sdr.so" CACHE INTERNAL "")
@@ -1021,12 +1042,12 @@ if (LINUX)
                 INSTALL_COMMAND ""
                 TEST_COMMAND ""
                 )
-    endif (NOT LIBPERSEUS_FOUND OR LIBPERSEUS_EXTERNAL)
+    endif ()
 
     # apt install librtlsdr-dev
     # needs pkgconfig and libusb
-    if (NOT LIBRTLSDR_FOUND OR LIBRTLSDR_EXTERNAL)
-        set(LIBRTLSDR_FOUND ON CACHE INTERNAL "")
+    if (ENABLE_RTLSDR AND (NOT LIBRTLSDR_FOUND OR LIBRTLSDR_EXTERNAL))
+        set_global_cache(LIBRTLSDR_FOUND ON)
         set(LIBRTLSDR_EXTERNAL ON CACHE INTERNAL "")
         set(LIBRTLSDR_INCLUDE_DIR "${EXTERNAL_BUILD_LIBRARIES}/rtlsdr/src/rtlsdr/include" CACHE INTERNAL "")
         set(LIBRTLSDR_LIBRARIES "${EXTERNAL_BUILD_LIBRARIES}/lib${LIB_SUFFIX}/librtlsdr.so" CACHE INTERNAL "")
@@ -1040,11 +1061,11 @@ if (LINUX)
                 INSTALL_COMMAND ""
                 TEST_COMMAND ""
                 )
-    endif (NOT LIBRTLSDR_FOUND OR LIBRTLSDR_EXTERNAL)
+    endif ()
 
     # needs pkgconfig and libusb
-    if (NOT LIBMIRISDR_FOUND OR LIBMIRISDR_EXTERNAL)
-        set(LIBMIRISDR_FOUND ON CACHE INTERNAL "")
+    if (ENABLE_MIRISDR AND (NOT LIBMIRISDR_FOUND OR LIBMIRISDR_EXTERNAL))
+        set_global_cache(LIBMIRISDR_FOUND ON)
         set(LIBMIRISDR_EXTERNAL ON CACHE INTERNAL "")
         set(LIBMIRISDR_INCLUDE_DIR "${EXTERNAL_BUILD_LIBRARIES}/libmirisdr/src/libmirisdr/include" CACHE INTERNAL "")
         set(LIBMIRISDR_LIBRARIES "${EXTERNAL_BUILD_LIBRARIES}/lib${LIB_SUFFIX}/libmirisdr.so" CACHE INTERNAL "")
@@ -1057,7 +1078,7 @@ if (LINUX)
                 INSTALL_COMMAND ""
                 TEST_COMMAND ""
                 )
-    endif (NOT LIBMIRISDR_FOUND OR LIBMIRISDR_EXTERNAL)
+    endif ()
 
 endif (LINUX)
 
@@ -1070,7 +1091,11 @@ if (WIN32 OR APPLE)
         endif ()
         # Disable pkg-config to allow LIBUSB_INCLUDE_DIRS to be used
         set(DISABLE_PKGCONFIG "-DCMAKE_DISABLE_FIND_PACKAGE_PkgConfig=ON")
-        # needs libusb
+        # If we want to use https://github.com/librtlsdr/librtlsdr instead of https://github.com/osmocom/rtl-sdr.git
+        #  - Don't use DISABLE_PKGCONFIG
+        #  - Use -DLIBUSB_INCLUDE_DIR instead of -DLIBUSB_INCLUDE_DIRS
+        #  - Build target is rtl_sdr rather than rtlsdr
+        #  - Use tag development otherwise it will not build with MSVC
         ExternalProject_Add(rtlsdr
                 GIT_REPOSITORY https://github.com/osmocom/rtl-sdr.git
                 GIT_TAG ${RTLSDR_TAG}
@@ -1089,7 +1114,7 @@ if (WIN32 OR APPLE)
                 TEST_COMMAND ""
                 )
         ExternalProject_Get_Property(rtlsdr source_dir binary_dir)
-        set(LIBRTLSDR_FOUND ON CACHE INTERNAL "")
+        set_global_cache(LIBRTLSDR_FOUND ON)
         set(LIBRTLSDR_EXTERNAL ON CACHE INTERNAL "")
         set(LIBRTLSDR_INCLUDE_DIR "${source_dir}/include" CACHE INTERNAL "")
         if (WIN32)
@@ -1132,7 +1157,7 @@ if (WIN32 OR APPLE)
                 TEST_COMMAND ""
                 )
         ExternalProject_Get_Property(limesuite source_dir binary_dir install_dir)
-        set(LIMESUITE_FOUND ON CACHE INTERNAL "")
+        set_global_cache(LIMESUITE_FOUND ON)
         set(LIMESUITE_EXTERNAL ON CACHE INTERNAL "")
         set(LIMESUITE_INCLUDE_DIR "${install_dir}/include" CACHE INTERNAL "")
         if (WIN32)
@@ -1165,7 +1190,7 @@ if (WIN32 OR APPLE)
                 TEST_COMMAND ""
                 )
         ExternalProject_Get_Property(soapysdr source_dir binary_dir)
-        set(SOAPYSDR_FOUND ON CACHE INTERNAL "")
+        set_global_cache(SOAPYSDR_FOUND ON)
         set(SOAPYSDR_EXTERNAL ON CACHE INTERNAL "")
         set(SOAPYSDR_INCLUDE_DIR "${source_dir}/include" CACHE INTERNAL "")
         if (WIN32)
@@ -1208,7 +1233,7 @@ if (WIN32 OR APPLE)
             add_dependencies(airspy pthreads4w)
         endif ()
         ExternalProject_Get_Property(airspy source_dir binary_dir)
-        set(LIBAIRSPY_FOUND ON CACHE INTERNAL "")
+        set_global_cache(LIBAIRSPY_FOUND ON)
         set(LIBAIRSPY_EXTERNAL ON CACHE INTERNAL "")
         set(LIBAIRSPY_INCLUDE_DIR "${source_dir}/libairspy/src" CACHE INTERNAL "")
         if (WIN32)
@@ -1250,7 +1275,7 @@ if (WIN32 OR APPLE)
             add_dependencies(airspyhf pthreads4w)
         endif()
         ExternalProject_Get_Property(airspyhf source_dir binary_dir)
-        set(LIBAIRSPYHF_FOUND ON CACHE INTERNAL "")
+        set_global_cache(LIBAIRSPYHF_FOUND ON)
         set(LIBAIRSPYHF_EXTERNAL ON CACHE INTERNAL "")
         set(LIBAIRSPYHF_INCLUDE_DIR "${source_dir}/libairspyhf/src" CACHE INTERNAL "")
         if (WIN32)
@@ -1295,7 +1320,7 @@ if (WIN32 OR APPLE)
             add_dependencies(hackrf pthreads4w)
         endif()
         ExternalProject_Get_Property(hackrf source_dir binary_dir)
-        set(LIBHACKRF_FOUND ON CACHE INTERNAL "")
+        set_global_cache(LIBHACKRF_FOUND ON)
         set(LIBHACKRF_EXTERNAL ON CACHE INTERNAL "")
         set(LIBHACKRF_INCLUDE_DIR "${source_dir}/host/libhackrf" CACHE INTERNAL "")
         if (WIN32)
@@ -1325,34 +1350,41 @@ if (WIN32 OR APPLE)
                     TEST_COMMAND ""
                     )
         elseif (APPLE)
-            set(LIBXML2_PATCH_COMMAND /usr/bin/sed -i '' "s/libtoolize/glibtoolize/g" autogen.sh)
             ExternalProject_Add(libxml2
                     GIT_REPOSITORY https://github.com/GNOME/libxml2.git
                     GIT_TAG ${LIBXML2_TAG}
                     PREFIX "${EXTERNAL_BUILD_LIBRARIES}/libxml2"
-                    BUILD_IN_SOURCE 1
-                    PATCH_COMMAND ${LIBXML2_PATCH_COMMAND}
-                    CONFIGURE_COMMAND ./autogen.sh
-                    BUILD_COMMAND make
-                    INSTALL_COMMAND ""
+                    CMAKE_ARGS ${COMMON_CMAKE_ARGS}
+                    -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+                    -DBUILD_SHARED_LIBS=OFF
+                    -DLIBXML2_WITH_ICONV=OFF
+                    -DLIBXML2_WITH_LZMA=OFF
+                    -DLIBXML2_WITH_PYTHON=OFF
+                    -DLIBXML2_WITH_ZLIB=OFF
                     TEST_COMMAND ""
                     )
         endif ()
         ExternalProject_Get_Property(libxml2 source_dir binary_dir)
         set_global(LIBXML2_DEPENDS libxml2)
-        set(LIBXML2_FOUND ON CACHE INTERNAL "")
+        set_global_cache(LIBXML2_FOUND ON)
         set(LIBXML2_EXTERNAL ON CACHE INTERNAL "")
-        set(LIBXML2_INCLUDE_DIR "${source_dir}/include" CACHE INTERNAL "")
+        if (WIN32)
+            set(LIBXML2_INCLUDE_DIR "${source_dir}/include" CACHE INTERNAL "")
+        else ()
+            set(LIBXML2_INCLUDE_DIR "${EXTERNAL_BUILD_LIBRARIES}/libxml2/include/libxml2" CACHE INTERNAL "")
+        endif ()
         if (WIN32)
             set(LIBXML2_LIBRARIES "${source_dir}/win32/bin.msvc/libxml2.lib" CACHE INTERNAL "")
             set(LIBIIO_LIBRARIES "${SDRANGEL_BINARY_LIB_DIR}/libiio.lib" CACHE INTERNAL "")
             makeCopy("${source_dir}/win32/bin.msvc/libxml2${CMAKE_SHARED_LIBRARY_SUFFIX}" "${SDRANGEL_BINARY_BIN_DIR}/libxml2${CMAKE_SHARED_LIBRARY_SUFFIX}" libxml2)
             install(FILES "${source_dir}/win32/bin.msvc/libxml2${CMAKE_SHARED_LIBRARY_SUFFIX}" DESTINATION "${INSTALL_LIB_DIR}")
-        elseif (APPLE)
-            set(LIBXML2_LIBRARIES "${source_dir}/.libs/libxml2${CMAKE_SHARED_LIBRARY_SUFFIX}" CACHE INTERNAL "")
-            install(DIRECTORY "${source_dir}/.libs/" DESTINATION "${INSTALL_LIB_DIR}"
-                    FILES_MATCHING PATTERN "libxml2*${CMAKE_SHARED_LIBRARY_SUFFIX}")
-            set(MACOS_EXTERNAL_LIBS_FIXUP "${MACOS_EXTERNAL_LIBS_FIXUP};${source_dir}/.libs")
+        else ()
+            set(LIBXML2_LIBRARIES "${EXTERNAL_BUILD_LIBRARIES}/libxml2/lib/libxml2.a" CACHE INTERNAL "")
+        endif ()
+        if (WIN32)
+            set(IIO_LIBUSB_INCLUDE_DIR ${LIBUSB_INCLUDE_DIR})
+        else ()
+            set(IIO_LIBUSB_INCLUDE_DIR ${LIBUSB_INCLUDE_DIR}/..)
         endif ()
         # needs pkgconfig, libusb, pthreads, libxml2
         ExternalProject_Add(libiio
@@ -1362,7 +1394,7 @@ if (WIN32 OR APPLE)
                 PREFIX "${EXTERNAL_BUILD_LIBRARIES}/libiio"
                 CMAKE_ARGS ${COMMON_CMAKE_ARGS}
                 -DLIBUSB_LIBRARIES=${LIBUSB_LIBRARIES}
-                -DLIBUSB_INCLUDE_DIR=${LIBUSB_INCLUDE_DIR}
+                -DLIBUSB_INCLUDE_DIR=${IIO_LIBUSB_INCLUDE_DIR}
                 -DTHREADS_PTHREADS_INCLUDE_DIR=${PTHREADS4W_INCLUDE_DIR}
                 -DTHREADS_PTHREADS_WIN32_LIBRARY=${PTHREADS4W_LIBRARIES}
                 -DLIBXML2_INCLUDE_DIR=${LIBXML2_INCLUDE_DIR}
@@ -1381,7 +1413,7 @@ if (WIN32 OR APPLE)
             add_dependencies(libiio pthreads4w)
         endif()
         ExternalProject_Get_Property(libiio source_dir binary_dir)
-        set(LIBIIO_FOUND ON CACHE INTERNAL "")
+        set_global_cache(LIBIIO_FOUND ON)
         set(LIBIIO_EXTERNAL ON CACHE INTERNAL "")
         set(LIBIIO_INCLUDE_DIR "${source_dir}" CACHE INTERNAL "")
         if (WIN32)
@@ -1390,8 +1422,7 @@ if (WIN32 OR APPLE)
             set(LIBIIO_LIBRARIES "${binary_dir}/libiio${CMAKE_SHARED_LIBRARY_SUFFIX}" CACHE INTERNAL "")
             install(DIRECTORY "${binary_dir}/" DESTINATION "${INSTALL_LIB_DIR}"
                     FILES_MATCHING PATTERN "libiio*${CMAKE_SHARED_LIBRARY_SUFFIX}")
-            string(REPLACE "v" "" IIO_VERSION ${LIBIIO_TAG})
-            makeCopy("${binary_dir}/libiio.framework/Versions/${IIO_VERSION}/libiio" "${binary_dir}/libiio${CMAKE_SHARED_LIBRARY_SUFFIX}" libiio)
+            makeCopy("${binary_dir}/iio.framework/iio" "${binary_dir}/libiio${CMAKE_SHARED_LIBRARY_SUFFIX}" libiio)
             add_custom_command(TARGET libiio POST_BUILD COMMAND install_name_tool -id "${binary_dir}/libiio${CMAKE_SHARED_LIBRARY_SUFFIX}" "${binary_dir}/libiio${CMAKE_SHARED_LIBRARY_SUFFIX}")
             set(MACOS_EXTERNAL_LIBS_FIXUP "${MACOS_EXTERNAL_LIBS_FIXUP};${binary_dir}")
         endif ()
@@ -1433,7 +1464,7 @@ if (WIN32 OR APPLE)
             add_dependencies(bladerf pthreads4w)
         endif()
         ExternalProject_Get_Property(bladerf source_dir binary_dir)
-        set(LIBBLADERF_FOUND ON CACHE INTERNAL "")
+        set_global_cache(LIBBLADERF_FOUND ON)
         set(LIBBLADERF_EXTERNAL ON CACHE INTERNAL "")
         set(LIBBLADERF_INCLUDE_DIRS "${source_dir}/host/libraries/libbladeRF/include" CACHE INTERNAL "")
         if (WIN32)
@@ -1463,7 +1494,7 @@ if (WIN32 OR APPLE)
                 TEST_COMMAND ""
                 )
         ExternalProject_Get_Property(uhd install_dir)
-        set(UHD_FOUND ON CACHE INTERNAL "")
+        set_global_cache(UHD_FOUND ON)
         set(UHD_EXTERNAL ON CACHE INTERNAL "")
         set(UHD_INCLUDE_DIR "${install_dir}/include" CACHE INTERNAL "")
         if (WIN32)

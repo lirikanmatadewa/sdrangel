@@ -311,7 +311,7 @@ void AaroniaRTSAInputWorker::onReadyRead()
                     // qDebug() << jdoc.toJson();
                     quint64 endFreq = jdoc["endFrequency"].toDouble();
                     quint64 startFreq = jdoc["startFrequency"].toDouble();
-                    int bw = endFreq - startFreq;
+                    int bw = jdoc["sampleFrequency"].toInt();
                     quint64 midFreq = (endFreq + startFreq) / 2;
 
                     if ((bw != m_sampleRate) || (midFreq != m_centerFrequency))
@@ -405,13 +405,13 @@ void AaroniaRTSAInputWorker::parseConfig(QByteArray bytes)
         }
         else
         {
-            qDebug() << "AaroniaRTSAInputWorker::parseConfig: document has no config obhect: " << documentObject;
+            qDebug() << "AaroniaRTSAInputWorker::parseConfig: document has no config object: " << documentObject;
         }
 
     }
     else
     {
-        qDebug() << "AaroniaRTSAInputWorker::parseConfig: Document is not an object: " << document;
+        qDebug() << "AaroniaRTSAInputWorker::parseConfig: document is not an object: " << document;
     }
 
     if (m_iqDemodName == "") {

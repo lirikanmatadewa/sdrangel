@@ -41,6 +41,7 @@ const QMap<QString, QString> WebAPIUtils::m_channelURIToSettingsKey = {
     {"sdrangel.channel.demoddatv", "DATVDemodSettings"},
     {"sdrangel.channel.dabdemod", "DABDemodSettings"},
     {"sdrangel.channel.doa2", "DOA2Settings"},
+    {"sdrangel.channel.dscdemod", "DSCDemodSettings"},
     {"sdrangel.channel.dsddemod", "DSDDemodSettings"},
     {"sdrangel.channel.filesink", "FileSinkSettings"},
     {"sdrangel.channeltx.filesource", "FileSourceSettings"},
@@ -89,8 +90,11 @@ const QMap<QString, QString> WebAPIUtils::m_channelURIToSettingsKey = {
 };
 
 const QMap<QString, QString> WebAPIUtils::m_deviceIdToSettingsKey = {
+    {"sdrangel.samplesource.aaroniartsasource", "aaroniaRTSASettings"},
+    {"sdrangel.samplesink.aaroniartsaoutput", "aaroniaRTSAOutputSettings"},
     {"sdrangel.samplesource.airspy", "airspySettings"},
     {"sdrangel.samplesource.airspyhf", "airspyHFSettings"},
+    {"sdrangel.samplemimo.audiocatsiso", "audioCATSISOSettings"},
     {"sdrangel.samplesource.audioinput", "audioInputSettings"},
     {"sdrangel.samplesink.audiooutput", "audioOutputSettings"},
     {"sdrangel.samplesource.bladerf1input", "bladeRF1InputSettings"},
@@ -155,6 +159,7 @@ const QMap<QString, QString> WebAPIUtils::m_channelTypeToSettingsKey = {
     {"DATVMod", "DATVModSettings"},
     {"DABDemod", "DABDemodSettings"},
     {"DOA2", "DOA2Settings"},
+    {"DSCDemod", "DSCDemodSettings"},
     {"DSDDemod", "DSDDemodSettings"},
     {"FileSink", "FileSinkSettings"},
     {"FileSource", "FileSourceSettings"},
@@ -207,6 +212,7 @@ const QMap<QString, QString> WebAPIUtils::m_channelTypeToActionsKey = {
 };
 
 const QMap<QString, QString> WebAPIUtils::m_sourceDeviceHwIdToSettingsKey = {
+    {"AaroniaRTSA", "aaroniaRTSASettings"},
     {"Airspy", "airspySettings"},
     {"AirspyHF", "airspyHFSettings"},
     {"AudioInput", "audioInputSettings"},
@@ -258,6 +264,7 @@ const QMap<QString, QString> WebAPIUtils::m_sourceDeviceHwIdToActionsKey = {
 };
 
 const QMap<QString, QString> WebAPIUtils::m_sinkDeviceHwIdToSettingsKey = {
+    {"AaroniaRTSAOutput", "aaroniaRTSAOutputSettings"},
     {"AudioOutput", "audioOutputSettings"},
     {"BladeRF1", "bladeRF1OutputSettings"},
     {"BladeRF2", "bladeRF2OutputSettings"},
@@ -276,6 +283,7 @@ const QMap<QString, QString> WebAPIUtils::m_sinkDeviceHwIdToActionsKey = {
 };
 
 const QMap<QString, QString> WebAPIUtils::m_mimoDeviceHwIdToSettingsKey = {
+    {"AudioCATSISO", "audioCATSISOSettings"},
     {"BladeRF2", "bladeRF2MIMOSettings"},
     {"MetisMISO", "metisMISOSettings"},
     {"TestMI", "testMISettings"},

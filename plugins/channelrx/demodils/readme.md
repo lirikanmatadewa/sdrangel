@@ -63,7 +63,7 @@ bandwidth should be set wide enough to cover all signals (E.g. ~16kHz).
 
 <h3>7: Ident</h3>
 
-Specifies the identifer for the ILS. This is typically 3 or 4 characters. The drop-down contains a number of identifiers for ILSs at
+Specifies the identifier for the ILS. This is typically 3 or 4 characters. The drop-down contains a number of identifiers for ILSs at
 airports within the South East of the UK. Selecting one of these will automatically fill in the other fields with details of the ILS.
 The ILS identifier is broadcast as Morse code at an offset of 1020Hz from the ILS carrier. This is demodulated and displayed below the CDI.
 
@@ -190,7 +190,7 @@ Full scale deviation is 2.5 degrees (centre to edge) for LOC and 0.35 degrees fo
 Pilots would fly towards the diamond. So if the diamond is left-of-center, then the aircraft should turn to the left.
 
 The decoded Morse code identifier will be displayed underneath the CDI in both Morse and letters.
-If will be displayed in white if it matches the specified identifer (7) or red if not.
+If will be displayed in white if it matches the specified identifier (7) or red if not.
 
 <h3>36: Demodulated Spectrum</h3>
 
@@ -211,7 +211,7 @@ The airport ICAO (purple box) and runway (yellow box) can be entered in (11).
 ![ILS approach chart](../../../doc/img/ILSDemod_plugin_chart.png)
 
 Next, we need to enter the latitude (8), longitude (9) and elevation (10) of the runway threshold. This is available on some charts (orange box), but not usually accurately enough to line up perfectly on the 3D map.
-For this, it's best to use the 3D map, and git statu click while holding shift at the start of the threshold to set a marker, which will display the coordinates.
+For this, it's best to use the 3D map, and click while holding shift at the start of the threshold to set a marker, which will display the coordinates.
 
 ![Runway threshold coordinates](../../../doc/img/ILSDemod_plugin_threshold.png)
 
@@ -222,7 +222,7 @@ adjust the setting until the centre of the localizer (the course line) lines up 
 
 The ILS Reference Datum Height (RDH) to be set in (15) can often be found in the AIP, and is typically 15m (50ft).
 
-The course width (16) is ocassionaly specified in the AIP.
+The course width (16) is occasionally specified in the AIP.
 
 If not in the AIP, it may be possible to calculate it from an SBAS FAS Data Block if available:
 * Calculate the distance between LTP (Landing Threshold Point) and FPAP (Fight Path Alignment Point) from

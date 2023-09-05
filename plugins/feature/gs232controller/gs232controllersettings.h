@@ -23,6 +23,7 @@
 #include <QString>
 
 #include "util/message.h"
+#include "inputcontrollersettings.h"
 
 class Serializable;
 
@@ -51,8 +52,8 @@ struct GS232ControllerSettings
     int m_port;
     bool m_track;
     QString m_source;           // Plugin to get az/el from. E.g: "R0:0 ADSBDemod". Use a string, so can be set via WebAPI
-    int m_azimuthOffset;
-    int m_elevationOffset;
+    float m_azimuthOffset;
+    float m_elevationOffset;
     int m_azimuthMin;
     int m_azimuthMax;
     int m_elevationMin;
@@ -62,6 +63,11 @@ struct GS232ControllerSettings
     enum Connection { SERIAL, TCP } m_connection;
     int m_precision;
     enum Coordinates { AZ_EL, X_Y_85, X_Y_30 } m_coordinates;
+    QString m_inputController;
+    InputControllerSettings m_inputControllerSettings;
+    bool m_targetControlEnabled;
+    bool m_offsetControlEnabled;
+    bool m_highSensitivity;
 
     bool m_dfmTrackOn;
     bool m_dfmLubePumpsOn;

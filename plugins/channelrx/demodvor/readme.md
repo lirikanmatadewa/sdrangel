@@ -2,7 +2,7 @@
 
 <h2>Introduction</h2>
 
-This plugin can be used to demodulate VOR (VHF omnidirectional range) navaids (navigation aids). VORs are radio naviation aids in the VHF 108 - 117.975MHz band commonly used for aircraft navigation.
+This plugin can be used to demodulate VOR (VHF omnidirectional range) navaids (navigation aids). VORs are radio navigation aids in the VHF 108 - 117.975MHz band commonly used for aircraft navigation.
 
 VORs transmit two 30Hz signals, one AM at the VOR center frequency and one FM on a 9960Hz sub-carrier. The FM reference signal's phase is set so 0 degrees corresponds to magnetic north from the VOR (Some VORs at high latitudes use true North). The phase of the AM variable signal is such that the phase difference to the reference signal corresponds to the bearing from the VOR to the receiver. For example, if a receiver is North from the VOR, the AM and FM 30Hz signals will be received in phase. If a receiver is East from the VOR, the phase difference will be 90 degrees.
 
@@ -40,7 +40,7 @@ Average total power in dB relative to a +/- 1.0 amplitude signal received in the
 
 Left click on this button to toggle audio mute for this channel. The button will light up in green if the squelch is open. This helps identifying which channels are active in a multi-channel configuration.
 
-If you right click on it it will open a dialog to select the audio output device. See [audio management documentation](../../../sdrgui/audio.md) for details.
+If you right click on it, it will open a dialog to select the audio output device. See [audio management documentation](../../../sdrgui/audio.md) for details.
 
 <h3>5: Morse ident threshold</h3>
 
@@ -68,7 +68,7 @@ Magnitude of the received 30Hz FM reference signal in dB.
 
 <h3>10. Variable signal power in dB</h3>
 
-Mangitude of the received 30Hz AM variable signal in dB.
+Magnitude of the received 30Hz AM variable signal in dB.
 
 <h3>11. VOR identifier code (decoded)</h3>
 
@@ -76,4 +76,4 @@ Demodulated identifier. If an identifier is received that is not 2 or 3 characte
 
 <h3>12. VOR identifier code (Morse)</h3>
 
-Demodulated Morse code identifier. Colour coding is the ame as for the decoded identifier.
+Demodulated Morse code identifier. Colour coding is the same as for the decoded identifier.

@@ -31,6 +31,7 @@ const QStringList MapSettings::m_pipeTypes = {
     QStringLiteral("AIS"),
     QStringLiteral("APRS"),
     QStringLiteral("APTDemod"),
+    QStringLiteral("DSCDemod"),
     QStringLiteral("FT8Demod"),
     QStringLiteral("HeatMap"),
     QStringLiteral("ILSDemod"),
@@ -46,6 +47,7 @@ const QStringList MapSettings::m_pipeURIs = {
     QStringLiteral("sdrangel.feature.ais"),
     QStringLiteral("sdrangel.feature.aprs"),
     QStringLiteral("sdrangel.channel.aptdemod"),
+    QStringLiteral("sdrangel.channel.dscdemod"),
     QStringLiteral("sdrangel.channel.ft8demod"),
     QStringLiteral("sdrangel.channel.heatmap"),
     QStringLiteral("sdrangel.channel.ilsdemod"),
@@ -79,6 +81,7 @@ MapSettings::MapSettings() :
     MapItemSettings *aprsSettings = new MapItemSettings("APRS", true, QColor(255, 255, 0), true, false, 11);
     aprsSettings->m_extrapolate = 0;
     m_itemSettings.insert("APRS", aprsSettings);
+    m_itemSettings.insert("DSCDemod", new MapItemSettings("DSCDemod", true,  QColor(181, 230, 29), true, true, 3));
     m_itemSettings.insert("StarTracker", new MapItemSettings("StarTracker", true,  QColor(230, 230, 230), true, true, 3));
     m_itemSettings.insert("SatelliteTracker", new MapItemSettings("SatelliteTracker", true, QColor(0, 0, 255), true, false, 0, modelMinPixelSize));
     m_itemSettings.insert("Beacons", new MapItemSettings("Beacons", true, QColor(255, 0, 0), false, true, 8));
@@ -87,6 +90,7 @@ MapSettings::MapSettings() :
     m_itemSettings.insert("Radar", new MapItemSettings("Radar", true, QColor(255, 0, 0), false, true, 8));
     m_itemSettings.insert("FT8Demod", new MapItemSettings("FT8Demod", true, QColor(0, 192, 255), true, true, 8));
     m_itemSettings.insert("HeatMap", new MapItemSettings("HeatMap", true, QColor(102, 40, 220), true, true, 11));
+    m_itemSettings.insert("VLF", new MapItemSettings("VLF", false, QColor(255, 0, 0), false, true, 8));
 
     m_itemSettings.insert("AM", new MapItemSettings("AM", false, QColor(255, 0, 0), false, true, 10));
     MapItemSettings *fmSettings = new MapItemSettings("FM", false, QColor(255, 0, 0), false, true, 12);
@@ -148,7 +152,7 @@ MapSettings::~MapSettings()
 void MapSettings::resetToDefaults()
 {
     m_displayNames = true;
-#ifdef LINUX
+#if defined(LINUX) && (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
     m_mapProvider = "mapboxgl"; // osm maps do not work in some versions of Linux https://github.com/f4exb/sdrangel/issues/1169 & 1369
 #else
     m_mapProvider = "osm";
@@ -248,7 +252,7 @@ bool MapSettings::deserialize(const QByteArray& data)
 
         d.readBool(1, &m_displayNames, true);
         d.readString(2, &m_mapProvider, "osm");
-#ifdef LINUX
+#if defined(LINUX) && (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
         if (m_mapProvider == "osm") {
             m_mapProvider = "mapboxgl";
         }

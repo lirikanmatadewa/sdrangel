@@ -43,6 +43,8 @@
 #include "SWGATVDemodSettings.h"
 #include "SWGATVModReport.h"
 #include "SWGATVModSettings.h"
+#include "SWGAaroniaRTSAOutputReport.h"
+#include "SWGAaroniaRTSAOutputSettings.h"
 #include "SWGAaroniaRTSAReport.h"
 #include "SWGAaroniaRTSASettings.h"
 #include "SWGAirspyHFReport.h"
@@ -52,6 +54,7 @@
 #include "SWGAntennaToolsSettings.h"
 #include "SWGArgInfo.h"
 #include "SWGArgValue.h"
+#include "SWGAudioCATSISOSettings.h"
 #include "SWGAudioDevices.h"
 #include "SWGAudioInputDevice.h"
 #include "SWGAudioInputSettings.h"
@@ -99,6 +102,8 @@
 #include "SWGDATVModSettings.h"
 #include "SWGDOA2Report.h"
 #include "SWGDOA2Settings.h"
+#include "SWGDSCDemodReport.h"
+#include "SWGDSCDemodSettings.h"
 #include "SWGDSDDemodReport.h"
 #include "SWGDSDDemodSettings.h"
 #include "SWGDVSerialDevice.h"
@@ -500,6 +505,16 @@ namespace SWGSDRangel {
       obj->init();
       return obj;
     }
+    if(QString("SWGAaroniaRTSAOutputReport").compare(type) == 0) {
+      SWGAaroniaRTSAOutputReport *obj = new SWGAaroniaRTSAOutputReport();
+      obj->init();
+      return obj;
+    }
+    if(QString("SWGAaroniaRTSAOutputSettings").compare(type) == 0) {
+      SWGAaroniaRTSAOutputSettings *obj = new SWGAaroniaRTSAOutputSettings();
+      obj->init();
+      return obj;
+    }
     if(QString("SWGAaroniaRTSAReport").compare(type) == 0) {
       SWGAaroniaRTSAReport *obj = new SWGAaroniaRTSAReport();
       obj->init();
@@ -542,6 +557,11 @@ namespace SWGSDRangel {
     }
     if(QString("SWGArgValue").compare(type) == 0) {
       SWGArgValue *obj = new SWGArgValue();
+      obj->init();
+      return obj;
+    }
+    if(QString("SWGAudioCATSISOSettings").compare(type) == 0) {
+      SWGAudioCATSISOSettings *obj = new SWGAudioCATSISOSettings();
       obj->init();
       return obj;
     }
@@ -777,6 +797,16 @@ namespace SWGSDRangel {
     }
     if(QString("SWGDOA2Settings").compare(type) == 0) {
       SWGDOA2Settings *obj = new SWGDOA2Settings();
+      obj->init();
+      return obj;
+    }
+    if(QString("SWGDSCDemodReport").compare(type) == 0) {
+      SWGDSCDemodReport *obj = new SWGDSCDemodReport();
+      obj->init();
+      return obj;
+    }
+    if(QString("SWGDSCDemodSettings").compare(type) == 0) {
+      SWGDSCDemodSettings *obj = new SWGDSCDemodSettings();
       obj->init();
       return obj;
     }

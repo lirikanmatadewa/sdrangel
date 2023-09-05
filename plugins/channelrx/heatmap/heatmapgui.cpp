@@ -390,7 +390,7 @@ void HeatMapGUI::on_readCSV_clicked()
 void HeatMapGUI::on_writeImage_clicked()
 {
     m_imageFileDialog.setAcceptMode(QFileDialog::AcceptSave);
-    m_imageFileDialog.setNameFilter("*.png;*.jpg;*.jpeg;*.bmp;*.ppm;*.xbm;*.xpm");
+    m_imageFileDialog.setNameFilter("*.png *.jpg *.jpeg *.bmp *.ppm *.xbm *.xpm");
     if (m_imageFileDialog.exec())
     {
         QStringList fileNames = m_imageFileDialog.selectedFiles();
@@ -695,7 +695,7 @@ void HeatMapGUI::displaySettings()
 
     value = (int)std::log10(m_settings.m_sampleRate);
     ui->sampleRate->setValue(value);
-    int idx = std::min(std::max(0, value-2), m_sampleRateTexts.size() - 1);
+    int idx = std::min(std::max(0, value-2), (int)m_sampleRateTexts.size() - 1);
     ui->sampleRateText->setText(m_sampleRateTexts[idx]);
     ui->averagePeriod->setMinimum(std::max(1, static_cast<int> (m_averagePeriodTexts.size()) - value));
 

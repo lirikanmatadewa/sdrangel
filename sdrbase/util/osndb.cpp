@@ -18,7 +18,11 @@
 #include <QFileInfo>
 #include <QResource>
 
+#if (QT_VERSION < QT_VERSION_CHECK(6, 6, 0))
 #include <QtGui/private/qzipreader_p.h>
+#else
+#include <QtCore/private/qzipreader_p.h>
+#endif
 
 #include "util/osndb.h"
 
@@ -527,6 +531,7 @@ QIcon *AircraftInformation::getAirlineIcon(const QString &operatorICAO)
         return icon;
     }
 }
+
 QString AircraftInformation::getFlagIconPath(const QString &country)
 {
     QString endPath = QString("/flags/%1.bmp").arg(country);
@@ -548,6 +553,15 @@ QString AircraftInformation::getFlagIconPath(const QString &country)
         }
     }
     return QString();
+}
+
+QString AircraftInformation::getFlagIconURL(const QString &country)
+{
+    QString path = getFlagIconPath(country);
+    if (path.startsWith(':')) {
+        path = "qrc://" + path.mid(1);
+    }
+    return path;
 }
 
 QIcon *AircraftInformation::getFlagIcon(const QString &country)

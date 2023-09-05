@@ -36,7 +36,7 @@ Toggle a 300 Hz cutoff high pass filter on audio to cut-off CTCSS frequencies. I
 
 Left click on this button to toggle audio mute for this channel. The button will light up in green if the squelch is open. This helps identifying which channels are active in a multi-channel configuration.
 
-If you right click on it it will open a dialog to select the audio output device. See [audio management documentation](../../../sdrgui/audio.md) for details.
+If you right click on it, it will open a dialog to select the audio output device. See [audio management documentation](../../../sdrgui/audio.md) for details.
 
 
 <h3>A: RF parameters</h3>
@@ -187,7 +187,7 @@ Use the checkbox to toggle DCS activation. When activated it will look for a squ
 
 <h3>C.5: DCS code</h3>
 
-This is the DCS code to be selected among the normalized values. The value is in octal format suffixed by "P" for positive or normal codes and "N" for negative or inverted codes. The values are those listed [here](http://onfreq.com/syntorx/dcs.html). The special value `--` desactivates the squelch but the DCS code is still searched.
+This is the DCS code to be selected among the normalized values. The value is in octal format suffixed by "P" for positive or normal codes and "N" for negative or inverted codes. The values are those listed [here](http://onfreq.com/syntorx/dcs.html). The special value `--` deactivates the squelch but the DCS code is still searched.
 
 <h3>C.6: Show positive or negative code</h3>
 

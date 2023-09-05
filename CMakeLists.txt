@@ -15,8 +15,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # configure version
 set(sdrangel_VERSION_MAJOR "7")
-set(sdrangel_VERSION_MINOR "13")
-set(sdrangel_VERSION_PATCH "0")
+set(sdrangel_VERSION_MINOR "15")
+set(sdrangel_VERSION_PATCH "4")
 set(sdrangel_VERSION_SUFFIX "")
 
 # SDRAngel cmake options
@@ -30,6 +30,8 @@ option(BUNDLE "Enable distribution bundle" OFF)
 set(ARCH_OPT "native" CACHE STRING "Specify instruction set to use. Will be passed directly as `-march` or `/arch:` argument on supported compilers. \
                                    'native' option will figure out host machine compatibilities and set flags accordingly (even with MSVC).")
 option(ENABLE_QT6 "Build with Qt6 rather than Qt5" OFF)
+option(ENABLE_PROFILER "Enable runtime profiler" OFF)
+set(VKFFT_BACKEND 1 CACHE STRING "vkFFT Backend: 0 - Vulkan, 1 - CUDA")
 
 # Sampling devices enablers
 option(ENABLE_AIRSPY "Enable AirSpy support" ON)
@@ -84,6 +86,8 @@ option(ENABLE_CHANNELRX_DEMODFT8 "Enable channelrx demodft8 plugin" ON)
 option(ENABLE_CHANNELRX_DEMODNAVTEX "Enable channelrx demodnavtex plugin" ON)
 option(ENABLE_CHANNELRX_DEMODRTTY "Enable channelrx demodrtty plugin" ON)
 option(ENABLE_CHANNELRX_DEMODILS "Enable channelrx demodils plugin" ON)
+option(ENABLE_CHANNELRX_DEMODDSC "Enable channelrx demoddsc plugin" ON)
+option(ENABLE_CHANNELRX_HEATMAP "Enable channelrx heatmap plugin" ON)
 
 # Channel Tx enablers
 option(ENABLE_CHANNELTX "Enable channeltx plugins" ON)
@@ -194,10 +198,6 @@ message(STATUS "Build type set to: ${CMAKE_BUILD_TYPE}")
 # as default disable qDebug()
 if(NOT DEBUG_OUTPUT)
   add_definitions("-DQT_NO_DEBUG_OUTPUT")
-endif()
-
-if(ENABLE_EXTERNAL_LIBRARIES STREQUAL "AUTO")
-  set(AUTO_EXTERNAL_LIBRARIES ON CACHE INTERNAL "")
 endif()
 
 # declare build structures
@@ -371,11 +371,18 @@ if(VS2019)
   set(HIDAPI_LIBRARIES "${EXTERNAL_LIBRARY_FOLDER}/hidapi/x64/hidapi.lib" CACHE INTERNAL "")
   set(HIDAPI_DLL_DIR "${EXTERNAL_LIBRARY_FOLDER}/hidapi/x64" CACHE INTERNAL "")
 
+  set(LIBSIGMF_FOUND ON CACHE INTERNAL "")
+  set(LIBSIGMF_INCLUDE_DIR "${EXTERNAL_LIBRARY_FOLDER}/libsigmf/include" CACHE INTERNAL "")
+  set(LIBSIGMF_LIBRARIES "${EXTERNAL_LIBRARY_FOLDER}/libsigmf/lib/libsigmf.lib" DbgHelp CACHE INTERNAL "")
+  set(LIBSIGMF_LIBRARIES_DEBUG "${EXTERNAL_LIBRARY_FOLDER}/libsigmf/lib/libsigmfd.lib" DbgHelp CACHE INTERNAL "")
+  set(LIBSIGMF_DLL_DIR "${EXTERNAL_LIBRARY_FOLDER}/libsigmf/lib/" CACHE INTERNAL "")
+
   # used on fixup_bundle phase
   set(WINDOWS_FIXUP_BUNDLE_LIB_DIRS
     "${EXTERNAL_LIBRARY_FOLDER}/fftw-3"
     "${EXTERNAL_LIBRARY_FOLDER}/libusb/MS64/dll"
     "${EXTERNAL_LIBRARY_FOLDER}/ffmpeg/bin"
+    "${EXTERNAL_LIBRARY_FOLDER}/libsigmf/lib"
   )
 elseif(ANDROID)
   set(EXTERNAL_LIBRARY_FOLDER "${CMAKE_SOURCE_DIR}/external/android")
@@ -569,6 +576,10 @@ else()
     message(STATUS "Compiling for 16 bit Rx DSP chain")
 endif()
 
+if (ENABLE_PROFILER)
+    add_compile_definitions(ENABLE_PROFILER)
+endif()
+
 # Set compiler options based on target architecture and selected extensions
 include(CompilerOptions)
 
@@ -588,7 +599,6 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 # Qt requirements
 # See: https://doc-snapshots.qt.io/qt6-dev/cmake-qt5-and-qt6-compatibility.html
 if(ENABLE_QT6)
-    # Qt6 doesn't currently support Location
     find_package(Qt6
                    COMPONENTS
                      Core
@@ -635,7 +645,9 @@ if (BUILD_GUI)
                             Location
                             TextToSpeech
                             Svg
-                            AndroidExtras)
+                            AndroidExtras
+                           OPTIONAL_COMPONENTS
+                            Gamepad)
         endif()
     else()
         find_package(OpenGL REQUIRED)
@@ -650,7 +662,8 @@ if (BUILD_GUI)
                             WebEngineQuick
                             WebEngineCore
                             WebEngineWidgets
-                            TextToSpeech)
+                            TextToSpeech
+                            Location)
         else()
             find_package(Qt5
                            REQUIRED COMPONENTS
@@ -662,7 +675,8 @@ if (BUILD_GUI)
                            OPTIONAL_COMPONENTS
                             WebEngine
                             WebEngineCore
-                            WebEngineWidgets)
+                            WebEngineWidgets
+                            Gamepad)
         endif()
     endif()
 endif()
@@ -701,16 +715,25 @@ if(WIN32)
   )
 endif()
 
-# When ENABLE_EXTERNAL_LIBRARIES is ON, we can build most of the required 3rd party libraries from source
-if(ENABLE_EXTERNAL_LIBRARIES)
-    add_subdirectory(external)
-    find_package(Boost REQUIRED)
-else()
+# When ENABLE_EXTERNAL_LIBRARIES is ON, we build most of the required 3rd party libraries from source
+# When ENABLE_EXTERNAL_LIBRARIES is AUTO, we only build 3rd party libraries that aren't already available
+# When ENABLE_EXTERNAL_LIBRARIES is OFF, we only use prebuilt libraries
+
+if (NOT ENABLE_EXTERNAL_LIBRARIES)
     find_package(Boost REQUIRED)
     find_package(FFTW3F REQUIRED)
     if(NOT ANDROID)
-        find_package(LibUSB REQUIRED)  # used by so many packages
+        find_package(LibUSB REQUIRED)
     endif()
+elseif(ENABLE_EXTERNAL_LIBRARIES STREQUAL "AUTO")
+    find_package(Boost)
+    find_package(FFTW3F)
+    if(NOT ANDROID)
+        find_package(LibUSB)
+    endif()
+endif()
+
+if (NOT ENABLE_EXTERNAL_LIBRARIES OR (ENABLE_EXTERNAL_LIBRARIES STREQUAL "AUTO"))
     find_package(OpenCV OPTIONAL_COMPONENTS core highgui imgproc imgcodecs videoio) # channeltx/modatv
     find_package(LibSigMF) # SigMF recording files support
     find_package(ZLIB) # For DAB
@@ -724,54 +747,61 @@ else()
     find_package(AptDec)
     find_package(LibDAB)
     find_package(HIDAPI)
+
+    # Devices
+    if(ENABLE_AIRSPY)
+        find_package(LibAIRSPY)
+    endif()
+    if(ENABLE_AIRSPYHF)
+        find_package(LibAIRSPYHF)
+    endif()
+    if(ENABLE_BLADERF)
+        find_package(LibBLADERF 2.0)
+    endif()
+    if(ENABLE_HACKRF)
+        find_package(LibHACKRF)
+    endif()
+    if(ENABLE_LIMESUITE)
+        find_package(LimeSuite)
+        if (LIMESUITE_FOUND)
+            add_definitions(-DHAS_LIMERFEUSB)
+        endif()
+    endif()
+    if(ENABLE_IIO) # PlutoSDR
+        find_package(LibIIO)
+    endif()
+    if(ENABLE_MIRISDR)
+        find_package(LibMiriSDR)
+    endif()
+    if(ENABLE_PERSEUS)
+        find_package(LibPerseus)
+    endif()
+    if(ENABLE_RTLSDR)
+        find_package(LibRTLSDR)
+    endif()
+    if(ENABLE_SOAPYSDR)
+        find_package(SoapySDR)
+    endif()
+    if(ENABLE_USRP)
+        find_package(UHD)
+    endif()
+endif()
+
+# The following devices can't yet be built by external/CMakeLists.txt, so always call find_package
+if(ENABLE_SDRPLAY)
+    find_package(SDRplay)
+endif()
+if(ENABLE_XTRX)
+    find_package(LibXTRX)
+endif()
+
+if(ENABLE_EXTERNAL_LIBRARIES)
+    add_subdirectory(external)
+    find_package(Boost REQUIRED)
 endif()
 
 if (LIBSIGMF_FOUND AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_definitions(-DHAS_LIBSIGMF)
-endif()
-
-# Devices
-if(ENABLE_AIRSPY)
-  find_package(LibAIRSPY)
-endif()
-if(ENABLE_AIRSPYHF)
-  find_package(LibAIRSPYHF)
-endif()
-if(ENABLE_BLADERF)
-  find_package(LibBLADERF 2.0)
-endif()
-if(ENABLE_HACKRF)
-  find_package(LibHACKRF)
-endif()
-if(ENABLE_LIMESUITE)
-  find_package(LimeSuite)
-  if (LIMESUITE_FOUND)
-    add_definitions(-DHAS_LIMERFEUSB)
-  endif()
-endif()
-if(ENABLE_IIO) # PlutoSDR
-  find_package(LibIIO)
-endif()
-if(ENABLE_MIRISDR)
-  find_package(LibMiriSDR)
-endif()
-if(ENABLE_PERSEUS)
-  find_package(LibPerseus)
-endif()
-if(ENABLE_RTLSDR)
-  find_package(LibRTLSDR)
-endif()
-if(ENABLE_SDRPLAY)
-  find_package(SDRplay)
-endif()
-if(ENABLE_SOAPYSDR)
-  find_package(SoapySDR)
-endif()
-if(ENABLE_XTRX)
-  find_package(LibXTRX)
-endif()
-if(ENABLE_USRP)
-  find_package(UHD)
 endif()
 
 if(ENABLE_FUNCUBE AND LIBUSB_FOUND AND HIDAPI_FOUND)
@@ -934,6 +964,7 @@ if (BUILD_GUI)
           ${OPENGL_LIBRARIES}
           Qt::Widgets
           Qt::Multimedia
+          Qt::Quick
           sdrbase
           sdrgui
           logging

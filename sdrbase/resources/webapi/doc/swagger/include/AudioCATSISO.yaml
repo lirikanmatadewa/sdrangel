@@ -1,0 +1,142 @@
+AudioCATSISOSettings:
+  description: AudioCATSISO
+  properties:
+    rxCenterFrequency:
+      type: integer
+      format: int64
+    txCenterFrequency:
+      type: integer
+      format: int64
+    transverterMode:
+      type: integer
+    transverterDeltaFrequency:
+      type: integer
+      format: int64
+    iqOrder:
+      type: integer
+      description: >
+        IQ samples order
+          * 0 - Q then I (swapped)
+          * 1 - I then Q (straight)
+    txEnable:
+      type: integer
+      description: >
+        Enable or disable transmission
+          * 0 - Disable transmission
+          * 1 - Enable transmission
+    pttSpectrumLink:
+      type: integer
+      description: >
+        Main spectrum display (Rx/Tx) follows PTT (GUI)
+          * 0 - Disable PTT following
+          * 1 - Enable PTT following
+    rxDeviceName:
+      description: The name of the input audio device
+      type: string
+    rxIQMapping:
+      type: integer
+      description: >
+        Audio channel to IQ mapping
+          * 0 - I=L, Q=R
+          * 1 - I=R, Q=L
+          * 2 - I=L, Q=0
+          * 3 - I=R, Q=0
+    log2Decim:
+      description: Decimation factor (Rx)
+      type: integer
+    fcPosRx:
+      type: integer
+      description: >
+        Decimated bandpass center frequency position
+          * 0 - Infradyne
+          * 1 - Supradyne
+          * 2 - Centered
+    dcBlock:
+      type: integer
+      description: >
+        Auto DC blocking
+          * 0 - Off
+          * 1 - On
+    iqCorrection:
+      type: integer
+      description: >
+        Auto IQ balance (you need auto DC blocking active)
+          * 0 - Off
+          * 1 - On
+    rxVolume:
+      type: number
+      format: float
+    txDeviceName:
+      description: The name of the output audio device
+      type: string
+    txIQMapping:
+      type: integer
+      description: >
+        Audio channel to IQ mapping
+          * 0 - I=L, Q=R
+          * 1 - I=R, Q=L
+    txVolume:
+      type: integer
+      description: Tx volume in dB usually negative
+    catSpeedIndex:
+      type: integer
+      descriptoion: >
+        CAT serial link baud rate
+          * 0 - 1200
+          * 1 - 2400
+          * 2 - 4800
+          * 3 - 9800
+          * 4 - 19200 (default)
+          * 5 - 38400
+          * 6 - 57600
+          * 7 - 115200
+    catDataBitsIndex:
+      type: integer
+      description: >
+        CAT serial link data bits
+          * 0 - 7
+          * 1 - 8 (default)
+    catStopBitsIndex:
+      type: integer
+      description: >
+        CAT serial linkj stop bits
+          * 0 - 1 (default)
+          * 1 - 2
+    catHandshakeIndex:
+      type: integer
+      description: >
+        CAT serial link handshake type
+          * 0 - none (default)
+          * 1 - XON/XOFF
+          * 2 - hardware
+    catPTTMethodIndex:
+      type: integer
+      description: >
+        CAT PTT metgod
+          * 0 - PTT (default)
+          * 1 - DTR
+          * 2 - RTS
+    catDTRHigh:
+      type: integer
+      description: >
+        CAT DTR control
+          * 0 - low
+          * 1 - high (default)
+    catRTSHigh:
+      type: integer
+      description: >
+        CAT RTS control
+          * 0 - low
+          * 1 - high (default)
+    catPollingMs:
+      type: integer
+      description: CAT frequency polling interval in milliseconds
+    useReverseAPI:
+      description: Synchronize with reverse API (1 for yes, 0 for no)
+      type: integer
+    reverseAPIAddress:
+      type: string
+    reverseAPIPort:
+      type: integer
+    reverseAPIDeviceIndex:
+      type: integer

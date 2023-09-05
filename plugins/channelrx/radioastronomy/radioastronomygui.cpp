@@ -57,6 +57,7 @@
 #include "feature/featurewebapiutils.h"
 #include "feature/feature.h"
 #include "feature/featureset.h"
+#include "webapi/webapiutils.h"
 
 #include "radioastronomy.h"
 #include "radioastronomysink.h"
@@ -287,6 +288,10 @@ void RadioAstronomyGUI::resizePowerTable()
     ui->powerTable->setItem(row, POWER_COL_SENSOR_1, new QTableWidgetItem("1.0000000"));
     ui->powerTable->setItem(row, POWER_COL_SENSOR_2, new QTableWidgetItem("1.0000000"));
     ui->powerTable->setItem(row, POWER_COL_UTC, new QTableWidgetItem("15/04/2016 10:17:00"));
+    ui->powerTable->setItem(row, POWER_COL_ROT_AZ, new QTableWidgetItem("359.0"));
+    ui->powerTable->setItem(row, POWER_COL_ROT_EL, new QTableWidgetItem("-90.0"));
+    ui->powerTable->setItem(row, POWER_COL_ROT_AZ_OFF, new QTableWidgetItem("-10.0"));
+    ui->powerTable->setItem(row, POWER_COL_ROT_EL_OFF, new QTableWidgetItem("-10.0"));
     ui->powerTable->resizeColumnsToContents();
     ui->powerTable->removeRow(row);
 }
@@ -635,6 +640,10 @@ void RadioAstronomyGUI::powerMeasurementReceived(FFTMeasurement *fft, bool skipC
     QTableWidgetItem* sensor1Item = new QTableWidgetItem();
     QTableWidgetItem* sensor2Item = new QTableWidgetItem();
     QTableWidgetItem* utcItem = new QTableWidgetItem();
+    QTableWidgetItem* rotAzItem = new QTableWidgetItem();
+    QTableWidgetItem* rotElItem = new QTableWidgetItem();
+    QTableWidgetItem* rotAzOffItem = new QTableWidgetItem();
+    QTableWidgetItem* rotElOffItem = new QTableWidgetItem();
 
     ui->powerTable->setItem(row, POWER_COL_DATE, dateItem);
     ui->powerTable->setItem(row, POWER_COL_TIME, timeItem);
@@ -664,6 +673,10 @@ void RadioAstronomyGUI::powerMeasurementReceived(FFTMeasurement *fft, bool skipC
     ui->powerTable->setItem(row, POWER_COL_SENSOR_1, sensor1Item);
     ui->powerTable->setItem(row, POWER_COL_SENSOR_2, sensor2Item);
     ui->powerTable->setItem(row, POWER_COL_UTC, utcItem);
+    ui->powerTable->setItem(row, POWER_COL_ROT_AZ, rotAzItem);
+    ui->powerTable->setItem(row, POWER_COL_ROT_EL, rotElItem);
+    ui->powerTable->setItem(row, POWER_COL_ROT_AZ_OFF, rotAzOffItem);
+    ui->powerTable->setItem(row, POWER_COL_ROT_EL_OFF, rotElOffItem);
 
     ui->powerTable->setSortingEnabled(true);
 
@@ -696,6 +709,13 @@ void RadioAstronomyGUI::powerMeasurementReceived(FFTMeasurement *fft, bool skipC
     airTempItem->setData(Qt::DisplayRole, fft->m_airTemp);
     sensor1Item->setData(Qt::DisplayRole, fft->m_sensor[0]);
     sensor2Item->setData(Qt::DisplayRole, fft->m_sensor[1]);
+    if (fft->m_rotValid)
+    {
+        rotAzItem->setData(Qt::DisplayRole, fft->m_rotAz);
+        rotElItem->setData(Qt::DisplayRole, fft->m_rotEl);
+        rotAzOffItem->setData(Qt::DisplayRole, fft->m_rotAzOff);
+        rotElOffItem->setData(Qt::DisplayRole, fft->m_rotElOff);
+    }
 
     addToPowerSeries(fft, skipCalcs);
 }
@@ -2130,6 +2150,10 @@ RadioAstronomyGUI::RadioAstronomyGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUI
     ui->powerTable->setItemDelegateForColumn(POWER_COL_VBCRS, new DecimalDelegate(1));
     ui->powerTable->setItemDelegateForColumn(POWER_COL_VLSR, new DecimalDelegate(1));
     ui->powerTable->setItemDelegateForColumn(POWER_COL_AIR_TEMP, new DecimalDelegate(1));
+    ui->powerTable->setItemDelegateForColumn(POWER_COL_ROT_AZ, new DecimalDelegate(0));
+    ui->powerTable->setItemDelegateForColumn(POWER_COL_ROT_EL, new DecimalDelegate(0));
+    ui->powerTable->setItemDelegateForColumn(POWER_COL_ROT_AZ_OFF, new DecimalDelegate(0));
+    ui->powerTable->setItemDelegateForColumn(POWER_COL_ROT_EL_OFF, new DecimalDelegate(0));
 
     resizeSpectrumMarkerTable();
     ui->spectrumMarkerTable->setItemDelegateForColumn(SPECTRUM_MARKER_COL_FREQ, new DecimalDelegate(6));
@@ -2596,9 +2620,13 @@ void RadioAstronomyGUI::updateRotatorList(const QList<RadioAstronomySettings::Av
     // if the chosen rotator appears
     int rotatorIndex = ui->rotator->findText(m_settings.m_rotator);
 
-    if (rotatorIndex >= 0) {
+    if (rotatorIndex >= 0)
+    {
         ui->rotator->setCurrentIndex(rotatorIndex);
-    } else {
+        setColumnPrecisionFromRotator();
+    }
+    else
+    {
         ui->rotator->setCurrentIndex(0); // return to None
     }
 
@@ -2709,6 +2737,44 @@ void RadioAstronomyGUI::on_rotator_currentTextChanged(const QString& text)
 {
     m_settings.m_rotator = text;
     applySettings();
+    setColumnPrecisionFromRotator();
+}
+
+void RadioAstronomyGUI::setColumnPrecisionFromRotator()
+{
+    // Match rotator precision
+    const QRegExp re("F([0-9]+):([0-9]+)");
+    if (re.indexIn(m_settings.m_rotator) >= 0)
+    {
+        int featureSetIndex = re.capturedTexts()[1].toInt();
+        int featureIndex = re.capturedTexts()[2].toInt();
+
+        int precision = 0;
+        if (ChannelWebAPIUtils::getFeatureSetting(featureSetIndex, featureIndex, "precision", precision))
+        {
+            int old = ((DecimalDelegate *)ui->powerTable->itemDelegateForColumn(POWER_COL_GAL_LAT))->getPrecision();
+            ((DecimalDelegate *)ui->powerTable->itemDelegateForColumn(POWER_COL_GAL_LAT))->setPrecision(precision);
+            ((DecimalDelegate *)ui->powerTable->itemDelegateForColumn(POWER_COL_GAL_LON))->setPrecision(precision);
+            ((DecimalDelegate *)ui->powerTable->itemDelegateForColumn(POWER_COL_AZ))->setPrecision(precision);
+            ((DecimalDelegate *)ui->powerTable->itemDelegateForColumn(POWER_COL_EL))->setPrecision(precision);
+            ((DecimalDelegate *)ui->powerTable->itemDelegateForColumn(POWER_COL_ROT_AZ))->setPrecision(precision);
+            ((DecimalDelegate *)ui->powerTable->itemDelegateForColumn(POWER_COL_ROT_EL))->setPrecision(precision);
+            ((DecimalDelegate *)ui->powerTable->itemDelegateForColumn(POWER_COL_ROT_AZ_OFF))->setPrecision(precision);
+            ((DecimalDelegate *)ui->powerTable->itemDelegateForColumn(POWER_COL_ROT_EL_OFF))->setPrecision(precision);
+            if (precision > old)
+            {
+                ui->powerTable->resizeColumnToContents(POWER_COL_GAL_LAT);
+                ui->powerTable->resizeColumnToContents(POWER_COL_GAL_LON);
+                ui->powerTable->resizeColumnToContents(POWER_COL_AZ);
+                ui->powerTable->resizeColumnToContents(POWER_COL_EL);
+                ui->powerTable->resizeColumnToContents(POWER_COL_ROT_AZ);
+                ui->powerTable->resizeColumnToContents(POWER_COL_ROT_EL);
+                ui->powerTable->resizeColumnToContents(POWER_COL_ROT_AZ_OFF);
+                ui->powerTable->resizeColumnToContents(POWER_COL_ROT_EL_OFF);
+            }
+            ui->powerTable->viewport()->update();
+        }
+    }
 }
 
 void RadioAstronomyGUI::on_showSensors_clicked()
@@ -3678,6 +3744,8 @@ void RadioAstronomyGUI::calCompletetReceived(const RadioAstronomy::MsgCalComplet
     }
     fft->m_tSys0 = calcTSys0();
     fft->m_baseline = m_settings.m_spectrumBaseline;
+    getRotatorData(fft);
+
 
     if (!hot) {
         ui->calTsky->setText(QString::number(m_skyTemp, 'f', 1));
@@ -4431,7 +4499,7 @@ void RadioAstronomyGUI::plotRefLine(FFTMeasurement *fft)
     double lineFreqMHz = ui->spectrumLineFrequency->value();
     double lineFreq = lineFreqMHz * 1e6;
     QString refFrame[] = {"Topocentric", "Barycentric", "LSR"};
-    m_fftDopplerAxis->setTitleText(QString("%1 radial velocity (km/s - +ve receeding)").arg(refFrame[m_settings.m_refFrame]));
+    m_fftDopplerAxis->setTitleText(QString("%1 radial velocity (km/s - +ve receding)").arg(refFrame[m_settings.m_refFrame]));
     m_fftHlineSeries->setName(QString("%1 line").arg(ui->spectrumLine->currentText()));
     m_fftHlineSeries->append(0.0f, -200.0f); // For dB
     m_fftHlineSeries->append(0.0f, 10000.0f); // For temp can be >1e6?
@@ -4616,6 +4684,66 @@ void RadioAstronomyGUI::addFFT(FFTMeasurement *fft, bool skipCalcs)
     }
 }
 
+void RadioAstronomyGUI::getRotatorData(FFTMeasurement *fft)
+{
+    const QRegExp re("F([0-9]+):([0-9]+)");
+    if (re.indexIn(m_settings.m_rotator) >= 0)
+    {
+        int rotatorFeatureSetIndex = re.capturedTexts()[1].toInt();
+        int rotatorFeatureIndex = re.capturedTexts()[2].toInt();
+
+        SWGSDRangel::SWGFeatureReport featureReport;
+        double value;
+        qDebug() << m_settings.m_rotator << rotatorFeatureSetIndex << rotatorFeatureIndex;
+
+        if (ChannelWebAPIUtils::getFeatureReport(rotatorFeatureSetIndex, rotatorFeatureIndex, featureReport))
+        {
+            QJsonObject *jsonObj = featureReport.asJsonObject();
+            qDebug() << *jsonObj;
+            if (WebAPIUtils::getSubObjectDouble(*jsonObj, "currentAzimuth", value)) {
+                fft->m_rotAz = value;
+            } else {
+                qDebug() << "RadioAstronomyGUI::getRotatorData: getSubObjectDouble currentAzimuth failed";
+            }
+            if (WebAPIUtils::getSubObjectDouble(*jsonObj, "currentElevation", value)) {
+                fft->m_rotEl = value;
+            } else {
+                qDebug() << "RadioAstronomyGUI::getRotatorData: getSubObjectDouble currentElevation failed";
+            }
+        }
+        else
+        {
+            qDebug() << "RadioAstronomyGUI::getRotatorData: getFeatureReport failed";
+        }
+
+        SWGSDRangel::SWGFeatureSettings featureSettingsResponse;
+        Feature *feature;
+        if (ChannelWebAPIUtils::getFeatureSettings(rotatorFeatureSetIndex, rotatorFeatureIndex, featureSettingsResponse, feature))
+        {
+            QJsonObject *jsonObj = featureSettingsResponse.asJsonObject();
+            qDebug() << *jsonObj;
+            if (WebAPIUtils::getSubObjectDouble(*jsonObj, "azimuthOffset", value)) {
+                fft->m_rotAzOff = value;
+            } else {
+                qDebug() << "RadioAstronomyGUI::getRotatorData: getSubObjectDouble azimuthOffset failed";
+            }
+            if (WebAPIUtils::getSubObjectDouble(*jsonObj, "elevationOffset", value)) {
+                fft->m_rotElOff = value;
+            } else {
+                qDebug() << "RadioAstronomyGUI::getRotatorData: getSubObjectDouble elevationOffset ";
+            }
+        }
+        else
+        {
+            qDebug() << "RadioAstronomyGUI::getRotatorData: getFeatureSettings failed";
+        }
+
+        fft->m_rotValid = true;
+    }
+    else
+        qDebug() << "Couldn't parse rotator feature " << m_settings.m_rotator;
+}
+
 void RadioAstronomyGUI::fftMeasurementReceived(const RadioAstronomy::MsgFFTMeasurement& measurement)
 {
     FFTMeasurement *fft = new FFTMeasurement();
@@ -4647,6 +4775,7 @@ void RadioAstronomyGUI::fftMeasurementReceived(const RadioAstronomy::MsgFFTMeasu
     fft->m_sweepIndex = m_sweepIndex++;
     fft->m_tSys0 = calcTSys0();
     fft->m_baseline = m_settings.m_spectrumBaseline;
+    getRotatorData(fft);
 
     calcFFTPower(fft);
     calcFFTTotalPower(fft);
@@ -5038,7 +5167,7 @@ void RadioAstronomyGUI::on_sunOrbitalVelocity_valueChanged(double value)
 
 void RadioAstronomyGUI::on_savePowerChartImage_clicked()
 {
-    QFileDialog fileDialog(nullptr, "Select file to save image to", "", "*.png;*.jpg;*.jpeg;*.bmp;*.ppm;*.xbm;*.xpm");
+    QFileDialog fileDialog(nullptr, "Select file to save image to", "", "*.png *.jpg *.jpeg *.bmp *.ppm *.xbm *.xpm");
     fileDialog.setAcceptMode(QFileDialog::AcceptSave);
     if (fileDialog.exec())
     {
@@ -5058,7 +5187,7 @@ void RadioAstronomyGUI::on_savePowerChartImage_clicked()
 
 void RadioAstronomyGUI::on_saveSpectrumChartImage_clicked()
 {
-    QFileDialog fileDialog(nullptr, "Select file to save image to", "", "*.png;*.jpg;*.jpeg;*.bmp;*.ppm;*.xbm;*.xpm");
+    QFileDialog fileDialog(nullptr, "Select file to save image to", "", "*.png *.jpg *.jpeg *.bmp *.ppm *.xbm *.xpm");
     fileDialog.setAcceptMode(QFileDialog::AcceptSave);
     if (fileDialog.exec())
     {

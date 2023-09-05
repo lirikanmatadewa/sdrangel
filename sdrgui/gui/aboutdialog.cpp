@@ -15,6 +15,7 @@ AboutDialog::AboutDialog(const QString& apiHost, int apiPort, const MainSettings
 	QString apiUrl = QString("http://%1:%2/").arg(apiHost).arg(apiPort);
 	ui->restApiUrl->setText(QString("REST API documentation: <a href=\"%1\">%2</a>").arg(apiUrl).arg(apiUrl));
 	ui->restApiUrl->setOpenExternalLinks(true);
+	ui->settingsFile->setText(QString("Settings: %1").arg(mainSettings.getFileLocation()));
 }
 
 AboutDialog::~AboutDialog()

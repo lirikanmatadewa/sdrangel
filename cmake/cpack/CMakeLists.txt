@@ -228,6 +228,27 @@ elseif(WIN32 OR MINGW)
     )
   endforeach(openssl_dll)
 
+  file(GLOB LIBSIGMF_DLLS "${LIBSIGMF_DLL_DIR}/libsigmf*${CMAKE_SHARED_LIBRARY_SUFFIX}")
+  foreach(libsigmf_dll ${LIBSIGMF_DLLS})
+    get_filename_component(libsigmf_dll_name "${libsigmf_dll}"  NAME)
+    add_custom_target(copy_libsigmf_${libsigmf_dll_name} ALL
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different "${libsigmf_dll}" "${SDRANGEL_BINARY_BIN_DIR}/"
+    )
+  endforeach(libsigmf_dll)
+
+  if(${VKFFT_BACKEND} EQUAL 1)
+    find_package(CUDA)
+    if(CUDA_FOUND)
+      file(GLOB CUDA_DLLS "${CUDA_TOOLKIT_ROOT_DIR}/bin/nvrtc*${CMAKE_SHARED_LIBRARY_SUFFIX}")
+      foreach(cuda_dll ${CUDA_DLLS})
+        get_filename_component(cuda_dll_name "${cuda_dll}"  NAME)
+        add_custom_target(copy_cuda_${cuda_dll_name} ALL
+          COMMAND ${CMAKE_COMMAND} -E copy_if_different "${cuda_dll}" "${SDRANGEL_BINARY_BIN_DIR}/"
+        )
+      endforeach(cuda_dll)
+    endif()
+  endif()
+
   # TODO we need a way to fixup_bundle() on the build bin/ directory without call install
   if(BUILD_GUI)
     install(CODE "
@@ -284,7 +305,14 @@ elseif(WIN32 OR MINGW)
     # OpenSSL
     install(DIRECTORY "${OPENSSL_DLL_DIR}/" DESTINATION "${INSTALL_LIB_DIR}"
       FILES_MATCHING PATTERN "*${CMAKE_SHARED_LIBRARY_SUFFIX}")
-
+    # libsigmf
+    install(DIRECTORY "${LIBSIGMF_DLL_DIR}/" DESTINATION "${INSTALL_LIB_DIR}"
+      FILES_MATCHING PATTERN "*${CMAKE_SHARED_LIBRARY_SUFFIX}")
+    # CUDA runtime
+    if((${VKFFT_BACKEND} EQUAL 1) AND CUDA_FOUND)
+      install(DIRECTORY "${CUDA_TOOLKIT_ROOT_DIR}/bin/" DESTINATION "${INSTALL_LIB_DIR}"
+        FILES_MATCHING PATTERN "nvrtc*${CMAKE_SHARED_LIBRARY_SUFFIX}")
+    endif()
 
     install(CODE "
       # remove *.lib files

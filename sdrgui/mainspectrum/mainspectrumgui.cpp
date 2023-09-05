@@ -271,10 +271,10 @@ void MainSpectrumGUI::maximizeWindow()
     }
     else
     {
-    showMaximized();
+        showMaximized();
         m_shrinkButton->setToolTip("Restore window to normal");
         m_maximizeButton->setToolTip("Make window full screen");
-}
+    }
 }
 
 void MainSpectrumGUI::shrinkWindow()

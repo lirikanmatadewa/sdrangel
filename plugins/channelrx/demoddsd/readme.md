@@ -107,7 +107,7 @@ Use this switch to toggle high-pass filter on the audio
 
 Left click to mute/unmute audio. This button lights in green when the squelch opens.
 
-If you right click on it it will open a dialog to select the audio output device. See [audio management documentation](../../../sdrgui/audio.md) for details.
+If you right click on it, it will open a dialog to select the audio output device. See [audio management documentation](../../../sdrgui/audio.md) for details.
 
 <h3>A.12: Format specific status display</h3>
 
@@ -206,7 +206,7 @@ String is in the form: `02223297>G00000222`
 
 ![DSD dPMR status](../../../doc/img/DSDdemod_plugin_dpmr_status.png)
 
-<h5>A11.3.1: dPMR frame tyoe</h5>
+<h5>A11.3.1: dPMR frame type</h5>
 
   - `--`: undetermined
   - `HD`: Header of FS1 type

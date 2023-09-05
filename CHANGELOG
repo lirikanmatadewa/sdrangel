@@ -1,4 +1,118 @@
-sdrangel (7.12.0-1) unstable; urgency=medium
+sdrangel (7.15.4-1) unstable; urgency=medium
+
+   * Fix Mac compilation. PR #1786
+   * Add support for plugin presets. PR #1789
+   * Map feature updates. PR #1778
+   * Fix RTLSDR E4000 gain and bandwidth settings. Add tuner type to GUI. PR #1790
+   * Add support for RTLSDRBlog V4 with HF upsampler. PR #1790
+   * Update RTLSDR driver to include RTLSDRBlog V4 support. PR #1790
+   * Add rotator az/el and offset to table. PR #1791
+   * Optmize redrawing of charts in Star Tracker. PR #1791
+   * Initialise PhaseDiscriminators state, to avoid outputting huge values. Fix #1794. PR #1794
+
+  -- Edouard Griffiths, F4EXB  <f4exb06@gmail.com>  Sat, 02 Sep 2023 19:12:12 +0200
+
+sdrangel (7.15.3-1) unstable; urgency=medium
+
+   * Rotator Controller: Add additional gamepad calibration and functionality. PR #1761
+   * Use QFileInfo to get file extension. Fixes #1760. PR #1762
+   * Add UI scale factor setting for high DPI screens. PR #1763
+   * Support Map plugin for Qt 6.5. Some Qt 6.6 fixes. PR #1764
+   * Map plugin: Fix beacon frequency. PR #1765
+   * PlutoSDR MIMO: fix variable names. PR #1770
+   * Rotator controller: use precision to determine step size. PR #1775
+   * Add VkFFT support and profiler. Implements #1166. PR #1779.
+
+  -- Edouard Griffiths, F4EXB  <f4exb06@gmail.com>  Sun, 20 Aug 2023 21:10:13 +0200
+
+sdrangel (7.15.2-1) unstable; urgency=medium
+
+   * Fixed some spellings. PR #1742
+   * Rotator Controller: Use floats for az/el offsets. PR #1744. Fixes #1739
+   * Switch to codec2-dev repo to access v1.0.3 tag. PR #1746. Fixes #1741
+   * Move find_package from external/CMakeLists.txt to root CMakeLists.txt. PR #1750
+   * Have some libraries and plugins built in the Ubuntu package. PR #1750. Fixes #1740
+   * Remove external projects from .deb. PR #1754. Fixes #1740
+   * OpenGL code: Clear with alpha=1 to fix #1735. PR #1735
+   * DSD demod UI: Connect slot 1/2 on/off buttons. PR #1758. Fixes #1752
+   * Use texture() instead of texture2d() in v330 shaders, so they work on Mac. PR #1759. Fixes #1757
+
+  -- Edouard Griffiths, F4EXB  <f4exb06@gmail.com>  Fri, 04 Aug 2023 01:17:54 +0200
+
+sdrangel (7.15.1-1) unstable; urgency=medium
+
+   * Remove comparison of strings and chars. Fix #1713, PR #1718
+   * Run audio out on its own thread. Fixes #1717
+   * PlutoSDR:  Add missing settings keys. PR #1727
+   * RTPSink: nullify m_byteBuffer after delete
+   * Audio output: forward actual sample rate to Audio Manager
+   * SSB demod: handle DSPConfigureAudio message correctly
+   * SSB mod/demod: handle DSPConfigureAudio message correctly
+   * Fixed some spelling mistakes. PR #1733
+   * Run audio in on its own thread. For #1731
+   * FCD/AudioInpout: use AudioDeviceManager in place of manupulating AudioInputDevice directly
+   * Audio Input: handle real signals with new main spectrum feature
+   * PlutoSDR input/output: do not apply settings to self when coming from a buddy change. Fixes #1690
+
+  -- Edouard Griffiths, F4EXB  <f4exb06@gmail.com>  Tue, 11 Jul 2023 15:45:58 +0200
+
+sdrangel (7.15.0-1) unstable; urgency=medium
+
+   * New Audio CAT SISO plugin. Implements #1597
+   * Map: Change Street Map from WikiMedia to OpenStreetMap. PR #1711. Issue #1709
+   * Packet Modulator: fixed segfault in GUI
+   * SigMFFileInput: fixed acceleration. Part of issue #1699
+   * SimplePTT: fixed typo in code. Fixes #1705
+
+  -- Edouard Griffiths, F4EXB  <f4exb06@gmail.com>  Sun, 18 Jun 2023 22:38:55 +0200
+
+sdrangel (7.14.2-1) unstable; urgency=medium
+
+  * Implement GPIO and script control from Simple PTT feature. Implements #1558
+  * Allow SigMF plugins to work in Windows. PR #1700
+  * Only update widgets from UI thread. Fixes #1692. PR #1692
+
+  -- Edouard Griffiths, F4EXB  <f4exb06@gmail.com>  Mon, 28 May 2023 22:04:01 +0200
+
+sdrangel (7.14.1-1) unstable; urgency=medium
+
+  * Fix Sat Tracker crash in previous release. Fixes #1682. PR #1696.
+  * Add support for tracking Satellites in the Star Tracker. PR #1696.
+
+  -- Edouard Griffiths, F4EXB  <f4exb06@gmail.com>  Wed, 24 May 2023 06:40:43 +0200
+
+sdrangel (7.14.0-1) unstable; urgency=medium
+
+  * New DSC channel Rx plugin (PR #1693)
+  * New Aaronia output (Tx) plugin
+  * GLSpectrumGUI: apply settings when buddies are set
+  * SpectrumVis: propagate apply settings to GUI message quque if it exists
+  * use MsgConfigureSpectrumVis in place of corresponding GLSpectrum set methods. Fixes #1624
+  * DATV demod: change interpolator and NCO in the same block
+  * DATV demod: leansdr: fix possible segfaults
+  * Fix Qt6 compilation. PR #1654
+  * Sat & Star tracker: Plot target on Az/El chart. Fixes #1641. PR #1641
+  * Use latest libxml2 that has cmake support for use on Mac. For #1657. PR #1663
+  * Set LIBXML2_LIBRARIES for static lib. PR #1663
+  * AIS Demod: Calculate time slot used for messages. PR #1664
+  * Aaroniartsainput: Changes with RTSA suite build 12830. PR #1667
+  * Fixed swagger docker compose run script
+  * GLSpectrum: set default waterfall share to 0.5
+  * Rotator Controller: Add gamepad input controller support. PR #1668
+  * Rx channel demods: prevent possible reading past audio buffer end. Fixes #1661
+  * Upgrade dsdcc to 1.9.4
+  * Scope GUI updates. PR #1671
+  * Add query to TLE download filename, to avoid clashes. Fixes #1647. PR #1673
+  * Add accessibility interface for ValueDial widgets, so they work with screen readers. Fixes #1672. PR #1675
+  * Fix QFileDialog filters to work with non-native dialog. Fixes #1681. PR #1685
+  * Fixed missing initializations of QNetworkManager. Fixes #1689
+  * Fix doppler correction for #1682. Add Az/El offset setting. PR #1694
+  * Update spectrum settings to match what's used in sink. Fix deserialisation of UI related settings. PR #1695
+  * Aaronia RTSA: Fixed API device settings PUT and PATCH
+
+  -- Edouard Griffiths, F4EXB  <f4exb06@gmail.com>  Tue, 23 May 2023 20:09:23 +0200
+
+sdrangel (7.13.0-1) unstable; urgency=medium
 
   - New Aaronia input (Rx) plugin
   - Channel analyzer: engage rational down sampler also when no channel decimation takes place. Fixes #1622

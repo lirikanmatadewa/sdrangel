@@ -4493,6 +4493,11 @@ bool WebAPIRequestMapper::getChannelSettings(
             channelSettings->setDoa2Settings(new SWGSDRangel::SWGDOA2Settings());
             channelSettings->getDoa2Settings()->fromJsonObject(settingsJsonObject);
         }
+        else if (channelSettingsKey == "DSCDemodSettings")
+        {
+            channelSettings->setDscDemodSettings(new SWGSDRangel::SWGDSCDemodSettings());
+            channelSettings->getDscDemodSettings()->fromJsonObject(settingsJsonObject);
+        }
         else if (channelSettingsKey == "DSDDemodSettings")
         {
             channelSettings->setDsdDemodSettings(new SWGSDRangel::SWGDSDDemodSettings());
@@ -4825,7 +4830,17 @@ bool WebAPIRequestMapper::getDeviceSettings(
         extractKeys(settingsJsonObject, deviceSettingsKeys);
         qDebug() << "WebAPIRequestMapper::getDeviceSettings: deviceSettingsKeys: " << deviceSettingsKeys;
 
-        if (deviceSettingsKey == "airspySettings")
+        if (deviceSettingsKey == "aaroniaRTSASettings")
+        {
+            deviceSettings->setAaroniaRtsaSettings(new SWGSDRangel::SWGAaroniaRTSASettings());
+            deviceSettings->getAaroniaRtsaSettings()->fromJsonObject(settingsJsonObject);
+        }
+        else if (deviceSettingsKey == "aaroniaRTSAOutputSettings")
+        {
+            deviceSettings->setAaroniaRtsaOutputSettings(new SWGSDRangel::SWGAaroniaRTSAOutputSettings());
+            deviceSettings->getAaroniaRtsaOutputSettings()->fromJsonObject(settingsJsonObject);
+        }
+        else if (deviceSettingsKey == "airspySettings")
         {
             deviceSettings->setAirspySettings(new SWGSDRangel::SWGAirspySettings());
             deviceSettings->getAirspySettings()->fromJsonObject(settingsJsonObject);
@@ -4834,6 +4849,11 @@ bool WebAPIRequestMapper::getDeviceSettings(
         {
             deviceSettings->setAirspyHfSettings(new SWGSDRangel::SWGAirspyHFSettings());
             deviceSettings->getAirspyHfSettings()->fromJsonObject(settingsJsonObject);
+        }
+        else if (deviceSettingsKey == "audioCATSISOSettings")
+        {
+            deviceSettings->setAudioCatsisoSettings(new SWGSDRangel::SWGAudioCATSISOSettings());
+            deviceSettings->getAudioCatsisoSettings()->fromJsonObject(settingsJsonObject);
         }
         else if (deviceSettingsKey == "audioInputSettings")
         {

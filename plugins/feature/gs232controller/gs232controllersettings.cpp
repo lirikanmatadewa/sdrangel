@@ -22,6 +22,7 @@
 #include "settings/serializable.h"
 
 #include "gs232controllersettings.h"
+#include "inputcontrollersettings.h"
 
 const QStringList GS232ControllerSettings::m_pipeTypes = {
     QStringLiteral("ADSBDemod"),
@@ -53,8 +54,8 @@ void GS232ControllerSettings::resetToDefaults()
     m_port = 4533;
     m_track = false;
     m_source = "";
-    m_azimuthOffset = 0;
-    m_elevationOffset = 0;
+    m_azimuthOffset = 0.0f;
+    m_elevationOffset = 0.0f;
     m_azimuthMin = 0;
     m_azimuthMax = 450;
     m_elevationMin = 0;
@@ -64,6 +65,15 @@ void GS232ControllerSettings::resetToDefaults()
     m_connection = SERIAL;
     m_precision = 0;
     m_coordinates = AZ_EL;
+    m_inputController = "None";
+    m_targetControlEnabled = true;
+    m_offsetControlEnabled = true;
+    m_highSensitivity = true;
+    m_inputControllerSettings.m_lowSensitivity = 5.0f;
+    m_inputControllerSettings.m_highSensitivity = 50.0f;
+    for (int i = 0; i < INPUTCONTROLLER_MAX_AXES; i++) {
+        m_inputControllerSettings.m_deadzone[i] = 10.0f;
+    }
     m_dfmTrackOn = false;
     m_dfmLubePumpsOn = false;
     m_dfmBrakesOn = false;
@@ -95,8 +105,8 @@ QByteArray GS232ControllerSettings::serialize() const
     s.writeU32(12, m_reverseAPIPort);
     s.writeU32(13, m_reverseAPIFeatureSetIndex);
     s.writeU32(14, m_reverseAPIFeatureIndex);
-    s.writeS32(15, m_azimuthOffset);
-    s.writeS32(16, m_elevationOffset);
+    s.writeFloat(15, m_azimuthOffset);
+    s.writeFloat(16, m_elevationOffset);
     s.writeS32(17, m_azimuthMin);
     s.writeS32(18, m_azimuthMax);
     s.writeS32(19, m_elevationMin);
@@ -119,6 +129,16 @@ QByteArray GS232ControllerSettings::serialize() const
     s.writeBool(32, m_dfmLubePumpsOn);
     s.writeBool(33, m_dfmBrakesOn);
     s.writeBool(34, m_dfmDrivesOn);
+    s.writeString(35, m_inputController);
+    s.writeBool(37, m_targetControlEnabled);
+    s.writeBool(38, m_offsetControlEnabled);
+    s.writeBool(39, m_highSensitivity);
+
+    s.writeFloat(50, m_inputControllerSettings.m_lowSensitivity);
+    s.writeFloat(51, m_inputControllerSettings.m_highSensitivity);
+    for (int i = 0; i < INPUTCONTROLLER_MAX_AXES; i++) {
+        s.writeFloat(60+i, m_inputControllerSettings.m_deadzone[i]);
+    }
 
     return s.final();
 }
@@ -161,8 +181,8 @@ bool GS232ControllerSettings::deserialize(const QByteArray& data)
         m_reverseAPIFeatureSetIndex = utmp > 99 ? 99 : utmp;
         d.readU32(14, &utmp, 0);
         m_reverseAPIFeatureIndex = utmp > 99 ? 99 : utmp;
-        d.readS32(15, &m_azimuthOffset, 0);
-        d.readS32(16, &m_elevationOffset, 0);
+        d.readFloat(15, &m_azimuthOffset, 0.0f);
+        d.readFloat(16, &m_elevationOffset, 0.0f);
         d.readS32(17, &m_azimuthMin, 0);
         d.readS32(18, &m_azimuthMax, 450);
         d.readS32(19, &m_elevationMin, 0);
@@ -187,6 +207,16 @@ bool GS232ControllerSettings::deserialize(const QByteArray& data)
         d.readBool(32, &m_dfmLubePumpsOn);
         d.readBool(33, &m_dfmBrakesOn);
         d.readBool(34, &m_dfmDrivesOn);
+        d.readString(35, &m_inputController, "None");
+        d.readBool(37, &m_targetControlEnabled, true);
+        d.readBool(38, &m_offsetControlEnabled, true);
+        d.readBool(39, &m_highSensitivity, true);
+
+        d.readFloat(50, &m_inputControllerSettings.m_lowSensitivity, 5.0f);
+        d.readFloat(51, &m_inputControllerSettings.m_highSensitivity, 50.0f);
+        for (int i = 0; i < INPUTCONTROLLER_MAX_AXES; i++) {
+            d.readFloat(60+i, &m_inputControllerSettings.m_deadzone[i], 10.0f);
+        }
 
         return true;
     }
@@ -270,6 +300,21 @@ void GS232ControllerSettings::applySettings(const QStringList& settingsKeys, con
     }
     if (settingsKeys.contains("coordinates")) {
         m_coordinates = settings.m_coordinates;
+    }
+    if (settingsKeys.contains("inputController")) {
+        m_inputController = settings.m_inputController;
+    }
+    if (settingsKeys.contains("inputControllerSettings")) {
+        m_inputControllerSettings = settings.m_inputControllerSettings;
+    }
+    if (settingsKeys.contains("targetControlEnabled")) {
+        m_targetControlEnabled = settings.m_targetControlEnabled;
+    }
+    if (settingsKeys.contains("offsetControlEnabled")) {
+        m_offsetControlEnabled = settings.m_offsetControlEnabled;
+    }
+    if (settingsKeys.contains("highSensitivity")) {
+        m_highSensitivity = settings.m_highSensitivity;
     }
     if (settingsKeys.contains("dfmTrackOn")) {
         m_dfmTrackOn = settings.m_dfmTrackOn;
@@ -370,6 +415,25 @@ QString GS232ControllerSettings::getDebugString(const QStringList& settingsKeys,
     if (settingsKeys.contains("coordinates") || force) {
         ostr << " m_coordinates: " << m_precision;
     }
+    if (settingsKeys.contains("inputController") || force) {
+        ostr << " m_inputController: " << m_inputController.toStdString();
+    }
+    if (settingsKeys.contains("inputControllerSettings") || force) {
+        ostr << " m_inputControllerSettings.m_lowSensitivity: " << m_inputControllerSettings.m_lowSensitivity;
+        ostr << " m_inputControllerSettings.m_highSensitivity: " << m_inputControllerSettings.m_highSensitivity;
+        for (int i = 0; i < INPUTCONTROLLER_MAX_AXES; i++) {
+            ostr << " m_inputControllerSettings.m_deadzone: " << m_inputControllerSettings.m_deadzone[i];
+        }
+    }
+    if (settingsKeys.contains("targetControlEnabled") || force) {
+        ostr << " m_targetControlEnabled: " << m_targetControlEnabled;
+    }
+    if (settingsKeys.contains("offsetControlEnabled") || force) {
+        ostr << " m_offsetControlEnabled: " << m_offsetControlEnabled;
+    }
+    if (settingsKeys.contains("highSensitivity") || force) {
+        ostr << " m_highSensitivity: " << m_highSensitivity;
+    }
     if (settingsKeys.contains("title") || force) {
         ostr << " m_title: " << m_title.toStdString();
     }
@@ -397,4 +461,3 @@ QString GS232ControllerSettings::getDebugString(const QStringList& settingsKeys,
 
     return QString(ostr.str().c_str());
 }
-

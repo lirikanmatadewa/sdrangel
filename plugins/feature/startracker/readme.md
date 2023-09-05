@@ -43,7 +43,7 @@ Pressing this button displays a settings dialog, that allows you to set:
 * Air pressure in millibars. This value can be automatically updated from OpenWeatherMap.
 * Air temperature in degrees Celsius. This value can be automatically updated from OpenWeatherMap.
 * Relative humidity in %. This value can be automatically updated from OpenWeatherMap.
-* Height above sea level in metres of the observation point (anntenna location).
+* Height above sea level in metres of the observation point (antenna location).
 * Temperature lapse rate in Kelvin per kilometre.
 * What data to display for the Solar flux measurement. Data can be selected from 2800 from DRAO or a number of different frequencies from Learmonth. Also, the Learmonth data can be linearly interpolated to the observation frequency set in the main window.
 * The units to display the solar flux in, either Solar Flux Units, Jansky or Wm^-2Hz-1. 1 sfu equals 10,000 Jansky or 10^-22 Wm^-2Hz-1.
@@ -99,6 +99,7 @@ To allow Stellarium to set the RA and Dec, select Custom RA/Dec, and ensure the 
 | S7               | HI                | IAU secondary calibration region (l=132,b=-1)  | Tb=100 peak                                |
 | S8               | HI                | IAU primary calibration region (l=207,b=-15)   | Tb=72 peak                                 |
 | S9               | HI                | IAU secondary calibration region (l=356,b=-4)  | Tb=85 peak                                 |
+| SatelliteTracker |                   | Gets target Az/El from Satellite Tracker       |                                            |
 
 References:
 
@@ -151,7 +152,7 @@ An offset in degrees that is added to the computed target elevation.
 
 When the target is set to Custom l/b, you specify the galactic longitude (angle in degrees, Eastward from the galactic centre) of the target object.
 
-For all other target settings, this sisplays the calculated galactic longitude to the object.
+For all other target settings, this displays the calculated galactic longitude to the object.
 
 <h3>21: b - Galactic Latitude</h3>
 
@@ -172,6 +173,9 @@ Click on this icon ![Star Tracker Chart theme](../../../doc/img/StarTracker_char
 In order to assist in determining whether and when observations of the target object may be possible, an elevation vs time plot is drawn for the 24 hours encompassing the selected date and time.
 This can be plotted on Cartesian or polar axis.
 Some objects may not be visible from a particular latitude for the specified time, in which case, the graph title will indicate the object is not visible on that particular date.
+
+When the target is set to a Satellite Tracker, this chart is plotted based on the Satellite's current position only. It does not take in to consideration the satellite's movement. For that,
+use the chart in the Satellite Tracker.
 
 <h3>Solar flux vs frequency</h3>
 

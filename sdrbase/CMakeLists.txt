@@ -19,20 +19,63 @@ if(FFTW3F_FOUND)
     add_definitions(-DUSE_FFTW)
     include_directories(${FFTW3F_INCLUDE_DIRS})
     set(sdrbase_FFTW3F_LIB ${FFTW3F_LIBRARIES})
-else(FFTW3F_FOUND)
-    set(sdrbase_SOURCES
-        ${sdrbase_SOURCES}
-        dsp/kissengine.cpp
-        dsp/kissfft.h
-    )
-    set(sdrbase_HEADERS
-        ${sdrbase_HEADERS}
-        dsp/kissengine.h
-    )
-    add_definitions(-DUSE_KISSFFT)
 endif(FFTW3F_FOUND)
 
-if (LIBSIGMF_FOUND AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+# Kiss FFT is always available
+set(sdrbase_SOURCES
+    ${sdrbase_SOURCES}
+    dsp/kissengine.cpp
+    dsp/kissfft.h
+)
+set(sdrbase_HEADERS
+    ${sdrbase_HEADERS}
+    dsp/kissengine.h
+)
+add_definitions(-DUSE_KISSFFT)
+
+# Vulkan SDK: https://vulkan.lunarg.com/
+# Windows Vulkan SDK is missing glslang_c_interface.h
+# See bug: https://vulkan.lunarg.com/issue/view/63d158a85df11200d569b2ab
+# Copy it from Linux SDK
+if (${VKFFT_BACKEND} EQUAL 0)
+    find_package(Vulkan)
+    if(Vulkan_FOUND)
+        set(sdrbase_SOURCES
+            ${sdrbase_SOURCES}
+            dsp/vulkanvkfftengine.cpp
+            dsp/vulkanvkfftengine.h
+        )
+    endif()
+endif()
+
+# CUDA Toolkit: https://developer.nvidia.com/cuda-downloads
+if (${VKFFT_BACKEND} EQUAL 1)
+    find_package(CUDA 9.0)
+    if(CUDA_FOUND)
+        enable_language(CUDA)
+        set(sdrbase_SOURCES
+            ${sdrbase_SOURCES}
+            dsp/cudavkfftengine.cpp
+            dsp/cudavkfftengine.h
+        )
+    endif()
+    if(WIN32)
+        set(WINDOWS_FIXUP_BUNDLE_LIB_DIRS ${WINDOWS_FIXUP_BUNDLE_LIB_DIRS} ${CUDA_TOOLKIT_ROOT_DIR}/bin PARENT_SCOPE)
+    endif()
+endif()
+
+if((Vulkan_FOUND AND (${VKFFT_BACKEND} EQUAL 0)) OR (CUDA_FOUND AND (${VKFFT_BACKEND} EQUAL 1)))
+    set(sdrbase_SOURCES
+        ${sdrbase_SOURCES}
+        dsp/vkfftengine.cpp
+        dsp/vkfftengine.h
+        dsp/vkfftutils.cpp
+        dsp/vkfftutils.h
+    )
+    include_directories(${VKFFT_INCLUDE_DIR})
+endif()
+
+if (LIBSIGMF_FOUND)
     set(sdrbase_SOURCES
         ${sdrbase_SOURCES}
         dsp/sigmffilerecord.cpp
@@ -43,7 +86,6 @@ if (LIBSIGMF_FOUND AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         dsp/sigmffilerecord.h
     )
     include_directories(${LIBSIGMF_INCLUDE_DIR})
-    set(sdrbase_LIBSIGMF_LIB ${LIBSIGMF_LIBRARIES})
 endif()
 
 if (LIBSERIALDV_FOUND)
@@ -165,6 +207,7 @@ set(sdrbase_SOURCES
 
     settings/configuration.cpp
     settings/featuresetpreset.cpp
+    settings/pluginpreset.cpp
     settings/preferences.cpp
     settings/preset.cpp
     settings/mainsettings.cpp
@@ -172,6 +215,7 @@ set(sdrbase_SOURCES
 
     util/ais.cpp
     util/android.cpp
+    util/aprsfi.cpp
     util/aviationweather.cpp
     util/ax25.cpp
     util/aprs.cpp
@@ -184,6 +228,7 @@ set(sdrbase_SOURCES
     util/CRC64.cpp
     util/csv.cpp
     util/db.cpp
+    util/dsc.cpp
     util/fixedtraits.cpp
     util/fits.cpp
     util/flightinformation.cpp
@@ -196,6 +241,7 @@ set(sdrbase_SOURCES
     util/maidenhead.cpp
     util/message.cpp
     util/messagequeue.cpp
+    util/mmsi.cpp
     util/morse.cpp
     util/navtex.cpp
     util/openaip.cpp
@@ -205,6 +251,7 @@ set(sdrbase_SOURCES
     util/planespotters.cpp
     util/png.cpp
     util/prettyprint.cpp
+    util/profiler.cpp
     util/radiosonde.cpp
     util/rtpsink.cpp
     util/syncmessenger.cpp
@@ -391,6 +438,7 @@ set(sdrbase_HEADERS
 
     settings/configuration.h
     settings/featuresetpreset.h
+    settings/pluginpreset.h
     settings/preferences.h
     settings/preset.h
     settings/mainsettings.h
@@ -398,6 +446,7 @@ set(sdrbase_HEADERS
 
     util/ais.h
     util/android.h
+    util/aprsfi.h
     util/aviationweather.h
     util/ax25.h
     util/aprs.h
@@ -409,6 +458,7 @@ set(sdrbase_HEADERS
     util/CRC64.h
     util/csv.h
     util/db.h
+    util/dsc.h
     util/doublebuffer.h
     util/doublebufferfifo.h
     util/doublebuffermultiple.h
@@ -426,6 +476,7 @@ set(sdrbase_HEADERS
     util/maidenhead.h
     util/message.h
     util/messagequeue.h
+    util/mmsi.h
     util/morse.h
     util/movingaverage.h
     util/movingmaximum.h
@@ -437,6 +488,7 @@ set(sdrbase_HEADERS
     util/planespotters.h
     util/png.h
     util/prettyprint.h
+    util/profiler.h
     util/radiosonde.h
     util/rtpsink.h
     util/syncmessenger.h
@@ -498,6 +550,95 @@ if(DEFINED OPUS_DEPENDS)
     add_dependencies(sdrbase "${OPUS_DEPENDS}")
 endif()
 
+if(DEFINED LIBSIGMF_DEPENDS)
+    add_dependencies(sdrbase "${LIBSIGMF_DEPENDS}")
+endif()
+
+if(Vulkan_FOUND AND (${VKFFT_BACKEND} EQUAL 0))
+    target_compile_definitions(sdrbase PUBLIC -DVK_API_VERSION=11)
+    target_include_directories(sdrbase PUBLIC ${Vulkan_INCLUDE_DIR} ${Vulkan_INCLUDE_DIR}/glslang/Include)
+    add_compile_definitions(sdrbase VKFFT_BACKEND=0)
+
+    find_library(VULKAN_SPIRV_LIB SPIRV HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
+    find_library(VULKAN_SPVREMAPPER_LIB SPVRemapper HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
+    find_library(VULKAN_SPIRV_TOOLS_LIB SPIRV-Tools HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
+    find_library(VULKAN_SPIRV_TOOLS_OPT_LIB SPIRV-Tools-opt HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
+    find_library(VULKAN_SPIRV_TOOLS_SHARED_LIB SPIRV-Tools-shared HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
+    find_library(VULKAN_HLSL_LIB HLSL HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
+    find_library(VULKAN_OGLCOMPILER_LIB OGLCompiler HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
+    find_library(VULKAN_OSDEPENDENT_LIB OSDependent HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
+    find_library(VULKAN_GLSLANG_LIB glslang HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
+    find_library(VULKAN_GLSLANG_RES_LIB glslang-default-resource-limits HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
+    find_library(VULKAN_MACHINEINDEPENDENT_LIB MachineIndependent HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
+    find_library(VULKAN_GENERICCODEGEN_LIB GenericCodeGen HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
+
+    if(MSVC)
+        set(VULKAN_DEBUG_POSTFIX "d")
+    else()
+        set(VULKAN_DEBUG_POSTFIX "")
+    endif()
+    find_library(VULKAN_SPIRVD_LIB SPIRV${VULKAN_DEBUG_POSTFIX} HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
+    find_library(VULKAN_SPVREMAPPERD_LIB SPVRemapper${VULKAN_DEBUG_POSTFIX} HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
+    find_library(VULKAN_SPIRV_TOOLSD_LIB SPIRV-Tools${VULKAN_DEBUG_POSTFIX} HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
+    find_library(VULKAN_SPIRV_TOOLS_OPTD_LIB SPIRV-Tools-opt${VULKAN_DEBUG_POSTFIX} HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
+    find_library(VULKAN_SPIRV_TOOLS_SHAREDD_LIB SPIRV-Tools-shared${VULKAN_DEBUG_POSTFIX} HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
+    find_library(VULKAN_HLSLD_LIB HLSL${VULKAN_DEBUG_POSTFIX} HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
+    find_library(VULKAN_OGLCOMPILERD_LIB OGLCompiler${VULKAN_DEBUG_POSTFIX} HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
+    find_library(VULKAN_OSDEPENDENTD_LIB OSDependent${VULKAN_DEBUG_POSTFIX} HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
+    find_library(VULKAN_GLSLANGD_LIB glslang${VULKAN_DEBUG_POSTFIX} HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
+    find_library(VULKAN_GLSLANG_RESD_LIB glslang-default-resource-limits${VULKAN_DEBUG_POSTFIX} HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
+    find_library(VULKAN_MACHINEINDEPENDENTD_LIB MachineIndependent${VULKAN_DEBUG_POSTFIX} HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
+    find_library(VULKAN_GENERICCODEGEND_LIB GenericCodeGen${VULKAN_DEBUG_POSTFIX} HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
+
+    target_link_libraries(sdrbase
+        optimized ${VULKAN_SPIRV_LIB}
+        optimized ${VULKAN_SPVREMAPPER_LIB}
+        optimized ${VULKAN_SPIRV_TOOLS_LIB}
+        optimized ${VULKAN_SPIRV_TOOLS_OPT_LIB}
+        optimized ${VULKAN_SPIRV_TOOLS_SHARED_LIB}
+        optimized ${VULKAN_HLSL_LIB}
+        optimized ${VULKAN_OGLCOMPILER_LIB}
+        optimized ${VULKAN_OSDEPENDENT_LIB}
+        optimized ${VULKAN_GLSLANG_LIB}
+        optimized ${VULKAN_GLSLANG_RES_LIB}
+        optimized ${VULKAN_MACHINEINDEPENDENT_LIB}
+        optimized ${VULKAN_GENERICCODEGEN_LIB}
+        optimized Vulkan::Vulkan
+        debug ${VULKAN_SPIRVD_LIB}
+        debug ${VULKAN_SPVREMAPPERD_LIB}
+        debug ${VULKAN_SPIRV_TOOLSD_LIB}
+        debug ${VULKAN_SPIRV_TOOLS_OPTD_LIB}
+        debug ${VULKAN_SPIRV_TOOLS_SHAREDD_LIB}
+        debug ${VULKAN_HLSLD_LIB}
+        debug ${VULKAN_OGLCOMPILERD_LIB}
+        debug ${VULKAN_OSDEPENDENTD_LIB}
+        debug ${VULKAN_GLSLANGD_LIB}
+        debug ${VULKAN_GLSLANG_RESD_LIB}
+        debug ${VULKAN_MACHINEINDEPENDENTD_LIB}
+        debug ${VULKAN_GENERICCODEGEND_LIB}
+        debug Vulkan::Vulkan
+    )
+endif()
+
+if(CUDA_FOUND AND (${VKFFT_BACKEND} EQUAL 1))
+    set_property(TARGET sdrbase PROPERTY CUDA_ARCHITECTURES 60 70 75 80 86)
+    add_compile_definitions(sdrbase VKFFT_BACKEND=1)
+    target_compile_options(sdrbase PUBLIC
+        "$<$<COMPILE_LANGUAGE:CUDA>:SHELL:
+        -DVKFFT_BACKEND=1
+        -gencode arch=compute_60,code=compute_60
+        -gencode arch=compute_70,code=compute_70
+        -gencode arch=compute_75,code=compute_75
+        -gencode arch=compute_80,code=compute_80
+        -gencode arch=compute_86,code=compute_86>")
+    set_target_properties(sdrbase PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+    set_target_properties(sdrbase PROPERTIES CUDA_RESOLVE_DEVICE_SYMBOLS ON)
+    find_library(CUDA_NVRTC_LIB libnvrtc nvrtc HINTS "${CUDA_TOOLKIT_ROOT_DIR}/lib64" "${LIBNVRTC_LIBRARY_DIR}" "${CUDA_TOOLKIT_ROOT_DIR}/lib/x64" /usr/lib64 /usr/local/cuda/lib64 REQUIRED)
+    find_library(CUDA_LIB cuda HINTS "${CUDA_TOOLKIT_ROOT_DIR}/lib64" "${LIBNVRTC_LIBRARY_DIR}" "${CUDA_TOOLKIT_ROOT_DIR}/lib/x64" /usr/lib64 /usr/local/cuda/lib64 REQUIRED)
+    target_link_libraries(sdrbase ${CUDA_LIBRARIES} ${CUDA_LIB} ${CUDA_NVRTC_LIB})
+    target_include_directories(sdrbase PUBLIC ${CUDA_INCLUDE_DIRS})
+endif()
+
 target_link_libraries(sdrbase
     ${OPUS_LIBRARIES}
     ${sdrbase_FFTW3F_LIB}
@@ -513,6 +654,14 @@ target_link_libraries(sdrbase
     qrtplib
     swagger
 )
+if (LIBSIGMF_FOUND)
+    if(WIN32)
+        target_link_libraries(sdrbase optimized ${LIBSIGMF_LIBRARIES})
+        target_link_libraries(sdrbase debug ${LIBSIGMF_LIBRARIES_DEBUG})
+    else()
+        target_link_libraries(sdrbase ${LIBSIGMF_LIBRARIES})
+    endif()
+endif()
 if (Qt6_FOUND)
     target_link_libraries(sdrbase
         Qt::Core5Compat

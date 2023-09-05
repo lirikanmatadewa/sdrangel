@@ -22,9 +22,11 @@
 #include <QJsonObject>
 
 
+#include "SWGAaroniaRTSAOutputSettings.h"
 #include "SWGAaroniaRTSASettings.h"
 #include "SWGAirspyHFSettings.h"
 #include "SWGAirspySettings.h"
+#include "SWGAudioCATSISOSettings.h"
 #include "SWGAudioInputSettings.h"
 #include "SWGAudioOutputSettings.h"
 #include "SWGBladeRF1InputSettings.h"
@@ -100,6 +102,9 @@ public:
 
     SWGAirspyHFSettings* getAirspyHfSettings();
     void setAirspyHfSettings(SWGAirspyHFSettings* airspy_hf_settings);
+
+    SWGAudioCATSISOSettings* getAudioCatsisoSettings();
+    void setAudioCatsisoSettings(SWGAudioCATSISOSettings* audio_catsiso_settings);
 
     SWGAudioInputSettings* getAudioInputSettings();
     void setAudioInputSettings(SWGAudioInputSettings* audio_input_settings);
@@ -227,6 +232,9 @@ public:
     SWGAaroniaRTSASettings* getAaroniaRtsaSettings();
     void setAaroniaRtsaSettings(SWGAaroniaRTSASettings* aaronia_rtsa_settings);
 
+    SWGAaroniaRTSAOutputSettings* getAaroniaRtsaOutputSettings();
+    void setAaroniaRtsaOutputSettings(SWGAaroniaRTSAOutputSettings* aaronia_rtsa_output_settings);
+
 
     virtual bool isSet() override;
 
@@ -245,6 +253,9 @@ private:
 
     SWGAirspyHFSettings* airspy_hf_settings;
     bool m_airspy_hf_settings_isSet;
+
+    SWGAudioCATSISOSettings* audio_catsiso_settings;
+    bool m_audio_catsiso_settings_isSet;
 
     SWGAudioInputSettings* audio_input_settings;
     bool m_audio_input_settings_isSet;
@@ -371,6 +382,9 @@ private:
 
     SWGAaroniaRTSASettings* aaronia_rtsa_settings;
     bool m_aaronia_rtsa_settings_isSet;
+
+    SWGAaroniaRTSAOutputSettings* aaronia_rtsa_output_settings;
+    bool m_aaronia_rtsa_output_settings_isSet;
 
 };
 

@@ -284,7 +284,7 @@ void DeviceEnumerator::enumerateDevices(PluginAPI::SamplingDeviceRegistrations& 
             {
                 found = true;
                 break;
-}
+            }
         }
         if (!found) {
             it->m_samplingDevice.removed = true;
@@ -294,18 +294,18 @@ void DeviceEnumerator::enumerateDevices(PluginAPI::SamplingDeviceRegistrations& 
     // Add new entries and update existing (in case re-added or sequence number has changed)
     int index = enumeration.size();
     for (DevicesEnumeration::iterator it = tempEnumeration.begin(); it != tempEnumeration.end(); ++it)
-{
+    {
 
         bool found = false;
         for (DevicesEnumeration::iterator it2 = enumeration.begin(); it2 != enumeration.end(); ++it2)
-    {
-        if (it->m_samplingDevice == it2->m_samplingDevice)
         {
-            it2->m_samplingDevice.removed = false;
-            it2->m_samplingDevice.displayedName = it->m_samplingDevice.displayedName;
-            found = true;
-            break;
-        }
+            if (it->m_samplingDevice == it2->m_samplingDevice)
+            {
+                it2->m_samplingDevice.removed = false;
+                it2->m_samplingDevice.displayedName = it->m_samplingDevice.displayedName;
+                found = true;
+                break;
+            }
 
         }
         if (!found)
@@ -322,14 +322,14 @@ void DeviceEnumerator::enumerateRxDevices(PluginManager *pluginManager)
 }
 
 void DeviceEnumerator::enumerateTxDevices(PluginManager *pluginManager)
-    {
+{
     enumerateDevices(pluginManager->getSinkDeviceRegistrations(), m_txEnumeration, PluginInterface::SamplingDevice::StreamSingleTx);
 }
 
 void DeviceEnumerator::enumerateMIMODevices(PluginManager *pluginManager)
-        {
+{
     enumerateDevices(pluginManager->getMIMODeviceRegistrations(), m_mimoEnumeration, PluginInterface::SamplingDevice::StreamMIMO);
-        }
+}
 
 void DeviceEnumerator::listRxDeviceNames(QList<QString>& list, std::vector<int>& indexes) const
 {

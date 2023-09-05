@@ -67,11 +67,11 @@ public:
     QString* getSource();
     void setSource(QString* source);
 
-    qint32 getAzimuthOffset();
-    void setAzimuthOffset(qint32 azimuth_offset);
+    float getAzimuthOffset();
+    void setAzimuthOffset(float azimuth_offset);
 
-    qint32 getElevationOffset();
-    void setElevationOffset(qint32 elevation_offset);
+    float getElevationOffset();
+    void setElevationOffset(float elevation_offset);
 
     qint32 getAzimuthMin();
     void setAzimuthMin(qint32 azimuth_min);
@@ -96,6 +96,12 @@ public:
 
     qint32 getCoordinates();
     void setCoordinates(qint32 coordinates);
+
+    QString* getInputController();
+    void setInputController(QString* input_controller);
+
+    float getInputSensitivity();
+    void setInputSensitivity(float input_sensitivity);
 
     QString* getTitle();
     void setTitle(QString* title);
@@ -149,10 +155,10 @@ private:
     QString* source;
     bool m_source_isSet;
 
-    qint32 azimuth_offset;
+    float azimuth_offset;
     bool m_azimuth_offset_isSet;
 
-    qint32 elevation_offset;
+    float elevation_offset;
     bool m_elevation_offset_isSet;
 
     qint32 azimuth_min;
@@ -178,6 +184,12 @@ private:
 
     qint32 coordinates;
     bool m_coordinates_isSet;
+
+    QString* input_controller;
+    bool m_input_controller_isSet;
+
+    float input_sensitivity;
+    bool m_input_sensitivity_isSet;
 
     QString* title;
     bool m_title_isSet;

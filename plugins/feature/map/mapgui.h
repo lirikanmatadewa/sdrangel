@@ -21,9 +21,14 @@
 
 #include <QTimer>
 #include <QQuickItem>
+#include <QQuickWidget>
 #include <QJsonObject>
 #ifdef QT_WEBENGINE_FOUND
 #include <QWebEngineFullScreenRequest>
+#include <QWebEnginePage>
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+#include <QWebEngineLoadingInfo>
+#endif
 #endif
 
 #include <math.h>
@@ -161,6 +166,7 @@ public:
     void addAirspace();
     void addAirports();
     void addNavtex();
+    void addVLF();
     void find(const QString& target);
     void track3D(const QString& target);
     Q_INVOKABLE void supportedMapsChanged();
@@ -217,6 +223,7 @@ private:
     void applyMap3DSettings(bool reloadMap);
     QString osmCachePath();
     void clearOSMCache();
+    void clearWikiMediaOSMCache();
     void displaySettings();
     bool handleMessage(const Message& message);
     void geoReply();
@@ -228,6 +235,7 @@ private:
 
     static QString getDataDir();
     static const QList<RadioTimeTransmitter> m_radioTimeTransmitters;
+    static const QList<RadioTimeTransmitter> m_vlfTransmitters;
 
 private slots:
     void init3DMap();
@@ -252,7 +260,12 @@ private slots:
     virtual bool eventFilter(QObject *obj, QEvent *event) override;
 #ifdef QT_WEBENGINE_FOUND
     void fullScreenRequested(QWebEngineFullScreenRequest fullScreenRequest);
+    void renderProcessTerminated(QWebEnginePage::RenderProcessTerminationStatus terminationStatus, int exitCode);
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+    void loadingChanged(const QWebEngineLoadingInfo &loadingInfo);
 #endif
+#endif
+    void statusChanged(QQuickWidget::Status status);
     void preferenceChanged(int elementType);
     void giroDataUpdated(const GIRO::GIROStationData& data);
     void mufUpdated(const QJsonDocument& document);

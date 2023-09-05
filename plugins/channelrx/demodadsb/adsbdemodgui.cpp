@@ -112,9 +112,9 @@ const QString ADSBDemodGUI::m_emergencyStatus[] = {
 };
 
 const QString ADSBDemodGUI::m_flightStatuses[] = {
-    QStringLiteral("Airbourne"),
+    QStringLiteral("Airborne"),
     QStringLiteral("On-ground"),
-    QStringLiteral("Alert, airboune"),
+    QStringLiteral("Alert, airborne"),
     QStringLiteral("Alert, on-ground"),
     QStringLiteral("Alert, SPI"),
     QStringLiteral("SPI"),
@@ -951,10 +951,7 @@ Aircraft *ADSBDemodGUI::getAircraft(int icao, bool &newAircraft)
                 QIcon *icon = nullptr;
                 if (aircraft->m_aircraftInfo->m_operatorICAO.size() > 0)
                 {
-                    aircraft->m_airlineIconURL = AircraftInformation::getAirlineIconPath(aircraft->m_aircraftInfo->m_operatorICAO);
-                    if (aircraft->m_airlineIconURL.startsWith(':')) {
-                        aircraft->m_airlineIconURL = "qrc://" + aircraft->m_airlineIconURL.mid(1);
-                    }
+                    aircraft->m_airlineIconURL = AircraftInformation::getFlagIconURL(aircraft->m_aircraftInfo->m_operatorICAO);
                     icon = AircraftInformation::getAirlineIcon(aircraft->m_aircraftInfo->m_operatorICAO);
                     if (icon != nullptr)
                     {
@@ -1110,7 +1107,7 @@ void ADSBDemodGUI::handleADSB(
         else
         {
             // Ignore if not from a known aircraft, as its likely not to be a valid packet
-            //qDebug() << "Skiping Mode-S from unknown aircraft - DF " << df << " ICAO " << Qt::hex << icao;
+            //qDebug() << "Skipping Mode-S from unknown aircraft - DF " << df << " ICAO " << Qt::hex << icao;
             return;
         }
     }
@@ -2165,7 +2162,7 @@ void ADSBDemodGUI::decodeCommB(const QByteArray data, const QDateTime dateTime, 
         float longitude = longitudeFix * (360.0f / 1048576.0f);
 
         bool positionInconsistent = !aircraft->m_positionValid
-                                || (positionValid && aircraft->m_positionValid && ((abs(latitude - aircraft->m_latitude > 2.0f)) || (abs(longitude - aircraft->m_longitude) > 2.0f)))
+                                || (positionValid && aircraft->m_positionValid && ((abs(latitude - aircraft->m_latitude) > 2.0f) || (abs(longitude - aircraft->m_longitude) > 2.0f)))
                                 || (!positionValid && ((latitudeFix != 0) || (longitudeFix != 0)));
 
         int pressureAltFix = ((data[9] & 0x7f) << 8) | (data[10] & 0xff);
@@ -3442,7 +3439,7 @@ void ADSBDemodGUI::adsbData_customContextMenuRequested(QPoint pos)
         });
         tableContextMenu->addAction(planeSpottersAction);
 
-        QAction* adsbExchangeAction = new QAction("View aircraft on adsbexchange.net...", tableContextMenu);
+        QAction* adsbExchangeAction = new QAction("View aircraft on adsbexchange.com...", tableContextMenu);
         connect(adsbExchangeAction, &QAction::triggered, this, [icaoHex]()->void {
             QDesktopServices::openUrl(QUrl(QString("https://globe.adsbexchange.com/?icao=%1").arg(icaoHex)));
         });
@@ -3456,7 +3453,7 @@ void ADSBDemodGUI::adsbData_customContextMenuRequested(QPoint pos)
 
         if (!aircraft->m_callsign.isEmpty())
         {
-            QAction* flightRadarAction = new QAction("View flight on flightradar24.net...", tableContextMenu);
+            QAction* flightRadarAction = new QAction("View flight on flightradar24.com...", tableContextMenu);
             connect(flightRadarAction, &QAction::triggered, this, [aircraft]()->void {
                 QDesktopServices::openUrl(QUrl(QString("https://www.flightradar24.com/%1").arg(aircraft->m_callsign)));
             });

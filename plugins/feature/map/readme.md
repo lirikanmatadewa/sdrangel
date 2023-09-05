@@ -11,10 +11,11 @@ On top of this, it can plot data from other plugins, such as:
 * Satellites from the Satellite Tracker,
 * Weather imagery from APT Demodulator,
 * The Sun, Moon and Stars from the Star Tracker,
-* Weather ballons from the RadioSonde feature,
+* Weather balloons from the RadioSonde feature,
 * RF Heat Maps from the Heap Map channel,
 * Radials and estimated position from the VOR localizer feature,
 * ILS course line and glide path from the ILS Demodulator.
+* DSC geographic call areas.
 
 As well as internet data sources:
 
@@ -25,6 +26,7 @@ As well as internet data sources:
 * GRAVES radar,
 * Ionosonde station data,
 * Navtex transmitters.
+* VLF transmitters.
 
 It can also create tracks showing the path aircraft, ships and APRS objects have taken, as well as predicted paths for satellites.
 
@@ -206,7 +208,7 @@ Ionosonde data and MUF/coF2 contours from [KC2G](https://prop.kc2g.com/) with so
 Icons made by Google from Flaticon https://www.flaticon.com
 World icons created by turkkub from Flaticon https://www.flaticon.com
 
-3D models are by various artists under a variety of liceneses. See: https://github.com/srcejon/sdrangel-3d-models
+3D models are by various artists under a variety of licenses. See: https://github.com/srcejon/sdrangel-3d-models
 
 <h2>Creating 3D Models</h2>
 
