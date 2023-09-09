@@ -252,6 +252,7 @@ set(sdrbase_SOURCES
     util/png.cpp
     util/prettyprint.cpp
     util/profiler.cpp
+    util/psk31.cpp
     util/radiosonde.cpp
     util/rtpsink.cpp
     util/syncmessenger.cpp
@@ -285,6 +286,7 @@ set(sdrbase_SOURCES
 
     mainparser.cpp
     maincore.cpp
+    remotetcpsinkstarter.cpp
 
     resources/webapi.qrc
 )
@@ -490,6 +492,7 @@ set(sdrbase_HEADERS
     util/png.h
     util/prettyprint.h
     util/profiler.h
+    util/psk31.h
     util/radiosonde.h
     util/rtpsink.h
     util/rtty.h
@@ -519,6 +522,7 @@ set(sdrbase_HEADERS
 
     mainparser.h
     maincore.h
+    remotetcpsinkstarter.h
 )
 
 include_directories(
