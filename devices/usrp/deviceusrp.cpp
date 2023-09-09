@@ -38,7 +38,6 @@ void DeviceUSRP::enumOriginDevices(const QString& hardwareId, PluginInterface::O
 
         if (dev_addrs.size() <= 0)
         {
-            qDebug("DeviceUSRP::enumOriginDevices: Could not find any USRP device");
             return;
         }
 
@@ -49,8 +48,6 @@ void DeviceUSRP::enumOriginDevices(const QString& hardwareId, PluginInterface::O
             QString serial = QString::fromStdString(dev_addrs[i].get("serial", "N/A"));
             QString product = QString::fromStdString(dev_addrs[i].get("product", "N/A"));
             QString displayedName(QString("%1[%2:$1] %3").arg(name).arg(i).arg(serial));
-
-            qDebug() << "DeviceUSRP::enumOriginDevices: found USRP device " << displayedName;
 
             // Opening some devices can be a little slow, so use hardcoded number of channels,
             // for known devices

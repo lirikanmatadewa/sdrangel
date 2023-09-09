@@ -34,28 +34,28 @@ SpectrumSettings::~SpectrumSettings()
 
 void SpectrumSettings::resetToDefaults()
 {
-	m_fftSize = 1024;
+	m_fftSize = 4096;
 	m_fftOverlap = 0;
 	m_fftWindow = FFTWindow::Hanning;
 	m_refLevel = 0;
 	m_powerRange = 100;
-	m_fpsPeriodMs = 50;
+	m_fpsPeriodMs = 5;
 	m_decay = 1;
-	m_decayDivisor = 1;
-	m_histogramStroke = 30;
-	m_displayGridIntensity = 5;
+	m_decayDivisor = 10;
+	m_histogramStroke = 8;
+	m_displayGridIntensity = 15;
 	m_displayTraceIntensity = 50;
 	m_waterfallShare = 0.5;
 	m_displayCurrent = true;
-	m_displayWaterfall = true;
-	m_invertedWaterfall = true;
+	m_displayWaterfall = false;
+	m_invertedWaterfall = false;
     m_display3DSpectrogram = false;
 	m_displayMaxHold = false;
-	m_displayHistogram = false;
+	m_displayHistogram = true;
 	m_displayGrid = false;
     m_truncateFreqScale = false;
-	m_averagingMode = AvgModeNone;
-	m_averagingIndex = 0;
+	m_averagingMode = AvgModeFixed;
+	m_averagingIndex = 2;
     m_averagingValue = 1;
 	m_linear = false;
     m_ssb = false;
@@ -201,7 +201,7 @@ bool SpectrumSettings::deserialize(const QByteArray& data)
 		d.readBool(9, &m_displayHistogram, false);
 		d.readS32(10, &m_decay, 1);
 		d.readBool(11, &m_displayGrid, false);
-		d.readS32(13, &m_displayGridIntensity, 5);
+		d.readS32(13, &m_displayGridIntensity, 15);
 		d.readS32(14, &m_decayDivisor, 1);
 		d.readS32(15, &m_histogramStroke, 30);
 		d.readBool(16, &m_displayCurrent, true);

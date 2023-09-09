@@ -127,6 +127,7 @@ MainWindow::MainWindow(qtwebapp::LoggerWithFile *logger, const MainParser& parse
     m_profileDialog(nullptr),
     m_fftWisdomProcess(nullptr)
 {
+    setWindowTitle("BWE Solutions - SDR Analyzer");
 #ifdef ANDROID
     bool showWelcome = true;
 #else

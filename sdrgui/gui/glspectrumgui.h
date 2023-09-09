@@ -91,6 +91,12 @@ private:
     QString displayScaled(int64_t value, char type, int precision, bool showMult);
 
 private slots:
+    void open_adsb();
+    void open_am();
+    void open_ssb();
+    void open_wfm();
+    void openIqRecord();
+    void openIqReplay();
 	void on_fftWindow_currentIndexChanged(int index);
 	void on_fftSize_currentIndexChanged(int index);
 	void on_fftOverlap_valueChanged(int value);
@@ -146,6 +152,8 @@ private slots:
 signals:
     // Emitted when user selects an annotation marker
     void requestCenterFrequency(qint64 frequency);
+    void addChannel(int channelPluginIndex);
+    void openReplay(int selectedDeviceIndex);
 };
 
 #endif // INCLUDE_GLSPECTRUMGUI_H
