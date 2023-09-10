@@ -382,6 +382,14 @@ void MainWindow::sampleSourceAdd(Workspace *deviceWorkspace, Workspace *spectrum
 
     QObject::connect(
         mainSpectrumGUI,
+        &MainSpectrumGUI::addChannel,
+        this,
+        [=](int selectedChannelIndex){ this->channelAddClicked(deviceWorkspace, deviceSetIndex, selectedChannelIndex); }
+    );
+
+
+    QObject::connect(
+        mainSpectrumGUI,
         &MainSpectrumGUI::requestCenterFrequency,
         this,
         &MainWindow::mainSpectrumRequestDeviceCenterFrequency
@@ -1077,6 +1085,8 @@ void MainWindow::removeDeviceSet(int deviceSetIndex)
 void MainWindow::removeLastDeviceSet()
 {
     int removedDeviceSetIndex = m_deviceUIs.size() - 1;
+
+    qDebug("MainWindow::removeLastDeviceSet: index: %d",removedDeviceSetIndex);
 
     if (m_deviceUIs.back()->m_deviceSourceEngine) // source tab
     {
@@ -2469,6 +2479,21 @@ void MainWindow::channelMoveToDeviceSet(ChannelGUI *gui, int dsIndexDestination)
         deviceUI->removeChannelMarker(&gui->getChannelMarker());
         destDeviceUI->addChannelMarker(&gui->getChannelMarker());
     }
+}
+
+void MainWindow::openIqReplayDialog(int selectedDeviceIndex)
+{
+    qDebug("MainWindow::deviceSetIndex FileInput as IQ Replay -> %d - %d - %d", selectedDeviceIndex, m_workspaces[0]->getIndex(), m_workspaces.size());
+
+    int deviceIndexs = DeviceEnumerator::instance()->getFileInputDeviceIndex();
+
+    deleteChannel(saveDeviceIndex, deviceIndexs);
+    removeDeviceSet(saveDeviceIndex);
+    sampleSourceAdd(m_workspaces[0], m_workspaces[0], deviceIndexs);
+    saveDeviceIndex = m_deviceUIs.size();
+    saveDeviceIndex = saveDeviceIndex - 1;
+    qDebug() << m_deviceUIs.size();
+    qDebug("MainWindow::deviceSetIndex saveDeviceIndex -> %d", saveDeviceIndex);
 }
 
 void MainWindow::channelDuplicate(ChannelGUI *sourceChannelGUI)

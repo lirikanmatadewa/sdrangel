@@ -68,7 +68,7 @@ MainSpectrumGUI::MainSpectrumGUI(GLSpectrum *spectrum, GLSpectrumGUI *spectrumGU
     m_titleLabel->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Fixed);
 
     m_helpButton = new QPushButton();
-    m_helpButton->setFixedSize(20, 20);
+    m_helpButton->setFixedSize(0, 0);
     QIcon helpIcon(":/help.png");
     m_helpButton->setIcon(helpIcon);
     m_helpButton->setToolTip("Show spectrum window documentation in browser");
@@ -136,8 +136,8 @@ MainSpectrumGUI::MainSpectrumGUI(GLSpectrum *spectrum, GLSpectrumGUI *spectrumGU
     m_bottomLayout->addWidget(m_sizeGripBottomRight, 0, Qt::AlignBottom | Qt::AlignRight);
 
     m_layouts->addLayout(m_topLayout);
-    m_layouts->addLayout(m_spectrumLayout);
     m_layouts->addLayout(m_spectrumGUILayout);
+    m_layouts->addLayout(m_spectrumLayout);
     m_layouts->addLayout(m_bottomLayout);
 
     QObjectCleanupHandler().add(layout());
@@ -152,6 +152,7 @@ MainSpectrumGUI::MainSpectrumGUI(GLSpectrum *spectrum, GLSpectrumGUI *spectrumGU
 
     connect(spectrum->getSpectrumView(), &GLSpectrumView::requestCenterFrequency, this, &MainSpectrumGUI::onRequestCenterFrequency);
     connect(spectrumGUI, &GLSpectrumGUI::requestCenterFrequency, this, &MainSpectrumGUI::onRequestCenterFrequency);
+    connect(spectrumGUI, &GLSpectrumGUI::addChannel, this, &MainSpectrumGUI::onRequestAddChannel);
 
     m_resizer.enableChildMouseTracking();
     shrinkWindow();
@@ -371,4 +372,10 @@ QString MainSpectrumGUI::getDeviceTypeTag()
 void MainSpectrumGUI::onRequestCenterFrequency(qint64 frequency)
 {
     emit requestCenterFrequency(m_deviceSetIndex, frequency);
+}
+
+
+void MainSpectrumGUI::onRequestAddChannel(int channelPluginIndex)
+{
+    emit addChannel(channelPluginIndex);
 }

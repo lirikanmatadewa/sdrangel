@@ -110,12 +110,14 @@ private slots:
     void shrinkWindow();
     void maximizeWindow();
     void onRequestCenterFrequency(qint64 frequency);
+    void onRequestAddChannel(int channelPluginIndex);
 
 signals:
     void closing();
     void moveToWorkspace(int workspaceIndex);
     void forceShrink();
     void requestCenterFrequency(int deviceSetIndex, qint64 frequency); // an action from the user to move device center frequency
+    void addChannel(int channelPluginIndex);
 };
 
 

@@ -87,8 +87,10 @@ public slots:
     void channelMove(ChannelGUI *gui, int wsIndexDestination);
     void channelDuplicate(ChannelGUI *gui);
     void channelMoveToDeviceSet(ChannelGUI *gui, int dsIndexDestination);
+    void openIqReplayDialog(int selectedDeviceIndex);
 
 private:
+    int indexOpenIqReplay = -1;
     enum {
 		PGroup,
 		PItem
@@ -132,6 +134,8 @@ private:
     ProfileDialog *m_profileDialog;
 
 	QProcess *m_fftWisdomProcess;
+
+    int saveDeviceIndex;
 
 	void loadSettings();
 	void loadDeviceSetPresetSettings(const Preset* preset, int deviceSetIndex);

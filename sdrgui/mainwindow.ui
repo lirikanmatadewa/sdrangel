@@ -1013,7 +1013,7 @@
   <customwidget>
    <class>ChannelsDock</class>
    <extends>QDockWidget</extends>
-   <header>gui/channelsdock.h</header>
+   <header location="global">gui/channelsdock.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>

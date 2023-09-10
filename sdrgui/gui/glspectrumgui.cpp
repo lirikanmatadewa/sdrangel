@@ -59,6 +59,7 @@ GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
     ui->setupUi(this);
 
     // Use the custom flow layout for the 3 main horizontal layouts (lines)
+    ui->verticalLayout->removeItem(ui->Line7Layout);
     ui->verticalLayout->removeItem(ui->Line6Layout);
     ui->verticalLayout->removeItem(ui->Line5Layout);
     ui->verticalLayout->removeItem(ui->Line4Layout);
@@ -72,6 +73,7 @@ GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
     flowLayout->addItem(ui->Line4Layout);
     flowLayout->addItem(ui->Line5Layout);
     flowLayout->addItem(ui->Line6Layout);
+    flowLayout->addItem(ui->Line7Layout);
     ui->verticalLayout->addItem(flowLayout);
 
     on_linscale_toggled(false);
@@ -120,6 +122,13 @@ GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
     connect(calibrationPointsRightClickEnabler, SIGNAL(rightClick(const QPoint &)), this, SLOT(openCalibrationPointsDialog(const QPoint &)));
 
     DialPopup::addPopupsToChildDials(this);
+
+    connect(ui->adsb, SIGNAL(clicked()), this, SLOT(open_adsb()));
+    connect(ui->am, SIGNAL(clicked()), this, SLOT(open_am()));
+    connect(ui->ssb, SIGNAL(clicked()), this, SLOT(open_ssb()));
+    connect(ui->wfm, SIGNAL(clicked()), this, SLOT(open_wfm()));
+    connect(ui->iqRecord, SIGNAL(clicked()), this, SLOT(openIqRecord()));
+    connect(ui->iqReplay, SIGNAL(clicked()), this, SLOT(openIqReplay()));
 
     displaySettings();
     setAveragingCombo();

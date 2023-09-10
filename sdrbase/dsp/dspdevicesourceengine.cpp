@@ -631,8 +631,7 @@ void DSPDeviceSourceEngine::handleInputMessages()
             if (m_deviceSampleSource)
             {
                 MessageQueue *guiMessageQueue = m_deviceSampleSource->getMessageQueueToGUI();
-                qDebug("DSPDeviceSourceEngine::handleInputMessages: DSPSignalNotification: guiMessageQueue: %p", guiMessageQueue);
-
+			
                 if (guiMessageQueue)
                 {
                     DSPSignalNotification* rep = new DSPSignalNotification(*notif); // make a copy for the source GUI

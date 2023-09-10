@@ -74,7 +74,7 @@ ChannelGUI::ChannelGUI(QWidget *parent) :
     m_titleLabel->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Fixed);
 
     m_helpButton = new QPushButton();
-    m_helpButton->setFixedSize(20, 20);
+    m_helpButton->setFixedSize(0, 0);
     QIcon helpIcon(":/help.png");
     m_helpButton->setIcon(helpIcon);
     m_helpButton->setToolTip("Show channel documentation in browser");
