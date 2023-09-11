@@ -1236,6 +1236,12 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
+       <property name="minimumSize">
+        <size>
+         <width>50</width>
+         <height>0</height>
+        </size>
+       </property>
        <property name="maximumSize">
         <size>
          <width>40</width>
@@ -1348,6 +1354,12 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
+       <property name="minimumSize">
+        <size>
+         <width>70</width>
+         <height>0</height>
+        </size>
+       </property>
        <property name="maximumSize">
         <size>
          <width>60</width>
@@ -1367,6 +1379,12 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
+       <property name="minimumSize">
+        <size>
+         <width>70</width>
+         <height>0</height>
+        </size>
+       </property>
        <property name="maximumSize">
         <size>
          <width>60</width>
@@ -1375,25 +1393,6 @@
        </property>
        <property name="text">
         <string>IQ Replay</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="fillLabel4">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="minimumSize">
-        <size>
-         <width>5</width>
-         <height>22</height>
-        </size>
-       </property>
-       <property name="text">
-        <string/>
        </property>
       </widget>
      </item>
