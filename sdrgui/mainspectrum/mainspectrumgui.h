@@ -20,6 +20,7 @@
 
 #include <QMdiSubWindow>
 #include <QByteArray>
+#include <QMap>
 
 #include "util/messagequeue.h"
 #include "gui/framelesswindowresizer.h"
@@ -58,6 +59,7 @@ public:
     int getWorkspaceIndex() const { return m_workspaceIndex; }
     void setGeometryBytes(const QByteArray& blob) { m_geometryBytes = blob; }
     const QByteArray& getGeometryBytes() const { return m_geometryBytes; }
+    void setRxChannel(QMap<QString, int> rx_channel);
 
 private:
     GLSpectrum *m_spectrum;
@@ -91,6 +93,7 @@ private:
     QMdiArea *m_mdi;                    // Saved pointer to MDI when in full screen mode
     static const int m_MinimumWidth = 380;
     static const int m_MinimumHeight = 200 + 20 + 10 + 6*22 + 5;
+    QMap<QString, int> rx_channel;
 
 protected:
     void closeEvent(QCloseEvent *event) override;

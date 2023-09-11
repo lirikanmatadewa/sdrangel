@@ -35,7 +35,7 @@ void FileSinkSettings::resetToDefaults()
     m_inputFrequencyOffset = 0;
     m_fileRecordName = "";
     m_rgbColor = QColor(140, 4, 4).rgb();
-    m_title = "File Sink";
+    m_title = "IQRecord";
     m_log2Decim = 0;
     m_spectrumGUI = nullptr;
     m_spectrumSquelchMode = false;
@@ -122,7 +122,7 @@ bool FileSinkSettings::deserialize(const QByteArray& data)
         d.readString(3, &m_fileRecordName, "");
         d.readS32(4, &m_streamIndex, 0);
         d.readU32(5, &m_rgbColor, QColor(0, 255, 255).rgb());
-        d.readString(6, &m_title, "File Sink");
+        d.readString(6, &m_title, "IQRecord");
         d.readBool(7, &m_useReverseAPI, false);
         d.readString(8, &m_reverseAPIAddress, "127.0.0.1");
         d.readU32(9, &tmp, 0);

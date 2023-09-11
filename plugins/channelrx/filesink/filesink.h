@@ -96,7 +96,7 @@ public:
 
     virtual void getIdentifier(QString& id) { id = objectName(); }
     virtual QString getIdentifier() const { return objectName(); }
-    virtual void getTitle(QString& title) { title = "File Sink"; }
+    virtual void getTitle(QString& title) { title = "IQ Record & Replay"; }
     virtual qint64 getCenterFrequency() const { return m_frequencyOffset; }
     virtual void setCenterFrequency(qint64) {}
 
