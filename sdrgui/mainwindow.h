@@ -23,7 +23,6 @@
 #include <QTimer>
 #include <QList>
 #include <QProcess>
-#include <QMap>
 
 #include "settings/mainsettings.h"
 #include "util/message.h"
@@ -96,7 +95,6 @@ private:
 		PGroup,
 		PItem
 	};
-	QMap<QString, int> rx_channel;
 
 	struct DeviceWidgetTabData
 	{

@@ -304,18 +304,6 @@ MainWindow::MainWindow(qtwebapp::LoggerWithFile* logger, const MainParser& parse
 		openConfigurationDialog(true);
 	}
 
-	qDebug() << "MainWindow::MainWindow: setting rx channel";
-
-	PluginAPI::ChannelRegistrations* channelRegistrations = m_pluginManager->getRxChannelRegistrations();
-	int rx_channel_counter = 0;
-
-	foreach(PluginAPI::ChannelRegistration cR, *channelRegistrations)
-	{
-		qDebug() << "rx_channel_counter: " << rx_channel_counter;
-		qDebug() << "cR.m_channelIdURI: " << cR.m_channelIdURI;
-		qDebug() << "cR.m_channelId: " << cR.m_channelId;
-		this->rx_channel[cR.m_channelId] = rx_channel_counter++;
-	}
 	qDebug() << "MainWindow::MainWindow: end";
 }
 
@@ -382,7 +370,22 @@ void MainWindow::sampleSourceAdd(Workspace* deviceWorkspace, Workspace* spectrum
 	m_deviceUIs.back()->m_mainSpectrumGUI->setWorkspaceIndex(spectrumWorkspace->getIndex());
 	MainSpectrumGUI* mainSpectrumGUI = m_deviceUIs.back()->m_mainSpectrumGUI;
 
-	mainSpectrumGUI->setRxChannel(this->rx_channel);
+	qDebug() << "MainWindow::MainWindow: setting rx channel";
+
+	PluginAPI::ChannelRegistrations* channelRegistrations = m_pluginManager->getRxChannelRegistrations();
+	QMap<QString, int> rx_channel;
+
+	int rx_channel_counter = 0;
+
+	foreach(PluginAPI::ChannelRegistration cR, *channelRegistrations)
+	{
+		qDebug() << "rx_channel_counter: " << rx_channel_counter;
+		qDebug() << "cR.m_channelIdURI: " << cR.m_channelIdURI;
+		qDebug() << "cR.m_channelId: " << cR.m_channelId;
+		rx_channel[cR.m_channelId] = rx_channel_counter++;
+	}
+
+	mainSpectrumGUI->setRxChannel(&rx_channel);
 
 	QObject::connect(
 		mainSpectrumGUI,

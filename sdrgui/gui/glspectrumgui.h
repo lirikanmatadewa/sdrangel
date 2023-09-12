@@ -23,6 +23,7 @@
 #define INCLUDE_GLSPECTRUMGUI_H
 
 #include <QWidget>
+#include <QMap>
 
 #include "dsp/dsptypes.h"
 #include "dsp/spectrumsettings.h"
@@ -42,26 +43,27 @@ class SDRGUI_API GLSpectrumGUI : public QWidget, public Serializable {
 	Q_OBJECT
 
 public:
-    enum AveragingMode
-    {
-        AvgModeNone,
-        AvgModeMoving,
-        AvgModeFixed,
-        AvgModeMax
-    };
+	enum AveragingMode
+	{
+		AvgModeNone,
+		AvgModeMoving,
+		AvgModeFixed,
+		AvgModeMax
+	};
 
 	explicit GLSpectrumGUI(QWidget* parent = NULL);
 	~GLSpectrumGUI();
 
 	void setBuddies(SpectrumVis* spectrumVis, GLSpectrum* glSpectrum);
-    void setFFTSize(int log2FFTSize);
+	void setFFTSize(int log2FFTSize);
 
 	void resetToDefaults();
 	virtual QByteArray serialize() const;
 	virtual bool deserialize(const QByteArray& data);
-    virtual void formatTo(SWGSDRangel::SWGObject *swgObject) const;
-    virtual void updateFrom(const QStringList& keys, const SWGSDRangel::SWGObject *swgObject);
+	virtual void formatTo(SWGSDRangel::SWGObject* swgObject) const;
+	virtual void updateFrom(const QStringList& keys, const SWGSDRangel::SWGObject* swgObject);
 	void updateSettings();
+	void setRxChannel(QMap<QString, int>* rx_channel);
 
 private:
 	Ui::GLSpectrumGUI* ui;
@@ -69,17 +71,17 @@ private:
 	SpectrumVis* m_spectrumVis;
 	GLSpectrum* m_glSpectrum;
 	MessageQueue m_messageQueue;
-    SpectrumSettings m_settings;
-    bool m_doApplySettings;
+	SpectrumSettings m_settings;
+	bool m_doApplySettings;
 	Real m_calibrationShiftdB;
-    static const int m_fpsMs[];
-    SpectrumMarkersDialog *m_markersDialog;
+	static const int m_fpsMs[];
+	SpectrumMarkersDialog* m_markersDialog;
 
-    void blockApplySettings(bool block);
+	void blockApplySettings(bool block);
 	void applySettings();
-    void applySpectrumSettings();
-    void displaySettings();
-    void displayControls();
+	void applySpectrumSettings();
+	void displaySettings();
+	void displayControls();
 	void setAveragingCombo();
 	void setNumberStr(int n, QString& s);
 	void setNumberStr(float v, int decimalPlaces, QString& s);
@@ -87,16 +89,18 @@ private:
 	void setFFTSizeToolitp();
 	void setMaximumOverlap();
 	bool handleMessage(const Message& message);
-    void displayGotoMarkers();
-    QString displayScaled(int64_t value, char type, int precision, bool showMult);
+	void displayGotoMarkers();
+	QString displayScaled(int64_t value, char type, int precision, bool showMult);
+
+	QMap<QString, int> rx_channel;
 
 private slots:
-    void open_adsb();
-    void open_am();
-    void open_ssb();
-    void open_wfm();
-    void openIqRecord();
-    void openIqReplay();
+	void open_adsb();
+	void open_am();
+	void open_ssb();
+	void open_wfm();
+	void openIqRecord();
+	void openIqReplay();
 	void on_fftWindow_currentIndexChanged(int index);
 	void on_fftSize_currentIndexChanged(int index);
 	void on_fftOverlap_valueChanged(int value);
@@ -107,38 +111,38 @@ private slots:
 	void on_decay_valueChanged(int index);
 	void on_decayDivisor_valueChanged(int index);
 	void on_stroke_valueChanged(int index);
-    void on_spectrogramStyle_currentIndexChanged(int index);
-    void on_colorMap_currentIndexChanged(int index);
+	void on_spectrogramStyle_currentIndexChanged(int index);
+	void on_colorMap_currentIndexChanged(int index);
 	void on_gridIntensity_valueChanged(int index);
-    void on_truncateScale_toggled(bool checked);
+	void on_truncateScale_toggled(bool checked);
 	void on_traceIntensity_valueChanged(int index);
 	void on_averagingMode_currentIndexChanged(int index);
-    void on_averaging_currentIndexChanged(int index);
-    void on_linscale_toggled(bool checked);
-    void on_wsSpectrum_toggled(bool checked);
+	void on_averaging_currentIndexChanged(int index);
+	void on_linscale_toggled(bool checked);
+	void on_wsSpectrum_toggled(bool checked);
 	void on_markers_clicked(bool checked);
-    void on_save_clicked(bool checked);
+	void on_save_clicked(bool checked);
 
 	void on_waterfall_toggled(bool checked);
 	void on_spectrogram_toggled(bool checked);
 	void on_histogram_toggled(bool checked);
 	void on_maxHold_toggled(bool checked);
-    void on_currentLine_toggled(bool checked);
-    void on_currentFill_toggled(bool checked);
-    void on_currentGradient_toggled(bool checked);
+	void on_currentLine_toggled(bool checked);
+	void on_currentFill_toggled(bool checked);
+	void on_currentGradient_toggled(bool checked);
 	void on_invertWaterfall_toggled(bool checked);
 	void on_grid_toggled(bool checked);
 	void on_clearSpectrum_clicked(bool checked);
-    void on_freeze_toggled(bool checked);
+	void on_freeze_toggled(bool checked);
 	void on_calibration_toggled(bool checked);
-    void on_gotoMarker_currentIndexChanged(int index);
-    void on_showAllControls_toggled(bool checked);
+	void on_gotoMarker_currentIndexChanged(int index);
+	void on_showAllControls_toggled(bool checked);
 
-    void on_measure_clicked(bool checked);
-    void on_resetMeasurements_clicked(bool checked);
+	void on_measure_clicked(bool checked);
+	void on_resetMeasurements_clicked(bool checked);
 
 	void handleInputMessages();
-    void openWebsocketSpectrumSettingsDialog(const QPoint& p);
+	void openWebsocketSpectrumSettingsDialog(const QPoint& p);
 	void openCalibrationPointsDialog(const QPoint& p);
 
 	void updateHistogramMarkers();
@@ -146,14 +150,14 @@ private slots:
 	void updateAnnotationMarkers();
 	void updateMarkersDisplay();
 	void updateCalibrationPoints();
-    void updateMeasurements();
-    void closeMarkersDialog();
+	void updateMeasurements();
+	void closeMarkersDialog();
 
 signals:
-    // Emitted when user selects an annotation marker
-    void requestCenterFrequency(qint64 frequency);
-    void addChannel(int channelPluginIndex);
-    void openReplay(int selectedDeviceIndex);
+	// Emitted when user selects an annotation marker
+	void requestCenterFrequency(qint64 frequency);
+	void addChannel(int channelPluginIndex);
+	void openReplay(int selectedDeviceIndex);
 };
 
 #endif // INCLUDE_GLSPECTRUMGUI_H

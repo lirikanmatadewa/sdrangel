@@ -1197,20 +1197,32 @@ void GLSpectrumGUI::open_am()
 
 void GLSpectrumGUI::open_ssb()
 {
-	int selectedChannelIndex = 2;   // NFMDemod
-	emit addChannel(selectedChannelIndex);
+	try {
+		emit addChannel(this->rx_channel["NFMDemod"]);
+	}
+	catch (...) {
+		;
+	}
 }
 
 void GLSpectrumGUI::open_wfm()
 {
-	int selectedChannelIndex = 3;  // WFMDemod
-	emit addChannel(selectedChannelIndex);
+	try {
+		emit addChannel(this->rx_channel["WFMDemod"]);
+	}
+	catch (...) {
+		;
+	}
 }
 
 void GLSpectrumGUI::openIqRecord()
 {
-	int selectedChannelIndex = 4;  // FileSink
-	emit addChannel(selectedChannelIndex);
+	try {
+		emit addChannel(this->rx_channel["FileSink"]);
+	}
+	catch (...) {
+		;
+	}
 }
 
 void GLSpectrumGUI::openIqReplay()
@@ -1221,4 +1233,17 @@ void GLSpectrumGUI::openIqReplay()
 	int selectedDeviceIndex = 2;
 	emit openReplay(selectedDeviceIndex);
 	qDebug("GLSpectrum::Emit -> %d", selectedDeviceIndex);
+}
+
+void GLSpectrumGUI::setRxChannel(QMap<QString, int>* rx_channel)
+{
+	qDebug() << "MainSpectrumGUI::setRxChannel";
+
+	this->rx_channel.clear();
+
+	for (auto i = rx_channel->cbegin(), end = rx_channel->cend(); i != end; ++i)
+	{
+		this->rx_channel[i.key()] = i.value();
+		qDebug() << i.key() << " = " << i.value();
+	}
 }

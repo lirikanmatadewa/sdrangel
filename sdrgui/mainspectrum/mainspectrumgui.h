@@ -20,7 +20,6 @@
 
 #include <QMdiSubWindow>
 #include <QByteArray>
-#include <QMap>
 
 #include "util/messagequeue.h"
 #include "gui/framelesswindowresizer.h"
@@ -36,91 +35,90 @@ class QSizeGrip;
 
 class SDRGUI_API MainSpectrumGUI : public QMdiSubWindow
 {
-    Q_OBJECT
+	Q_OBJECT
 public:
-    enum DeviceType
-    {
-        DeviceRx,
-        DeviceTx,
-        DeviceMIMO
-    };
+	enum DeviceType
+	{
+		DeviceRx,
+		DeviceTx,
+		DeviceMIMO
+	};
 
-	MainSpectrumGUI(GLSpectrum *spectrum, GLSpectrumGUI *spectrumGUI, QWidget *parent = nullptr);
+	MainSpectrumGUI(GLSpectrum* spectrum, GLSpectrumGUI* spectrumGUI, QWidget* parent = nullptr);
 	virtual ~MainSpectrumGUI();
 
-    void setDeviceType(DeviceType type);
-    DeviceType getDeviceType() const { return m_deviceType; }
-    void setTitle(const QString& title);
-    QString getTitle() const;
-    void setToolTip(const QString& tooltip);
-    void setIndex(int index);
-    int getIndex() const { return m_deviceSetIndex; }
-    void setWorkspaceIndex(int index);
-    int getWorkspaceIndex() const { return m_workspaceIndex; }
-    void setGeometryBytes(const QByteArray& blob) { m_geometryBytes = blob; }
-    const QByteArray& getGeometryBytes() const { return m_geometryBytes; }
-    void setRxChannel(QMap<QString, int> rx_channel);
+	void setDeviceType(DeviceType type);
+	DeviceType getDeviceType() const { return m_deviceType; }
+	void setTitle(const QString& title);
+	QString getTitle() const;
+	void setToolTip(const QString& tooltip);
+	void setIndex(int index);
+	int getIndex() const { return m_deviceSetIndex; }
+	void setWorkspaceIndex(int index);
+	int getWorkspaceIndex() const { return m_workspaceIndex; }
+	void setGeometryBytes(const QByteArray& blob) { m_geometryBytes = blob; }
+	const QByteArray& getGeometryBytes() const { return m_geometryBytes; }
+	void setRxChannel(QMap<QString, int>* rx_channel);
 
 private:
-    GLSpectrum *m_spectrum;
-    GLSpectrumGUI *m_spectrumGUI;
-    int m_workspaceIndex;
-    QByteArray m_geometryBytes;
-    DeviceType m_deviceType;
-    int m_deviceSetIndex;
-    QString m_deviceTitle;
-    QString m_deviceTooltip;
-    QString m_helpURL;
+	GLSpectrum* m_spectrum;
+	GLSpectrumGUI* m_spectrumGUI;
+	int m_workspaceIndex;
+	QByteArray m_geometryBytes;
+	DeviceType m_deviceType;
+	int m_deviceSetIndex;
+	QString m_deviceTitle;
+	QString m_deviceTooltip;
+	QString m_helpURL;
 
-    QLabel *m_indexLabel;
-    QLabel *m_spacerLabel;
-    QLabel *m_titleLabel;
-    QPushButton *m_helpButton;
-    QPushButton *m_moveButton;
-    QPushButton *m_shrinkButton;
-    QPushButton *m_maximizeButton;
-    QPushButton *m_hideButton;
-    QLabel *m_statusLabel;
-    QVBoxLayout *m_layouts;
-    QHBoxLayout *m_topLayout;
-    QHBoxLayout *m_spectrumLayout;
-    QHBoxLayout *m_spectrumGUILayout;
-    QHBoxLayout *m_bottomLayout;
-    QSizeGrip *m_sizeGripBottomRight;
-    bool m_drag;
-    QPoint m_DragPosition;
-    FramelessWindowResizer m_resizer;
-    QMdiArea *m_mdi;                    // Saved pointer to MDI when in full screen mode
-    static const int m_MinimumWidth = 380;
-    static const int m_MinimumHeight = 200 + 20 + 10 + 6*22 + 5;
-    QMap<QString, int> rx_channel;
+	QLabel* m_indexLabel;
+	QLabel* m_spacerLabel;
+	QLabel* m_titleLabel;
+	QPushButton* m_helpButton;
+	QPushButton* m_moveButton;
+	QPushButton* m_shrinkButton;
+	QPushButton* m_maximizeButton;
+	QPushButton* m_hideButton;
+	QLabel* m_statusLabel;
+	QVBoxLayout* m_layouts;
+	QHBoxLayout* m_topLayout;
+	QHBoxLayout* m_spectrumLayout;
+	QHBoxLayout* m_spectrumGUILayout;
+	QHBoxLayout* m_bottomLayout;
+	QSizeGrip* m_sizeGripBottomRight;
+	bool m_drag;
+	QPoint m_DragPosition;
+	FramelessWindowResizer m_resizer;
+	QMdiArea* m_mdi;                    // Saved pointer to MDI when in full screen mode
+	static const int m_MinimumWidth = 380;
+	static const int m_MinimumHeight = 200 + 20 + 10 + 6 * 22 + 5;
 
 protected:
-    void closeEvent(QCloseEvent *event) override;
-    void leaveEvent(QEvent *event) override;
-    void mousePressEvent(QMouseEvent* event) override;
-    void mouseReleaseEvent(QMouseEvent* event) override;
-    void mouseMoveEvent(QMouseEvent* event) override;
+	void closeEvent(QCloseEvent* event) override;
+	void leaveEvent(QEvent* event) override;
+	void mousePressEvent(QMouseEvent* event) override;
+	void mouseReleaseEvent(QMouseEvent* event) override;
+	void mouseMoveEvent(QMouseEvent* event) override;
 
 private:
-    bool isOnMovingPad();
-    QString getDeviceTypeColor();
-    QString getDeviceTypeTag();
+	bool isOnMovingPad();
+	QString getDeviceTypeColor();
+	QString getDeviceTypeTag();
 
 private slots:
-    void showHelp();
-    void openMoveToWorkspaceDialog();
-    void shrinkWindow();
-    void maximizeWindow();
-    void onRequestCenterFrequency(qint64 frequency);
-    void onRequestAddChannel(int channelPluginIndex);
+	void showHelp();
+	void openMoveToWorkspaceDialog();
+	void shrinkWindow();
+	void maximizeWindow();
+	void onRequestCenterFrequency(qint64 frequency);
+	void onRequestAddChannel(int channelPluginIndex);
 
 signals:
-    void closing();
-    void moveToWorkspace(int workspaceIndex);
-    void forceShrink();
-    void requestCenterFrequency(int deviceSetIndex, qint64 frequency); // an action from the user to move device center frequency
-    void addChannel(int channelPluginIndex);
+	void closing();
+	void moveToWorkspace(int workspaceIndex);
+	void forceShrink();
+	void requestCenterFrequency(int deviceSetIndex, qint64 frequency); // an action from the user to move device center frequency
+	void addChannel(int channelPluginIndex);
 };
 
 

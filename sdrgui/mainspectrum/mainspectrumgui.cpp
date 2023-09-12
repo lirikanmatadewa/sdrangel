@@ -24,6 +24,7 @@
 #include <QObjectCleanupHandler>
 #include <QDesktopServices>
 #include <QMdiArea>
+#include <QMap>
 
 #include "mainwindow.h"
 #include "gui/glspectrum.h"
@@ -378,32 +379,12 @@ void MainSpectrumGUI::onRequestCenterFrequency(qint64 frequency)
 
 void MainSpectrumGUI::onRequestAddChannel(int channelPluginIndex)
 {
-	QMap<int, QString> typeToString;
-
-	// LMD: Add more type for more tools
-	typeToString[0] = "ADSBDemod";
-	typeToString[1] = "AMDemod";
-	typeToString[2] = "NFMDemod";
-	typeToString[3] = "WFMDemod";
-	typeToString[4] = "FileSink";
-
-	try {
-		emit addChannel(this->rx_channel[typeToString[channelPluginIndex]]);
-	}
-	catch (...) {
-		;
-	}
+	emit addChannel(channelPluginIndex);
 }
 
-void MainSpectrumGUI::setRxChannel(QMap<QString, int> rx_channel)
+void MainSpectrumGUI::setRxChannel(QMap<QString, int>* rx_channel)
 {
 	qDebug() << "MainSpectrumGUI::setRxChannel";
 
-	this->rx_channel.clear();
-
-	for (auto i = rx_channel.cbegin(), end = rx_channel.cend(); i != end; ++i)
-	{
-		this->rx_channel[i.key()] = i.value();
-		qDebug() << i.key() << " = " << i.value();
-	}
+	m_spectrumGUI->setRxChannel(rx_channel);
 }
