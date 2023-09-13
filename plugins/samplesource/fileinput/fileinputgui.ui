@@ -38,7 +38,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>FileInput</string>
+   <string>IQReplay</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="spacing">

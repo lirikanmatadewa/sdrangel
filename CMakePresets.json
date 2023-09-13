@@ -53,7 +53,7 @@
         "ENABLE_BLADERF": "ON",
         "ENABLE_HACKRF": "ON",
         "ENABLE_IIO": "ON",
-        "ENABLE_MIRISDR": "OFF",
+        "ENABLE_MIRISDR": "ON",
         "ENABLE_PERSEUS": "ON",
         "ENABLE_RTLSDR": "ON",
         "ENABLE_SDRPLAY": "ON",

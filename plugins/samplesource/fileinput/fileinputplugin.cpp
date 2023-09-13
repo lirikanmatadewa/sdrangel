@@ -63,7 +63,7 @@ void FileInputPlugin::enumOriginDevices(QStringList& listedHwIds, OriginDevices&
     }
 
     originDevices.append(OriginDevice(
-        "FileInput",
+        "IQReplay",
         m_hardwareID,
         QString(),
         0,

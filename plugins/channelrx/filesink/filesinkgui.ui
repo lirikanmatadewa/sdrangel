@@ -29,7 +29,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>File Sink</string>
+   <string>IQRecord</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>

@@ -1185,14 +1185,22 @@ void GLSpectrumGUI::updateMeasurements()
 
 void GLSpectrumGUI::open_adsb()
 {
-	int selectedChannelIndex = 0;  // ADSBDemod
-	emit addChannel(selectedChannelIndex);
+	try {
+		emit addChannel(this->rx_channel["ADSBDemod"]);
+	}
+	catch (...) {
+		;
+	}
 }
 
 void GLSpectrumGUI::open_am()
 {
-	int selectedChannelIndex = 1;  // AMDemod
-	emit addChannel(selectedChannelIndex);
+	try {
+		emit addChannel(this->rx_channel["AMDemod"]);
+	}
+	catch (...) {
+		;
+	}
 }
 
 void GLSpectrumGUI::open_ssb()

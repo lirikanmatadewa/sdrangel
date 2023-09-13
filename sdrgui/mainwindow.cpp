@@ -2515,12 +2515,13 @@ void MainWindow::openIqReplayDialog(int selectedDeviceIndex)
 	qDebug("MainWindow::deviceSetIndex FileInput as IQ Replay -> %d - %d - %d", selectedDeviceIndex, m_workspaces[0]->getIndex(), m_workspaces.size());
 
 	int deviceIndexs = DeviceEnumerator::instance()->getFileInputDeviceIndex();
+	saveDeviceIndex = m_deviceUIs.size();
 
 	deleteChannel(saveDeviceIndex, deviceIndexs);
 	removeDeviceSet(saveDeviceIndex);
 	sampleSourceAdd(m_workspaces[0], m_workspaces[0], deviceIndexs);
-	saveDeviceIndex = m_deviceUIs.size();
-	saveDeviceIndex = saveDeviceIndex - 1;
+	
+	saveDeviceIndex -= 1;
 	qDebug() << m_deviceUIs.size();
 	qDebug("MainWindow::deviceSetIndex saveDeviceIndex -> %d", saveDeviceIndex);
 }
