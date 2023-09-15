@@ -1206,7 +1206,7 @@ void GLSpectrumGUI::open_am()
 void GLSpectrumGUI::open_ssb()
 {
 	try {
-		emit addChannel(this->rx_channel["NFMDemod"]);
+		emit addChannel(this->rx_channel["SSBDemod"]);
 	}
 	catch (...) {
 		;

@@ -20,6 +20,8 @@
 #include <QTime>
 #include <QMessageBox>
 
+#include "gui/channeladddialog.h"
+
 #include "device/deviceuiset.h"
 #include "device/deviceapi.h"
 #include "gui/basicchannelsettingsdialog.h"
@@ -80,7 +82,7 @@ bool FileSinkGUI::handleMessage(const Message& message)
 		DSPSignalNotification notif = (const DSPSignalNotification&)message;
 		m_deviceCenterFrequency = notif.getCenterFrequency();
 		m_basebandSampleRate = notif.getSampleRate();
-		ui->deltaFrequency->setValueRange(false, 8, -m_basebandSampleRate / 2, m_basebandSampleRate / 2);
+		//        ui->deltaFrequency->setValueRange(false, 8, -m_basebandSampleRate/2, m_basebandSampleRate/2);
 		ui->deltaFrequencyLabel->setToolTip(tr("Range %1 %L2 Hz").arg(QChar(0xB1)).arg(m_basebandSampleRate / 2));
 		updateAbsoluteCenterFrequency();
 		displayRate();
@@ -102,7 +104,7 @@ bool FileSinkGUI::handleMessage(const Message& message)
 		const FileSink::MsgConfigureFileSink& cfg = (FileSink::MsgConfigureFileSink&)message;
 		m_settings = cfg.getSettings();
 		blockApplySettings(true);
-		ui->glSpectrumGUI->updateSettings();
+		//        ui->glSpectrumGUI->updateSettings();
 		m_channelMarker.updateSettings(static_cast<const ChannelMarker*>(m_settings.m_channelMarker));
 		displaySettings();
 		blockApplySettings(false);
@@ -122,9 +124,9 @@ bool FileSinkGUI::handleMessage(const Message& message)
 	}
 	else if (FileSinkMessages::MsgConfigureSpectrum::match(message))
 	{
-		const FileSinkMessages::MsgConfigureSpectrum& cfg = (FileSinkMessages::MsgConfigureSpectrum&)message;
-		ui->glSpectrum->setSampleRate(cfg.getSampleRate());
-		ui->glSpectrum->setCenterFrequency(cfg.getCenterFrequency());
+		//        const FileSinkMessages::MsgConfigureSpectrum& cfg = (FileSinkMessages::MsgConfigureSpectrum&) message;
+		//        ui->glSpectrum->setSampleRate(cfg.getSampleRate());
+		//        ui->glSpectrum->setCenterFrequency(cfg.getCenterFrequency());
 		return true;
 	}
 	else if (FileSinkMessages::MsgReportSquelch::match(message))
@@ -149,7 +151,7 @@ bool FileSinkGUI::handleMessage(const Message& message)
 
 		if (report.getOpen())
 		{
-			ui->record->setStyleSheet("QToolButton { background-color : red; }");
+			ui->record->setStyleSheet("QToolButton { background-color : black; }");
 			ui->record->setChecked(true);
 		}
 		else
@@ -202,33 +204,35 @@ FileSinkGUI::FileSinkGUI(PluginAPI* pluginAPI, DeviceUISet* deviceUISet, Baseban
 	connect(this, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(onMenuDialogCalled(const QPoint&)));
 
 	m_fileSink = (FileSink*)channelrx;
-	m_spectrumVis = m_fileSink->getSpectrumVis();
-	m_spectrumVis->setGLSpectrum(ui->glSpectrum);
-	m_fileSink->setMessageQueueToGUI(getInputMessageQueue());
+	//    m_spectrumVis = m_fileSink->getSpectrumVis();
+	//	m_spectrumVis->setGLSpectrum(ui->glSpectrum);
+	//    m_fileSink->setMessageQueueToGUI(getInputMessageQueue());
 
-	ui->deltaFrequencyLabel->setText(QString("%1f").arg(QChar(0x94, 0x03)));
-	ui->deltaFrequency->setColorMapper(ColorMapper(ColorMapper::GrayGold));
-	ui->deltaFrequency->setValueRange(false, 8, -99999999, 99999999);
-	ui->position->setEnabled(m_fixedPosition);
-	ui->glSpectrumGUI->setBuddies(m_spectrumVis, ui->glSpectrum);
+
+
+	//	ui->deltaFrequencyLabel->setText(QString("%1f").arg(QChar(0x94, 0x03)));
+	////    ui->deltaFrequency->setColorMapper(ColorMapper(ColorMapper::GrayGold));
+	////    ui->deltaFrequency->setValueRange(false, 8, -99999999, 99999999);
+	//    ui->position->setEnabled(m_fixedPosition);
+	//    ui->glSpectrumGUI->setBuddies(m_spectrumVis, ui->glSpectrum);
 
 	m_channelMarker.blockSignals(true);
 	m_channelMarker.setColor(m_settings.m_rgbColor);
 	m_channelMarker.setCenterFrequency(0);
 	m_channelMarker.setBandwidth(m_basebandSampleRate);
-	m_channelMarker.setTitle("File Sink");
+	m_channelMarker.setTitle("IQRecord");
 	m_channelMarker.blockSignals(false);
 	m_channelMarker.setVisible(true); // activate signal on the last setting only
 
-	m_settings.setChannelMarker(&m_channelMarker);
-	m_settings.setSpectrumGUI(ui->glSpectrumGUI);
-	m_settings.setRollupState(&m_rollupState);
+	//    m_settings.setChannelMarker(&m_channelMarker);
+	//    m_settings.setSpectrumGUI(ui->glSpectrumGUI);
+	//    m_settings.setRollupState(&m_rollupState);
 
 	m_deviceUISet->addChannelMarker(&m_channelMarker);
 
 	connect(&m_channelMarker, SIGNAL(changedByCursor()), this, SLOT(channelMarkerChangedByCursor()));
 	connect(&m_channelMarker, SIGNAL(highlightedByCursor()), this, SLOT(channelMarkerHighlightedByCursor()));
-	connect(getInputMessageQueue(), SIGNAL(messageEnqueued()), this, SLOT(handleSourceMessages()));
+	//    connect(getInputMessageQueue(), SIGNAL(messageEnqueued()), this, SLOT(handleSourceMessages()));
 	connect(&(m_deviceUISet->m_deviceAPI->getMasterTimer()), SIGNAL(timeout()), this, SLOT(tick()));
 
 	displaySettings();
@@ -276,7 +280,7 @@ void FileSinkGUI::displaySettings()
 
 	ui->record->setEnabled(!m_settings.m_squelchRecordingEnable);
 	ui->squelchedRecording->setChecked(m_settings.m_squelchRecordingEnable);
-	ui->deltaFrequency->setValue(m_channelMarker.getCenterFrequency());
+	//    ui->deltaFrequency->setValue(m_channelMarker.getCenterFrequency());
 	ui->fileNameText->setText(m_settings.m_fileRecordName);
 	ui->decimationFactor->setCurrentIndex(m_settings.m_log2Decim);
 	ui->spectrumSquelch->setChecked(m_settings.m_spectrumSquelchMode);
@@ -330,7 +334,7 @@ void FileSinkGUI::channelMarkerChangedByCursor()
 		return;
 	}
 
-	ui->deltaFrequency->setValue(m_channelMarker.getCenterFrequency());
+	//    ui->deltaFrequency->setValue(m_channelMarker.getCenterFrequency());
 	m_settings.m_inputFrequencyOffset = m_channelMarker.getCenterFrequency();
 	setPosFromFrequency();
 	applySettings();
@@ -443,7 +447,7 @@ void FileSinkGUI::on_fixedPosition_toggled(bool checked)
 {
 	m_fixedPosition = checked;
 	m_channelMarker.setMovable(!checked);
-	ui->deltaFrequency->setEnabled(!checked);
+	//    ui->deltaFrequency->setEnabled(!checked);
 	ui->position->setEnabled(checked);
 
 	if (m_fixedPosition)
@@ -482,10 +486,66 @@ void FileSinkGUI::on_spectrumSquelch_toggled(bool checked)
 	applySettings();
 }
 
+void FileSinkGUI::on_squelchLevelInc_clicked(bool checked)
+{
+	(void)checked;
+	int value = m_settings.m_spectrumSquelch;
+	value++;
+	if (value > 0)
+	{
+		value = 0;
+	}
+	m_settings.m_spectrumSquelch = value;
+	ui->squelchLevelText->setText(tr("%1").arg(m_settings.m_spectrumSquelch));
+	applySettings();
+}
+
+void FileSinkGUI::on_squelchLevelDec_clicked(bool checked)
+{
+	(void)checked;
+	int value = m_settings.m_spectrumSquelch;
+	value--;
+	if (value < -120)
+	{
+		value = -120;
+	}
+	m_settings.m_spectrumSquelch = value;
+	ui->squelchLevelText->setText(tr("%1").arg(m_settings.m_spectrumSquelch));
+	applySettings();
+}
+
 void FileSinkGUI::on_squelchLevel_valueChanged(int value)
 {
 	m_settings.m_spectrumSquelch = value;
 	ui->squelchLevelText->setText(tr("%1").arg(m_settings.m_spectrumSquelch));
+	applySettings();
+}
+
+void FileSinkGUI::on_preRecordTimeInc_clicked(bool checked)
+{
+	(void)checked;
+	int value = m_settings.m_preRecordTime;
+	value++;
+	if (value > 10)
+	{
+		value = 10;
+	}
+	m_settings.m_preRecordTime = value;
+	ui->preRecordTimeText->setText(tr("%1").arg(m_settings.m_preRecordTime));
+	applySettings();
+}
+
+void FileSinkGUI::on_preRecordTimeDec_clicked(bool checked)
+{
+	(void)checked;
+	int value = m_settings.m_preRecordTime;
+	value--;
+	if (value < 0)
+	{
+		value = 0;
+	}
+	m_settings.m_preRecordTime = value;
+	ui->preRecordTimeText->setText(tr("%1").arg(m_settings.m_preRecordTime));
 	applySettings();
 }
 
@@ -494,6 +554,35 @@ void FileSinkGUI::on_preRecordTime_valueChanged(int value)
 	m_settings.m_preRecordTime = value;
 	ui->preRecordTimeText->setText(tr("%1").arg(m_settings.m_preRecordTime));
 	applySettings();
+}
+
+void FileSinkGUI::on_postSquelchTimeInc_clicked(bool checked)
+{
+	(void)checked;
+	int value = m_settings.m_squelchPostRecordTime;
+	value++;
+	if (value > 10)
+	{
+		value = 10;
+	}
+	m_settings.m_squelchPostRecordTime = value;
+	ui->postSquelchTimeText->setText(tr("%1").arg(m_settings.m_squelchPostRecordTime));
+	applySettings();
+}
+
+void FileSinkGUI::on_postSquelchTimeDec_clicked(bool checked)
+{
+	(void)checked;
+	int value = m_settings.m_squelchPostRecordTime;
+	value--;
+	if (value < 0)
+	{
+		value = 0;
+	}
+	m_settings.m_squelchPostRecordTime = value;
+	ui->postSquelchTimeText->setText(tr("%1").arg(m_settings.m_squelchPostRecordTime));
+	applySettings();
+
 }
 
 void FileSinkGUI::on_postSquelchTime_valueChanged(int value)
@@ -549,7 +638,7 @@ void FileSinkGUI::setFrequencyFromPos()
 		m_settings.m_log2Decim,
 		m_fixedShiftIndex);
 	m_channelMarker.setCenterFrequency(inputFrequencyOffset);
-	ui->deltaFrequency->setValue(m_channelMarker.getCenterFrequency());
+	//    ui->deltaFrequency->setValue(m_channelMarker.getCenterFrequency());
 	m_settings.m_inputFrequencyOffset = m_channelMarker.getCenterFrequency();
 	updateAbsoluteCenterFrequency();
 }
@@ -611,7 +700,7 @@ QString FileSinkGUI::displayScaled(uint64_t value, int precision)
 
 void FileSinkGUI::makeUIConnections()
 {
-	QObject::connect(ui->deltaFrequency, &ValueDialZ::changed, this, &FileSinkGUI::on_deltaFrequency_changed);
+	//    QObject::connect(ui->deltaFrequency, &ValueDialZ::changed, this, &FileSinkGUI::on_deltaFrequency_changed);
 	QObject::connect(ui->decimationFactor, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &FileSinkGUI::on_decimationFactor_currentIndexChanged);
 	QObject::connect(ui->fixedPosition, &QCheckBox::toggled, this, &FileSinkGUI::on_fixedPosition_toggled);
 	QObject::connect(ui->position, &QSlider::valueChanged, this, &FileSinkGUI::on_position_valueChanged);
@@ -622,6 +711,12 @@ void FileSinkGUI::makeUIConnections()
 	QObject::connect(ui->squelchedRecording, &ButtonSwitch::toggled, this, &FileSinkGUI::on_squelchedRecording_toggled);
 	QObject::connect(ui->record, &ButtonSwitch::toggled, this, &FileSinkGUI::on_record_toggled);
 	QObject::connect(ui->showFileDialog, &QPushButton::clicked, this, &FileSinkGUI::on_showFileDialog_clicked);
+	QObject::connect(ui->squelchLevelInc, &QPushButton::clicked, this, &FileSinkGUI::on_squelchLevelInc_clicked);
+	QObject::connect(ui->squelchLevelDec, &QPushButton::clicked, this, &FileSinkGUI::on_squelchLevelDec_clicked);
+	QObject::connect(ui->preRecordTimeInc, &QPushButton::clicked, this, &FileSinkGUI::on_preRecordTimeInc_clicked);
+	QObject::connect(ui->preRecordTimeDec, &QPushButton::clicked, this, &FileSinkGUI::on_preRecordTimeDec_clicked);
+	QObject::connect(ui->postSquelchTimeInc, &QPushButton::clicked, this, &FileSinkGUI::on_postSquelchTimeInc_clicked);
+	QObject::connect(ui->postSquelchTimeDec, &QPushButton::clicked, this, &FileSinkGUI::on_postSquelchTimeDec_clicked);
 }
 
 void FileSinkGUI::updateAbsoluteCenterFrequency()

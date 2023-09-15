@@ -121,6 +121,12 @@ private slots:
 	void onWidgetRolled(QWidget* widget, bool rollDown);
 	void onMenuDialogCalled(const QPoint& p);
 	void tick();
+	void on_squelchLevelDec_clicked(bool checked);
+	void on_squelchLevelInc_clicked(bool checked);
+	void on_preRecordTimeDec_clicked(bool checked);
+	void on_preRecordTimeInc_clicked(bool checked);
+	void on_postSquelchTimeInc_clicked(bool checked);
+	void on_postSquelchTimeDec_clicked(bool checked);
 };
 
 
