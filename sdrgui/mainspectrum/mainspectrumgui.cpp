@@ -154,6 +154,7 @@ MainSpectrumGUI::MainSpectrumGUI(GLSpectrum* spectrum, GLSpectrumGUI* spectrumGU
 	connect(spectrum->getSpectrumView(), &GLSpectrumView::requestCenterFrequency, this, &MainSpectrumGUI::onRequestCenterFrequency);
 	connect(spectrumGUI, &GLSpectrumGUI::requestCenterFrequency, this, &MainSpectrumGUI::onRequestCenterFrequency);
 	connect(spectrumGUI, &GLSpectrumGUI::addChannel, this, &MainSpectrumGUI::onRequestAddChannel);
+	connect(spectrumGUI, &GLSpectrumGUI::addIqReplaySignal, this, &MainSpectrumGUI::onRequestAddIqReplay);
 
 	m_resizer.enableChildMouseTracking();
 	shrinkWindow();
@@ -387,4 +388,9 @@ void MainSpectrumGUI::setRxChannel(QMap<QString, int>* rx_channel)
 	qDebug() << "MainSpectrumGUI::setRxChannel";
 
 	m_spectrumGUI->setRxChannel(rx_channel);
+}
+
+void MainSpectrumGUI::onRequestAddIqReplay()
+{
+	emit addIqReplaySignal();
 }

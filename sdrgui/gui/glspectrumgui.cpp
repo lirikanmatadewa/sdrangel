@@ -1235,12 +1235,7 @@ void GLSpectrumGUI::openIqRecord()
 
 void GLSpectrumGUI::openIqReplay()
 {
-	MainWindow* mainwindow = MainWindow::getInstance();
-	connect(this, SIGNAL(openReplay(int)), mainwindow, SLOT(openIqReplayDialog(int)));
-
-	int selectedDeviceIndex = 2;
-	emit openReplay(selectedDeviceIndex);
-	qDebug("GLSpectrum::Emit -> %d", selectedDeviceIndex);
+	emit addIqReplaySignal();
 }
 
 void GLSpectrumGUI::setRxChannel(QMap<QString, int>* rx_channel)

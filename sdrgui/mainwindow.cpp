@@ -373,19 +373,23 @@ void MainWindow::sampleSourceAdd(Workspace* deviceWorkspace, Workspace* spectrum
 	qDebug() << "MainWindow::MainWindow: setting rx channel";
 
 	PluginAPI::ChannelRegistrations* channelRegistrations = m_pluginManager->getRxChannelRegistrations();
-	QMap<QString, int> rx_channel;
+	
 
-	int rx_channel_counter = 0;
-
-	foreach(PluginAPI::ChannelRegistration cR, *channelRegistrations)
+	if ((*channelRegistrations).size())
 	{
-		qDebug() << "rx_channel_counter: " << rx_channel_counter;
-		qDebug() << "cR.m_channelIdURI: " << cR.m_channelIdURI;
-		qDebug() << "cR.m_channelId: " << cR.m_channelId;
-		rx_channel[cR.m_channelId] = rx_channel_counter++;
-	}
+		QMap<QString, int> rx_channel;
 
-	mainSpectrumGUI->setRxChannel(&rx_channel);
+		int rx_channel_counter = 0;
+
+		foreach(PluginAPI::ChannelRegistration cR, *channelRegistrations)
+		{
+			qDebug() << "rx_channel_counter: " << rx_channel_counter;
+			qDebug() << "cR.m_channelIdURI: " << cR.m_channelIdURI;
+			qDebug() << "cR.m_channelId: " << cR.m_channelId;
+			rx_channel[cR.m_channelId] = rx_channel_counter++;
+		}
+		mainSpectrumGUI->setRxChannel(&rx_channel);
+	}
 
 	QObject::connect(
 		mainSpectrumGUI,
@@ -408,7 +412,12 @@ void MainWindow::sampleSourceAdd(Workspace* deviceWorkspace, Workspace* spectrum
 		[=](int selectedChannelIndex) { this->channelAddClicked(deviceWorkspace, deviceSetIndex, selectedChannelIndex); }
 	);
 
-
+	QObject::connect(
+		mainSpectrumGUI,
+		&MainSpectrumGUI::addIqReplaySignal,
+		this,
+		[=]() { this->openIqReplayDialog(deviceWorkspace, spectrumWorkspace); }
+	); 
 	QObject::connect(
 		mainSpectrumGUI,
 		&MainSpectrumGUI::requestCenterFrequency,
@@ -2510,20 +2519,11 @@ void MainWindow::channelMoveToDeviceSet(ChannelGUI* gui, int dsIndexDestination)
 	}
 }
 
-void MainWindow::openIqReplayDialog(int selectedDeviceIndex)
+void MainWindow::openIqReplayDialog(Workspace* deviceWorkspace, Workspace* spectrumWorkSpace)
 {
-	qDebug("MainWindow::deviceSetIndex FileInput as IQ Replay -> %d - %d - %d", selectedDeviceIndex, m_workspaces[0]->getIndex(), m_workspaces.size());
-
 	int deviceIndexs = DeviceEnumerator::instance()->getFileInputDeviceIndex();
-	saveDeviceIndex = m_deviceUIs.size();
-
-	deleteChannel(saveDeviceIndex, deviceIndexs);
-	removeDeviceSet(saveDeviceIndex);
-	sampleSourceAdd(m_workspaces[0], m_workspaces[0], deviceIndexs);
 	
-	saveDeviceIndex -= 1;
-	qDebug() << m_deviceUIs.size();
-	qDebug("MainWindow::deviceSetIndex saveDeviceIndex -> %d", saveDeviceIndex);
+	sampleSourceAdd(deviceWorkspace, spectrumWorkSpace, deviceIndexs);
 }
 
 void MainWindow::channelDuplicate(ChannelGUI* sourceChannelGUI)

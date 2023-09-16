@@ -157,7 +157,7 @@ signals:
 	// Emitted when user selects an annotation marker
 	void requestCenterFrequency(qint64 frequency);
 	void addChannel(int channelPluginIndex);
-	void openReplay(int selectedDeviceIndex);
+	void addIqReplaySignal();
 };
 
 #endif // INCLUDE_GLSPECTRUMGUI_H

@@ -112,6 +112,7 @@ private slots:
 	void maximizeWindow();
 	void onRequestCenterFrequency(qint64 frequency);
 	void onRequestAddChannel(int channelPluginIndex);
+	void onRequestAddIqReplay();
 
 signals:
 	void closing();
@@ -119,6 +120,7 @@ signals:
 	void forceShrink();
 	void requestCenterFrequency(int deviceSetIndex, qint64 frequency); // an action from the user to move device center frequency
 	void addChannel(int channelPluginIndex);
+	void addIqReplaySignal();
 };
 
 
