@@ -80,6 +80,15 @@ public:
     qint32 getSyncAmOperation();
     void setSyncAmOperation(qint32 sync_am_operation);
 
+    qint32 getFrequencyMode();
+    void setFrequencyMode(qint32 frequency_mode);
+
+    qint64 getFrequency();
+    void setFrequency(qint64 frequency);
+
+    qint32 getSnap();
+    void setSnap(qint32 snap);
+
     qint32 getStreamIndex();
     void setStreamIndex(qint32 stream_index);
 
@@ -143,6 +152,15 @@ private:
 
     qint32 sync_am_operation;
     bool m_sync_am_operation_isSet;
+
+    qint32 frequency_mode;
+    bool m_frequency_mode_isSet;
+
+    qint64 frequency;
+    bool m_frequency_isSet;
+
+    qint32 snap;
+    bool m_snap_isSet;
 
     qint32 stream_index;
     bool m_stream_index_isSet;

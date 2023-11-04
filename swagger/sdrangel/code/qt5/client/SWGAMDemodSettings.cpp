@@ -52,6 +52,12 @@ SWGAMDemodSettings::SWGAMDemodSettings() {
     m_pll_isSet = false;
     sync_am_operation = 0;
     m_sync_am_operation_isSet = false;
+    frequency_mode = 0;
+    m_frequency_mode_isSet = false;
+    frequency = 0L;
+    m_frequency_isSet = false;
+    snap = 0;
+    m_snap_isSet = false;
     stream_index = 0;
     m_stream_index_isSet = false;
     use_reverse_api = 0;
@@ -100,6 +106,12 @@ SWGAMDemodSettings::init() {
     m_pll_isSet = false;
     sync_am_operation = 0;
     m_sync_am_operation_isSet = false;
+    frequency_mode = 0;
+    m_frequency_mode_isSet = false;
+    frequency = 0L;
+    m_frequency_isSet = false;
+    snap = 0;
+    m_snap_isSet = false;
     stream_index = 0;
     m_stream_index_isSet = false;
     use_reverse_api = 0;
@@ -134,6 +146,9 @@ SWGAMDemodSettings::cleanup() {
     if(audio_device_name != nullptr) {
         delete audio_device_name;
     }
+
+
+
 
 
 
@@ -186,6 +201,12 @@ SWGAMDemodSettings::fromJsonObject(QJsonObject &pJson) {
     ::SWGSDRangel::setValue(&pll, pJson["pll"], "qint32", "");
 
     ::SWGSDRangel::setValue(&sync_am_operation, pJson["syncAMOperation"], "qint32", "");
+
+    ::SWGSDRangel::setValue(&frequency_mode, pJson["frequencyMode"], "qint32", "");
+
+    ::SWGSDRangel::setValue(&frequency, pJson["frequency"], "qint64", "");
+
+    ::SWGSDRangel::setValue(&snap, pJson["snap"], "qint32", "");
 
     ::SWGSDRangel::setValue(&stream_index, pJson["streamIndex"], "qint32", "");
 
@@ -254,6 +275,15 @@ SWGAMDemodSettings::asJsonObject() {
     }
     if(m_sync_am_operation_isSet){
         obj->insert("syncAMOperation", QJsonValue(sync_am_operation));
+    }
+    if(m_frequency_mode_isSet){
+        obj->insert("frequencyMode", QJsonValue(frequency_mode));
+    }
+    if(m_frequency_isSet){
+        obj->insert("frequency", QJsonValue(frequency));
+    }
+    if(m_snap_isSet){
+        obj->insert("snap", QJsonValue(snap));
     }
     if(m_stream_index_isSet){
         obj->insert("streamIndex", QJsonValue(stream_index));
@@ -404,6 +434,36 @@ SWGAMDemodSettings::setSyncAmOperation(qint32 sync_am_operation) {
 }
 
 qint32
+SWGAMDemodSettings::getFrequencyMode() {
+    return frequency_mode;
+}
+void
+SWGAMDemodSettings::setFrequencyMode(qint32 frequency_mode) {
+    this->frequency_mode = frequency_mode;
+    this->m_frequency_mode_isSet = true;
+}
+
+qint64
+SWGAMDemodSettings::getFrequency() {
+    return frequency;
+}
+void
+SWGAMDemodSettings::setFrequency(qint64 frequency) {
+    this->frequency = frequency;
+    this->m_frequency_isSet = true;
+}
+
+qint32
+SWGAMDemodSettings::getSnap() {
+    return snap;
+}
+void
+SWGAMDemodSettings::setSnap(qint32 snap) {
+    this->snap = snap;
+    this->m_snap_isSet = true;
+}
+
+qint32
 SWGAMDemodSettings::getStreamIndex() {
     return stream_index;
 }
@@ -522,6 +582,15 @@ SWGAMDemodSettings::isSet(){
             isObjectUpdated = true; break;
         }
         if(m_sync_am_operation_isSet){
+            isObjectUpdated = true; break;
+        }
+        if(m_frequency_mode_isSet){
+            isObjectUpdated = true; break;
+        }
+        if(m_frequency_isSet){
+            isObjectUpdated = true; break;
+        }
+        if(m_snap_isSet){
             isObjectUpdated = true; break;
         }
         if(m_stream_index_isSet){
