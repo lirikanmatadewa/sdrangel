@@ -26,8 +26,14 @@
 class SDRGUI_API FrequencyDelegate : public QStyledItemDelegate {
 
 public:
-    FrequencyDelegate(QString units = "kHz", int precision=1, bool group=true);
-    virtual QString displayText(const QVariant &value, const QLocale &locale) const override;
+    FrequencyDelegate(const QString& units = "kHz", int precision=1, bool group=true);
+    QString displayText(const QVariant &value, const QLocale &locale) const override;
+
+protected:
+    QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& option, const QModelIndex& index) const;
+    void setEditorData(QWidget* editor, const QModelIndex& index) const;
+    void setModelData(QWidget* editor, QAbstractItemModel* model, const QModelIndex& index) const;
+    void updateEditorGeometry(QWidget* editor, const QStyleOptionViewItem& option, const QModelIndex& index) const;
 
 private:
     QString m_units;

@@ -2728,10 +2728,9 @@ void GLSpectrumView::applyChanges()
         if (m_sampleRate > 0)
         {
             float timeScaleDiv = ((float)m_sampleRate / (float)m_timingRate);
-            float halfFFTSize = m_fftSize / 2;
 
-            if (halfFFTSize > m_fftOverlap) {
-                timeScaleDiv *= halfFFTSize / (halfFFTSize - m_fftOverlap);
+            if (m_fftSize > m_fftOverlap) {
+                timeScaleDiv *= m_fftSize / (float)(m_fftSize - m_fftOverlap);
             }
 
             if (!m_invertedWaterfall) {
@@ -2822,10 +2821,9 @@ void GLSpectrumView::applyChanges()
         if (m_sampleRate > 0)
         {
             float timeScaleDiv = ((float)m_sampleRate / (float)m_timingRate);
-            float halfFFTSize = m_fftSize / 2;
 
-            if (halfFFTSize > m_fftOverlap) {
-                timeScaleDiv *= halfFFTSize / (halfFFTSize - m_fftOverlap);
+            if (m_fftSize > m_fftOverlap) {
+                timeScaleDiv *= m_fftSize / (float)(m_fftSize - m_fftOverlap);
             }
 
             if (!m_invertedWaterfall) {
@@ -3594,6 +3592,8 @@ void GLSpectrumView::updateWaterfallMarkers()
 
 void GLSpectrumView::updateAnnotationMarkers()
 {
+    emit updateAnnotations(); // Notify other plugins we have updated annotations
+
     if (!(m_markersDisplay & SpectrumSettings::MarkersDisplayAnnotations)) {
         return;
     }
@@ -4447,7 +4447,7 @@ void GLSpectrumView::timeZoom(bool zoomInElseOut)
         return;
     }
 
-    if (zoomInElseOut && (m_fftOverlap == m_fftSize/2 - 1)) {
+	if (zoomInElseOut && (m_fftOverlap == m_fftSize - 1)) {
         return;
     }
 

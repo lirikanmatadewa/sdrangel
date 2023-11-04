@@ -899,22 +899,21 @@ void GLSpectrumGUI::setNumberStr(float v, int decimalPlaces, QString& s)
 
 void GLSpectrumGUI::setAveragingToolitp()
 {
-	if (m_glSpectrum)
-	{
-		QString s;
-		int averagingIndex = m_settings.m_averagingMode == SpectrumSettings::AvgModeNone ? 0 : m_settings.m_averagingIndex;
-		float halfSize = m_settings.m_fftSize / 2;
-		float overlapFactor = (halfSize - m_settings.m_fftOverlap) / halfSize;
-		float averagingTime = (m_settings.m_fftSize * (SpectrumSettings::getAveragingValue(averagingIndex, m_settings.m_averagingMode) == 0 ?
-			1 :
-			SpectrumSettings::getAveragingValue(averagingIndex, m_settings.m_averagingMode))) / (float)m_glSpectrum->getSampleRate();
-		setNumberStr(averagingTime * overlapFactor, 2, s);
-		ui->averaging->setToolTip(QString("Number of averaging samples (avg time: %1s)").arg(s));
-	}
-	else
-	{
-		ui->averaging->setToolTip(QString("Number of averaging samples"));
-	}
+    if (m_glSpectrum)
+    {
+        QString s;
+        int averagingIndex = m_settings.m_averagingMode == SpectrumSettings::AvgModeNone ? 0 : m_settings.m_averagingIndex;
+        float overlapFactor = (m_settings.m_fftSize - m_settings.m_fftOverlap) / (float)m_settings.m_fftSize;
+        float averagingTime = (m_settings.m_fftSize * (SpectrumSettings::getAveragingValue(averagingIndex, m_settings.m_averagingMode) == 0 ?
+            1 :
+            SpectrumSettings::getAveragingValue(averagingIndex, m_settings.m_averagingMode))) / (float) m_glSpectrum->getSampleRate();
+        setNumberStr(averagingTime*overlapFactor, 2, s);
+        ui->averaging->setToolTip(QString("Number of averaging samples (avg time: %1s)").arg(s));
+    }
+    else
+    {
+        ui->averaging->setToolTip(QString("Number of averaging samples"));
+    }
 }
 
 void GLSpectrumGUI::setFFTSizeToolitp()
@@ -944,15 +943,14 @@ void GLSpectrumGUI::setFFTSize(int log2FFTSize)
 
 void GLSpectrumGUI::setMaximumOverlap()
 {
-	int halfSize = m_settings.m_fftSize / 2;
-	ui->fftOverlap->setMaximum((halfSize)-1);
-	int value = ui->fftOverlap->value();
-	ui->fftOverlap->setValue(value);
-	ui->fftOverlap->setToolTip(tr("FFT overlap %1 %").arg((value / (float)halfSize) * 100.0f));
+    ui->fftOverlap->setMaximum(m_settings.m_fftSize -1);
+    int value = ui->fftOverlap->value();
+    ui->fftOverlap->setValue(value);
+    ui->fftOverlap->setToolTip(tr("FFT overlap %1 %").arg((value/(float)m_settings.m_fftSize)*100.0f));
 
-	if (m_glSpectrum) {
-		m_glSpectrum->setFFTOverlap(value);
-	}
+    if (m_glSpectrum) {
+        m_glSpectrum->setFFTOverlap(value);
+    }
 }
 
 bool GLSpectrumGUI::handleMessage(const Message& message)

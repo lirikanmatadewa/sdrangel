@@ -16,6 +16,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.          //
 ///////////////////////////////////////////////////////////////////////////////////
 
+#include <array>
 
 #include <QString>
 #include <QDebug>
@@ -237,61 +238,53 @@ UpChannelizer::FilterStage::~FilterStage()
     delete m_filter;
 }
 
-bool UpChannelizer::signalContainsChannel(Real sigStart, Real sigEnd, Real chanStart, Real chanEnd) const
+Real UpChannelizer::channelMinSpace(Real sigStart, Real sigEnd, Real chanStart, Real chanEnd)
 {
-    //qDebug("   testing signal [%f, %f], channel [%f, %f]", sigStart, sigEnd, chanStart, chanEnd);
-    if(sigEnd <= sigStart)
-        return false;
-    if(chanEnd <= chanStart)
-        return false;
-    return (sigStart <= chanStart) && (sigEnd >= chanEnd);
+    Real leftSpace = chanStart - sigStart;
+    Real rightSpace = sigEnd - chanEnd;
+    return std::min(leftSpace, rightSpace);
 }
 
 Real UpChannelizer::createFilterChain(Real sigStart, Real sigEnd, Real chanStart, Real chanEnd)
 {
     Real sigBw = sigEnd - sigStart;
+    Real chanBw = chanEnd - chanStart;
     Real rot = sigBw / 4;
     Sample s;
 
-    qDebug() << "UpChannelizer::createFilterChain: start:"
-            << " sig: ["  << sigStart << ":" << sigEnd << "]"
-            << " BW: " << sigBw
-            << " chan: [" << chanStart << ":" << chanEnd << "]"
-            << " rot: " << rot;
+    std::array<Real, 3> filterMinSpaces; // Array of left, center and right filter min spaces respectively
+    filterMinSpaces[0] = channelMinSpace(sigStart, sigStart + sigBw / 2.0, chanStart, chanEnd);
+    filterMinSpaces[1] = channelMinSpace(sigStart + rot, sigEnd - rot, chanStart, chanEnd);
+    filterMinSpaces[2] = channelMinSpace(sigEnd - sigBw / 2.0f, sigEnd, chanStart, chanEnd);
+    auto maxIt = std::max_element(filterMinSpaces.begin(), filterMinSpaces.end());
+    int maxIndex = maxIt - filterMinSpaces.begin();
+    Real maxValue = *maxIt;
 
-    // check if it fits into the left half
-    if(signalContainsChannel(sigStart, sigStart + sigBw / 2.0, chanStart, chanEnd))
-    {
-        qDebug() << "UpChannelizer::createFilterChain: take left half (rotate by +1/4 and decimate by 2):"
-                << " [" << m_filterStages.size() << "]"
-                << " sig: ["  << sigStart << ":" << sigStart + sigBw / 2.0 << "]";
-        m_filterStages.push_back(new FilterStage(FilterStage::ModeLowerHalf));
-        m_stageSamples.push_back(s);
-        return createFilterChain(sigStart, sigStart + sigBw / 2.0, chanStart, chanEnd);
-    }
+	qDebug("UpChannelizer::createFilterChain: Signal [%.1f, %.1f] (BW %.1f) Channel [%.1f, %.1f] (BW %.1f) Selected: %d (fit %.1f)",
+        sigStart, sigEnd, sigBw, chanStart, chanEnd, chanBw, maxIndex, maxValue);
 
-    // check if it fits into the right half
-    if(signalContainsChannel(sigEnd - sigBw / 2.0f, sigEnd, chanStart, chanEnd))
+    if ((sigStart < sigEnd) && (chanStart < chanEnd) && (maxValue >= chanBw/8.0))
     {
-        qDebug() << "UpChannelizer::createFilterChain: take right half (rotate by -1/4 and decimate by 2):"
-                << " [" << m_filterStages.size() << "]"
-                << " sig: ["  << sigEnd - sigBw / 2.0f << ":" << sigEnd << "]";
-        m_filterStages.push_back(new FilterStage(FilterStage::ModeUpperHalf));
-        m_stageSamples.push_back(s);
-        return createFilterChain(sigEnd - sigBw / 2.0f, sigEnd, chanStart, chanEnd);
-    }
+        if (maxIndex == 0)
+        {
+            m_filterStages.push_back(new FilterStage(FilterStage::ModeLowerHalf));
+            m_stageSamples.push_back(s);
+            return createFilterChain(sigStart, sigStart + sigBw / 2.0, chanStart, chanEnd);
+        }
 
-    // check if it fits into the center
-    // Was: if(signalContainsChannel(sigStart + rot + safetyMargin, sigStart + rot + sigBw / 2.0f - safetyMargin, chanStart, chanEnd)) {
-    if(signalContainsChannel(sigStart + rot, sigEnd - rot, chanStart, chanEnd))
-    {
-        qDebug() << "UpChannelizer::createFilterChain: take center half (decimate by 2):"
-                << " [" << m_filterStages.size() << "]"
-                << " sig: ["  << sigStart + rot << ":" << sigEnd - rot << "]";
-        m_filterStages.push_back(new FilterStage(FilterStage::ModeCenter));
-        m_stageSamples.push_back(s);
-        // Was: return createFilterChain(sigStart + rot, sigStart + sigBw / 2.0f + rot, chanStart, chanEnd);
-        return createFilterChain(sigStart + rot, sigEnd - rot, chanStart, chanEnd);
+        if (maxIndex == 1)
+        {
+            m_filterStages.push_back(new FilterStage(FilterStage::ModeCenter));
+            m_stageSamples.push_back(s);
+            return createFilterChain(sigStart + rot, sigEnd - rot, chanStart, chanEnd);
+        }
+
+        if (maxIndex == 2)
+        {
+            m_filterStages.push_back(new FilterStage(FilterStage::ModeUpperHalf));
+            m_stageSamples.push_back(s);
+            return createFilterChain(sigEnd - sigBw / 2.0f, sigEnd, chanStart, chanEnd);
+        }
     }
 
     Real ofs = ((chanEnd - chanStart) / 2.0 + chanStart) - ((sigEnd - sigStart) / 2.0 + sigStart);
