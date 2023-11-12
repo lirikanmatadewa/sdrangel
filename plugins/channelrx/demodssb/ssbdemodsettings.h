@@ -19,6 +19,7 @@
 #define PLUGINS_CHANNELRX_DEMODSSB_SSBDEMODSETTINGS_H_
 
 #include <QByteArray>
+#include <QString>
 
 #include "dsp/fftwindow.h"
 
@@ -30,6 +31,12 @@ struct SSBDemodFilterSettings
     Real m_rfBandwidth;
     Real m_lowCutoff;
     FFTWindow::Function m_fftWindow;
+    bool m_dnr;
+    int  m_dnrScheme;
+    float m_dnrAboveAvgFactor;
+    float m_dnrSigmaFactor;
+    int  m_dnrNbPeaks;
+    float m_dnrAlpha;
 
     SSBDemodFilterSettings() :
         m_spanLog2(3),
@@ -55,6 +62,12 @@ struct SSBDemodSettings
     int  m_agcTimeLog2;
     int  m_agcPowerThreshold;
     int  m_agcThresholdGate;
+    bool m_dnr;
+    int  m_dnrScheme;
+    float m_dnrAboveAvgFactor;
+    float m_dnrSigmaFactor;
+    int  m_dnrNbPeaks;
+    float m_dnrAlpha;
     quint32 m_rgbColor;
     QString m_title;
     QString m_audioDeviceName;
