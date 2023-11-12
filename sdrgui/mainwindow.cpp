@@ -156,7 +156,7 @@ MainWindow::MainWindow(qtwebapp::LoggerWithFile* logger, const MainParser& parse
 
 	QPixmap logoPixmap(":/bwe-solutions_black.png");
 	SDRangelSplash* splash = new SDRangelSplash(logoPixmap);
-	splash->setMessageRect(QRect(10, 80, 350, 16));
+	splash->setMessageRect(QRect(40, 150, 350, 18));
 	splash->show();
 	splash->showStatusMessage("starting...", Qt::white);
 	splash->showStatusMessage("starting...", Qt::white);
@@ -1649,9 +1649,6 @@ void MainWindow::createMenuBar(QToolButton* button)
 	QAction* fftAction = preferencesMenu->addAction("&FFT...");
 	fftAction->setToolTip("Set FFT preferences");
 	QObject::connect(fftAction, &QAction::triggered, this, &MainWindow::on_action_FFT_triggered);
-	QAction* fftWisdomAction = preferencesMenu->addAction("&FFTW Wisdom...");
-	fftWisdomAction->setToolTip("Set FFTW cache");
-	QObject::connect(fftWisdomAction, &QAction::triggered, this, &MainWindow::on_action_FFTWisdom_triggered);
 	QMenu* devicesMenu = preferencesMenu->addMenu("&Devices");
 	QAction* userArgumentsAction = devicesMenu->addAction("&User arguments...");
 	userArgumentsAction->setToolTip("Device custom user arguments");

@@ -108,6 +108,7 @@ GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
 	connect(ui->wfm, SIGNAL(clicked()), this, SLOT(open_wfm()));
 	connect(ui->iqRecord, SIGNAL(clicked()), this, SLOT(openIqRecord()));
 	connect(ui->iqReplay, SIGNAL(clicked()), this, SLOT(openIqReplay()));
+	connect(ui->frequencyScanner, SIGNAL(clicked()), this, SLOT(openFrequencyScanner()));
 
 	displaySettings();
 	setAveragingCombo();
@@ -1234,6 +1235,16 @@ void GLSpectrumGUI::openIqRecord()
 void GLSpectrumGUI::openIqReplay()
 {
 	emit addIqReplaySignal();
+}
+
+void GLSpectrumGUI::openFrequencyScanner()
+{
+	try {
+		emit addChannel(this->rx_channel["FreqScanner"]);
+	}
+	catch (...) {
+		;
+	}
 }
 
 void GLSpectrumGUI::setRxChannel(QMap<QString, int>* rx_channel)

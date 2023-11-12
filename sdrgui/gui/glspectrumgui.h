@@ -101,6 +101,7 @@ private slots:
 	void open_wfm();
 	void openIqRecord();
 	void openIqReplay();
+	void openFrequencyScanner();
 	void on_fftWindow_currentIndexChanged(int index);
 	void on_fftSize_currentIndexChanged(int index);
 	void on_fftOverlap_valueChanged(int value);

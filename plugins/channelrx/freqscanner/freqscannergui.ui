@@ -247,7 +247,40 @@
         </property>
        </widget>
       </item>
-      <item>
+       <item>
+         <layout class="QVBoxLayout" name="threshIncDec" stretch="0,0">
+           <property name="spacing">
+             <number>1</number>
+           </property>
+           <item>
+             <widget class="QPushButton" name="threshInc">
+               <property name="maximumSize">
+                 <size>
+                   <width>20</width>
+                   <height>20</height>
+                 </size>
+               </property>
+               <property name="text">
+                 <string>+</string>
+               </property>
+             </widget>
+           </item>
+           <item>
+             <widget class="QPushButton" name="threshDec">
+               <property name="maximumSize">
+                 <size>
+                   <width>20</width>
+                   <height>20</height>
+                 </size>
+               </property>
+               <property name="text">
+                 <string>-</string>
+               </property>
+             </widget>
+           </item>
+         </layout>
+       </item>
+       <item>
        <widget class="QLabel" name="threshText">
         <property name="minimumSize">
          <size>
@@ -309,7 +342,40 @@
         </property>
        </widget>
       </item>
-      <item>
+       <item>
+         <layout class="QVBoxLayout" name="tuneTimeIncDec" stretch="0,0">
+           <property name="spacing">
+             <number>1</number>
+           </property>
+           <item>
+             <widget class="QPushButton" name="tuneTimeInc">
+               <property name="maximumSize">
+                 <size>
+                   <width>20</width>
+                   <height>20</height>
+                 </size>
+               </property>
+               <property name="text">
+                 <string>+</string>
+               </property>
+             </widget>
+           </item>
+           <item>
+             <widget class="QPushButton" name="tuneTimeDec">
+               <property name="maximumSize">
+                 <size>
+                   <width>20</width>
+                   <height>20</height>
+                 </size>
+               </property>
+               <property name="text">
+                 <string>-</string>
+               </property>
+             </widget>
+           </item>
+         </layout>
+       </item>
+       <item>
        <widget class="QLabel" name="tuneTimeText">
         <property name="minimumSize">
          <size>
@@ -358,7 +424,40 @@
         </property>
        </widget>
       </item>
-      <item>
+       <item>
+         <layout class="QVBoxLayout" name="scanTimeIncDec" stretch="0,0">
+           <property name="spacing">
+             <number>1</number>
+           </property>
+           <item>
+             <widget class="QPushButton" name="scanTimeInc">
+               <property name="maximumSize">
+                 <size>
+                   <width>20</width>
+                   <height>20</height>
+                 </size>
+               </property>
+               <property name="text">
+                 <string>+</string>
+               </property>
+             </widget>
+           </item>
+           <item>
+             <widget class="QPushButton" name="scanTimeDec">
+               <property name="maximumSize">
+                 <size>
+                   <width>20</width>
+                   <height>20</height>
+                 </size>
+               </property>
+               <property name="text">
+                 <string>-</string>
+               </property>
+             </widget>
+           </item>
+         </layout>
+       </item>
+       <item>
        <widget class="QLabel" name="scanTimeText">
         <property name="minimumSize">
          <size>
@@ -407,7 +506,40 @@
         </property>
        </widget>
       </item>
-      <item>
+       <item>
+         <layout class="QVBoxLayout" name="retransmitTimeIncDec" stretch="0,0">
+           <property name="spacing">
+             <number>1</number>
+           </property>
+           <item>
+             <widget class="QPushButton" name="retransmitTimeInc">
+               <property name="maximumSize">
+                 <size>
+                   <width>20</width>
+                   <height>20</height>
+                 </size>
+               </property>
+               <property name="text">
+                 <string>+</string>
+               </property>
+             </widget>
+           </item>
+           <item>
+             <widget class="QPushButton" name="retransmitTimeDec">
+               <property name="maximumSize">
+                 <size>
+                   <width>20</width>
+                   <height>20</height>
+                 </size>
+               </property>
+               <property name="text">
+                 <string>-</string>
+               </property>
+             </widget>
+           </item>
+         </layout>
+       </item>
+       <item>
        <widget class="QLabel" name="retransmitTimeText">
         <property name="minimumSize">
          <size>

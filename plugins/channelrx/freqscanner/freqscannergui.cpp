@@ -305,6 +305,46 @@ void FreqScannerGUI::on_thresh_valueChanged(int value)
     applySetting("threshold");
 }
 
+void FreqScannerGUI::scanTimeIncClick()
+{
+   ui->scanTime->setValue(ui->scanTime->value() + 1);
+}
+
+void FreqScannerGUI::scanTimeDecClick()
+{
+   ui->scanTime->setValue(ui->scanTime->value() - 1);
+}
+
+void FreqScannerGUI::retransmitTimeIncClick()
+{
+   ui->retransmitTime->setValue(ui->retransmitTime->value() + 1);
+}
+
+void FreqScannerGUI::retransmitTimeDecClick()
+{
+   ui->retransmitTime->setValue(ui->retransmitTime->value() - 1);
+}
+
+void FreqScannerGUI::tuneTimeIncClick()
+{
+   ui->tuneTime->setValue(ui->tuneTime->value() + 1);
+}
+
+void FreqScannerGUI::tuneTimeDecClick()
+{
+   ui->tuneTime->setValue(ui->tuneTime->value() - 1);
+}
+
+void FreqScannerGUI::threshIncClick()
+{
+   ui->thresh->setValue(ui->thresh->value() + 1);
+}
+
+void FreqScannerGUI::threshDecClick()
+{
+   ui->thresh->setValue(ui->thresh->value() - 1);
+}
+
 void FreqScannerGUI::on_priority_currentIndexChanged(int index)
 {
     m_settings.m_priority = (FreqScannerSettings::Priority)index;
@@ -460,6 +500,10 @@ FreqScannerGUI::FreqScannerGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, B
 
     displaySettings();
     makeUIConnections();
+    ui->thresh->hide();
+    ui->tuneTime->hide();
+    ui->scanTime->hide();
+    ui->retransmitTime->hide();
     applyAllSettings();
 
     ui->table->setItemDelegateForColumn(COL_FREQUENCY, new FrequencyDelegate("Auto", 3));
@@ -985,6 +1029,14 @@ void FreqScannerGUI::makeUIConnections()
     QObject::connect(ui->up, &QToolButton::clicked, this, &FreqScannerGUI::on_up_clicked);
     QObject::connect(ui->down, &QToolButton::clicked, this, &FreqScannerGUI::on_down_clicked);
     QObject::connect(ui->clearActiveCount, &QToolButton::clicked, this, &FreqScannerGUI::on_clearActiveCount_clicked);
+    QObject::connect(ui->threshInc, &QToolButton::clicked, this, &FreqScannerGUI::threshIncClick);
+    QObject::connect(ui->threshDec, &QToolButton::clicked, this, &FreqScannerGUI::threshDecClick);
+    QObject::connect(ui->tuneTimeInc, &QToolButton::clicked, this, &FreqScannerGUI::tuneTimeIncClick);
+    QObject::connect(ui->tuneTimeDec, &QToolButton::clicked, this, &FreqScannerGUI::tuneTimeDecClick);
+    QObject::connect(ui->scanTimeInc, &QToolButton::clicked, this, &FreqScannerGUI::scanTimeIncClick);
+    QObject::connect(ui->scanTimeDec, &QToolButton::clicked, this, &FreqScannerGUI::scanTimeDecClick);
+    QObject::connect(ui->retransmitTimeInc, &QToolButton::clicked, this, &FreqScannerGUI::retransmitTimeIncClick);
+    QObject::connect(ui->retransmitTimeDec, &QToolButton::clicked, this, &FreqScannerGUI::retransmitTimeDecClick);
 }
 
 void FreqScannerGUI::updateAbsoluteCenterFrequency()

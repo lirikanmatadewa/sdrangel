@@ -152,7 +152,7 @@ DeviceGUI::DeviceGUI(QWidget *parent) :
     m_topLayout->addWidget(m_changeDeviceButton);
     m_topLayout->addWidget(m_reloadDeviceButton);
     m_topLayout->addWidget(m_deviceSetPresetsButton);
-    m_topLayout->addWidget(m_addChannelsButton);
+    // m_topLayout->addWidget(m_addChannelsButton);
     m_topLayout->addWidget(m_titleLabel);
     // m_topLayout->addStretch(1);
     m_topLayout->addWidget(m_helpButton);
@@ -356,7 +356,7 @@ void DeviceGUI::showHelp()
     if (m_helpURL.startsWith("http")) {
         url = m_helpURL;
     } else {
-        url = QString("https://github.com/f4exb/sdrangel/blob/master/%1").arg(m_helpURL); // Something like "plugins/channelrx/chanalyzer/readme.md"
+        url = QString("https://www.bwe-solutions.com/").arg(m_helpURL); // Something like "plugins/channelrx/chanalyzer/readme.md"
     }
 
     QDesktopServices::openUrl(QUrl(url));
