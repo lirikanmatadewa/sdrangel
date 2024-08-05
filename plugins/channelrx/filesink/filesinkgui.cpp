@@ -233,18 +233,11 @@ FileSinkGUI::FileSinkGUI(PluginAPI* pluginAPI, DeviceUISet* deviceUISet, Baseban
 	//    connect(getInputMessageQueue(), SIGNAL(messageEnqueued()), this, SLOT(handleSourceMessages()));
 	connect(&(m_deviceUISet->m_deviceAPI->getMasterTimer()), SIGNAL(timeout()), this, SLOT(tick()));
 
-<<<<<<< HEAD
-	displaySettings();
-	makeUIConnections();
-	applySettings(true);
-	DialPopup::addPopupsToChildDials(this);
-=======
     displaySettings();
     makeUIConnections();
     applySettings(true);
     DialPopup::addPopupsToChildDials(this);
     m_resizer.enableChildMouseTracking();
->>>>>>> remotes/origin/master
 }
 
 FileSinkGUI::~FileSinkGUI()

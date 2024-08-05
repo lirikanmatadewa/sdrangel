@@ -81,18 +81,6 @@ QDataStream& operator>>(QDataStream& ds, AudioDeviceManager::OutputDeviceInfo& i
 
 AudioDeviceManager::AudioDeviceManager()
 {
-<<<<<<< HEAD
-    m_inputDevicesInfo = AudioDeviceInfo::availableInputDevices();
-
-    for (int i = 0; i < m_inputDevicesInfo.size(); i++) {
-        ;
-    }
-
-    m_outputDevicesInfo = AudioDeviceInfo::availableOutputDevices();
-
-    for (int i = 0; i < m_outputDevicesInfo.size(); i++) {
-        ;
-=======
     qDebug("AudioDeviceManager::AudioDeviceManager: scan input devices");
     {
         auto &devicesInfo = AudioDeviceInfo::availableInputDevices();
@@ -109,7 +97,6 @@ AudioDeviceManager::AudioDeviceManager()
         for (int i = 0; i < devicesInfo.size(); i++) {
             qDebug("AudioDeviceManager::AudioDeviceManager: output device #%d: %s", i, qPrintable(devicesInfo[i].deviceName()));
         }
->>>>>>> remotes/origin/master
     }
     m_defaultInputStarted = false;
     m_defaultOutputStarted = false;

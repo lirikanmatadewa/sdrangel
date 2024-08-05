@@ -247,17 +247,10 @@ int main(int argc, char* argv[])
 
     int res = runQtApplication(argc, argv, logger);
 
-<<<<<<< HEAD
-    delete logger;
-    
-    qWarning("SDR Analyzer quit.");
-    return res;
-=======
     if (logger) {
         delete logger;
     }
-
-	qWarning("SDRangel quit.");
-	return res;
->>>>>>> remotes/origin/master
+    
+    qWarning("SDR Analyzer quit.");
+    return res;
 }
