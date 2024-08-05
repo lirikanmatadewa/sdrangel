@@ -24,13 +24,16 @@
 
 #include "SWGAFCActions.h"
 #include "SWGAMBEActions.h"
+#include "SWGDemodAnalyzerActions.h"
 #include "SWGGS232ControllerActions.h"
 #include "SWGLimeRFEActions.h"
 #include "SWGMapActions.h"
+#include "SWGMorseDecoderActions.h"
 #include "SWGPERTesterActions.h"
 #include "SWGRigCtlServerActions.h"
 #include "SWGSatelliteTrackerActions.h"
 #include "SWGSimplePTTActions.h"
+#include "SWGSkyMapActions.h"
 #include "SWGStarTrackerActions.h"
 #include "SWGVORLocalizerActions.h"
 #include <QString>
@@ -77,6 +80,9 @@ public:
     SWGMapActions* getMapActions();
     void setMapActions(SWGMapActions* map_actions);
 
+    SWGMorseDecoderActions* getMorseDecoderActions();
+    void setMorseDecoderActions(SWGMorseDecoderActions* morse_decoder_actions);
+
     SWGPERTesterActions* getPerTesterActions();
     void setPerTesterActions(SWGPERTesterActions* per_tester_actions);
 
@@ -89,11 +95,17 @@ public:
     SWGSimplePTTActions* getSimplePttActions();
     void setSimplePttActions(SWGSimplePTTActions* simple_ptt_actions);
 
+    SWGSkyMapActions* getSkyMapActions();
+    void setSkyMapActions(SWGSkyMapActions* sky_map_actions);
+
     SWGStarTrackerActions* getStarTrackerActions();
     void setStarTrackerActions(SWGStarTrackerActions* star_tracker_actions);
 
     SWGVORLocalizerActions* getVorLocalizerActions();
     void setVorLocalizerActions(SWGVORLocalizerActions* vor_localizer_actions);
+
+    SWGDemodAnalyzerActions* getDemodAnalyzerActions();
+    void setDemodAnalyzerActions(SWGDemodAnalyzerActions* demod_analyzer_actions);
 
 
     virtual bool isSet() override;
@@ -123,6 +135,9 @@ private:
     SWGMapActions* map_actions;
     bool m_map_actions_isSet;
 
+    SWGMorseDecoderActions* morse_decoder_actions;
+    bool m_morse_decoder_actions_isSet;
+
     SWGPERTesterActions* per_tester_actions;
     bool m_per_tester_actions_isSet;
 
@@ -135,11 +150,17 @@ private:
     SWGSimplePTTActions* simple_ptt_actions;
     bool m_simple_ptt_actions_isSet;
 
+    SWGSkyMapActions* sky_map_actions;
+    bool m_sky_map_actions_isSet;
+
     SWGStarTrackerActions* star_tracker_actions;
     bool m_star_tracker_actions_isSet;
 
     SWGVORLocalizerActions* vor_localizer_actions;
     bool m_vor_localizer_actions_isSet;
+
+    SWGDemodAnalyzerActions* demod_analyzer_actions;
+    bool m_demod_analyzer_actions_isSet;
 
 };
 

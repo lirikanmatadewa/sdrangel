@@ -1,5 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2018 Edouard Griffiths, F4EXB.                                  //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2020 Kacper Michajłow <kasper93@gmail.com>                      //
 //                                                                               //
 // Swagger server adapter interface                                              //
 //                                                                               //
@@ -55,6 +58,8 @@ private:
     void testDecimateFF();
     void testGolay2312();
     void testFT8(const QString& wavFile, const QString& argsStr); //!< use with sdrbench/samples/ft8/230105_091630.wav in -f option
+    void testFT8Protocols(const QString& argsStr);
+    void testCallsign(const QString& argsStr);
     void decimateII(const qint16 *buf, int len);
     void decimateInfII(const qint16 *buf, int len);
     void decimateSupII(const qint16 *buf, int len);

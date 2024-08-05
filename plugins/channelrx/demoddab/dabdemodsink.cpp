@@ -1,6 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2021-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2023 Daniele Forsi <iu5hkx@gmail.com>                           //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -20,9 +21,7 @@
 
 #include <complex.h>
 
-#include "dsp/dspengine.h"
 #include "dsp/datafifo.h"
-#include "util/db.h"
 #include "maincore.h"
 
 #include "dabdemod.h"
@@ -367,7 +366,7 @@ void DABDemodSink::tii(int tii)
     }
 }
 
-static int16_t scale(int16_t sample, float factor)
+static int16_t scale(Real sample, float factor)
 {
     int32_t prod = (int32_t)(((int32_t)sample) * factor);
     prod = std::min(prod, 32767);
@@ -404,7 +403,12 @@ void DABDemodSink::audio(int16_t *buffer, int size, int samplerate, bool stereo)
             ci.real(0.0f);
             ci.imag(0.0f);
         }
-        if (m_audioInterpolatorDistance < 1.0f) // interpolate
+
+        if (m_audioInterpolatorDistance == 1.0f)
+        {
+            processOneAudioSample(ci);
+        }
+        else if (m_audioInterpolatorDistance < 1.0f) // interpolate
         {
             while (!m_audioInterpolator.interpolate(&m_audioInterpolatorDistanceRemain, ci, &ca))
             {

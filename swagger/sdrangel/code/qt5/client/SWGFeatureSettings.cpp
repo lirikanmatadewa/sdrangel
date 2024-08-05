@@ -54,6 +54,8 @@ SWGFeatureSettings::SWGFeatureSettings() {
     m_lime_rfe_settings_isSet = false;
     map_settings = nullptr;
     m_map_settings_isSet = false;
+    morse_decoder_settings = nullptr;
+    m_morse_decoder_settings_isSet = false;
     per_tester_settings = nullptr;
     m_per_tester_settings_isSet = false;
     radiosonde_settings = nullptr;
@@ -62,10 +64,14 @@ SWGFeatureSettings::SWGFeatureSettings() {
     m_rig_ctl_server_settings_isSet = false;
     satellite_tracker_settings = nullptr;
     m_satellite_tracker_settings_isSet = false;
-    star_tracker_settings = nullptr;
-    m_star_tracker_settings_isSet = false;
+    sid_settings = nullptr;
+    m_sid_settings_isSet = false;
     simple_ptt_settings = nullptr;
     m_simple_ptt_settings_isSet = false;
+    sky_map_settings = nullptr;
+    m_sky_map_settings_isSet = false;
+    star_tracker_settings = nullptr;
+    m_star_tracker_settings_isSet = false;
     vor_localizer_settings = nullptr;
     m_vor_localizer_settings_isSet = false;
 }
@@ -102,6 +108,8 @@ SWGFeatureSettings::init() {
     m_lime_rfe_settings_isSet = false;
     map_settings = new SWGMapSettings();
     m_map_settings_isSet = false;
+    morse_decoder_settings = new SWGMorseDecoderSettings();
+    m_morse_decoder_settings_isSet = false;
     per_tester_settings = new SWGPERTesterSettings();
     m_per_tester_settings_isSet = false;
     radiosonde_settings = new SWGRadiosondeSettings();
@@ -110,10 +118,14 @@ SWGFeatureSettings::init() {
     m_rig_ctl_server_settings_isSet = false;
     satellite_tracker_settings = new SWGSatelliteTrackerSettings();
     m_satellite_tracker_settings_isSet = false;
-    star_tracker_settings = new SWGStarTrackerSettings();
-    m_star_tracker_settings_isSet = false;
+    sid_settings = new SWGSIDSettings();
+    m_sid_settings_isSet = false;
     simple_ptt_settings = new SWGSimplePTTSettings();
     m_simple_ptt_settings_isSet = false;
+    sky_map_settings = new SWGSkyMapSettings();
+    m_sky_map_settings_isSet = false;
+    star_tracker_settings = new SWGStarTrackerSettings();
+    m_star_tracker_settings_isSet = false;
     vor_localizer_settings = new SWGVORLocalizerSettings();
     m_vor_localizer_settings_isSet = false;
 }
@@ -155,6 +167,9 @@ SWGFeatureSettings::cleanup() {
     if(map_settings != nullptr) { 
         delete map_settings;
     }
+    if(morse_decoder_settings != nullptr) { 
+        delete morse_decoder_settings;
+    }
     if(per_tester_settings != nullptr) { 
         delete per_tester_settings;
     }
@@ -167,11 +182,17 @@ SWGFeatureSettings::cleanup() {
     if(satellite_tracker_settings != nullptr) { 
         delete satellite_tracker_settings;
     }
-    if(star_tracker_settings != nullptr) { 
-        delete star_tracker_settings;
+    if(sid_settings != nullptr) { 
+        delete sid_settings;
     }
     if(simple_ptt_settings != nullptr) { 
         delete simple_ptt_settings;
+    }
+    if(sky_map_settings != nullptr) { 
+        delete sky_map_settings;
+    }
+    if(star_tracker_settings != nullptr) { 
+        delete star_tracker_settings;
     }
     if(vor_localizer_settings != nullptr) { 
         delete vor_localizer_settings;
@@ -215,6 +236,8 @@ SWGFeatureSettings::fromJsonObject(QJsonObject &pJson) {
     
     ::SWGSDRangel::setValue(&map_settings, pJson["MapSettings"], "SWGMapSettings", "SWGMapSettings");
     
+    ::SWGSDRangel::setValue(&morse_decoder_settings, pJson["MorseDecoderSettings"], "SWGMorseDecoderSettings", "SWGMorseDecoderSettings");
+    
     ::SWGSDRangel::setValue(&per_tester_settings, pJson["PERTesterSettings"], "SWGPERTesterSettings", "SWGPERTesterSettings");
     
     ::SWGSDRangel::setValue(&radiosonde_settings, pJson["RadiosondeSettings"], "SWGRadiosondeSettings", "SWGRadiosondeSettings");
@@ -223,9 +246,13 @@ SWGFeatureSettings::fromJsonObject(QJsonObject &pJson) {
     
     ::SWGSDRangel::setValue(&satellite_tracker_settings, pJson["SatelliteTrackerSettings"], "SWGSatelliteTrackerSettings", "SWGSatelliteTrackerSettings");
     
-    ::SWGSDRangel::setValue(&star_tracker_settings, pJson["StarTrackerSettings"], "SWGStarTrackerSettings", "SWGStarTrackerSettings");
+    ::SWGSDRangel::setValue(&sid_settings, pJson["SIDSettings"], "SWGSIDSettings", "SWGSIDSettings");
     
     ::SWGSDRangel::setValue(&simple_ptt_settings, pJson["SimplePTTSettings"], "SWGSimplePTTSettings", "SWGSimplePTTSettings");
+    
+    ::SWGSDRangel::setValue(&sky_map_settings, pJson["SkyMapSettings"], "SWGSkyMapSettings", "SWGSkyMapSettings");
+    
+    ::SWGSDRangel::setValue(&star_tracker_settings, pJson["StarTrackerSettings"], "SWGStarTrackerSettings", "SWGStarTrackerSettings");
     
     ::SWGSDRangel::setValue(&vor_localizer_settings, pJson["VORLocalizerSettings"], "SWGVORLocalizerSettings", "SWGVORLocalizerSettings");
     
@@ -284,6 +311,9 @@ SWGFeatureSettings::asJsonObject() {
     if((map_settings != nullptr) && (map_settings->isSet())){
         toJsonValue(QString("MapSettings"), map_settings, obj, QString("SWGMapSettings"));
     }
+    if((morse_decoder_settings != nullptr) && (morse_decoder_settings->isSet())){
+        toJsonValue(QString("MorseDecoderSettings"), morse_decoder_settings, obj, QString("SWGMorseDecoderSettings"));
+    }
     if((per_tester_settings != nullptr) && (per_tester_settings->isSet())){
         toJsonValue(QString("PERTesterSettings"), per_tester_settings, obj, QString("SWGPERTesterSettings"));
     }
@@ -296,11 +326,17 @@ SWGFeatureSettings::asJsonObject() {
     if((satellite_tracker_settings != nullptr) && (satellite_tracker_settings->isSet())){
         toJsonValue(QString("SatelliteTrackerSettings"), satellite_tracker_settings, obj, QString("SWGSatelliteTrackerSettings"));
     }
-    if((star_tracker_settings != nullptr) && (star_tracker_settings->isSet())){
-        toJsonValue(QString("StarTrackerSettings"), star_tracker_settings, obj, QString("SWGStarTrackerSettings"));
+    if((sid_settings != nullptr) && (sid_settings->isSet())){
+        toJsonValue(QString("SIDSettings"), sid_settings, obj, QString("SWGSIDSettings"));
     }
     if((simple_ptt_settings != nullptr) && (simple_ptt_settings->isSet())){
         toJsonValue(QString("SimplePTTSettings"), simple_ptt_settings, obj, QString("SWGSimplePTTSettings"));
+    }
+    if((sky_map_settings != nullptr) && (sky_map_settings->isSet())){
+        toJsonValue(QString("SkyMapSettings"), sky_map_settings, obj, QString("SWGSkyMapSettings"));
+    }
+    if((star_tracker_settings != nullptr) && (star_tracker_settings->isSet())){
+        toJsonValue(QString("StarTrackerSettings"), star_tracker_settings, obj, QString("SWGStarTrackerSettings"));
     }
     if((vor_localizer_settings != nullptr) && (vor_localizer_settings->isSet())){
         toJsonValue(QString("VORLocalizerSettings"), vor_localizer_settings, obj, QString("SWGVORLocalizerSettings"));
@@ -439,6 +475,16 @@ SWGFeatureSettings::setMapSettings(SWGMapSettings* map_settings) {
     this->m_map_settings_isSet = true;
 }
 
+SWGMorseDecoderSettings*
+SWGFeatureSettings::getMorseDecoderSettings() {
+    return morse_decoder_settings;
+}
+void
+SWGFeatureSettings::setMorseDecoderSettings(SWGMorseDecoderSettings* morse_decoder_settings) {
+    this->morse_decoder_settings = morse_decoder_settings;
+    this->m_morse_decoder_settings_isSet = true;
+}
+
 SWGPERTesterSettings*
 SWGFeatureSettings::getPerTesterSettings() {
     return per_tester_settings;
@@ -479,14 +525,14 @@ SWGFeatureSettings::setSatelliteTrackerSettings(SWGSatelliteTrackerSettings* sat
     this->m_satellite_tracker_settings_isSet = true;
 }
 
-SWGStarTrackerSettings*
-SWGFeatureSettings::getStarTrackerSettings() {
-    return star_tracker_settings;
+SWGSIDSettings*
+SWGFeatureSettings::getSidSettings() {
+    return sid_settings;
 }
 void
-SWGFeatureSettings::setStarTrackerSettings(SWGStarTrackerSettings* star_tracker_settings) {
-    this->star_tracker_settings = star_tracker_settings;
-    this->m_star_tracker_settings_isSet = true;
+SWGFeatureSettings::setSidSettings(SWGSIDSettings* sid_settings) {
+    this->sid_settings = sid_settings;
+    this->m_sid_settings_isSet = true;
 }
 
 SWGSimplePTTSettings*
@@ -497,6 +543,26 @@ void
 SWGFeatureSettings::setSimplePttSettings(SWGSimplePTTSettings* simple_ptt_settings) {
     this->simple_ptt_settings = simple_ptt_settings;
     this->m_simple_ptt_settings_isSet = true;
+}
+
+SWGSkyMapSettings*
+SWGFeatureSettings::getSkyMapSettings() {
+    return sky_map_settings;
+}
+void
+SWGFeatureSettings::setSkyMapSettings(SWGSkyMapSettings* sky_map_settings) {
+    this->sky_map_settings = sky_map_settings;
+    this->m_sky_map_settings_isSet = true;
+}
+
+SWGStarTrackerSettings*
+SWGFeatureSettings::getStarTrackerSettings() {
+    return star_tracker_settings;
+}
+void
+SWGFeatureSettings::setStarTrackerSettings(SWGStarTrackerSettings* star_tracker_settings) {
+    this->star_tracker_settings = star_tracker_settings;
+    this->m_star_tracker_settings_isSet = true;
 }
 
 SWGVORLocalizerSettings*
@@ -553,6 +619,9 @@ SWGFeatureSettings::isSet(){
         if(map_settings && map_settings->isSet()){
             isObjectUpdated = true; break;
         }
+        if(morse_decoder_settings && morse_decoder_settings->isSet()){
+            isObjectUpdated = true; break;
+        }
         if(per_tester_settings && per_tester_settings->isSet()){
             isObjectUpdated = true; break;
         }
@@ -565,10 +634,16 @@ SWGFeatureSettings::isSet(){
         if(satellite_tracker_settings && satellite_tracker_settings->isSet()){
             isObjectUpdated = true; break;
         }
-        if(star_tracker_settings && star_tracker_settings->isSet()){
+        if(sid_settings && sid_settings->isSet()){
             isObjectUpdated = true; break;
         }
         if(simple_ptt_settings && simple_ptt_settings->isSet()){
+            isObjectUpdated = true; break;
+        }
+        if(sky_map_settings && sky_map_settings->isSet()){
+            isObjectUpdated = true; break;
+        }
+        if(star_tracker_settings && star_tracker_settings->isSet()){
             isObjectUpdated = true; break;
         }
         if(vor_localizer_settings && vor_localizer_settings->isSet()){

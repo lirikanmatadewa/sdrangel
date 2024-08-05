@@ -1,5 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019-2020 Edouard Griffiths, F4EXB                              //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2015 John Greb <hexameron@spam.no>                              //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -27,15 +31,14 @@
 #include "gui/glspectrum.h"
 #include "gui/glspectrumgui.h"
 #include "gui/basicchannelsettingsdialog.h"
-#include "gui/devicestreamselectiondialog.h"
 #include "gui/dialpopup.h"
 #include "gui/dialogpositioner.h"
 #include "plugin/pluginapi.h"
-#include "util/simpleserializer.h"
 #include "util/db.h"
 #include "maincore.h"
 
 #include "chirpchatdemod.h"
+#include "chirpchatdemodmsg.h"
 #include "chirpchatdemodgui.h"
 
 ChirpChatDemodGUI* ChirpChatDemodGUI::create(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, BasebandSampleSink *rxChannel)
@@ -99,7 +102,7 @@ bool ChirpChatDemodGUI::handleMessage(const Message& message)
 
         return true;
     }
-    else if (ChirpChatDemod::MsgReportDecodeBytes::match(message))
+    else if (ChirpChatDemodMsg::MsgReportDecodeBytes::match(message))
     {
         if (m_settings.m_codingScheme == ChirpChatDemodSettings::CodingLoRa) {
             showLoRaMessage(message);
@@ -107,11 +110,19 @@ bool ChirpChatDemodGUI::handleMessage(const Message& message)
 
         return true;
     }
-    else if (ChirpChatDemod::MsgReportDecodeString::match(message))
+    else if (ChirpChatDemodMsg::MsgReportDecodeString::match(message))
     {
         if ((m_settings.m_codingScheme == ChirpChatDemodSettings::CodingASCII)
-         || (m_settings.m_codingScheme == ChirpChatDemodSettings::CodingTTY)) {
-             showTextMessage(message);
+        || (m_settings.m_codingScheme == ChirpChatDemodSettings::CodingTTY)) {
+            showTextMessage(message);
+        }
+
+        return true;
+    }
+    else if (ChirpChatDemodMsg::MsgReportDecodeFT::match(message))
+    {
+        if (m_settings.m_codingScheme == ChirpChatDemodSettings::CodingFT) {
+            showFTMessage(message);
         }
 
         return true;
@@ -276,6 +287,7 @@ void ChirpChatDemodGUI::on_header_stateChanged(int state)
 
     ui->fecParity->setEnabled(state != Qt::Checked);
     ui->crc->setEnabled(state != Qt::Checked);
+    ui->packetLength->setEnabled(state != Qt::Checked);
 
     applySettings();
 }
@@ -445,6 +457,7 @@ ChirpChatDemodGUI::ChirpChatDemodGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUI
     resetLoRaStatus();
 	applySettings(true);
     DialPopup::addPopupsToChildDials(this);
+    m_resizer.enableChildMouseTracking();
 }
 
 ChirpChatDemodGUI::~ChirpChatDemodGUI()
@@ -538,11 +551,11 @@ void ChirpChatDemodGUI::displaySquelch()
 
 void ChirpChatDemodGUI::displayLoRaStatus(int headerParityStatus, bool headerCRCStatus, int payloadParityStatus, bool payloadCRCStatus)
 {
-    if (m_settings.m_hasHeader && (headerParityStatus == (int) ParityOK)) {
+    if (m_settings.m_hasHeader && (headerParityStatus == (int) ChirpChatDemodSettings::ParityOK)) {
         ui->headerHammingStatus->setStyleSheet("QLabel { background-color : green; }");
-    } else if (m_settings.m_hasHeader && (headerParityStatus == (int) ParityError)) {
+    } else if (m_settings.m_hasHeader && (headerParityStatus == (int) ChirpChatDemodSettings::ParityError)) {
         ui->headerHammingStatus->setStyleSheet("QLabel { background-color : red; }");
-    } else if (m_settings.m_hasHeader && (headerParityStatus == (int) ParityCorrected)) {
+    } else if (m_settings.m_hasHeader && (headerParityStatus == (int) ChirpChatDemodSettings::ParityCorrected)) {
         ui->headerHammingStatus->setStyleSheet("QLabel { background-color : blue; }");
     } else {
         ui->headerHammingStatus->setStyleSheet("QLabel { background:rgb(79,79,79); }");
@@ -556,11 +569,11 @@ void ChirpChatDemodGUI::displayLoRaStatus(int headerParityStatus, bool headerCRC
         ui->headerCRCStatus->setStyleSheet("QLabel { background:rgb(79,79,79); }");
     }
 
-    if (payloadParityStatus == (int) ParityOK) {
+    if (payloadParityStatus == (int) ChirpChatDemodSettings::ParityOK) {
         ui->payloadFECStatus->setStyleSheet("QLabel { background-color : green; }");
-    } else if (payloadParityStatus == (int) ParityError) {
+    } else if (payloadParityStatus == (int) ChirpChatDemodSettings::ParityError) {
         ui->payloadFECStatus->setStyleSheet("QLabel { background-color : red; }");
-    } else if (payloadParityStatus == (int) ParityCorrected) {
+    } else if (payloadParityStatus == (int) ChirpChatDemodSettings::ParityCorrected) {
         ui->payloadFECStatus->setStyleSheet("QLabel { background-color : blue; }");
     } else {
         ui->payloadFECStatus->setStyleSheet("QLabel { background:rgb(79,79,79); }");
@@ -583,6 +596,25 @@ void ChirpChatDemodGUI::resetLoRaStatus()
     ui->nbCodewordsText->setText("---");
 }
 
+void ChirpChatDemodGUI::displayFTStatus(int payloadParityStatus, bool payloadCRCStatus)
+{
+    if (payloadParityStatus == (int) ChirpChatDemodSettings::ParityOK) {
+        ui->payloadFECStatus->setStyleSheet("QLabel { background-color : green; }");
+    } else if (payloadParityStatus == (int) ChirpChatDemodSettings::ParityError) {
+        ui->payloadFECStatus->setStyleSheet("QLabel { background-color : red; }");
+    } else if (payloadParityStatus == (int) ChirpChatDemodSettings::ParityCorrected) {
+        ui->payloadFECStatus->setStyleSheet("QLabel { background-color : blue; }");
+    } else {
+        ui->payloadFECStatus->setStyleSheet("QLabel { background:rgb(79,79,79); }");
+    }
+
+    if (payloadCRCStatus) {
+        ui->payloadCRCStatus->setStyleSheet("QLabel { background-color : green; }");
+    } else {
+        ui->payloadCRCStatus->setStyleSheet("QLabel { background-color : red; }");
+    }
+}
+
 void ChirpChatDemodGUI::setBandwidths()
 {
     int maxBandwidth = m_basebandSampleRate/ChirpChatDemodSettings::oversampling;
@@ -602,7 +634,7 @@ void ChirpChatDemodGUI::setBandwidths()
 
 void ChirpChatDemodGUI::showLoRaMessage(const Message& message)
 {
-    const ChirpChatDemod::MsgReportDecodeBytes& msg = (ChirpChatDemod::MsgReportDecodeBytes&) message;
+    const ChirpChatDemodMsg::MsgReportDecodeBytes& msg = (ChirpChatDemodMsg::MsgReportDecodeBytes&) message;
     QByteArray bytes = msg.getBytes();
     QString syncWordStr((tr("%1").arg(msg.getSyncWord(), 2, 16, QChar('0'))));
 
@@ -638,7 +670,7 @@ void ChirpChatDemodGUI::showLoRaMessage(const Message& message)
             .arg(msg.getHeaderCRCStatus() ? "ok" : "err");
 
         displayStatus(loRaStatus);
-        displayLoRaStatus(msg.getHeaderParityStatus(), msg.getHeaderCRCStatus(), (int) ParityUndefined, true);
+        displayLoRaStatus(msg.getHeaderParityStatus(), msg.getHeaderCRCStatus(), (int) ChirpChatDemodSettings::ParityUndefined, true);
         ui->payloadCRCStatus->setStyleSheet("QLabel { background:rgb(79,79,79); }"); // reset payload CRC
     }
     else
@@ -672,7 +704,7 @@ void ChirpChatDemodGUI::showLoRaMessage(const Message& message)
 
 void ChirpChatDemodGUI::showTextMessage(const Message& message)
 {
-    const ChirpChatDemod::MsgReportDecodeString& msg = (ChirpChatDemod::MsgReportDecodeString&) message;
+    const ChirpChatDemodMsg::MsgReportDecodeString& msg = (ChirpChatDemodMsg::MsgReportDecodeString&) message;
 
     QDateTime dt = QDateTime::currentDateTime();
     QString dateStr = dt.toString("HH:mm:ss");
@@ -686,6 +718,27 @@ void ChirpChatDemodGUI::showTextMessage(const Message& message)
 
     displayStatus(status);
     displayText(msg.getString());
+}
+
+void ChirpChatDemodGUI::showFTMessage(const Message& message)
+{
+    const ChirpChatDemodMsg::MsgReportDecodeFT& msg = (ChirpChatDemodMsg::MsgReportDecodeFT&) message;
+
+    QDateTime dt = QDateTime::currentDateTime();
+    QString dateStr = dt.toString("HH:mm:ss");
+    ui->sText->setText(tr("%1").arg(msg.getSingalDb(), 0, 'f', 1));
+    ui->snrText->setText(tr("%1").arg(msg.getSingalDb() - msg.getNoiseDb(), 0, 'f', 1));
+
+    QString status = tr("%1 S:%2 SN:%3 FEC:%4 CRC:%5")
+        .arg(dateStr)
+        .arg(msg.getSingalDb(), 0, 'f', 1)
+        .arg(msg.getSingalDb() - msg.getNoiseDb(), 0, 'f', 1)
+        .arg(getParityStr(msg.getPayloadParityStatus()))
+        .arg(msg.getPayloadCRCStatus() ? "ok" : "err");
+
+    displayStatus(status);
+    displayText(msg.getMessage()); // We do not show constituents of the message (call1, ...)
+    displayFTStatus(msg.getPayloadParityStatus(), msg.getPayloadCRCStatus());
 }
 
 void ChirpChatDemodGUI::displayText(const QString& text)
@@ -748,11 +801,11 @@ void ChirpChatDemodGUI::displayStatus(const QString& status)
 
 QString ChirpChatDemodGUI::getParityStr(int parityStatus)
 {
-    if (parityStatus == (int) ParityError) {
+    if (parityStatus == (int) ChirpChatDemodSettings::ParityError) {
         return "err";
-    } else if (parityStatus == (int) ParityCorrected) {
+    } else if (parityStatus == (int) ChirpChatDemodSettings::ParityCorrected) {
         return "fix";
-    } else if (parityStatus == (int) ParityOK) {
+    } else if (parityStatus == (int) ChirpChatDemodSettings::ParityOK) {
         return "ok";
     } else {
         return "n/a";

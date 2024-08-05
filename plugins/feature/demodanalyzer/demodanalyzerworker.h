@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2020-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2022 Jiří Pinkava <jiri.pinkava@rossum.ai>                      //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -108,7 +109,6 @@ public:
 
 private:
     DataFifo *m_dataFifo;
-    int m_channelSampleRate;
     int m_sinkSampleRate;
 	MessageQueue m_inputMessageQueue;  //!< Queue for asynchronous inbound communication
     MessageQueue *m_msgQueueToFeature; //!< Queue to report channel change to main feature object

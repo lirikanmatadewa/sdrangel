@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2019-2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -25,13 +25,10 @@
 
 #include "SWGDeviceSettings.h"
 #include "SWGDeviceState.h"
-#include "SWGTestMISettings.h"
 #include "SWGDeviceReport.h"
 
 #include "device/deviceapi.h"
 #include "dsp/dspcommands.h"
-#include "dsp/dspengine.h"
-#include "dsp/dspdevicemimoengine.h"
 #include "dsp/devicesamplesource.h"
 #include "dsp/devicesamplesink.h"
 #include "bladerf2/devicebladerf2.h"
@@ -174,7 +171,6 @@ bool BladeRF2MIMO::startRx()
     }
 
 	m_sourceThread->startWork();
-	mutexLocker.unlock();
 	m_runningRx = true;
 
     return true;
@@ -210,7 +206,6 @@ bool BladeRF2MIMO::startTx()
     }
 
 	m_sinkThread->startWork();
-	mutexLocker.unlock();
 	m_runningTx = true;
 
     return true;
@@ -730,7 +725,7 @@ bool BladeRF2MIMO::applySettings(const BladeRF2MIMOSettings& settings, const QLi
 
     // Reverse API settings
 
-    if (settingsKeys.contains("useReverseAPI"))
+    if (settings.m_useReverseAPI)
     {
         bool fullUpdate = (settingsKeys.contains("useReverseAPI") && settings.m_useReverseAPI) ||
             settingsKeys.contains("reverseAPIAddress") ||

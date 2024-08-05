@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2017 F4HKW                                                      //
+// Copyright (C) 2017-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2020 Vort <vvort@yandex.ru>                                     //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 // for F4EXB / SDRAngel                                                          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
@@ -22,6 +24,7 @@
 #include "atvdemodgui.h"
 
 #include "device/deviceuiset.h"
+#include "dsp/dspcommands.h"
 #include "dsp/scopevis.h"
 #include "dsp/glscopesettings.h"
 #include "gui/basicchannelsettingsdialog.h"
@@ -29,7 +32,6 @@
 #include "gui/dialogpositioner.h"
 #include "ui_atvdemodgui.h"
 #include "plugin/pluginapi.h"
-#include "util/simpleserializer.h"
 #include "util/db.h"
 #include "dsp/dspengine.h"
 #include "maincore.h"
@@ -333,6 +335,7 @@ ATVDemodGUI::ATVDemodGUI(PluginAPI* objPluginAPI, DeviceUISet *deviceUISet, Base
 
     makeUIConnections();
     DialPopup::addPopupsToChildDials(this);
+    m_resizer.enableChildMouseTracking();
 }
 
 ATVDemodGUI::~ATVDemodGUI()

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2021-2024 Jon Beniston, M7RCE                                   //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -26,7 +26,7 @@
 #include <QDebug>
 #include <QMessageBox>
 #include <QAction>
-#include <QRegExp>
+#include <QRegularExpression>
 #include <QClipboard>
 #include <QFileDialog>
 #include <QImage>
@@ -39,32 +39,25 @@
 #include "dsp/dspcommands.h"
 #include "ui_radioastronomygui.h"
 #include "plugin/pluginapi.h"
-#include "util/simpleserializer.h"
 #include "util/db.h"
 #include "util/astronomy.h"
 #include "util/interpolation.h"
 #include "util/png.h"
 #include "util/units.h"
 #include "gui/basicchannelsettingsdialog.h"
-#include "gui/devicestreamselectiondialog.h"
 #include "dsp/dspengine.h"
-#include "gui/crightclickenabler.h"
 #include "gui/timedelegate.h"
 #include "gui/decimaldelegate.h"
 #include "gui/dialogpositioner.h"
 #include "channel/channelwebapiutils.h"
 #include "maincore.h"
-#include "feature/featurewebapiutils.h"
 #include "feature/feature.h"
-#include "feature/featureset.h"
 #include "webapi/webapiutils.h"
 
 #include "radioastronomy.h"
-#include "radioastronomysink.h"
 #include "radioastronomysensordialog.h"
 #include "radioastronomycalibrationdialog.h"
 
-#include "SWGMapItem.h"
 #include "SWGStarTrackerTarget.h"
 #include "SWGStarTrackerDisplaySettings.h"
 #include "SWGStarTrackerDisplayLoSSettings.h"
@@ -73,6 +66,9 @@
 class TimeDeltaDelegate : public QStyledItemDelegate {
 
 public:
+    TimeDeltaDelegate(QObject *parent = nullptr) :
+        QStyledItemDelegate(parent) {}
+
     virtual QString displayText(const QVariant &value, const QLocale &locale) const override
     {
         (void) locale;
@@ -104,6 +100,9 @@ private:
 class HMSDelegate : public QStyledItemDelegate {
 
 public:
+    HMSDelegate(QObject *parent = nullptr) :
+        QStyledItemDelegate(parent) {}
+
     virtual QString displayText(const QVariant &value, const QLocale &locale) const override
     {
         (void) locale;
@@ -116,6 +115,9 @@ public:
 class DMSDelegate : public QStyledItemDelegate {
 
 public:
+    DMSDelegate(QObject *parent = nullptr) :
+        QStyledItemDelegate(parent) {}
+
     virtual QString displayText(const QVariant &value, const QLocale &locale) const override
     {
         (void) locale;
@@ -916,31 +918,33 @@ bool RadioAstronomyGUI::deserialize(const QByteArray& data)
     }
 }
 
-void RadioAstronomyGUI::updateAvailableFeatures()
+void RadioAstronomyGUI::updateAvailableFeatures(const AvailableChannelOrFeatureList& availableFeatures, const QStringList& renameFrom, const QStringList& renameTo)
 {
-    QString currentText = ui->starTracker->currentText();
+    // Update starTracker setting if it has been renamed
+    if (renameFrom.contains(m_settings.m_starTracker))
+    {
+        m_settings.m_starTracker = renameTo[renameFrom.indexOf(m_settings.m_starTracker)];
+        applySettings();
+    }
+
     ui->starTracker->blockSignals(true);
     ui->starTracker->clear();
 
-    for (const auto& feature : m_availableFeatures) {
-        ui->starTracker->addItem(tr("F%1:%2 %3").arg(feature.m_featureSetIndex).arg(feature.m_featureIndex).arg(feature.m_type));
+    for (const auto& feature : availableFeatures) {
+        ui->starTracker->addItem(feature.getLongId());
     }
 
-    if (currentText.isEmpty())
-    {
-        if (m_availableFeatures.size() > 0) {
-            ui->starTracker->setCurrentIndex(0);
-        }
-    }
-    else
-    {
-        ui->starTracker->setCurrentIndex(ui->starTracker->findText(currentText));
+    int idx = ui->starTracker->findText(m_settings.m_starTracker);
+    if (idx >= 0) {
+        ui->starTracker->setCurrentIndex(idx);
+    } else  {
+        ui->starTracker->setCurrentIndex(0);
     }
 
     ui->starTracker->blockSignals(false);
-    QString newText = ui->starTracker->currentText();
 
-    if (currentText != newText)
+    QString newText = ui->starTracker->currentText();
+    if (m_settings.m_starTracker != newText)
     {
        m_settings.m_starTracker = newText;
        applySettings();
@@ -970,8 +974,7 @@ bool RadioAstronomyGUI::handleMessage(const Message& message)
     {
         qDebug("RadioAstronomyGUI::handleMessage: MsgReportAvailableFeatures");
         RadioAstronomy::MsgReportAvailableFeatures& report = (RadioAstronomy::MsgReportAvailableFeatures&) message;
-        m_availableFeatures = report.getFeatures();
-        updateAvailableFeatures();
+        updateAvailableFeatures(report.getFeatures(), report.getRenameFrom(), report.getRenameTo());
         return true;
     }
     else if (MainCore::MsgStarTrackerTarget::match(message))
@@ -1063,7 +1066,7 @@ bool RadioAstronomyGUI::handleMessage(const Message& message)
     else if (RadioAstronomy::MsgReportAvailableRotators::match(message))
     {
         RadioAstronomy::MsgReportAvailableRotators& report = (RadioAstronomy::MsgReportAvailableRotators&) message;
-        updateRotatorList(report.getFeatures());
+        updateRotatorList(report.getFeatures(), report.getRenameFrom(), report.getRenameTo());
         return true;
     }
 
@@ -1443,7 +1446,7 @@ void RadioAstronomyGUI::calcCalTrx()
     }
 }
 
-// Estimate spillover temperature (This is typically very Az/El depenedent as ground noise will vary)
+// Estimate spillover temperature (This is typically very Az/El dependent as ground noise will vary)
 void RadioAstronomyGUI::calcCalTsp()
 {
     if (!ui->calTrx->text().isEmpty() && !ui->calTsky->text().isEmpty() && !ui->calYFactor->text().isEmpty())
@@ -1901,11 +1904,11 @@ void RadioAstronomyGUI::on_loadSpectrumData_clicked()
 
 void RadioAstronomyGUI::on_powerTable_cellDoubleClicked(int row, int column)
 {
-    if ((column >= POWER_COL_RA) && (column >= POWER_COL_EL))
+    if ((column >= POWER_COL_RA) && (column <= POWER_COL_EL))
     {
         // Display target in Star Tracker
         QList<ObjectPipe*> starTrackerPipes;
-        MainCore::instance()->getMessagePipes().getMessagePipes(this, "startracker.display", starTrackerPipes);
+        MainCore::instance()->getMessagePipes().getMessagePipes(m_radioAstronomy, "startracker.display", starTrackerPipes);
 
         for (const auto& pipe : starTrackerPipes)
         {
@@ -2129,42 +2132,42 @@ RadioAstronomyGUI::RadioAstronomyGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUI
     ui->powerTable->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->powerTable, SIGNAL(customContextMenuRequested(QPoint)), SLOT(customContextMenuRequested(QPoint)));
 
-    ui->powerTable->setItemDelegateForColumn(POWER_COL_TIME, new TimeDelegate());
-    //ui->powerTable->setItemDelegateForColumn(POWER_COL_POWER, new DecimalDelegate(6));
-    ui->powerTable->setItemDelegateForColumn(POWER_COL_POWER_DB, new DecimalDelegate(1));
-    ui->powerTable->setItemDelegateForColumn(POWER_COL_POWER_DBM, new DecimalDelegate(1));
-    ui->powerTable->setItemDelegateForColumn(POWER_COL_TSYS, new DecimalDelegate(0));
-    ui->powerTable->setItemDelegateForColumn(POWER_COL_TSYS0, new DecimalDelegate(0));
-    ui->powerTable->setItemDelegateForColumn(POWER_COL_TSOURCE, new DecimalDelegate(0));
-    ui->powerTable->setItemDelegateForColumn(POWER_COL_TB, new DecimalDelegate(0));
-    ui->powerTable->setItemDelegateForColumn(POWER_COL_TSKY, new DecimalDelegate(0));
-    ui->powerTable->setItemDelegateForColumn(POWER_COL_FLUX, new DecimalDelegate(2));
-    ui->powerTable->setItemDelegateForColumn(POWER_COL_SIGMA_T, new DecimalDelegate(2));
-    ui->powerTable->setItemDelegateForColumn(POWER_COL_SIGMA_S, new DecimalDelegate(1));
-    ui->powerTable->setItemDelegateForColumn(POWER_COL_RA, new HMSDelegate());
-    ui->powerTable->setItemDelegateForColumn(POWER_COL_DEC, new DMSDelegate());
-    ui->powerTable->setItemDelegateForColumn(POWER_COL_GAL_LAT, new DecimalDelegate(0));
-    ui->powerTable->setItemDelegateForColumn(POWER_COL_GAL_LON, new DecimalDelegate(0));
-    ui->powerTable->setItemDelegateForColumn(POWER_COL_AZ, new DecimalDelegate(0));
-    ui->powerTable->setItemDelegateForColumn(POWER_COL_EL, new DecimalDelegate(0));
-    ui->powerTable->setItemDelegateForColumn(POWER_COL_VBCRS, new DecimalDelegate(1));
-    ui->powerTable->setItemDelegateForColumn(POWER_COL_VLSR, new DecimalDelegate(1));
-    ui->powerTable->setItemDelegateForColumn(POWER_COL_AIR_TEMP, new DecimalDelegate(1));
-    ui->powerTable->setItemDelegateForColumn(POWER_COL_ROT_AZ, new DecimalDelegate(0));
-    ui->powerTable->setItemDelegateForColumn(POWER_COL_ROT_EL, new DecimalDelegate(0));
-    ui->powerTable->setItemDelegateForColumn(POWER_COL_ROT_AZ_OFF, new DecimalDelegate(0));
-    ui->powerTable->setItemDelegateForColumn(POWER_COL_ROT_EL_OFF, new DecimalDelegate(0));
+    ui->powerTable->setItemDelegateForColumn(POWER_COL_TIME, new TimeDelegate("hh:mm:ss", ui->powerTable));
+    //ui->powerTable->setItemDelegateForColumn(POWER_COL_POWER, new DecimalDelegate(6, ui->powerTable));
+    ui->powerTable->setItemDelegateForColumn(POWER_COL_POWER_DB, new DecimalDelegate(1, ui->powerTable));
+    ui->powerTable->setItemDelegateForColumn(POWER_COL_POWER_DBM, new DecimalDelegate(1, ui->powerTable));
+    ui->powerTable->setItemDelegateForColumn(POWER_COL_TSYS, new DecimalDelegate(0, ui->powerTable));
+    ui->powerTable->setItemDelegateForColumn(POWER_COL_TSYS0, new DecimalDelegate(0, ui->powerTable));
+    ui->powerTable->setItemDelegateForColumn(POWER_COL_TSOURCE, new DecimalDelegate(0, ui->powerTable));
+    ui->powerTable->setItemDelegateForColumn(POWER_COL_TB, new DecimalDelegate(0, ui->powerTable));
+    ui->powerTable->setItemDelegateForColumn(POWER_COL_TSKY, new DecimalDelegate(0, ui->powerTable));
+    ui->powerTable->setItemDelegateForColumn(POWER_COL_FLUX, new DecimalDelegate(2, ui->powerTable));
+    ui->powerTable->setItemDelegateForColumn(POWER_COL_SIGMA_T, new DecimalDelegate(2, ui->powerTable));
+    ui->powerTable->setItemDelegateForColumn(POWER_COL_SIGMA_S, new DecimalDelegate(1, ui->powerTable));
+    ui->powerTable->setItemDelegateForColumn(POWER_COL_RA, new HMSDelegate(ui->powerTable));
+    ui->powerTable->setItemDelegateForColumn(POWER_COL_DEC, new DMSDelegate(ui->powerTable));
+    ui->powerTable->setItemDelegateForColumn(POWER_COL_GAL_LAT, new DecimalDelegate(0, ui->powerTable));
+    ui->powerTable->setItemDelegateForColumn(POWER_COL_GAL_LON, new DecimalDelegate(0, ui->powerTable));
+    ui->powerTable->setItemDelegateForColumn(POWER_COL_AZ, new DecimalDelegate(0, ui->powerTable));
+    ui->powerTable->setItemDelegateForColumn(POWER_COL_EL, new DecimalDelegate(0, ui->powerTable));
+    ui->powerTable->setItemDelegateForColumn(POWER_COL_VBCRS, new DecimalDelegate(1, ui->powerTable));
+    ui->powerTable->setItemDelegateForColumn(POWER_COL_VLSR, new DecimalDelegate(1, ui->powerTable));
+    ui->powerTable->setItemDelegateForColumn(POWER_COL_AIR_TEMP, new DecimalDelegate(1, ui->powerTable));
+    ui->powerTable->setItemDelegateForColumn(POWER_COL_ROT_AZ, new DecimalDelegate(0, ui->powerTable));
+    ui->powerTable->setItemDelegateForColumn(POWER_COL_ROT_EL, new DecimalDelegate(0, ui->powerTable));
+    ui->powerTable->setItemDelegateForColumn(POWER_COL_ROT_AZ_OFF, new DecimalDelegate(0, ui->powerTable));
+    ui->powerTable->setItemDelegateForColumn(POWER_COL_ROT_EL_OFF, new DecimalDelegate(0, ui->powerTable));
 
     resizeSpectrumMarkerTable();
-    ui->spectrumMarkerTable->setItemDelegateForColumn(SPECTRUM_MARKER_COL_FREQ, new DecimalDelegate(6));
-    ui->spectrumMarkerTable->setItemDelegateForColumn(SPECTRUM_MARKER_COL_VALUE, new DecimalDelegate(1));
-    ui->spectrumMarkerTable->setItemDelegateForColumn(SPECTRUM_MARKER_COL_DELTA_X, new DecimalDelegate(6));
-    ui->spectrumMarkerTable->setItemDelegateForColumn(SPECTRUM_MARKER_COL_DELTA_Y, new DecimalDelegate(1));
-    ui->spectrumMarkerTable->setItemDelegateForColumn(SPECTRUM_MARKER_COL_VR, new DecimalDelegate(2));
-    ui->spectrumMarkerTable->setItemDelegateForColumn(SPECTRUM_MARKER_COL_R, new DecimalDelegate(1));
-    ui->spectrumMarkerTable->setItemDelegateForColumn(SPECTRUM_MARKER_COL_D, new DecimalDelegate(1));
-    ui->spectrumMarkerTable->setItemDelegateForColumn(SPECTRUM_MARKER_COL_R_MIN, new DecimalDelegate(1));
-    ui->spectrumMarkerTable->setItemDelegateForColumn(SPECTRUM_MARKER_COL_V, new DecimalDelegate(1));
+    ui->spectrumMarkerTable->setItemDelegateForColumn(SPECTRUM_MARKER_COL_FREQ, new DecimalDelegate(6, ui->spectrumMarkerTable));
+    ui->spectrumMarkerTable->setItemDelegateForColumn(SPECTRUM_MARKER_COL_VALUE, new DecimalDelegate(1, ui->spectrumMarkerTable));
+    ui->spectrumMarkerTable->setItemDelegateForColumn(SPECTRUM_MARKER_COL_DELTA_X, new DecimalDelegate(6, ui->spectrumMarkerTable));
+    ui->spectrumMarkerTable->setItemDelegateForColumn(SPECTRUM_MARKER_COL_DELTA_Y, new DecimalDelegate(1, ui->spectrumMarkerTable));
+    ui->spectrumMarkerTable->setItemDelegateForColumn(SPECTRUM_MARKER_COL_VR, new DecimalDelegate(2, ui->spectrumMarkerTable));
+    ui->spectrumMarkerTable->setItemDelegateForColumn(SPECTRUM_MARKER_COL_R, new DecimalDelegate(1, ui->spectrumMarkerTable));
+    ui->spectrumMarkerTable->setItemDelegateForColumn(SPECTRUM_MARKER_COL_D, new DecimalDelegate(1, ui->spectrumMarkerTable));
+    ui->spectrumMarkerTable->setItemDelegateForColumn(SPECTRUM_MARKER_COL_R_MIN, new DecimalDelegate(1, ui->spectrumMarkerTable));
+    ui->spectrumMarkerTable->setItemDelegateForColumn(SPECTRUM_MARKER_COL_V, new DecimalDelegate(1, ui->spectrumMarkerTable));
 
     // Create blank marker table
     ui->spectrumMarkerTable->setRowCount(SPECTRUM_MARKER_ROWS); // 1 peak and two markers
@@ -2193,10 +2196,10 @@ RadioAstronomyGUI::RadioAstronomyGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUI
     connect(ui->spectrumMarkerTable, &QTableWidget::itemChanged, this, &RadioAstronomyGUI::spectrumMarkerTableItemChanged);
 
     resizePowerMarkerTable();
-    ui->powerMarkerTable->setItemDelegateForColumn(POWER_MARKER_COL_TIME, new TimeDelegate());
-    ui->powerMarkerTable->setItemDelegateForColumn(POWER_MARKER_COL_VALUE, new DecimalDelegate(1));
-    ui->powerMarkerTable->setItemDelegateForColumn(POWER_MARKER_COL_DELTA_X, new TimeDeltaDelegate());
-    ui->powerMarkerTable->setItemDelegateForColumn(POWER_MARKER_COL_DELTA_Y, new DecimalDelegate(1));
+    ui->powerMarkerTable->setItemDelegateForColumn(POWER_MARKER_COL_TIME, new TimeDelegate("hh:mm:ss", ui->powerMarkerTable));
+    ui->powerMarkerTable->setItemDelegateForColumn(POWER_MARKER_COL_VALUE, new DecimalDelegate(1, ui->powerMarkerTable));
+    ui->powerMarkerTable->setItemDelegateForColumn(POWER_MARKER_COL_DELTA_X, new TimeDeltaDelegate(ui->powerMarkerTable));
+    ui->powerMarkerTable->setItemDelegateForColumn(POWER_MARKER_COL_DELTA_Y, new DecimalDelegate(1, ui->powerMarkerTable));
 
     // Create blank marker table
     ui->powerMarkerTable->setRowCount(POWER_MARKER_ROWS); // 1 peak and two markers
@@ -2223,6 +2226,7 @@ RadioAstronomyGUI::RadioAstronomyGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUI
     displaySettings();
     makeUIConnections();
     applySettings(true);
+    m_resizer.enableChildMouseTracking();
 
     create2DImage();
 
@@ -2302,6 +2306,7 @@ void RadioAstronomyGUI::customContextMenuRequested(QPoint pos)
 
 RadioAstronomyGUI::~RadioAstronomyGUI()
 {
+    delete m_networkManager;
     delete ui;
     delete m_calHot;
     delete m_calCold;
@@ -2603,17 +2608,22 @@ void RadioAstronomyGUI::tick()
     m_tickCount++;
 }
 
-void RadioAstronomyGUI::updateRotatorList(const QList<RadioAstronomySettings::AvailableFeature>& rotators)
+void RadioAstronomyGUI::updateRotatorList(const AvailableChannelOrFeatureList& rotators, const QStringList& renameFrom, const QStringList& renameTo)
 {
+    // Update rotator setting if it has been renamed
+    if (renameFrom.contains(m_settings.m_rotator))
+    {
+        m_settings.m_rotator = renameTo[renameFrom.indexOf(m_settings.m_rotator)];
+        applySettings();
+    }
+
     // Update list of rotators
     ui->rotator->blockSignals(true);
     ui->rotator->clear();
     ui->rotator->addItem("None");
 
-    for (const auto& rotator : rotators)
-    {
-        QString name = QString("F%1:%2 %3").arg(rotator.m_featureSetIndex).arg(rotator.m_featureIndex).arg(rotator.m_type);
-        ui->rotator->addItem(name);
+    for (const auto& rotator : rotators) {
+        ui->rotator->addItem(rotator.getLongId());
     }
 
     // Rotator feature can be created after this plugin, so select it
@@ -2743,12 +2753,10 @@ void RadioAstronomyGUI::on_rotator_currentTextChanged(const QString& text)
 void RadioAstronomyGUI::setColumnPrecisionFromRotator()
 {
     // Match rotator precision
-    const QRegExp re("F([0-9]+):([0-9]+)");
-    if (re.indexIn(m_settings.m_rotator) >= 0)
-    {
-        int featureSetIndex = re.capturedTexts()[1].toInt();
-        int featureIndex = re.capturedTexts()[2].toInt();
+    unsigned int featureSetIndex, featureIndex;
 
+    if (MainCore::getFeatureIndexFromId(m_settings.m_rotator, featureSetIndex, featureIndex))
+    {
         int precision = 0;
         if (ChannelWebAPIUtils::getFeatureSetting(featureSetIndex, featureIndex, "precision", precision))
         {
@@ -2975,7 +2983,7 @@ void RadioAstronomyGUI::updateSpectrumChartWidgetsVisibility()
     getRollupContents()->arrangeRollups();
 }
 
-// Calulate mean, RMS and standard deviation
+// Calculate mean, RMS and standard deviation
 // Currently this is for all data - but could make it only for visible data
 void RadioAstronomyGUI::calcAverages()
 {
@@ -4083,7 +4091,7 @@ static double lineDopplerVelocity(double centre, double f)
     return Astronomy::dopplerToVelocity(f, centre) / 1000.0f;
 }
 
-// Convert frequency shift to velocity (+ve receeding - which seems to be the astronomical convention)
+// Convert frequency shift to velocity (+ve receding - which seems to be the astronomical convention)
 double RadioAstronomyGUI::dopplerToVelocity(double centre, double f, FFTMeasurement *fft)
 {
     double v = lineDopplerVelocity(centre, f);
@@ -4099,7 +4107,7 @@ double RadioAstronomyGUI::dopplerToVelocity(double centre, double f, FFTMeasurem
     default:
         break;
     }
-    // Make +ve receeding
+    // Make +ve receding
     return -v;
 }
 
@@ -4336,7 +4344,7 @@ void RadioAstronomyGUI::updateLoSMarker(const QString& name, float l, float b, f
 {
     // Send to Star Tracker
     QList<ObjectPipe*> starTrackerPipes;
-    MainCore::instance()->getMessagePipes().getMessagePipes(this, "startracker.display", starTrackerPipes);
+    MainCore::instance()->getMessagePipes().getMessagePipes(m_radioAstronomy, "startracker.display", starTrackerPipes);
 
     for (const auto& pipe : starTrackerPipes)
     {
@@ -4637,7 +4645,7 @@ void RadioAstronomyGUI::calcFFTTotalTemperature(FFTMeasurement* fft)
         fft->m_totalPowerdBm = Astronomy::noisePowerdBm(tempSum, bw);
         fft->m_tSys = tempSum/fft->m_fftSize;
 
-        // Esimate source temperature
+        // Estimate source temperature
         fft->m_tSource = calcTSource(fft);
 
         // Calculate error due to thermal noise and gain variation
@@ -4686,12 +4694,10 @@ void RadioAstronomyGUI::addFFT(FFTMeasurement *fft, bool skipCalcs)
 
 void RadioAstronomyGUI::getRotatorData(FFTMeasurement *fft)
 {
-    const QRegExp re("F([0-9]+):([0-9]+)");
-    if (re.indexIn(m_settings.m_rotator) >= 0)
-    {
-        int rotatorFeatureSetIndex = re.capturedTexts()[1].toInt();
-        int rotatorFeatureIndex = re.capturedTexts()[2].toInt();
+    unsigned int rotatorFeatureSetIndex, rotatorFeatureIndex;
 
+    if (MainCore::getFeatureIndexFromId(m_settings.m_rotator, rotatorFeatureSetIndex, rotatorFeatureIndex))
+    {
         SWGSDRangel::SWGFeatureReport featureReport;
         double value;
         qDebug() << m_settings.m_rotator << rotatorFeatureSetIndex << rotatorFeatureIndex;
@@ -4797,7 +4803,7 @@ void RadioAstronomyGUI::on_spectrumIndex_valueChanged(int value)
 
         // Display target in Star Tracker
         QList<ObjectPipe*> starTrackerPipes;
-        MainCore::instance()->getMessagePipes().getMessagePipes(this, "startracker.display", starTrackerPipes);
+        MainCore::instance()->getMessagePipes().getMessagePipes(m_radioAstronomy, "startracker.display", starTrackerPipes);
 
         for (const auto& pipe : starTrackerPipes)
         {
@@ -5467,7 +5473,7 @@ void RadioAstronomyGUI::on_spectrumShowLAB_toggled(bool checked)
     applySettings();
     m_fftLABSeries->setVisible(m_settings.m_spectrumLAB);
     if (m_settings.m_spectrumLAB) {
-        plotLAB(); // Replot incase data needs to be downloaded
+        plotLAB(); // Replot in case data needs to be downloaded
     }
     spectrumAutoscale();
 }
@@ -6048,10 +6054,11 @@ void RadioAstronomyGUI::networkManagerFinished(QNetworkReply *reply)
     else
     {
         QString answer = reply->readAll();
-        QRegExp re("a href=\\\"download.php([^\"]*)\"");
-        if (re.indexIn(answer) != -1)
+        QRegularExpression re("a href=\\\"download.php([^\"]*)\"");
+        QRegularExpressionMatch match = re.match(answer);
+        if (match.hasMatch())
         {
-            QString filename = re.capturedTexts()[1];
+            QString filename = match.capturedTexts()[1];
             qDebug() << "RadioAstronomyGUI: Downloading LAB reference data: " << filename;
             m_dlm.download(QUrl("https://www.astro.uni-bonn.de/hisurvey/euhou/LABprofile/download.php" + filename), m_filenameLAB);
         }
@@ -6087,7 +6094,7 @@ void RadioAstronomyGUI::downloadFinished(const QString& filename, bool success)
                 }
                 else
                 {
-                    // Try ploting for current FFT (as we only allow one download at a time, so may have been skipped)
+                    // Try plotting for current FFT (as we only allow one download at a time, so may have been skipped)
                     m_downloadingLAB = false;
                     plotLAB(fft->m_l, fft->m_b, m_beamWidth);
                     // Don't clear m_downloadingLAB after this point

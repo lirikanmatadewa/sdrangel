@@ -2,7 +2,7 @@
 
 <h2>Introduction</h2>
 
-The Packet Error Rate (PER) Tester feature can be used to measure the packet error rate over digital, packet based protocols such as AX.25 (Packet mod/demod), LoRa (ChipChat mod/demod), AIS and 802.15.4.
+The Packet Error Rate (PER) Tester feature can be used to measure the packet error rate over digital, packet based protocols such as AX.25 (Packet mod/demod), LoRa (ChirpChat mod/demod), AIS and 802.15.4.
 
 The PER Tester feature allows you to define the contents of the packets to transmit, which can include a per-packet 32-bit identifier, as well as a user-defined or random payload, how many packets are sent and the interval between them.
 
@@ -97,8 +97,8 @@ The statistics fields display the statistics for the current test:
 
 Full details of the API can be found in the Swagger documentation. Here is a quick example of how to set the azimuth and elevation from the command line:
 
-    curl -X PATCH "http://127.0.0.1:8091/sdrangel/featureset/0/feature/0/settings" -d '{"featureType": "PERTester",  "PERTesterSettings": { "packetCount": 100 }}'
+    curl -X PATCH "http://127.0.0.1:8091/sdrangel/featureset/feature/0/settings" -d '{"featureType": "PERTester",  "PERTesterSettings": { "packetCount": 100 }}'
 
 To start sending the test:
 
-    curl -X POST "http://127.0.0.1:8091/sdrangel/featureset/0/feature/0/run"
+    curl -X POST "http://127.0.0.1:8091/sdrangel/featureset/feature/0/run"

@@ -1,5 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2015 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2014 John Greb <hexameron@spam.no>                              //
+// Copyright (C) 2015-2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2022 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -76,7 +80,7 @@ private slots:
 	void on_ppm_valueChanged(int value);
 	void on_dcOffset_toggled(bool checked);
 	void on_iqImbalance_toggled(bool checked);
-	// TOOD: defaults push button
+	// TODO: defaults push button
 	void on_lnaGain_currentIndexChanged(int index);
 	void on_rfFilter_currentIndexChanged(int index);
 	void on_lnaEnhance_currentIndexChanged(int index);

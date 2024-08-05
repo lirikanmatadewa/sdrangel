@@ -23,6 +23,8 @@ FeatureActions:
       $ref: "http://swgserver:8081/api/swagger/include/LimeRFE.yaml#/LimeRFEActions"
     MapActions:
       $ref: "http://swgserver:8081/api/swagger/include/Map.yaml#/MapActions"
+    MorseDecoderActions:
+      $ref: "http://swgserver:8081/api/swagger/include/MorseDecoder.yaml#/MorseDecoderActions"
     PERTesterActions:
       $ref: "http://swgserver:8081/api/swagger/include/PERTester.yaml#/PERTesterActions"
     RigCtlServerActions:
@@ -31,7 +33,11 @@ FeatureActions:
       $ref: "http://swgserver:8081/api/swagger/include/SatelliteTracker.yaml#/SatelliteTrackerActions"
     SimplePTTActions:
       $ref: "http://swgserver:8081/api/swagger/include/SimplePTT.yaml#/SimplePTTActions"
+    SkyMapActions:
+      $ref: "http://swgserver:8081/api/swagger/include/SkyMap.yaml#/SkyMapActions"
     StarTrackerActions:
       $ref: "http://swgserver:8081/api/swagger/include/StarTracker.yaml#/StarTrackerActions"
     VORLocalizerActions:
       $ref: "http://swgserver:8081/api/swagger/include/VORLocalizer.yaml#/VORLocalizerActions"
+    DemodAnalyzerActions:
+      $ref: "http://swgserver:8081/api/swagger/include/DemodAnalyzer.yaml#/DemodAnalyzerActions"

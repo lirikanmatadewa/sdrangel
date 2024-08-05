@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2016, 2019-2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com> //
+// Copyright (C) 2022-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -73,7 +74,7 @@ public:
     void addChannelSource(BasebandSampleSource* sink, int streamIndex = 0);            //!< Add a channel source (Tx)
     void removeChannelSource(BasebandSampleSource* sink, int streamIndex = 0);         //!< Remove a channel source (Tx)
     void addMIMOChannel(MIMOChannel* channel);   //!< Add a MIMO channel (n Rx and m Tx combination)
-    void removeMIMOChannel(MIMOChannel* channe); //!< Remove a MIMO channel (n Rx and m Tx combination)
+    void removeMIMOChannel(MIMOChannel* channel); //!< Remove a MIMO channel (n Rx and m Tx combination)
 
     void addChannelSinkAPI(ChannelAPI* channelAPI);
     void removeChannelSinkAPI(ChannelAPI* channelAPI);
@@ -158,10 +159,8 @@ public:
     DSPDeviceSinkEngine *getDeviceSinkEngine() { return m_deviceSinkEngine; }
     DSPDeviceMIMOEngine *getDeviceMIMOEngine() { return m_deviceMIMOEngine; }
 
-    void addSourceBuddy(DeviceAPI* buddy);
-    void addSinkBuddy(DeviceAPI* buddy);
-    void removeSourceBuddy(DeviceAPI* buddy);
-    void removeSinkBuddy(DeviceAPI* buddy);
+    void addBuddy(DeviceAPI* buddy);
+    void removeBuddy(DeviceAPI* buddy);
     void clearBuddiesLists();
     void *getBuddySharedPtr() const { return m_buddySharedPtr; }
     void setBuddySharedPtr(void *ptr) { m_buddySharedPtr = ptr; }

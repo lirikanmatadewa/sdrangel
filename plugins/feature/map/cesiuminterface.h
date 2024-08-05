@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2022 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2022-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -48,7 +48,6 @@ public:
         bool m_reverse;
         bool m_loop;
         bool m_stop;            // Stop looped animation
-        float m_delay;          // Delay in seconds before animation starts
         float m_startOffset;    // [0..1] What point to start playing animation
         float m_duration;       // How long to play animation for
         float m_multiplier;     // Speed to play animation at
@@ -68,6 +67,8 @@ public:
     void setAntiAliasing(const QString &antiAliasing);
     void showMUF(bool show);
     void showfoF2(bool show);
+    void showLayer(const QString& layer, bool show);
+    void setLayerSettings(const QString& layer, const QStringList& settings, const QList<QVariant>& values);
     void updateImage(const QString &name, float east, float west, float north, float south, float altitude, const QString &data);
     void removeImage(const QString &name);
     void removeAllImages();
@@ -78,6 +79,7 @@ public:
     void update(PolygonMapItem *mapItem);
     void update(PolylineMapItem *mapItem);
     void setPosition(const QGeoCoordinate& position);
+    void save(const QString& filename, const QString& dataDir);
 
 protected:
 

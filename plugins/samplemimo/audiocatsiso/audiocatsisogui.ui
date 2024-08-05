@@ -32,7 +32,6 @@
    <font>
     <family>Liberation Sans</family>
     <pointsize>9</pointsize>
-    <weight>50</weight>
     <italic>false</italic>
     <bold>false</bold>
    </font>
@@ -154,6 +153,23 @@
         <iconset resource="../../../sdrgui/resources/res.qrc">
          <normaloff>:/unlocked.png</normaloff>
          <normalon>:/locked.png</normalon>:/unlocked.png</iconset>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="freqRxToTx">
+       <property name="toolTip">
+        <string>Send Rx frequency to Tx</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../../../sdrgui/resources/res.qrc">
+         <normaloff>:/arrow_left.png</normaloff>:/arrow_left.png</iconset>
        </property>
        <property name="checkable">
         <bool>true</bool>
@@ -317,7 +333,6 @@
         <font>
          <family>Liberation Mono</family>
          <pointsize>16</pointsize>
-         <weight>50</weight>
          <italic>false</italic>
          <bold>false</bold>
         </font>

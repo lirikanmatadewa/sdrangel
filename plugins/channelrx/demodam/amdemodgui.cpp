@@ -1,5 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2015 John Greb <hexameron@spam.no>                              //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -26,10 +30,8 @@
 #include "dsp/dspengine.h"
 #include "dsp/dspcommands.h"
 #include "plugin/pluginapi.h"
-#include "util/simpleserializer.h"
 #include "util/db.h"
 #include "gui/basicchannelsettingsdialog.h"
-#include "gui/devicestreamselectiondialog.h"
 #include "gui/crightclickenabler.h"
 #include "gui/audioselectdialog.h"
 #include "gui/dialogpositioner.h"
@@ -196,11 +198,13 @@ void AMDemodGUI::on_frequencyMode_currentIndexChanged(int index)
 {
     m_settings.m_frequencyMode = (AMDemodSettings::FrequencyMode) index;
     ui->deltaFrequency->blockSignals(true);
+
     if (m_settings.m_frequencyMode == AMDemodSettings::Offset)
     {
         ui->deltaFrequency->setValueRange(false, 7, -9999999, 9999999);
         ui->deltaFrequency->setValue(m_settings.m_inputFrequencyOffset);
         ui->deltaUnits->setText("Hz");
+
         if (m_settings.m_snap)
         {
             m_settings.m_snap = false;
@@ -225,10 +229,14 @@ void AMDemodGUI::on_frequencyMode_currentIndexChanged(int index)
         ui->deltaFrequency->setValue(freqToChannel(m_settings.m_frequency) / 1000);
         ui->deltaUnits->setText("MHz");
     }
+
     ui->deltaFrequency->blockSignals(false);
+
     if (m_settings.m_snap) {
         applySnap();
     }
+
+    updateAbsoluteCenterFrequency();
     applySettings();
 }
 
@@ -252,11 +260,14 @@ void AMDemodGUI::calcOffset()
 void AMDemodGUI::channelMarkerChangedByCursor()
 {
     m_settings.m_inputFrequencyOffset = m_channelMarker.getCenterFrequency();
+
     if (m_settings.m_snap) {
         applySnap();
     }
+
     m_settings.m_frequency = m_deviceCenterFrequency + m_settings.m_inputFrequencyOffset;
-    int value = 0;
+    qint64 value = 0;
+
     if (m_settings.m_frequencyMode == AMDemodSettings::Offset) {
         value = m_settings.m_inputFrequencyOffset;
     } else if (m_settings.m_frequencyMode == AMDemodSettings::MediumWave) {
@@ -279,10 +290,7 @@ void AMDemodGUI::channelMarkerChangedByCursor()
 
 void AMDemodGUI::on_deltaFrequency_changed(qint64 value)
 {
-    (void) value;
-
     qint64 offset = 0;
-    bool valid = true;
 
     if (m_settings.m_frequencyMode == AMDemodSettings::Offset)
     {
@@ -500,6 +508,7 @@ AMDemodGUI::AMDemodGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, BasebandS
 	displaySettings();
     makeUIConnections();
 	applySettings(true);
+    m_resizer.enableChildMouseTracking();
 }
 
 AMDemodGUI::~AMDemodGUI()
@@ -611,6 +620,7 @@ void AMDemodGUI::audioSelect(const QPoint& p)
     qDebug("AMDemodGUI::audioSelect");
     AudioSelectDialog audioSelect(DSPEngine::instance()->getAudioDeviceManager(), m_settings.m_audioDeviceName);
     audioSelect.move(p);
+    new DialogPositioner(&audioSelect, false);
     audioSelect.exec();
 
     if (audioSelect.m_selected)
@@ -648,9 +658,32 @@ void AMDemodGUI::snapClicked()
     } else {
         m_settings.m_snap = !m_settings.m_snap;
     }
-    if (m_settings.m_snap) {
+
+    if (m_settings.m_snap)
+    {
         applySnap();
+
+        qint64 value;
+
+        if (m_settings.m_frequencyMode == AMDemodSettings::Offset) {
+            value = m_settings.m_inputFrequencyOffset;
+        } else if (m_settings.m_frequencyMode == AMDemodSettings::MediumWave) {
+            value = m_settings.m_frequency / 1000;
+        } else if (m_settings.m_frequencyMode == AMDemodSettings::Airband25k) {
+            value = m_settings.m_frequency / 1000;
+        } else if (m_settings.m_frequencyMode == AMDemodSettings::Airband8K) {
+            value = freqToChannel(m_settings.m_frequency) / 1000;
+        }
+
+        // We support finer tuning by marker than by deltaFrequency widget (unless in offset mode),
+        // so block signals so it doesn't truncate frequency to limit of widget
+        ui->deltaFrequency->blockSignals(true);
+        ui->deltaFrequency->setValue(value);
+        ui->deltaFrequency->blockSignals(false);
+
+        updateAbsoluteCenterFrequency();
     }
+
     displaySnap();
     applySettings();
 }
@@ -662,6 +695,7 @@ void AMDemodGUI::applySnap()
     }
 
     qint64 frequency = m_deviceCenterFrequency + m_settings.m_inputFrequencyOffset;
+
     if (m_settings.m_frequencyMode == AMDemodSettings::MediumWave)
     {
         frequency = (frequency / 1000) * 1000;
@@ -672,9 +706,11 @@ void AMDemodGUI::applySnap()
     }
     else if (m_settings.m_frequencyMode == AMDemodSettings::Airband8K)
     {
-        frequency = std::round((frequency / 8333) * 8333.3);
+        frequency = std::round((frequency / 8333) * 8333.33333333);
     }
+
     m_settings.m_inputFrequencyOffset = frequency - m_deviceCenterFrequency;
+    m_settings.m_frequency = frequency;
     m_channelMarker.setCenterFrequency(m_settings.m_inputFrequencyOffset);
 }
 

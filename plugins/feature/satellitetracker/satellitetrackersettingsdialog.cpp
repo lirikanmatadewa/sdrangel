@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -15,8 +15,10 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.          //
 ///////////////////////////////////////////////////////////////////////////////////
 
+#include "util/units.h"
 #include "satellitetrackersettingsdialog.h"
 #include <QDebug>
+#include <QMessageBox>
 
 SatelliteTrackerSettingsDialog::SatelliteTrackerSettingsDialog(SatelliteTrackerSettings *settings,
         QWidget* parent) :
@@ -48,12 +50,7 @@ SatelliteTrackerSettingsDialog::SatelliteTrackerSettingsDialog(SatelliteTrackerS
     ui->dateFormat->setText(settings->m_dateFormat);
     ui->utc->setChecked(settings->m_utc);
     ui->drawOnMap->setChecked(settings->m_drawOnMap);
-    for (int i = 0; i < settings->m_tles.size(); i++)
-    {
-        QListWidgetItem *item = new QListWidgetItem(settings->m_tles[i]);
-        item->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEditable|Qt::ItemIsEnabled);
-        ui->tles->addItem(item);
-    }
+    updateTleWidget(settings->m_tles);
     ui->replayEnabled->setChecked(settings->m_replayEnabled);
     ui->replayDateTime->setDateTime(settings->m_replayStartDateTime);
     ui->sendTimeToMap->setChecked(settings->m_sendTimeToMap);
@@ -64,9 +61,19 @@ SatelliteTrackerSettingsDialog::~SatelliteTrackerSettingsDialog()
     delete ui;
 }
 
+void SatelliteTrackerSettingsDialog::updateTleWidget(QList<QString> tles)
+{
+    for (int i = 0; i < tles.size(); i++)
+    {
+        QListWidgetItem *item = new QListWidgetItem(tles[i]);
+        item->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEditable|Qt::ItemIsEnabled);
+        ui->tles->addItem(item);
+    }
+}
+
 void SatelliteTrackerSettingsDialog::on_addTle_clicked()
 {
-    QListWidgetItem *item = new QListWidgetItem("http://");
+    QListWidgetItem *item = new QListWidgetItem("https://");
     item->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEditable|Qt::ItemIsEnabled);
     ui->tles->addItem(item);
 }
@@ -76,6 +83,16 @@ void SatelliteTrackerSettingsDialog::on_removeTle_clicked()
     QList<QListWidgetItem *> items = ui->tles->selectedItems();
     for (int i = 0; i < items.size(); i++)
         delete items[i];
+}
+
+void SatelliteTrackerSettingsDialog::on_defaultTles_clicked()
+{
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "Confirm overwrite", "Replace the current TLE list with the default?", QMessageBox::Yes|QMessageBox::No, QMessageBox::No);
+    if (reply == QMessageBox::Yes) {
+        ui->tles->clear();
+        updateTleWidget(DEFAULT_TLES);
+    }
 }
 
 void SatelliteTrackerSettingsDialog::accept()

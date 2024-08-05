@@ -1,5 +1,5 @@
 ﻿///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2023 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2023 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -5559,4 +5559,9 @@ Airline::Init::Init()
         Airline::m_callsignHash.insert(airline->m_callsign, airline);
         s += 4;
     }
+}
+
+Airline::Init::~Init()
+{
+    qDeleteAll(m_icaoHash);
 }

@@ -18,7 +18,7 @@ Specifies the channel (such as an AM, NFM or DSD Demod), by device set and chann
 
 <h3>2: Minimum frequency shift from center frequency of reception for channel</h3>
 
-Use the wheels of keyboard to adjust the minimim frequency shift in Hz from the center frequency of reception for the channel (1).
+Use the wheels of keyboard to adjust the minimum frequency shift in Hz from the center frequency of reception for the channel (1).
 
 This setting is typically used to avoid having the channel (1) centered at DC, which can be problematic for some demodulators used with SDRs with a DC spike.
 
@@ -34,7 +34,7 @@ Power threshold in dB that determines whether a frequency is active or not.
 
 Specifies the time in milliseconds that the Frequency Scanner should wait after adjusting the device center frequency, before starting a measurement.
 This time should take in to account PLL settle time and the device to host transfer latency, so that the measurement only starts when IQ data
-that corresponds to the set frequency is being recieved.
+that corresponds to the set frequency is being received.
 
 <h3>6: t_s - Scan time</h3>
 
@@ -93,10 +93,14 @@ The frequency table contains the list of frequencies to be scanned, along with r
 
 - Freq (Hz): Specifies the channel center frequencies to be scanned. Values should be entered in Hertz.
 - Annotation: An annotation (description) for the frequency, that is obtained from the closest matching [annotation marker](../../../sdrgui/gui/spectrummarkers.md) in the Main Spectrum.
-- Enable: Determines whether the frequency will be scanned. This can be used to temporaily disable frequencies you aren't interested in.
+- Enable: Determines whether the frequency will be scanned. This can be used to temporarily disable frequencies you aren't interested in.
 - Power (dB): Displays the measured power in decibels from the last scan. The cell will have a green background if the power was above the threshold (4).
 - Active Count: Displays the number of scans in which the power for this frequency was above the threshold (4). This allows you to see which frequencies are commonly in use.
 - Notes: Available for user-entry of notes/information about this frequency.
+- Channel: Specifies the channel that should be tuned when this frequency is active. If blank, the common Channel setting (1) is used.
+- Ch Bw (Hz): Specifies the channel bandwidth in Hertz. If blank, the common Channel Bandwidth setting (8) is used.
+- TH (dB): Specifies the power threshold in dB that determines whether this frequency is active or not. If blank, the common Threshold setting (4) is used.
+- Sq (dB): Specifies a squelch level in dB that will be applied to the Channel when active. If blank, the squelch level will not be changed.
 
 When an active frequency is found after a scan, the corresponding row in the table will be selected.
 
@@ -136,3 +140,15 @@ Moves the selected rows the the frequency table (14).
 <h3>21: Clear Active Count</h3>
 
 Press to reset the value in the Active Count column to 0 for all rows.
+
+<h2>API</h2>
+
+Full details of the API can be found in the Swagger documentation. Below are a few examples.
+
+To run a frequency scan:
+
+    curl -X POST "http://127.0.0.1:8091/sdrangel/deviceset/0/channel/0/actions" -d '{  "channelType": "FreqScanner",  "direction": 0,  "originatorDeviceSetIndex": 0,  "originatorChannelIndex": 0,  "FreqScannerActions": { "run": 1 }}'
+
+To get the results of the last scan:
+
+   curl -X GET "http://127.0.0.1:8091/sdrangel/deviceset/0/channel/0/report"

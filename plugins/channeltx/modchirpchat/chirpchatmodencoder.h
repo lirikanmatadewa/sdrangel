@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2016-2020 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -32,10 +34,11 @@ public:
     void setLoRaParityBits(unsigned int parityBits) { m_nbParityBits = parityBits; }
     void setLoRaHasHeader(bool hasHeader) { m_hasHeader = hasHeader; }
     void setLoRaHasCRC(bool hasCRC) { m_hasCRC = hasCRC; }
-    void encodeString(const QString& str, std::vector<unsigned short>& symbols);
     void encodeBytes(const QByteArray& bytes, std::vector<unsigned short>& symbols);
+    void encode(ChirpChatModSettings settings, std::vector<unsigned short>& symbols);
 
 private:
+    void encodeString(const QString& str, std::vector<unsigned short>& symbols);
     // LoRa functions
     void encodeBytesLoRa(const QByteArray& bytes, std::vector<unsigned short>& symbols);
 

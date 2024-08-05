@@ -1,3 +1,285 @@
+sdrangel (7.21.4-1) unstable; urgency=medium
+
+    * Code fixes. PR #2184
+    * Do not save the settings twice. PR #2182
+    * FreqScanner: Add HF ATC channels preset. PR #2181
+    * FreqScanner: Add API action to run scan. Add scan results to channel report. PR #2181
+    * FreqScanner: Add scanState to FreqScanner Report. PR #2181
+    * Configurations dialog: Fix slot names. PR #2180
+    * AIS: Validate message length. Fixes #2125. PR #2180
+    * ILS Demod. Save frequency when switching between LOC and G/S. PR #2180
+    * ILS Demod. Set frequency for ident when in G/S mode. Fixes #2177. PR #2180
+    * Heat Map: Handle memory allocation errors. PR #2175
+    * Heat Map: Allow selecting which data to be saved to reduce memory requirements. PR #2175
+    * ILS Demod: Add DDM/SDM/Deviation to channel report. PR #2174
+
+   -- Edouard Griffiths, F4EXB  <f4exb06@gmail.com>  Tue, 25 Jun 2024 20:17:52 +0200
+
+sdrangel (7.21.3-1) unstable; urgency=medium
+
+   * Update sdrangel-windows-libraries to latest revision. PR #2173 fixes #2155
+   * SDRplayV3Input: Add SDRPLAY_RSPdxR2_ID support. PR #2172 fixes #2155
+   * Fix tooltips. PR #2170
+   * Update external/windows to latest sdrangel-windows-libraries. PR #2169
+   * Update SDRplay API to 3.15 on Mac. PR #2169
+   * Fix typo in ILS freq. PR #2168
+   * Remove use of deprecated QRegExp. PR #2160
+   * Fix memleaks. PR #2157
+
+  -- Edouard Griffiths, F4EXB  <f4exb06@gmail.com>  Mon, 17 Jun 2024 22:30:17 +0200
+
+sdrangel (7.21.2-1) unstable; urgency=medium
+
+   * Morse Decoder feature: build for Windows. Issue #2152
+   * Satellite Tracker Settings: add missing help description of Replay tab, PR #2151
+   * Satellite Tracker Settings: update help page for new button. PR #2151
+   * Satellite Tracker Settings: add a button to reset the list of TLE. PR #2151
+   * Move defines to the header so they can be reused elsewhere. PR #2151
+   * Factor out the code that updates the widget containing the list of TLEs. PR #2151
+   * Use https for all addresses. PR #2151
+   * Set CMAKE_PREFIX_PATH to include ffmpeg@5. PR #2149
+   * Github mac CI: Try ffmpeg@5. PR #2149
+   * CUDAvkFFTEngine: Add required include.. PR #2149
+   * Fix memleaks. PR #2133
+   * Remove extra margins from some dialog. PR #2148
+   * SDRPlay v1: fix setting of hardware flavour. Fixes #2127
+   * Audio Input: list plugin as a built in device for multiple times instantiation. Fixes #2143
+   * Do not exit after listing available devices. Fixes #2144
+   * Fix and refactor FindSoapySDR.cmake. PR #2146
+   * Morse Decoder: returm to the original GGMorse library
+   * Fix WFM mod: remove feedback sink. PR #2138
+   * Fix ADSB demod: Message length. PR #2138
+   * Fix Sigmf Record: overwriting sigmf-data or sigmf-meta. PR #2136
+   * Highlight the current workspace and device. PR #2126
+   * Web API: Sort some files by name in the resources file. PR #2124
+   * Web API: Add missing files to resources file. PR #2124
+   * Install subversion for Mac build. PR #2123
+   * Fix ggmorse paths on ma. PR #2123
+
+  -- Edouard Griffiths, F4EXB  <f4exb06@gmail.com>  Fri, 06 Jun 2024 20:09:11 +0200
+
+sdrangel (7.21.1-1) unstable; urgency=medium
+
+   * Morse Decoder feature: Fix for Qt6 and Windows. PR #2122
+
+  -- Edouard Griffiths, F4EXB  <f4exb06@gmail.com>  Fri, 24 May 2024 10:29:04 +0200
+
+sdrangel (7.21.0-1) unstable; urgency=medium
+
+   * Morse decoder feature. Implements #2112
+   * Fix crash quitting sdrangel when the SID window is open. PR #2121. Fixes #2119
+   * SSB demod: apply clamping also when squelch opens
+   * Remove unneeded calls to disconnect signals. PR #2120
+   * Fix memleaks. PR #2120 PR #2058.
+   * Do not create objects if there is no message queue to send to. PR #2058.
+   * Do not create a Message if there is no worker to send to. PT #2058
+   * Add cmake option to optionally compile with LeakSanitizer. PR #2058
+
+  -- Edouard Griffiths, F4EXB  <f4exb06@gmail.com>  Thu, 23 May 2024 22:18:08 +0200
+
+sdrangel (7.20.1-1) unstable; urgency=medium
+
+   * Fix Qt6 build. PR #2069
+   * ADS-B: Fix map centering and station icon for Qt6. PR #2072
+   * Fix bug that prevents settings changes updates via reverse API. PR #2066
+   * SIDAddChannelsDialog: Make columns sortable. PR #2067
+   * Fix build failure when Qt Location is not available. PR #2073
+   * Fix "More '%' conversions than data arguments". PR #2075
+   * Remove unused includes and use more direct includes. PR #2076
+   * Make all include directives identical. PR #2076
+   * Fix build of DAB demodulation plugin. PR #2076
+   * Update the IPB beacons table only when the dialog is visible. PR #2068
+   * Raise the Beacon, IBP Beacons an Radio Time dialogs. PR #2068
+   * Close any open dialog when sdrangel quits. PR #2068
+   * vkFFT: Fix building with recent Vulkan SDKs. PR #2087
+   * Sdrplayv3: use SDRPLAY_MAX_DEVICES in enumOriginDevices(). PR #2088
+   * AudioCATSISO: fixed CAT worker handling
+   * AudioCATSISO: fixed transverter processing
+   * AIS: Fix string decoding in safetey messages. Fixes #2094. PR #2096
+   * ValueDial: Fix array being accessed out of range. PR #2096
+   * BFM Demod: Delete baseband on stop(). PR #2104
+   * Bring BFM demod closer to AM demod design. PR #2104
+   * Don't call start() in Demod's constructors. Fixes #2102. PR #2104
+   * SSDDemodGUI: Disable AGC widgets when AGC disable. PR #2104
+   * Fix saving configurations after deleting some entries. PR #2109
+   * Interferometer: added channel B gain control
+   * Interferometer: implement gain and phase in API
+   * LocalSink: update local input device list at construction time
+   * Interferometer: list local input devices and make update settings atomic
+   * Interferometer: added possibility to send correlated IQ to a Local Input device
+   * Interferometer: added localDeviceIndex and play to API
+   * LocalSink: refactored getLocalDevice method
+   * Metis MISO: added lock all Rx frequencies option
+
+  -- Edouard Griffiths, F4EXB  <f4exb06@gmail.com>  Sun, 15 May 2024 10:01:05 +0200
+
+sdrangel (7.20.0-1) unstable; urgency=medium
+
+   * New Sudden Ionospheric Disturbance feature. PR #2052
+   * Removed unused includes and use more direct includes. PR #2062
+   * Various updates and fixes. Fixing #2061. PR #2063
+   * ChirpChat: added FT mode (FT-chirp)
+   * Support VOR Localizer on Qt6. PR #2057
+   * Fix audio sink/source mapping. PR #2056
+   * Use mouse wheel to zoom in / out of charts. PR #2052
+   * Channel Power: Add absolute frequency setting. PR #2052
+   * RadiosondeDemod: Fix packets read from .csv not being sent to Radiosonde feature.. PR #2052
+   * KiwiSDR: Add position of device to web API report. PR #2052
+   * KiwiSDR: Add position to yaml. PR #2052
+   * SkyMap: Add Moon map. PR #2052
+   * APRS: Check for Cr or LF. For #2028. PR #2052
+   * AX.25 Packet: packetmod supports multi Via; packetdemod fix H bit. PR #2039
+   * Audio optimize & default input/output bugfix. PR #2038
+   * Sat Tracker: Prevent crash if satellite not found. PR #2052
+   * Astronomy: Add sunrise / sunset calculation. PR #2052
+   * APRS: Fix forwarding of binary data to APRS-IS for #2028. PR #2052
+   * APRS: Forward packets to aprsi-is, even if we can't decode them. For #2029. PR #2052
+   * ADSB: Add Airplanes.Live at request of user. PR #2027
+   * Heat Map: Fix overflow in average calculation. PR #2052
+   * AIS Demod: Remove unused filter. PR #2052
+   * SkyMap: Fix erronous entry in source list. PR #2052
+
+  -- Edouard Griffiths, F4EXB  <f4exb06@gmail.com>  Sun, 14 Apr 2024 09:15:24 +0200
+
+sdrangel (7.19.1-1) unstable; urgency=medium
+
+   * Add channel power channel. PR #2019, #2021
+   * Use mouse keys for CW modulation in SSB modulator. Fixes #1948
+   * ADS-B: Only list available maps. PR #2017
+   * CRightClickEnabler: Prevent duplicate events... PR #2017
+   * Update snap. PR #2016
+   * Scan all plugins for qml (for Mac). PR #2014
+   * fix memset() arguments order in vkfftengine. PR #2013
+
+  -- Edouard Griffiths, F4EXB  <f4exb06@gmail.com>  Sun, 17 Mar 2024 19:17:00 +0100
+
+sdrangel (7.19.0-1) unstable; urgency=medium
+
+   * Upgraded RTL-SDR library to v2.0.1
+   * Fix not remove source buddy. PR #1998
+   * Fix renumberate deviceset without modifying claimed of SamplingDevice. PR #2001
+   * Merge pull request #2000 from srcejon/freq_scanner
+   * ADS-B: Add QT 6 support for map. PR #2000
+   * Fix URLs on QT 6 map. PR #2000
+   * Fix 32-bit float support for Spy Server. PR #2000
+   * Fix Kiwi location. PR #2000
+   * Update map docs. PR #2000
+   * Fix gcc warnings. PR #2000
+   * Update map QML/HTML. PR #2000
+   * Add libqt5svg5-dev dependency. PR #2000
+   * Add SVG and libacars. PR #2000
+   * HTTPDownloadManager: Support latest updates to Google Drive. PR #2000
+   * Add utils. PR #2000
+   * SkyMap: Fix CORS and enabling caching. PR #2000
+   * Map: Add Spy Server and Kiwi SDR. Add weather and satellite overlays. PR #2000
+   * Fix SDRA protocol and improve spectrum refresh rate. PR #2000
+   * Fix gcc warnings. PR #2000
+   * RemoteTCPInput: Add Spy Server support. PR #2000
+   * SDRplay: Prevent nullpointer dereference for #1825 PR #2000
+   * Add End-of-Train demodulator for #1866. PR #2005
+   * AIS, DSC, End-of-Train, Packet, Radiosonde: date/time from File Input device or system clock. PR #2005
+   * Use log2 approximation to increase performance. Part of #2004. PR #2006
+   * SigMF File Sink: implement 16 and 8 bits sample sizes. Fixes #1921
+   * Use F:n for feature Ids. PR #2007
+   * Update Demod Analzyer to use AvailableChannelsOrFeature. PR #2007
+   * Class to handle amateur radio callsigns and corresponding country data. Part of #2008
+   * FT8 demod: implemented DXCC country decoding. Implements #2008
+
+  -- Edouard Griffiths, F4EXB  <f4exb06@gmail.com>  Fri, 08 Mar 2024 18:12:42 +0100
+
+sdrangel (7.18.0-1) unstable; urgency=medium
+
+   * Upgrade to SDRPlay API to 3.14 and support for RSP 1B
+
+  -- Edouard Griffiths, F4EXB  <f4exb06@gmail.com>  Wed, 21 Feb 2024 12:53:33 +0100
+
+sdrangel (7.18.0-1) unstable; urgency=medium
+
+   * New SkyMap feature PR #1986
+   * Add AvailableChannelOrFeatureHandler. PR #1986
+   * Use MainCore code for managing available channel and feature list. PR #1986
+   * Optimize eumerator of origin device PR #1984
+   * Fix SimpltPTT device id; Add "None" Rx/Tx device option PR #1983
+   * Fix LimeSDR MIMO Tx gain mode. PR #1973
+   * Fix GUI handle Startstop message. PR #1973
+   * Speedup compilation on all platforms using ccache. PR #1967
+   * Demod Analyzer plugin: channel selection via api. PR #1956
+   * Sat Tracker: Update default TLEs to latest URLs. PR #1954
+   * Fix failure due to access by null pointer. PR #1952 Issue #1951
+   * Fix frequency calculation for SSB spectrum. PR #1946
+   * File Input: Fix seeking over .wav header. PR #1946
+
+  -- Edouard Griffiths, F4EXB  <f4exb06@gmail.com>  Sun, 18 Feb 2024 10:46:39 +0100
+
+sdrangel (7.17.3-1) unstable; urgency=medium
+
+   * Map updates: Allow selection of which device to tune to frequency. PR #1911
+   * Map updates: Support tuning of multiple frequencies per map item. Update maplibre to maplibregl. PR #1911
+   * Use common code for creating and processing device and channel Ids. PR #1911
+   * Prevent crash that can occur if preset type is unknown. PR #1911
+   * Add support for setting center frequency on Tx devices. PR #1911
+   * Allow replay time offset to be set by ctrl+left click in waterfall. PR #1914
+   * Add replay support to Lime Input. PR #1914
+   * Remove space in CSV header. PR #1916
+   * SDRPlayV3 on Mac: Update library path so is works with API 3.12.1. PR #1916
+   * Fixed AudioNetSink stereo handling
+   * SSB demod: added FIR LP filter after AGC to smooth out sharp peaks
+   * Removed useless AGC clamping
+   * Fixed some AGC issues
+   * SSB demod: better algorithm for AGC limitation. Fixes #1918
+   * AM demod: extend squelch limit to -120 dB
+   * Start file browser in directory of last file selected. PR #1926
+   * Fix #1928. Add null-terminator between strings. PR #1929
+   * Frequency Scanner: allow scanning channels of a MIMO device
+   * Frequency scanner: set device frequency for both Rx and MIMO devices
+   * Frequency Scanner: GUI: give more space to channel power display
+   * Frequency Scanner: handle change of I/Q stream in tracked channels (MIMO)
+   * AudioCATSISO: adapt to newer versions of Hamlib. Fixes #1919
+   * Mac O/S: Disable build of LAME frontend. PR #1935
+   * Use separate date/time fields and prefix address with leading 0. Fixes #1936. PR #1937.
+   * Radioastronomy: Handle negative flux values in .srd file. PR #1940.
+
+  -- Edouard Griffiths, F4EXB  <f4exb06@gmail.com>  Sun, 31 Dec 2023 17:58:51 +0100
+
+sdrangel (7.17.2-1) unstable; urgency=medium
+
+   * Freq Scanner: Add per-frequency settings. Fix freq > 2GHz. PR #1905
+   * DSD demod: Upgrade dsdcc to 1.9.5. Fixes #1878
+   * Scope: Added derivative of magnitude squared to the list of projections
+   * SSB demod: mitigate AGC steep transitions causing audio clicks
+   * SSB demod: tie AGC steep transition correction to AGC clamping
+   * Fix AirspyHF instant replay. PR #1905
+   * Fix sdrplay shared library name on Mac arm64, as incorrect in 3.12 API release. PR #1905
+   * SDRPlay V3 API - don't call close unless open was a success, as will crash on Mac. PR #1905
+   * Add dialog positioner for audio select dialog. PR #1905
+   * Display FIFO size on overflow. PR #1905
+   * Freq scanner: Stop scanning when Tune menu selected. PR #1905
+
+  -- Edouard Griffiths, F4EXB  <f4exb06@gmail.com>  Mon, 04 Dec 2023 20:35:40 +0100
+
+sdrangel (7.17.1-1) unstable; urgency=medium
+
+   * Fixes to Mac build. PR #1869
+   * AM demod: channel/frequency entry modes. PR #1876
+   * SSB demod noise reduction
+   * Radiosonde: Added more columns, PR #1881. Fixes  #1880
+   * DSD Demod - Fix loss of constellation. PR #1883. Fixes #1836
+   * Remote TCP - Fix FIFO size adjustment. Fixes SR > 3 MS/s. PR #1886. Fixes #1885.
+   * Indicate audio FIFO underflow/overflow. PR #1887
+   * Fix resize cursor not being cleared when mouse moves over child widgets. PR #1888
+   * Prevent popup menu when scrolling tables. PR #1889
+   * Use custom save/restore geometry for MDI sub=windows. PR #1890. Fixes #1835
+   * Use MDI restore when loading config. PR #1890
+   * M17: Reverse byte ordering of CRC in packet mode. PR #1891. Fixes #1826
+   * M17: Update packet format to comply with current spec. PR #1892. Fixes #1826
+   * More M17 fixes. PR #1894
+   * Frequency scanner: Add FRS-GMRS presets. PR #1897
+   * ADS-B demod: Split widgets in to 2 tabs for small Android screens. PR #1898. Fixes #1896.
+   * Add instant replay for RTL SDR, SDR Play V3, USRP and Airspy HF RXes. PR #1900.
+   * Scope trigger fix. PR #1902. Part of #1901
+
+  -- Edouard Griffiths, F4EXB  <f4exb06@gmail.com>  Wed, 29 Nov 2023 03:00:21 +0100
+
 sdrangel (7.17.0-1) unstable; urgency=medium
 
    * Add frequency scanner channel plugin. PR #1852

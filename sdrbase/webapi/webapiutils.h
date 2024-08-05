@@ -1,6 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Jon Beniston, M7RCE                                        //
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2020 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2021-2022 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -52,6 +54,8 @@ public:
     static bool getSubObjectString(const QJsonObject &json, const QString &key, QString &value);
     static bool setSubObjectString(QJsonObject &json, const QString &key, const QString &value);
     static bool getSubObjectIntList(const QJsonObject &json, const QString &key, const QString &subKey, QList<int> &values);
+    static bool setSubObject(QJsonObject &json, const QString &key, const QVariant &value);
+    static bool hasSubObject(const QJsonObject &json, const QString &key);
     static bool extractValue(const QJsonObject &json, const QString &key, QJsonValue &value);
     static bool extractArray(const QJsonObject &json, const QString &key, QJsonArray &value);
     static bool extractObject(const QJsonObject &json, const QString &key, QJsonObject &value);

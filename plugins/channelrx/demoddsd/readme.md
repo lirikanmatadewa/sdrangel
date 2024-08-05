@@ -43,7 +43,7 @@ The top and bottom bars of the channel window are described [here](../../../sdrg
 
 <h4>A.1: Frequency shift from center frequency of reception</h4>
 
-Use the wheels to adjust the frequency shift in Hz from the center frequency of reception. Left click on a digit sets the cursor position at this digit. Right click on a digit sets all digits on the right to zero. This effectively floors value at the digit position. Wheels are moved with the mousewheel while pointing at the wheel or by selecting the wheel with the left mouse click and using the keyboard arrows.Pressing shift simultaneously moves digit by 5 and pressing control moves it by 2.
+Use the wheels to adjust the frequency shift in Hz from the center frequency of reception. Left click on a digit sets the cursor position at this digit. Right click on a digit sets all digits on the right to zero. This effectively floors value at the digit position. Wheels are moved with the mousewheel while pointing at the wheel or by selecting the wheel with the left mouse click and using the keyboard arrows. Pressing shift simultaneously moves digit by 5 and pressing control moves it by 2.
 
 <h4>A.2: Channel bandwidth before discriminator</h4>
 
@@ -291,30 +291,30 @@ This is the control channel used in trunked systems and is usually sent continuo
 
 ![DSD NXDN RTDCH status](../../../doc/img/DSDdemod_plugin_nxdn_rcch_status.png)
 
-<h6>A11.5.1.1: RF channel indicator</h5>
+<h6>A11.5.1.1: RF channel indicator</h6>
 
 This is `RC` for RCCH
 
-<h6>A11.5.2.2: Half/full rate</h5>
+<h6>A11.5.2.2: Half/full rate</h6>
 
 Indicator of transmission rate:
 
   - `H`: half rate (2400 or 4800 S/s). Uses EHR vocoder (AMBE 3600/2450)
   - `F`: full rate (4800 S/s only). Uses EFR vocoder (AMBE 7200/4400)
 
-<h6>A11.5.1.3: RAN number</h5>
+<h6>A11.5.1.3: RAN number</h6>
 
 This is the RAN number (0 to 63) associated to the transmission. RAN stands for "Radio Access Number" and for trunked systems this is the site identifier (Site Id) modulo 64.
 
-<h6>A11.5.1.4: Last message type code</h5>
+<h6>A11.5.1.4: Last message type code</h6>
 
 This is the type code of the last message (6 bits) displayed in hexadecimal. The complete list is found in the NXDN documentation `NXDN TS 1-A Version 1.3` section 6.
 
-<h6>A11.5.1.5: Location Id</h5>
+<h6>A11.5.1.5: Location Id</h6>
 
 This is the 3 byte location Id associated to the site displayed in hexadecimal
 
-<h6>A11.5.1.6: Services available flags</h5>
+<h6>A11.5.1.6: Services available flags</h6>
 
 This is a 16 bit collection of flags to indicate which services are available displayed in hexadecimal. The breakdown is listed in the NXDN documentation `NXDN TS 1-A Version 1.3` section 6.5.33. From MSB to LSB:
 
@@ -341,33 +341,33 @@ This is the transmission channel either in a trunked system (RTCH) or convention
 
 ![DSD NXDN RTDCH status](../../../doc/img/DSDdemod_plugin_nxdn_rtdch_status.png)
 
-<h6>A11.5.2.1: RF channel indicator</h5>
+<h6>A11.5.2.1: RF channel indicator</h6>
 
 It can be either `RT` for RTCH or `RD` for a RDCH channel
 
-<h6>A11.5.2.2: Half/full rate</h5>
+<h6>A11.5.2.2: Half/full rate</h6>
 
 Indicator of transmission rate:
 
   - `H`: half rate (2400 or 4800 S/s). Uses EHR vocoder (AMBE 3600/2450)
   - `F`: full rate (4800 S/s only). Uses EFR vocoder (AMBE 7200/4400)
 
-<h6>A11.5.2.3: RAN number</h5>
+<h6>A11.5.2.3: RAN number</h6>
 
 This is the RAN number (0 to 63) associated to the transmission. RAN stands for "Radio Access Number" and has a different usage in conventional or trunked systems:
 
   - Conventional (RDCH): this is used as a selective squelch. Code `0` means always unmute.
   - Trunked (RTCH): this is the site identifier (Site Id) modulo 64.
 
-<h6>A11.5.2.4: Last message type code</h5>
+<h6>A11.5.2.4: Last message type code</h6>
 
 This is the type code of the last message (6 bits) displayed in hexadecimal. The complete list is found in the NXDN documentation `NXDN TS 1-A Version 1.3` section 6.
 
-<h6>A11.5.2.5: Source Id</h5>
+<h6>A11.5.2.5: Source Id</h6>
 
 This is the source of transmission identification code on two bytes (0 to 65353) displayed in decimal.
 
-<h6>A11.5.2.6: Destination Id</h5>
+<h6>A11.5.2.6: Destination Id</h6>
 
 This is the destination of transmission identification code on two bytes (0 to 65353) displayed in decimal. It is prefixed by a group call indicator:
 
@@ -550,11 +550,11 @@ This button tunes the length of the trace displayed on B.1. Units are millisecon
 
 <h4>B.15: Trace stroke</h4>
 
-This button tunes the stroke of the points displayer on B.1. The trace has limited persistence based on alpha blending. This is the 8 bit unsigned integer value of the trace alpha blending. Default value is 100.
+This button tunes the stroke of the points displayed on B.1. The trace has limited persistence based on alpha blending. This is the 8 bit unsigned integer value of the trace alpha blending. Default value is 100.
 
 <h4>B.16: Trace decay</h4>
 
-This button tunes the persistence decay of the points displayer on B.1. The trace has limited persistence based on alpha blending. This controls the alpha value of the black screen printed at the end of each trace and thus the trace points decay time. The value is 255 minus he displayed value using 8 bit unsigned integers.
+This button tunes the persistence decay of the points displayed on B.1. The trace has limited persistence based on alpha blending. This controls the alpha value of the black screen printed at the end of each trace and thus the trace points decay time. The value is 255 minus the displayed value using 8 bit unsigned integers.
 
   - A value of 0 yields no persistence
   - A value of 255 yields infinite persistence
@@ -574,7 +574,7 @@ This is the one side deviation in kHz (&#177;) leading to maximum (100%) deviati
 
 This is the gain applied to the output of the discriminator before the decoder. Normally this would be set at unit gain 1.0 while the FM deviation is adjusted. However this can be used to extend the range of FM adjustment.
 
-<h4>B.19: Activate AMBE hardware feature</h3>
+<h4>B.19: Activate AMBE hardware feature</h4>
 
 Connects to an [AMBE Feature](../../feature/ambe/readme.md) to process AMBE frames in hardware
 

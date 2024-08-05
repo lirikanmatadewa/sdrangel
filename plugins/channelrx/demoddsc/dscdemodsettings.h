@@ -1,6 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2017 Edouard Griffiths, F4EXB.                                  //
-// Copyright (C) 2023 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2019, 2021-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com> //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -50,6 +52,8 @@ struct DSCDemodSettings
 
     QString m_logFilename;
     bool m_logEnabled;
+
+    bool m_useFileTime;
     Serializable *m_scopeGUI;
     Serializable *m_rollupState;
     int m_workspaceIndex;

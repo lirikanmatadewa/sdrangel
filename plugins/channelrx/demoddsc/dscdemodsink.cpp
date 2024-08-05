@@ -1,6 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2023 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2023 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -20,11 +19,10 @@
 
 #include <complex.h>
 
-#include "dsp/dspengine.h"
 #include "dsp/scopevis.h"
+#include "device/deviceapi.h"
 #include "util/db.h"
-#include "util/popcount.h"
-#include "maincore.h"
+#include "channel/channelwebapiutils.h"
 
 #include "dscdemod.h"
 #include "dscdemodsink.h"
@@ -165,7 +163,7 @@ void DSCDemodSink::processOneSample(Complex &ci)
 
     // Save current data for edge detection
     m_dataPrev = m_data;
-    // Set data according to stongest correlation
+    // Set data according to strongest correlation
     m_data = biasedData > 0;
 
     // Calculate timing error (we expect clockCount to be 0 when data changes), and add a proportion of it
@@ -241,8 +239,25 @@ void DSCDemodSink::receiveBit(bool bit)
         {
             if (m_dscDecoder.decodeBits(m_bits & 0x3ff))
             {
+                QDateTime dateTime = QDateTime::currentDateTime();
+
+                if (m_settings.m_useFileTime)
+                {
+                    QString hardwareId = m_dscDemod->getDeviceAPI()->getHardwareId();
+
+                    if ((hardwareId == "FileInput") || (hardwareId == "SigMFFileInput"))
+                    {
+                        QString dateTimeStr;
+                        int deviceIdx = m_dscDemod->getDeviceSetIndex();
+
+                        if (ChannelWebAPIUtils::getDeviceReportValue(deviceIdx, "absoluteTime", dateTimeStr)) {
+                            dateTime = QDateTime::fromString(dateTimeStr, Qt::ISODateWithMs);
+                        }
+                    }
+                }
+
                 QByteArray bytes = m_dscDecoder.getMessage();
-                DSCMessage message(bytes, QDateTime::currentDateTime());
+                DSCMessage message(bytes, dateTime);
                 //qDebug() << "RX Bytes: " << bytes.toHex();
                 //qDebug() << "DSC Message: " << message.toString();
 

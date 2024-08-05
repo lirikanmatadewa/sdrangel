@@ -1,6 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
 // written by Christian Daniel                                                   //
+// Copyright (C) 2015, 2017-2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com> //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -20,7 +21,6 @@
 #include <QTime>
 #include "dsp/dsptypes.h"
 #include "audio/audiofifo.h"
-#include "audio/audionetsink.h"
 
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 
@@ -171,6 +171,31 @@ bool AudioFifo::readOne(quint8* data)
     m_head %= m_size;
     m_fill -= 1;
     return true;
+}
+
+uint32_t AudioFifo::writeOne(const quint8* data)
+{
+	if (!m_fifo) {
+		return 0;
+	}
+
+    if (isFull())
+    {
+        emit overflow(1);
+        return 0;
+    }
+
+	m_mutex.lock();
+
+    memcpy(m_fifo + (m_tail * m_sampleSize), data, m_sampleSize);
+    m_tail += 1;
+    m_tail %= m_size;
+    m_fill += 1;
+
+	m_mutex.unlock();
+
+	emit dataReady();
+	return 1;
 }
 
 uint AudioFifo::drain(uint32_t numSamples)

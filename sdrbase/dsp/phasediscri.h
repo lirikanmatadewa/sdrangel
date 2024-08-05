@@ -1,6 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2015 F4EXB                                                      //
-// written by Edouard Griffiths                                                  //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2017, 2019 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2020 Kacper Michajłow <kasper93@gmail.com>                      //
+// Copyright (C) 2023 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -89,7 +92,7 @@ public:
     }
 
 	/**
-	 * Alternative without atan at the expense of a slight distorsion on very wideband signals
+	 * Alternative without atan at the expense of a slight distortion on very wideband signals
 	 * http://www.embedded.com/design/configurable-systems/4212086/DSP-Tricks--Frequency-demodulation-algorithms-
 	 * in addition it needs scaling by instantaneous magnitude squared and volume (0..10) adjustment factor
 	 */

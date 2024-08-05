@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2021-2022 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -75,7 +75,7 @@ public:
         }
     };
 
-    // Sent from worker to GUI to indicaite LOS
+    // Sent from worker to GUI to indicate LOS
     class MsgReportLOS : public Message {
         MESSAGE_CLASS_DECLARATION
 

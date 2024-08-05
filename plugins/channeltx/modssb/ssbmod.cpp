@@ -1,5 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2016-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2019 Stefan Biereigel <stefan@biereigel.de>                     //
+// Copyright (C) 2020 Kacper Michajłow <kasper93@gmail.com>                      //
+// Copyright (C) 2022 Jiří Pinkava <jiri.pinkava@rossum.ai>                      //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -32,11 +35,9 @@
 #include "SWGChannelReport.h"
 #include "SWGSSBModReport.h"
 
-#include "dsp/dspengine.h"
 #include "dsp/dspcommands.h"
 #include "dsp/cwkeyer.h"
 #include "device/deviceapi.h"
-#include "feature/feature.h"
 #include "util/db.h"
 #include "maincore.h"
 
@@ -342,6 +343,8 @@ void SSBMod::applySettings(const SSBModSettings& settings, bool force)
             m_deviceAPI->removeChannelSource(this, m_settings.m_streamIndex);
             m_deviceAPI->addChannelSource(this, settings.m_streamIndex);
             m_deviceAPI->addChannelSourceAPI(this);
+            m_settings.m_streamIndex = settings.m_streamIndex; // make sure ChannelAPI::getStreamIndex() is consistent
+            emit streamIndexChanged(settings.m_streamIndex);
         }
 
         reverseAPIKeys.append("streamIndex");

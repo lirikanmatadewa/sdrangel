@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2015-2020, 2022-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com> //
+// Copyright (C) 2018 beta-tester <alpha-beta-release@gmx.net>                   //
+// Copyright (C) 2023 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -55,6 +57,7 @@ AudioOutput::AudioOutput(DeviceAPI *deviceAPI) :
 
 AudioOutput::~AudioOutput()
 {
+	delete m_networkManager;
 	stop();
 }
 
@@ -94,8 +97,6 @@ bool AudioOutput::start()
     m_worker->connectTimer(m_deviceAPI->getMasterTimer());
     m_workerThread->start();
     m_running = true;
-
-	mutexLocker.unlock();
 
 	qDebug("AudioOutput::start: started");
 
@@ -236,7 +237,7 @@ void AudioOutput::applySettings(const AudioOutputSettings& settings, const QList
         }
     }
 
-    if (settingsKeys.contains("useReverseAPI"))
+    if (settings.m_useReverseAPI)
     {
         bool fullUpdate = (settingsKeys.contains("useReverseAPI") && settings.m_useReverseAPI) ||
             settingsKeys.contains("reverseAPIAddress") ||

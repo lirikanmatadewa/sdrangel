@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2015-2018 Edouard Griffiths, F4EXB                              //
-// Copyright (C) 2020 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2020, 2022-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2020, 2022 Jon Beniston, M7RCE <jon@beniston.com>               //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -118,7 +118,6 @@ bool AudioInput::start()
     m_worker->startWork();
     m_workerThread->start();
     m_running = true;
-	mutexLocker.unlock();
 
     qDebug("AudioInput::start: started");
 
@@ -302,7 +301,7 @@ void AudioInput::applySettings(const AudioInputSettings& settings, QList<QString
                 settings.m_iqImbalance ? "true" : "false");
     }
 
-    if (settingsKeys.contains("useReverseAPI"))
+    if (settings.m_useReverseAPI)
     {
         bool fullUpdate = (settingsKeys.contains("useReverseAPI") && settings.m_useReverseAPI) ||
             settingsKeys.contains("reverseAPIAddress") ||

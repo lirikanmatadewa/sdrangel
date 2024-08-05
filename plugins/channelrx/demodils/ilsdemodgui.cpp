@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2023 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2023 Jon Beniston, M7RCE <jon@beniston.com>                     //
+// Copyright (C) 2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>               //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -36,27 +36,22 @@
 #include "dsp/morsedemod.h"
 #include "ui_ilsdemodgui.h"
 #include "plugin/pluginapi.h"
-#include "util/simpleserializer.h"
 #include "util/db.h"
 #include "util/units.h"
 #include "util/morse.h"
 #include "gui/basicchannelsettingsdialog.h"
-#include "gui/devicestreamselectiondialog.h"
 #include "dsp/dspengine.h"
 #include "dsp/glscopesettings.h"
 #include "dsp/spectrumvis.h"
 #include "gui/crightclickenabler.h"
-#include "gui/tabletapandhold.h"
 #include "gui/dialogpositioner.h"
 #include "gui/audioselectdialog.h"
 #include "channel/channelwebapiutils.h"
 #include "feature/featurewebapiutils.h"
 #include "feature/feature.h"
-#include "feature/featureset.h"
 #include "maincore.h"
 
 #include "ilsdemod.h"
-#include "ilsdemodsink.h"
 
 MESSAGE_CLASS_DEFINITION(ILSDemodGUI::MsgGSAngle, Message)
 
@@ -68,7 +63,7 @@ MESSAGE_CLASS_DEFINITION(ILSDemodGUI::MsgGSAngle, Message)
 
 // ICAO Anntex 10 Volume 1 - 3.1.6.1
 const QStringList ILSDemodGUI::m_locFrequencies = {
-    "108.10", "108.15", "108.30", "108.35", "108.50", "108.55", "180.70", "108.75",
+    "108.10", "108.15", "108.30", "108.35", "108.50", "108.55", "108.70", "108.75",
     "108.90", "108.95", "109.10", "109.15", "109.30", "109.35", "109.50", "109.55",
     "109.70", "109.75", "109.90", "109.95", "110.10", "110.15", "110.30", "110.35",
     "110.50", "110.55", "110.70", "110.75", "110.90", "110.95", "111.10", "111.15",
@@ -98,6 +93,7 @@ const QList<ILSDemodGUI::ILS> ILSDemodGUI::m_ils = {
     {"EGLC", "ILSR", "27",  111150000, 272.89, 5.5, 51.504927, 0.064960,  48,  10.7,  1580, 0.0},
     {"EGSS", "ISX",  "22",  110500000, 222.78, 3.0, 51.895165, 0.250051,  352, 14.9,  3430, 0.0},
     {"EGSS", "ISED", "04",  110500000, 42.78,  3.0, 51.877054, 0.222887,  352, 16.2,  3130, 0.0},
+    {"KGYH", "IGYH", "5",   108300000, 40.00,  3.0, 34.749987, -82.384983,850, 15.84, 2750, -0.6},
 };
 
 ILSDemodGUI* ILSDemodGUI::create(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, BasebandSampleSink *rxChannel)
@@ -300,6 +296,7 @@ void ILSDemodGUI::on_rfBW_valueChanged(int value)
 
 void ILSDemodGUI::on_mode_currentIndexChanged(int index)
 {
+    int freqIdx = ui->frequency->currentIndex();
     ui->frequency->clear();
     m_settings.m_mode = (ILSDemodSettings::Mode)index;
     if (m_settings.m_mode == ILSDemodSettings::LOC)
@@ -322,6 +319,7 @@ void ILSDemodGUI::on_mode_currentIndexChanged(int index)
         }
         closePipes();
     }
+    ui->frequency->setCurrentIndex(freqIdx);
     applySettings();
 }
 
@@ -415,14 +413,8 @@ void ILSDemodGUI::on_ident_currentIndexChanged(int index)
         on_runway_editingFinished();
         int frequency = m_ils[index].m_frequency;
         QString freqText = QString("%1").arg(frequency / 1000000.0f, 0, 'f', 2);
-        if (m_settings.m_mode == ILSDemodSettings::GS)
-        {
-            int index = m_locFrequencies.indexOf(freqText);
-            if (index >= 0) {
-                freqText = m_gsFrequencies[index];
-            }
-        }
-        ui->frequency->setCurrentText(freqText);
+        int freqIndex = m_locFrequencies.indexOf(freqText);
+        ui->frequency->setCurrentIndex(freqIndex);
         m_disableDrawILS = false;
     }
     drawILSOnMap();
@@ -1110,6 +1102,7 @@ ILSDemodGUI::ILSDemodGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, Baseban
     displaySettings();
     makeUIConnections();
     applySettings(true);
+    m_resizer.enableChildMouseTracking();
     drawILSOnMap();
 
     bool devMode = false;
@@ -1278,6 +1271,7 @@ void ILSDemodGUI::audioSelect(const QPoint& p)
     qDebug("ILSDemodGUI::audioSelect");
     AudioSelectDialog audioSelect(DSPEngine::instance()->getAudioDeviceManager(), m_settings.m_audioDeviceName);
     audioSelect.move(p);
+    new DialogPositioner(&audioSelect, false);
     audioSelect.exec();
 
     if (audioSelect.m_selected)

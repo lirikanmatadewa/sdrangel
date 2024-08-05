@@ -1,6 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2021-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2022 Jiří Pinkava <jiri.pinkava@rossum.ai>                      //
+// Copyright (C) 2023 Daniele Forsi <iu5hkx@gmail.com>                           //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -30,7 +32,6 @@
 #include "SWGMapItem.h"
 
 #include "webapi/webapiadapterinterface.h"
-#include "webapi/webapiutils.h"
 
 #include "util/units.h"
 #include "device/deviceset.h"
@@ -397,7 +398,7 @@ void SatelliteTrackerWorker::update()
                                 if (satWorkerState->m_losTimer.isActive()) {
                                     qDebug() << "SatelliteTrackerWorker::update m_losTimer.remainingTime: " << satWorkerState->m_losTimer.remainingTime();
                                 }
-                                // We can detect a new AOS for a satellite, a little bit before the LOS has occured
+                                // We can detect a new AOS for a satellite, a little bit before the LOS has occurred
                                 // Allow for 5s here (1s doesn't appear to be enough in some cases)
                                 if (satWorkerState->m_losTimer.isActive() && (satWorkerState->m_losTimer.remainingTime() <= 5000))
                                 {

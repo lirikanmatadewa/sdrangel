@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2023 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2023 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -61,6 +61,7 @@ protected:
     float m_latitude;                   // Position for label
     float m_longitude;
     float m_altitude;                   // In metres
+    QDateTime m_availableFrom;          // Date & time this item is visible from. Invalid date/time is forever
     QDateTime m_availableUntil;         // Date & time this item is visible until (for 3D map). Invalid date/time is forever
 };
 
@@ -77,7 +78,7 @@ public:
     void update(SWGSDRangel::SWGMapItem *mapItem) override;
 
 protected:
-    void findFrequency();
+    void findFrequencies();
     void updateTrack(QList<SWGSDRangel::SWGMapCoordinate *> *track);
     void updatePredictedTrack(QList<SWGSDRangel::SWGMapCoordinate *> *track);
 
@@ -92,8 +93,8 @@ protected:
     QString m_image;
     int m_imageRotation;
     QString m_text;
-    double m_frequency;                 // Frequency to set
-    QString m_frequencyString;
+    QList<qint64> m_frequencies;        // Frequencies that can be tuned (currently only extracted from text)
+    QStringList m_frequencyStrings;
     bool m_fixedPosition;               // Don't record/display track
     QList<QGeoCoordinate *> m_predictedTrackCoords;
     QList<QDateTime *> m_predictedTrackDateTimes;

@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2023 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2020-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2022-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -23,7 +24,6 @@
 #include <QMessageBox>
 #include <QFileDialog>
 
-#include "plugin/pluginapi.h"
 #include "device/deviceapi.h"
 #include "device/deviceuiset.h"
 #include "gui/colormapper.h"
@@ -33,12 +33,8 @@
 #include "gui/basicdevicesettingsdialog.h"
 #include "gui/audioselectdialog.h"
 #include "dsp/dspengine.h"
-#include "dsp/dspdevicemimoengine.h"
 #include "dsp/dspcommands.h"
 #include "dsp/devicesamplesource.h"
-#include "util/db.h"
-
-#include "mainwindow.h"
 
 #include "ui_audiocatsisogui.h"
 #include "audiocatsisogui.h"
@@ -99,6 +95,7 @@ AudioCATSISOGUI::AudioCATSISOGUI(DeviceUISet *deviceUISet, QWidget* parent) :
 
     makeUIConnections();
     DialPopup::addPopupsToChildDials(this);
+    m_resizer.enableChildMouseTracking();
 }
 
 AudioCATSISOGUI::~AudioCATSISOGUI()
@@ -255,6 +252,14 @@ void AudioCATSISOGUI::on_streamLock_toggled(bool checked)
     }
 }
 
+void AudioCATSISOGUI::on_freqRxToTx_clicked()
+{
+    m_settings.m_txCenterFrequency = m_settings.m_rxCenterFrequency;
+    displayFrequency();
+    m_settingsKeys.append("txCenterFrequency");
+    sendSettings();
+}
+
 void AudioCATSISOGUI::on_centerFrequency_changed(quint64 value)
 {
     if (m_rxElseTx)
@@ -324,6 +329,7 @@ void AudioCATSISOGUI::on_transverter_clicked()
 void AudioCATSISOGUI::on_rxDeviceSelect_clicked()
 {
     AudioSelectDialog audioSelect(DSPEngine::instance()->getAudioDeviceManager(), m_settings.m_txDeviceName, true, this);
+    new DialogPositioner(&audioSelect, false);
     audioSelect.exec();
 
     if (audioSelect.m_selected)
@@ -338,6 +344,7 @@ void AudioCATSISOGUI::on_rxDeviceSelect_clicked()
 void AudioCATSISOGUI::on_txDeviceSelect_clicked()
 {
     AudioSelectDialog audioSelect(DSPEngine::instance()->getAudioDeviceManager(), m_settings.m_txDeviceName, false, this);
+    new DialogPositioner(&audioSelect, false);
     audioSelect.exec();
 
     if (audioSelect.m_selected)
@@ -417,6 +424,9 @@ void AudioCATSISOGUI::displaySettings()
 {
     blockApplySettings(true);
 
+    ui->transverter->setDeltaFrequency(m_settings.m_transverterDeltaFrequency);
+    ui->transverter->setDeltaFrequencyActive(m_settings.m_transverterMode);
+    ui->transverter->setIQOrder(m_settings.m_iqOrder);
     ui->rxDeviceLabel->setText(m_settings.m_rxDeviceName);
     ui->txDeviceLabel->setText(m_settings.m_txDeviceName);
     ui->dcBlock->setChecked(m_settings.m_dcBlock);
@@ -767,7 +777,8 @@ void AudioCATSISOGUI::makeUIConnections()
 	QObject::connect(ui->streamSide, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &AudioCATSISOGUI::on_streamSide_currentIndexChanged);
     QObject::connect(ui->spectrumSide, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &AudioCATSISOGUI::on_spectrumSide_currentIndexChanged);
     QObject::connect(ui->streamLock, &QToolButton::toggled, this, &AudioCATSISOGUI::on_streamLock_toggled);
-	QObject::connect(ui->startStop, &ButtonSwitch::toggled, this, &AudioCATSISOGUI::on_startStop_toggled);
+	QObject::connect(ui->freqRxToTx, &QPushButton::clicked, this, &AudioCATSISOGUI::on_freqRxToTx_clicked);
+    QObject::connect(ui->startStop, &ButtonSwitch::toggled, this, &AudioCATSISOGUI::on_startStop_toggled);
 	QObject::connect(ui->ptt, &ButtonSwitch::toggled, this, &AudioCATSISOGUI::on_ptt_toggled);
 	QObject::connect(ui->catConnect, &ButtonSwitch::toggled, this, &AudioCATSISOGUI::on_catConnect_toggled);
     QObject::connect(ui->centerFrequency, &ValueDial::changed, this, &AudioCATSISOGUI::on_centerFrequency_changed);

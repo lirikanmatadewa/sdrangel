@@ -1,6 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 F4EXB                                                      //
-// written by Edouard Griffiths                                                  //
+// Copyright (C) 2019-2020 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // Audio compressor based on sndfilter by Sean Connelly (@voidqk)                //
 // https://github.com/voidqk/sndfilter                                           //
@@ -146,7 +145,7 @@ void AudioCompressorSnd::CompressorState::sf_advancecomp(
 
 	// calculate the adaptive release curve parameters
 	// solve a,b,c,d in `y = a*x^3 + b*x^2 + c*x + d`
-	// interescting points (0, y1), (1, y2), (2, y3), (3, y4)
+	// intersecting points (0, y1), (1, y2), (2, y3), (3, y4)
 	float y1 = releasesamples * releasezone1;
 	float y2 = releasesamples * releasezone2;
 	float y3 = releasesamples * releasezone3;

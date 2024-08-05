@@ -1,6 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2015 Edouard Griffiths, F4EXB.                                  //
-// Copyright (C) 2023 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2020-2021, 2023 Jon Beniston, M7RCE <jon@beniston.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -18,7 +20,6 @@
 
 #include <QColor>
 
-#include "dsp/dspengine.h"
 #include "util/simpleserializer.h"
 #include "settings/serializable.h"
 #include "dscdemodsettings.h"
@@ -44,6 +45,7 @@ void DSCDemodSettings::resetToDefaults()
     m_logFilename = "dsc_log.csv";
     m_logEnabled = false;
     m_feed = true;
+    m_useFileTime = false;
 
     m_rgbColor = QColor(181, 230, 29).rgb();
     m_title = "DSC Demodulator";
@@ -83,6 +85,7 @@ QByteArray DSCDemodSettings::serialize() const
     s.writeString(12, m_logFilename);
     s.writeBool(13, m_logEnabled);
     s.writeBool(14, m_feed);
+    s.writeBool(15, m_useFileTime);
 
     s.writeU32(20, m_rgbColor);
     s.writeString(21, m_title);
@@ -153,6 +156,7 @@ bool DSCDemodSettings::deserialize(const QByteArray& data)
         d.readString(12, &m_logFilename, "dsc_log.csv");
         d.readBool(13, &m_logEnabled, false);
         d.readBool(14, &m_feed, true);
+        d.readBool(15, &m_useFileTime, false);
 
         d.readU32(20, &m_rgbColor, QColor(181, 230, 29).rgb());
         d.readString(21, &m_title, "DSC Demodulator");

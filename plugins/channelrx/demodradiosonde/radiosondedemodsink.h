@@ -1,6 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2019-2021 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2020-2022 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2020 Kacper Michajłow <kasper93@gmail.com>                      //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -28,7 +29,6 @@
 #include "dsp/firfilter.h"
 #include "dsp/gaussian.h"
 #include "util/movingaverage.h"
-#include "util/doublebufferfifo.h"
 #include "util/messagequeue.h"
 #include "util/crc.h"
 
@@ -112,7 +112,7 @@ private:
     Lowpass<Complex> m_lowpass;         // RF input filter
     PhaseDiscriminators m_phaseDiscri;  // FM demodulator
     Gaussian<Real> m_pulseShape;        // Pulse shaping filter
-    Real *m_rxBuf;                      // Receive sample buffer, large enough for one max length messsage
+    Real *m_rxBuf;                      // Receive sample buffer, large enough for one max length message
     int m_rxBufLength;                  // Size in elements in m_rxBuf
     int m_rxBufIdx;                     // Index in to circular buffer
     int m_rxBufCnt;                     // Number of valid samples in buffer

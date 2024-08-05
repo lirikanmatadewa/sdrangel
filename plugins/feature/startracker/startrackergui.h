@@ -1,6 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2015 John Greb <hexameron@spam.no>                              //
+// Copyright (C) 2020-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -27,9 +30,9 @@
 
 #include "feature/featuregui.h"
 #include "util/messagequeue.h"
-#include "util/fits.h"
 #include "gui/httpdownloadmanagergui.h"
 #include "settings/rollupstate.h"
+#include "availablechannelorfeature.h"
 
 #include "startrackersettings.h"
 
@@ -166,7 +169,7 @@ private:
     void updateSolarFlux(bool all);
     void makeUIConnections();
     void limitAzElRange(double& azimuth, double& elevation) const;
-    void updateSatelliteTrackerList(const QList<StarTrackerSettings::AvailableFeature>& satelliteTrackers);
+    void updateFeatureList(const AvailableChannelOrFeatureList& features);
 
 private slots:
     void onMenuDialogCalled(const QPoint &p);

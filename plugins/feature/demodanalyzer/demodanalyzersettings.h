@@ -1,5 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2021 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -21,26 +24,11 @@
 #include <QByteArray>
 #include <QString>
 
-#include "util/message.h"
-
 class Serializable;
 class ChannelAPI;
 
 struct DemodAnalyzerSettings
 {
-    struct AvailableChannel
-    {
-        bool m_tx;
-        int m_deviceSetIndex;
-        int m_channelIndex;
-        ChannelAPI *m_channelAPI;
-        QString m_id;
-
-        AvailableChannel() = default;
-        AvailableChannel(const AvailableChannel&) = default;
-        AvailableChannel& operator=(const AvailableChannel&) = default;
-    };
-
     int m_log2Decim;
     QString m_title;
     quint32 m_rgbColor;
@@ -68,7 +56,6 @@ struct DemodAnalyzerSettings
     void applySettings(const QStringList& settingsKeys, const DemodAnalyzerSettings& settings);
     QString getDebugString(const QStringList& settingsKeys, bool force=false) const;
 
-    static const QStringList m_channelTypes;
     static const QStringList m_channelURIs;
 };
 

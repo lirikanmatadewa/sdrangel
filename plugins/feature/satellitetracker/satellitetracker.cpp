@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2021-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -28,7 +28,6 @@
 #include "SWGSatelliteTrackerSettings.h"
 #include "SWGSatelliteDeviceSettings.h"
 
-#include "dsp/dspengine.h"
 #include "util/httpdownloadmanager.h"
 #include "settings/serializable.h"
 #include "channel/channelwebapiutils.h"
@@ -42,6 +41,7 @@ MESSAGE_CLASS_DEFINITION(SatelliteTracker::MsgConfigureSatelliteTracker, Message
 MESSAGE_CLASS_DEFINITION(SatelliteTracker::MsgStartStop, Message)
 MESSAGE_CLASS_DEFINITION(SatelliteTracker::MsgUpdateSatData, Message)
 MESSAGE_CLASS_DEFINITION(SatelliteTracker::MsgSatData, Message)
+MESSAGE_CLASS_DEFINITION(SatelliteTracker::MsgError, Message)
 
 const char* const SatelliteTracker::m_featureIdURI = "sdrangel.feature.satellitetracker";
 const char* const SatelliteTracker::m_featureId = "SatelliteTracker";
@@ -73,6 +73,7 @@ SatelliteTracker::SatelliteTracker(WebAPIAdapterInterface *webAPIAdapterInterfac
 
 SatelliteTracker::~SatelliteTracker()
 {
+    delete m_networkManager;
     stop();
     qDeleteAll(m_satState);
 }
@@ -208,15 +209,14 @@ void SatelliteTracker::applySettings(const SatelliteTrackerSettings& settings, c
         tlesChanged = true;
     }
 
-    SatelliteTrackerWorker::MsgConfigureSatelliteTrackerWorker *msg = SatelliteTrackerWorker::MsgConfigureSatelliteTrackerWorker::create(
-        settings, settingsKeys, force
-    );
-
     if (m_worker) {
+        SatelliteTrackerWorker::MsgConfigureSatelliteTrackerWorker *msg = SatelliteTrackerWorker::MsgConfigureSatelliteTrackerWorker::create(
+            settings, settingsKeys, force
+        );
         m_worker->getInputMessageQueue()->push(msg);
     }
 
-    if (settingsKeys.contains("useReverseAPI"))
+    if (settings.m_useReverseAPI)
     {
         bool fullUpdate = (settingsKeys.contains("useReverseAPI") && settings.m_useReverseAPI) ||
                 settingsKeys.contains("reverseAPIAddress") ||
@@ -881,7 +881,7 @@ QString SatelliteTracker::tleURLToFilename(const QString& string)
     return fileName;
 }
 
-void SatelliteTracker::downloadFinished(const QString& filename, bool success)
+void SatelliteTracker::downloadFinished(const QString& filename, bool success, const QString& url, const QString& error)
 {
     if (success)
     {
@@ -912,7 +912,11 @@ void SatelliteTracker::downloadFinished(const QString& filename, bool success)
             qDebug() << "SatelliteTracker::downloadFinished: Unexpected filename: " << filename;
     }
     else
+    {
         m_updatingSatData = false;
+        if (m_guiMessageQueue)
+            m_guiMessageQueue->push(MsgError::create(QString("Failed to download: %1\n\n%2").arg(url).arg(error)));
+    }
 }
 
 bool SatelliteTracker::readSatData()
@@ -940,7 +944,11 @@ bool SatelliteTracker::readSatData()
                             else
                                 ok = parseTxtTLEs(tlesFile.readAll());
                             if (!ok)
+                            {
                                 qDebug() << "SatelliteTracker::readSatData - failed to parse: " << tlesFile.fileName();
+                                if (m_guiMessageQueue)
+                                    m_guiMessageQueue->push(MsgError::create(QString("Failed to parse: %1").arg(tlesFile.fileName())));
+                            }
                         }
                         else
                             qDebug() << "SatelliteTracker::readSatData - failed to open: " << tlesFile.fileName();

@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2021-2022 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2021-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -23,8 +24,8 @@
 #include <OrbitalElements.h>
 #include <Tle.h>
 
-#include "satelliteselectiondialog.h"
 #include "util/units.h"
+#include "satelliteselectiondialog.h"
 
 using namespace libsgp4;
 
@@ -70,6 +71,7 @@ SatelliteSelectionDialog::SatelliteSelectionDialog(SatelliteTrackerSettings *set
 
 SatelliteSelectionDialog::~SatelliteSelectionDialog()
 {
+    delete m_networkManager;
     delete ui;
 }
 
@@ -196,6 +198,13 @@ void SatelliteSelectionDialog::displaySatInfo(const QString& name)
 {
     SatNogsSatellite *sat = m_satellites[name];
     m_satInfo = sat;
+    if (!sat)
+    {
+        // Might not be null if satellite name entered via API
+        ui->satInfo->setText("");
+        ui->satImage->setPixmap(QPixmap());
+        return;
+    }
     QStringList info;
     info.append(QString("Name: %1").arg(sat->m_name));
     if (sat->m_names.size() > 0)

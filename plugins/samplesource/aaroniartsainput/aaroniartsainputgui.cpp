@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2023 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2019-2020, 2022-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com> //
+// Copyright (C) 2019 Vort <vvort@yandex.ru>                                     //
+// Copyright (C) 2022-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -24,16 +26,11 @@
 #include <QFileDialog>
 
 #include "ui_aaroniartsainputgui.h"
-#include "plugin/pluginapi.h"
 #include "gui/colormapper.h"
 #include "gui/glspectrum.h"
 #include "gui/basicdevicesettingsdialog.h"
 #include "gui/dialogpositioner.h"
-#include "dsp/dspengine.h"
 #include "dsp/dspcommands.h"
-#include "util/db.h"
-
-#include "mainwindow.h"
 
 #include "aaroniartsainputgui.h"
 #include "device/deviceapi.h"
@@ -78,6 +75,7 @@ AaroniaRTSAInputGui::AaroniaRTSAInputGui(DeviceUISet *deviceUISet, QWidget* pare
 
     displaySettings();
     makeUIConnections();
+    m_resizer.enableChildMouseTracking();
 
     connect(&m_updateTimer, SIGNAL(timeout()), this, SLOT(updateHardware()));
     connect(&m_statusTimer, SIGNAL(timeout()), this, SLOT(updateStatus()));

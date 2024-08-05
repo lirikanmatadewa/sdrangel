@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Vort                                                       //
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2019-2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2019 Vort <vvort@yandex.ru>                                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -34,7 +34,6 @@
 #include "device/deviceapi.h"
 #include "kiwisdrworker.h"
 #include "dsp/dspcommands.h"
-#include "dsp/dspengine.h"
 
 MESSAGE_CLASS_DEFINITION(KiwiSDRInput::MsgConfigureKiwiSDR, Message)
 MESSAGE_CLASS_DEFINITION(KiwiSDRInput::MsgStartStop, Message)
@@ -49,7 +48,10 @@ KiwiSDRInput::KiwiSDRInput(DeviceAPI *deviceAPI) :
     m_kiwiSDRWorkerThread(nullptr),
 	m_deviceDescription("KiwiSDR"),
 	m_running(false),
-	m_masterTimer(deviceAPI->getMasterTimer())
+	m_masterTimer(deviceAPI->getMasterTimer()),
+    m_latitude(std::numeric_limits<float>::quiet_NaN()),
+    m_longitude(std::numeric_limits<float>::quiet_NaN()),
+    m_altitude(std::numeric_limits<float>::quiet_NaN())
 {
     m_sampleFifo.setLabel(m_deviceDescription);
     m_deviceAPI->setNbSourceStreams(1);
@@ -237,6 +239,16 @@ bool KiwiSDRInput::handleMessage(const Message& message)
 
         return true;
     }
+    else if (KiwiSDRWorker::MsgReportPosition::match(message))
+    {
+        KiwiSDRWorker::MsgReportPosition& report = (KiwiSDRWorker::MsgReportPosition&) message;
+
+        m_latitude = report.getLatitude();
+        m_longitude = report.getLongitude();
+        m_altitude = report.getAltitude();
+
+        return true;
+    }
     else if (MsgStartStop::match(message))
     {
         MsgStartStop& cmd = (MsgStartStop&) message;
@@ -302,7 +314,7 @@ bool KiwiSDRInput::applySettings(const KiwiSDRSettings& settings, const QList<QS
 		m_deviceAPI->getDeviceEngineInputMessageQueue()->push(notif);
 	}
 
-    if (settingsKeys.contains("useReverseAPI"))
+    if (settings.m_useReverseAPI)
     {
         bool fullUpdate = (settingsKeys.contains("useReverseAPI") && settings.m_useReverseAPI) ||
             settingsKeys.contains("reverseAPIAddress") ||
@@ -455,6 +467,9 @@ void KiwiSDRInput::webapiFormatDeviceSettings(SWGSDRangel::SWGDeviceSettings& re
 void KiwiSDRInput::webapiFormatDeviceReport(SWGSDRangel::SWGDeviceReport& response)
 {
     response.getKiwiSdrReport()->setStatus(getStatus());
+    response.getKiwiSdrReport()->setLatitude(m_latitude);
+    response.getKiwiSdrReport()->setLongitude(m_longitude);
+    response.getKiwiSdrReport()->setAltitude(m_altitude);
 }
 
 void KiwiSDRInput::webapiReverseSendSettings(const QList<QString>& deviceSettingsKeys, const KiwiSDRSettings& settings, bool force)

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2015-2018 Edouard Griffiths, F4EXB.                             //
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2021-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2021 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -32,13 +32,9 @@
 #include "SWGWorkspaceInfo.h"
 #include "SWGChannelReport.h"
 
-#include "dsp/dspengine.h"
 #include "dsp/dspcommands.h"
 #include "device/deviceapi.h"
-#include "feature/feature.h"
 #include "util/db.h"
-#include "maincore.h"
-#include "radioclocksink.h"
 #include "radioclocksettings.h"
 
 MESSAGE_CLASS_DEFINITION(RadioClock::MsgConfigureRadioClock, Message)
@@ -233,8 +229,14 @@ void RadioClock::applySettings(const RadioClockSettings& settings, bool force)
 
     QList<QString> reverseAPIKeys;
 
+    if ((settings.m_frequencyMode != m_settings.m_frequencyMode) || force) {
+        reverseAPIKeys.append("frequencyMode");
+    }
     if ((settings.m_inputFrequencyOffset != m_settings.m_inputFrequencyOffset) || force) {
         reverseAPIKeys.append("inputFrequencyOffset");
+    }
+    if ((settings.m_frequency != m_settings.m_frequency) || force) {
+        reverseAPIKeys.append("frequency");
     }
     if ((settings.m_rfBandwidth != m_settings.m_rfBandwidth) || force) {
         reverseAPIKeys.append("rfBandwidth");
@@ -256,6 +258,8 @@ void RadioClock::applySettings(const RadioClockSettings& settings, bool force)
             m_deviceAPI->removeChannelSink(this, m_settings.m_streamIndex);
             m_deviceAPI->addChannelSink(this, settings.m_streamIndex);
             m_deviceAPI->addChannelSinkAPI(this);
+            m_settings.m_streamIndex = settings.m_streamIndex; // make sure ChannelAPI::getStreamIndex() is consistent
+            emit streamIndexChanged(settings.m_streamIndex);
         }
 
         reverseAPIKeys.append("streamIndex");
@@ -329,6 +333,13 @@ int RadioClock::webapiSettingsPutPatch(
     RadioClockSettings settings = m_settings;
     webapiUpdateChannelSettings(settings, channelSettingsKeys, response);
 
+    // Ensure inputFrequencyOffset and frequency are consistent
+    if (channelSettingsKeys.contains("frequency") && !channelSettingsKeys.contains("inputFrequencyOffset")) {
+        settings.m_inputFrequencyOffset = settings.m_frequency - m_centerFrequency;
+    } else if (channelSettingsKeys.contains("inputFrequencyOffset") && !channelSettingsKeys.contains("frequency")) {
+        settings.m_frequency = m_centerFrequency + settings.m_inputFrequencyOffset;
+    }
+
     MsgConfigureRadioClock *msg = MsgConfigureRadioClock::create(settings, force);
     m_inputMessageQueue.push(msg);
 
@@ -349,8 +360,14 @@ void RadioClock::webapiUpdateChannelSettings(
         const QStringList& channelSettingsKeys,
         SWGSDRangel::SWGChannelSettings& response)
 {
+    if (channelSettingsKeys.contains("frequencyMode")) {
+        settings.m_frequencyMode = (RadioClockSettings::FrequencyMode) response.getRadioClockSettings()->getFrequencyMode();
+    }
     if (channelSettingsKeys.contains("inputFrequencyOffset")) {
         settings.m_inputFrequencyOffset = response.getRadioClockSettings()->getInputFrequencyOffset();
+    }
+    if (channelSettingsKeys.contains("frequency")) {
+        settings.m_frequency = response.getRadioClockSettings()->getFrequency();
     }
     if (channelSettingsKeys.contains("rfBandwidth")) {
         settings.m_rfBandwidth = response.getRadioClockSettings()->getRfBandwidth();
@@ -401,7 +418,9 @@ void RadioClock::webapiUpdateChannelSettings(
 
 void RadioClock::webapiFormatChannelSettings(SWGSDRangel::SWGChannelSettings& response, const RadioClockSettings& settings)
 {
+    response.getRadioClockSettings()->setFrequencyMode((int)settings.m_frequencyMode);
     response.getRadioClockSettings()->setInputFrequencyOffset(settings.m_inputFrequencyOffset);
+    response.getRadioClockSettings()->setFrequency(settings.m_frequency);
     response.getRadioClockSettings()->setRfBandwidth(settings.m_rfBandwidth);
     response.getRadioClockSettings()->setThreshold(settings.m_threshold);
     response.getRadioClockSettings()->setModulation((int)settings.m_modulation);
@@ -534,8 +553,14 @@ void RadioClock::webapiFormatChannelSettings(
 
     // transfer data that has been modified. When force is on transfer all data except reverse API data
 
+    if (channelSettingsKeys.contains("frequencyMode") || force) {
+        swgRadioClockSettings->setFrequencyMode(settings.m_frequencyMode);
+    }
     if (channelSettingsKeys.contains("inputFrequencyOffset") || force) {
         swgRadioClockSettings->setInputFrequencyOffset(settings.m_inputFrequencyOffset);
+    }
+    if (channelSettingsKeys.contains("frequency") || force) {
+        swgRadioClockSettings->setFrequency(settings.m_frequency);
     }
     if (channelSettingsKeys.contains("rfBandwidth") || force) {
         swgRadioClockSettings->setRfBandwidth(settings.m_rfBandwidth);

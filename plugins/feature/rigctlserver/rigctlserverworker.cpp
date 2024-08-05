@@ -1,6 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Jon Beniston, M7RCE                                        //
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>         //
+// Copyright (C) 2020 Christian W. Zuckschwerdt <christian@zuckschwerdt.org>     //
+// Copyright (C) 2022 Jiří Pinkava <jiri.pinkava@rossum.ai>                      //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -482,7 +483,7 @@ bool RigCtlServerWorker::getFrequency(double& frequency, rig_errcode_e& rigCtlRC
     if (WebAPIUtils::getSubObjectDouble(*jsonObj, "centerFrequency", deviceFreq))
     {
         SWGSDRangel::SWGChannelSettings channelSettingsResponse;
-        // Get channel settings containg inputFrequencyOffset, so we can patch them
+        // Get channel settings containing inputFrequencyOffset, so we can patch them
         httpRC = m_webAPIAdapterInterface->devicesetChannelSettingsGet(
             m_settings.m_deviceIndex,
             m_settings.m_channelIndex,
@@ -682,7 +683,7 @@ bool RigCtlServerWorker::getMode(const char **mode, double& passband, rig_errcod
     SWGSDRangel::SWGErrorResponse errorResponse;
     int httpRC;
 
-    // Get channel settings containg inputFrequencyOffset, so we can patch them
+    // Get channel settings containing inputFrequencyOffset, so we can patch them
     httpRC = m_webAPIAdapterInterface->devicesetChannelSettingsGet(
         m_settings.m_deviceIndex,
         m_settings.m_channelIndex,

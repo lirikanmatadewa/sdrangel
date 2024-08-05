@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>         //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -24,15 +24,12 @@
 #include "SWGXtrxMIMOSettings.h"
 #include "SWGDeviceState.h"
 #include "SWGDeviceReport.h"
-#include "SWGDeviceActions.h"
 #include "SWGXtrxMIMOReport.h"
 
 #include "device/deviceapi.h"
 #include "dsp/dspcommands.h"
-#include "dsp/dspengine.h"
-#include "dsp/dspdevicemimoengine.h"
-#include "dsp/devicesamplesource.h"
 #include "dsp/devicesamplesink.h"
+#include "dsp/devicesamplesource.h"
 #include "xtrx/devicextrxparam.h"
 #include "xtrx/devicextrxshared.h"
 #include "xtrx/devicextrx.h"
@@ -773,7 +770,7 @@ bool XTRXMIMO::applySettings(const XTRXMIMOSettings& settings, const QList<QStri
 
     // Reverse API
 
-    if (settingsKeys.contains("useReverseAPI"))
+    if (settings.m_useReverseAPI)
     {
         bool fullUpdate = (settingsKeys.contains("useReverseAPI") && settings.m_useReverseAPI) ||
             settingsKeys.contains("reverseAPIAddress") ||

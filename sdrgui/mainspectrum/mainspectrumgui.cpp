@@ -1,5 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2022 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2022 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -156,8 +159,15 @@ MainSpectrumGUI::MainSpectrumGUI(GLSpectrum* spectrum, GLSpectrumGUI* spectrumGU
 	connect(spectrumGUI, &GLSpectrumGUI::addChannel, this, &MainSpectrumGUI::onRequestAddChannel);
 	connect(spectrumGUI, &GLSpectrumGUI::addIqReplaySignal, this, &MainSpectrumGUI::onRequestAddIqReplay);
 
+<<<<<<< HEAD
 	m_resizer.enableChildMouseTracking();
 	shrinkWindow();
+=======
+    connect(spectrum->getSpectrumView(), &GLSpectrumView::timeSelected, this, &MainSpectrumGUI::onTimeSelected);
+
+    m_resizer.enableChildMouseTracking();
+    shrinkWindow();
+>>>>>>> remotes/origin/master
 }
 
 MainSpectrumGUI::~MainSpectrumGUI()
@@ -251,9 +261,15 @@ void MainSpectrumGUI::showHelp()
 
 void MainSpectrumGUI::openMoveToWorkspaceDialog()
 {
+<<<<<<< HEAD
 	int numberOfWorkspaces = MainWindow::getInstance()->getNumberOfWorkspaces();
 	WorkspaceSelectionDialog dialog(numberOfWorkspaces, this);
 	dialog.exec();
+=======
+    int numberOfWorkspaces = MainWindow::getInstance()->getNumberOfWorkspaces();
+    WorkspaceSelectionDialog dialog(numberOfWorkspaces, getWorkspaceIndex(), this);
+    dialog.exec();
+>>>>>>> remotes/origin/master
 
 	if (dialog.hasChanged()) {
 		emit moveToWorkspace(dialog.getSelectedIndex());
@@ -377,6 +393,7 @@ void MainSpectrumGUI::onRequestCenterFrequency(qint64 frequency)
 	emit requestCenterFrequency(m_deviceSetIndex, frequency);
 }
 
+<<<<<<< HEAD
 
 void MainSpectrumGUI::onRequestAddChannel(int channelPluginIndex)
 {
@@ -394,3 +411,9 @@ void MainSpectrumGUI::onRequestAddIqReplay()
 {
 	emit addIqReplaySignal();
 }
+=======
+void MainSpectrumGUI::onTimeSelected(float time)
+{
+    emit timeSelected(m_deviceSetIndex, time);
+}
+>>>>>>> remotes/origin/master

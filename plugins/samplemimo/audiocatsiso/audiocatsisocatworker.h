@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2023 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>               //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -21,11 +21,12 @@
 #include <hamlib/rig.h>
 
 #include <QObject>
-#include <QTimer>
 
 #include "util/message.h"
 #include "util/messagequeue.h"
 #include "audiocatsisosettings.h"
+
+class QTimer;
 
 class AudioCATSISOCATWorker : public QObject {
     Q_OBJECT
@@ -55,6 +56,39 @@ public:
 			m_force(force)
 		{ }
 	};
+
+    class MsgPollTimerConnect : public Message {
+        MESSAGE_CLASS_DECLARATION
+
+    public:
+        static MsgPollTimerConnect* create() {
+            return new MsgPollTimerConnect();
+        }
+
+    protected:
+        MsgPollTimerConnect() :
+            Message()
+        { }
+    };
+
+    class MsgSetRxSampleRate : public Message {
+        MESSAGE_CLASS_DECLARATION
+
+    public:
+        int getSampleRate() const { return m_sampleRate; }
+
+        static MsgSetRxSampleRate* create(int sampleRate) {
+            return new MsgSetRxSampleRate(sampleRate);
+        }
+
+    protected:
+        int m_sampleRate;
+
+        MsgSetRxSampleRate(int sampleRate) :
+            Message(),
+            m_sampleRate(sampleRate)
+        { }
+    };
 
     class MsgReportFrequency : public Message {
         MESSAGE_CLASS_DECLARATION
@@ -99,9 +133,10 @@ private:
     bool m_connected;
     AudioCATSISOSettings m_settings;
     RIG *m_rig;
-    QTimer m_pollTimer;
+    QTimer *m_pollTimer;
     bool m_ptt;
     uint64_t m_frequency;
+    int m_rxSampleRate;
 
 private slots:
     void handleInputMessages();

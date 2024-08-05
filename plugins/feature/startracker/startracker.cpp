@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2021-2024 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2021-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -25,24 +25,21 @@
 #include "SWGFeatureReport.h"
 #include "SWGFeatureActions.h"
 #include "SWGDeviceState.h"
-#include "SWGStarTrackerDisplaySettings.h"
 
-#include "device/deviceset.h"
-#include "dsp/dspengine.h"
 #include "feature/featureset.h"
 #include "util/weather.h"
 #include "util/units.h"
 #include "settings/serializable.h"
 #include "maincore.h"
 
-#include "startrackerreport.h"
 #include "startrackerworker.h"
 #include "startracker.h"
 
 MESSAGE_CLASS_DEFINITION(StarTracker::MsgConfigureStarTracker, Message)
 MESSAGE_CLASS_DEFINITION(StarTracker::MsgStartStop, Message)
 MESSAGE_CLASS_DEFINITION(StarTracker::MsgSetSolarFlux, Message)
-MESSAGE_CLASS_DEFINITION(StarTracker::MsgReportAvailableSatelliteTrackers, Message)
+MESSAGE_CLASS_DEFINITION(StarTracker::MsgRequestAvailableFeatures, Message)
+MESSAGE_CLASS_DEFINITION(StarTracker::MsgReportAvailableFeatures, Message)
 
 const char* const StarTracker::m_featureIdURI = "sdrangel.feature.startracker";
 const char* const StarTracker::m_featureId = "StarTracker";
@@ -50,7 +47,9 @@ const char* const StarTracker::m_featureId = "StarTracker";
 StarTracker::StarTracker(WebAPIAdapterInterface *webAPIAdapterInterface) :
     Feature(m_featureIdURI, webAPIAdapterInterface),
     m_thread(nullptr),
-    m_worker(nullptr)
+    m_worker(nullptr),
+    m_availableChannelHandler({"sdrangel.channel.radioastronomy"}, QStringList{"startracker.display"}),
+    m_availableFeatureHandler({"sdrangel.feature.satellitetracker", "sdrangel.feature.skymap"})
 {
     qDebug("StarTracker::StarTracker: webAPIAdapterInterface: %p", webAPIAdapterInterface);
     setObjectName(m_featureId);
@@ -70,36 +69,17 @@ StarTracker::StarTracker(WebAPIAdapterInterface *webAPIAdapterInterface) :
     m_temps.append(new FITS(":/startracker/startracker/408mhz_ra_dec.fits"));
     m_temps.append(new FITS(":/startracker/startracker/1420mhz_ra_dec.fits"));
     m_spectralIndex = new FITS(":/startracker/startracker/408mhz_ra_dec_spectral_index.fits");
-    scanAvailableChannels();
-    scanAvailableFeatures();
-    QObject::connect(
-        MainCore::instance(),
-        &MainCore::channelAdded,
-        this,
-        &StarTracker::handleChannelAdded
-    );
-    QObject::connect(
-        MainCore::instance(),
-        &MainCore::featureAdded,
-        this,
-        &StarTracker::handleFeatureAdded
-    );
-    QObject::connect(
-        MainCore::instance(),
-        &MainCore::featureRemoved,
-        this,
-        &StarTracker::handleFeatureRemoved
-    );
+
+    QObject::connect(&m_availableChannelHandler, &AvailableChannelOrFeatureHandler::messageEnqueued, this, &StarTracker::handleChannelMessageQueue);
+    m_availableChannelHandler.scanAvailableChannelsAndFeatures();
+    QObject::connect(&m_availableFeatureHandler, &AvailableChannelOrFeatureHandler::channelsOrFeaturesChanged, this, &StarTracker::featuresChanged);
+    m_availableFeatureHandler.scanAvailableChannelsAndFeatures();
 }
 
 StarTracker::~StarTracker()
 {
-    QObject::disconnect(
-        MainCore::instance(),
-        &MainCore::channelAdded,
-        this,
-        &StarTracker::handleChannelAdded
-    );
+    QObject::disconnect(&m_availableChannelHandler, &AvailableChannelOrFeatureHandler::messageEnqueued, this, &StarTracker::handleChannelMessageQueue);
+    QObject::disconnect(&m_availableFeatureHandler, &AvailableChannelOrFeatureHandler::channelsOrFeaturesChanged, this, &StarTracker::featuresChanged);
     QObject::disconnect(
         m_networkManager,
         &QNetworkAccessManager::finished,
@@ -176,27 +156,32 @@ bool StarTracker::handleMessage(const Message& cmd)
 
         return true;
     }
+    else if (MsgRequestAvailableFeatures::match(cmd))
+    {
+        notifyUpdateFeatures();
+        return true;
+    }
     else if (MsgSetSolarFlux::match(cmd))
     {
-        MsgSetSolarFlux& msg = (MsgSetSolarFlux&) cmd;
-        m_solarFlux = msg.getFlux();
         if (m_worker) {
+            MsgSetSolarFlux& msg = (MsgSetSolarFlux&) cmd;
+            m_solarFlux = msg.getFlux();
             m_worker->getInputMessageQueue()->push(new MsgSetSolarFlux(msg));
         }
         return true;
     }
     else if (MainCore::MsgStarTrackerDisplaySettings::match(cmd))
     {
-        MainCore::MsgStarTrackerDisplaySettings& settings = (MainCore::MsgStarTrackerDisplaySettings&) cmd;
         if (m_guiMessageQueue) {
+            MainCore::MsgStarTrackerDisplaySettings& settings = (MainCore::MsgStarTrackerDisplaySettings&) cmd;
             m_guiMessageQueue->push(new MainCore::MsgStarTrackerDisplaySettings(settings));
         }
         return true;
     }
     else if (MainCore::MsgStarTrackerDisplayLoSSettings::match(cmd))
     {
-        MainCore::MsgStarTrackerDisplayLoSSettings& settings = (MainCore::MsgStarTrackerDisplayLoSSettings&) cmd;
         if (m_guiMessageQueue) {
+            MainCore::MsgStarTrackerDisplayLoSSettings& settings = (MainCore::MsgStarTrackerDisplayLoSSettings&) cmd;
             m_guiMessageQueue->push(new MainCore::MsgStarTrackerDisplayLoSSettings(settings));
         }
         return true;
@@ -261,14 +246,14 @@ void StarTracker::applySettings(const StarTrackerSettings& settings, const QList
         }
     }
 
-    StarTrackerWorker::MsgConfigureStarTrackerWorker *msg = StarTrackerWorker::MsgConfigureStarTrackerWorker::create(
-        settings, settingsKeys, force
-    );
     if (m_worker) {
+        StarTrackerWorker::MsgConfigureStarTrackerWorker *msg = StarTrackerWorker::MsgConfigureStarTrackerWorker::create(
+            settings, settingsKeys, force
+            );
         m_worker->getInputMessageQueue()->push(msg);
     }
 
-    if (settingsKeys.contains("useReverseAPI"))
+    if (settings.m_useReverseAPI)
     {
         bool fullUpdate = (settingsKeys.contains("useReverseAPI") && settings.m_useReverseAPI) ||
                 settingsKeys.contains("reverseAPIAddress") ||
@@ -695,7 +680,7 @@ double StarTracker::applyBeam(const FITS *fits, double beamwidth, double ra, dou
     // (Essentially the same as Gaussian of exp(-4*ln(theta^2/beamwidth^2))
     // (See a2 in https://arxiv.org/pdf/1812.10084.pdf for Elliptical equivalent))
     // We have gain of 0dB (1) at 0 degrees, and -3dB (~0.5) at half-beamwidth degrees
-    // Find exponent that correponds to -3dB at that angle
+    // Find exponent that corresponds to -3dB at that angle
     double minus3dBLinear = pow(10.0, -3.0/10.0);
     double p = log(minus3dBLinear)/log(cos(Units::degreesToRadians(halfBeamwidth)));
     // Create an matrix with gain as a function of angle
@@ -806,7 +791,7 @@ bool StarTracker::calcSkyTemperature(double frequency, double beamwidth, double 
             // LFmap: https://www.faculty.ece.vt.edu/swe/lwa/memo/lwa0111.pdf
             double iso408 = 50 * pow(150e6/408e6, 2.75);                 // Extra-galactic isotropic in reference map at 408MHz
             double isoT = 50 * pow(150e6/frequency, 2.75);  // Extra-galactic isotropic at target frequency
-            double cmbT = 2.725; // Cosmic microwave backgroud;
+            double cmbT = 2.725; // Cosmic microwave background;
             double spectralIndex;
             const FITS *spectralIndexFITS = getSpectralIndexFITS();
             if (spectralIndexFITS && spectralIndexFITS->valid())
@@ -839,137 +824,18 @@ bool StarTracker::calcSkyTemperature(double frequency, double beamwidth, double 
     }
 }
 
-void StarTracker::scanAvailableChannels()
+void StarTracker::featuresChanged()
 {
-    MainCore *mainCore = MainCore::instance();
-    MessagePipes& messagePipes = mainCore->getMessagePipes();
-    std::vector<DeviceSet*>& deviceSets = mainCore->getDeviceSets();
-    m_availableChannels.clear();
-
-    for (const auto& deviceSet : deviceSets)
-    {
-        DSPDeviceSourceEngine *deviceSourceEngine =  deviceSet->m_deviceSourceEngine;
-
-        if (deviceSourceEngine)
-        {
-            for (int chi = 0; chi < deviceSet->getNumberOfChannels(); chi++)
-            {
-                ChannelAPI *channel = deviceSet->getChannelAt(chi);
-
-                if (StarTrackerSettings::m_pipeURIs.contains(channel->getURI()) && !m_availableChannels.contains(channel))
-                {
-                    qDebug("StarTracker::scanAvailableChannels: register %d:%d %s (%p)",
-                        deviceSet->getIndex(), chi, qPrintable(channel->getURI()), channel);
-                    ObjectPipe *pipe = messagePipes.registerProducerToConsumer(channel, this, "startracker.display");
-                    MessageQueue *messageQueue = qobject_cast<MessageQueue*>(pipe->m_element);
-                    QObject::connect(
-                        messageQueue,
-                        &MessageQueue::messageEnqueued,
-                        this,
-                        [=](){ this->handleChannelMessageQueue(messageQueue); },
-                        Qt::QueuedConnection
-                    );
-                    QObject::connect(
-                        pipe,
-                        &ObjectPipe::toBeDeleted,
-                        this,
-                        &StarTracker::handleMessagePipeToBeDeleted
-                    );
-                    m_availableChannels.insert(channel);
-                }
-            }
-        }
-    }
+    m_availableFeatures = m_availableFeatureHandler.getAvailableChannelOrFeatureList();
+    notifyUpdateFeatures();
 }
 
-void StarTracker::handleChannelAdded(int deviceSetIndex, ChannelAPI *channel)
-{
-    qDebug("StarTracker::handleChannelAdded: deviceSetIndex: %d:%d channel: %s (%p)",
-        deviceSetIndex, channel->getIndexInDeviceSet(), qPrintable(channel->getURI()), channel);
-    DeviceSet *deviceSet = MainCore::instance()->getDeviceSets()[deviceSetIndex];
-    DSPDeviceSourceEngine *deviceSourceEngine =  deviceSet->m_deviceSourceEngine;
-
-    if (deviceSourceEngine && StarTrackerSettings::m_pipeURIs.contains(channel->getURI()))
-    {
-        if (!m_availableChannels.contains(channel))
-        {
-            MessagePipes& messagePipes = MainCore::instance()->getMessagePipes();
-            ObjectPipe *pipe = messagePipes.registerProducerToConsumer(channel, this, "startracker.display");
-            MessageQueue *messageQueue = qobject_cast<MessageQueue*>(pipe->m_element);
-            QObject::connect(
-                messageQueue,
-                &MessageQueue::messageEnqueued,
-                this,
-                [=](){ this->handleChannelMessageQueue(messageQueue); },
-                Qt::QueuedConnection
-            );
-            QObject::connect(
-                pipe,
-                &ObjectPipe::toBeDeleted,
-                this,
-                &StarTracker::handleMessagePipeToBeDeleted
-            );
-            m_availableChannels.insert(channel);
-        }
-    }
-}
-
-void StarTracker::handleMessagePipeToBeDeleted(int reason, QObject* object)
-{
-    if ((reason == 0) && m_availableChannels.contains((ChannelAPI*) object)) // producer (channel)
-    {
-        qDebug("StarTracker::handleMessagePipeToBeDeleted: removing channel at (%p)", object);
-        m_availableChannels.remove((ChannelAPI*) object);
-    }
-}
-
-void StarTracker::scanAvailableFeatures()
-{
-    qDebug("StarTracker::scanAvailableFeatures");
-    MainCore *mainCore = MainCore::instance();
-    std::vector<FeatureSet*>& featureSets = mainCore->getFeatureeSets();
-    m_satelliteTrackers.clear();
-
-    for (const auto& featureSet : featureSets)
-    {
-        for (int fei = 0; fei < featureSet->getNumberOfFeatures(); fei++)
-        {
-            Feature *feature = featureSet->getFeatureAt(fei);
-
-            if (feature->getURI() == "sdrangel.feature.satellitetracker")
-            {
-                StarTrackerSettings::AvailableFeature satelliteTracker =
-                    StarTrackerSettings::AvailableFeature{featureSet->getIndex(), fei, feature->getIdentifier()};
-                m_satelliteTrackers[feature] = satelliteTracker;
-            }
-        }
-    }
-
-    notifyUpdateSatelliteTrackers();
-}
-
-void StarTracker::handleFeatureAdded(int featureSetIndex, Feature *feature)
-{
-    (void) featureSetIndex;
-    (void) feature;
-
-    scanAvailableFeatures();
-}
-
-void StarTracker::handleFeatureRemoved(int featureSetIndex, Feature *feature)
-{
-    (void) featureSetIndex;
-    (void) feature;
-
-    scanAvailableFeatures();
-}
-
-void StarTracker::notifyUpdateSatelliteTrackers()
+void StarTracker::notifyUpdateFeatures()
 {
     if (getMessageQueueToGUI())
     {
-        MsgReportAvailableSatelliteTrackers *msg = MsgReportAvailableSatelliteTrackers::create();
-        msg->getFeatures() = m_satelliteTrackers.values();
+        MsgReportAvailableFeatures *msg = MsgReportAvailableFeatures::create();
+        msg->getFeatures() = m_availableFeatures;
         getMessageQueueToGUI()->push(msg);
     }
 }

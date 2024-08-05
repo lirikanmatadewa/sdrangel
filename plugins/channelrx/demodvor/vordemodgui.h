@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2020 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2020, 2022-2023 Jon Beniston, M7RCE <jon@beniston.com>          //
+// Copyright (C) 2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>         //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -21,7 +21,6 @@
 
 #include "channel/channelgui.h"
 #include "dsp/channelmarker.h"
-#include "dsp/movingaverage.h"
 #include "util/messagequeue.h"
 #include "settings/rollupstate.h"
 #include "vordemodsettings.h"

@@ -1,8 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2023 Edouard Griffiths, F4EXB.                                  //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2019, 2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
 //                                                                               //
 // This is the code from ft8mon: https://github.com/rtmrtmrtmrtm/ft8mon          //
-// written by Robert Morris, AB1HL                                               //
 // reformatted and adapted to Qt and SDRangel context                            //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
@@ -23,13 +24,17 @@
 
 namespace FT8 {
 
-int ldpc_check(int codeword[]);
-void ldpc_decode(float llcodeword[], int iters, int plain[], int *ok);
-float fast_tanh(float x);
-void ldpc_decode_log(float codeword[], int iters, int plain[], int *ok);
-void ft8_crc(int msg1[], int msglen, int out[14]);
-void gauss_jordan(int rows, int cols, int m[174][2 * 91], int which[91], int *ok);
+class LDPC {
+public:
+    static void ldpc_decode(float llcodeword[], int iters, int plain[], int *ok);
+    static void ldpc_decode_log(float codeword[], int iters, int plain[], int *ok);
+    static void ft8_crc(int msg1[], int msglen, int out[14]);
+    static void gauss_jordan(int rows, int cols, int m[174][2 * 91], int which[91], int *ok);
 
+private:
+    static int ldpc_check(int codeword[]);
+    static float fast_tanh(float x);
+};
 
 } // namespace FT8
 

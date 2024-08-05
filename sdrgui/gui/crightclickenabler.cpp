@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2018 F4EXB                                                      //
-// written by Edouard Griffiths                                                  //
+// Copyright (C) 2018 Edouard Griffiths, F4EXB <f4exb06@gmail.com>               //
+// Copyright (C) 2022 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -38,20 +38,17 @@ bool CRightClickEnabler::eventFilter(QObject *obj, QEvent *event)
     {
         auto mouseEvent = (QMouseEvent*) event;
 
+        if (mouseEvent->source() == Qt::MouseEventNotSynthesized) {
+            m_mousePressed = true;
+        } else {
+            m_mousePressed = false; // Mouse event generated from touch event
+        }
+
         if (mouseEvent->button() == Qt::RightButton)
         {
             emit rightClick(mouseEvent->globalPos());
             mouseEvent->setAccepted(true);
             return true;
-        }
-
-        if (mouseEvent->button() == Qt::LeftButton)
-        {
-            if (mouseEvent->source() == Qt::MouseEventNotSynthesized) {
-                m_mousePressed = true;
-            } else {
-                m_mousePressed = false; // Mouse event generated from touch event
-            }
         }
     }
     else if (event->type() == QEvent::MouseButtonRelease)
@@ -61,6 +58,7 @@ bool CRightClickEnabler::eventFilter(QObject *obj, QEvent *event)
         if (mouseEvent->button() == Qt::RightButton)
         {
             mouseEvent->setAccepted(true);
+            m_mousePressed = false;
             return true;
         }
 

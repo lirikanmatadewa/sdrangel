@@ -14,7 +14,9 @@ LOCAL/*
 .vscode/
 .settings/
 *.cs
+*.orig
 *.pro.user
+*.rej
 .idea/*
 rescuesdriq/rescuesdriq
 debian/sdrangel/*
@@ -44,3 +46,9 @@ obj-x86_64-linux-gnu/*
 /rescuesdriq/vendor/
 /rescuesdriq/Godeps/
 /.vs
+
+# WDSP
+wdsp/*.o
+wdsp/*.h
+wdsp/*.c
+wdsp/Makefile

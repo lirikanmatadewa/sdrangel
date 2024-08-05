@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2017 Edouard Griffiths, F4EXB.                                  //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // Swagger server adapter interface                                              //
 //                                                                               //
@@ -330,7 +332,7 @@ public:
     }
 
     /**
-     * Handler of /sdrangel/audio/output/paramaters (DELETE) swagger/sdrangel/code/html2/index.html#api-Default-instanceChannels
+     * Handler of /sdrangel/audio/output/parameters (DELETE) swagger/sdrangel/code/html2/index.html#api-Default-instanceChannels
      * returns the Http status code (default 501: not implemented)
      */
     virtual int instanceAudioOutputDelete(

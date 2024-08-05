@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2021 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2021-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -25,12 +25,9 @@
 #include "SWGDeviceReport.h"
 #include "device/deviceapi.h"
 #include "dsp/dspcommands.h"
-#include "dsp/dspengine.h"
-#include "dsp/dspdevicemimoengine.h"
 #include "dsp/devicesamplesource.h"
 #include "dsp/devicesamplesink.h"
 #include "plutosdr/deviceplutosdrparams.h"
-#include "plutosdr/deviceplutosdrshared.h"
 
 #include "plutosdrmithread.h"
 #include "plutosdrmothread.h"
@@ -202,7 +199,6 @@ bool PlutoSDRMIMO::startRx()
 
     m_plutoRxBuffer = m_plutoParams->getBox()->createRxBuffer(PlutoSDRMIMOSettings::m_plutoSDRBlockSizeSamples, false);
 	m_sourceThread->startWork();
-	mutexLocker.unlock();
 	m_runningRx = true;
 
     return true;
@@ -240,7 +236,6 @@ bool PlutoSDRMIMO::startTx()
 
     m_plutoTxBuffer = m_plutoParams->getBox()->createTxBuffer(PlutoSDRMIMOSettings::m_plutoSDRBlockSizeSamples, false);
 	m_sinkThread->startWork();
-	mutexLocker.unlock();
 	m_runningTx = true;
 
     return true;
@@ -716,7 +711,7 @@ bool PlutoSDRMIMO::applySettings(const PlutoSDRMIMOSettings& settings, const QLi
         plutoBox->set_params(DevicePlutoSDRBox::DEVICE_PHY, params);
     }
 
-    if (settingsKeys.contains("useReverseAPI"))
+    if (settings.m_useReverseAPI)
     {
         bool fullUpdate = (settingsKeys.contains("useReverseAPI") && settings.m_useReverseAPI) ||
             settingsKeys.contains("reverseAPIAddress") ||

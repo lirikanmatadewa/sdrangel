@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2020-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2021 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -25,11 +26,7 @@
 #include "SWGDeviceState.h"
 
 #include "dsp/dspcommands.h"
-#include "dsp/dspengine.h"
 #include "dsp/datafifo.h"
-#include "dsp/dspdevicesourceengine.h"
-#include "dsp/devicesamplesource.h"
-#include "device/deviceset.h"
 #include "channel/channelapi.h"
 #include "maincore.h"
 
@@ -38,7 +35,6 @@
 
 MESSAGE_CLASS_DEFINITION(DemodAnalyzer::MsgConfigureDemodAnalyzer, Message)
 MESSAGE_CLASS_DEFINITION(DemodAnalyzer::MsgStartStop, Message)
-MESSAGE_CLASS_DEFINITION(DemodAnalyzer::MsgRefreshChannels, Message)
 MESSAGE_CLASS_DEFINITION(DemodAnalyzer::MsgReportChannels, Message)
 MESSAGE_CLASS_DEFINITION(DemodAnalyzer::MsgSelectChannel, Message)
 MESSAGE_CLASS_DEFINITION(DemodAnalyzer::MsgReportSampleRate, Message)
@@ -52,6 +48,7 @@ DemodAnalyzer::DemodAnalyzer(WebAPIAdapterInterface *webAPIAdapterInterface) :
     m_running(false),
     m_worker(nullptr),
     m_spectrumVis(SDR_RX_SCALEF),
+    m_availableChannelOrFeatureHandler(DemodAnalyzerSettings::m_channelURIs),
     m_selectedChannel(nullptr),
     m_dataPipe(nullptr)
 {
@@ -66,10 +63,23 @@ DemodAnalyzer::DemodAnalyzer(WebAPIAdapterInterface *webAPIAdapterInterface) :
         this,
         &DemodAnalyzer::networkManagerFinished
     );
+    QObject::connect(
+        &m_availableChannelOrFeatureHandler,
+        &AvailableChannelOrFeatureHandler::channelsOrFeaturesChanged,
+        this,
+        &DemodAnalyzer::channelsOrFeaturesChanged
+    );
+    m_availableChannelOrFeatureHandler.scanAvailableChannelsAndFeatures();
 }
 
 DemodAnalyzer::~DemodAnalyzer()
 {
+    QObject::disconnect(
+        &m_availableChannelOrFeatureHandler,
+        &AvailableChannelOrFeatureHandler::channelsOrFeaturesChanged,
+        this,
+        &DemodAnalyzer::channelsOrFeaturesChanged
+    );
     QObject::disconnect(
         m_networkManager,
         &QNetworkAccessManager::finished,
@@ -192,12 +202,6 @@ bool DemodAnalyzer::handleMessage(const Message& cmd)
 
         return true;
     }
-    else if (MsgRefreshChannels::match(cmd))
-    {
-        qDebug() << "DemodAnalyzer::handleMessage: MsgRefreshChannels";
-        updateChannels();
-        return true;
-    }
     else if (MsgSelectChannel::match(cmd))
     {
         MsgSelectChannel& cfg = (MsgSelectChannel&) cmd;
@@ -286,7 +290,7 @@ void DemodAnalyzer::applySettings(const DemodAnalyzerSettings& settings, const Q
     }
 
 
-    if (settingsKeys.contains("useReverseAPI"))
+    if (settings.m_useReverseAPI)
     {
         bool fullUpdate = (settingsKeys.contains("useReverseAPI") && settings.m_useReverseAPI) ||
                 settingsKeys.contains("reverseAPIAddress") ||
@@ -303,60 +307,25 @@ void DemodAnalyzer::applySettings(const DemodAnalyzerSettings& settings, const Q
     }
 }
 
-void DemodAnalyzer::updateChannels()
+void DemodAnalyzer::channelsOrFeaturesChanged(const QStringList& renameFrom, const QStringList& renameTo)
 {
-    MainCore *mainCore = MainCore::instance();
-    std::vector<DeviceSet*>& deviceSets = mainCore->getDeviceSets();
-    std::vector<DeviceSet*>::const_iterator it = deviceSets.begin();
-    m_availableChannels.clear();
+    m_availableChannels = m_availableChannelOrFeatureHandler.getAvailableChannelOrFeatureList();
+    notifyUpdate(renameFrom, renameTo);
+}
 
-    int deviceIndex = 0;
-
-    for (; it != deviceSets.end(); ++it, deviceIndex++)
-    {
-        DSPDeviceSourceEngine *deviceSourceEngine =  (*it)->m_deviceSourceEngine;
-        DSPDeviceSinkEngine *deviceSinkEngine =  (*it)->m_deviceSinkEngine;
-
-        if (deviceSourceEngine || deviceSinkEngine)
-        {
-            for (int chi = 0; chi < (*it)->getNumberOfChannels(); chi++)
-            {
-                ChannelAPI *channel = (*it)->getChannelAt(chi);
-                int i = DemodAnalyzerSettings::m_channelURIs.indexOf(channel->getURI());
-
-                if (i >= 0)
-                {
-                    DemodAnalyzerSettings::AvailableChannel availableChannel =
-                        DemodAnalyzerSettings::AvailableChannel{
-                            deviceSinkEngine != nullptr,
-                            deviceIndex,
-                            chi,
-                            channel,
-                            DemodAnalyzerSettings::m_channelTypes.at(i)
-                        };
-                    m_availableChannels[channel] = availableChannel;
-                }
-            }
-        }
-    }
-
+void DemodAnalyzer::notifyUpdate(const QStringList& renameFrom, const QStringList& renameTo)
+{
     if (getMessageQueueToGUI())
     {
-        MsgReportChannels *msgToGUI = MsgReportChannels::create();
-        QList<DemodAnalyzerSettings::AvailableChannel>& msgAvailableChannels = msgToGUI->getAvailableChannels();
-        QHash<ChannelAPI*, DemodAnalyzerSettings::AvailableChannel>::iterator it = m_availableChannels.begin();
-
-        for (; it != m_availableChannels.end(); ++it) {
-            msgAvailableChannels.push_back(*it);
-        }
-
-        getMessageQueueToGUI()->push(msgToGUI);
+        MsgReportChannels *msg = MsgReportChannels::create(renameFrom, renameTo);
+        msg->getAvailableChannels() = m_availableChannels;
+        getMessageQueueToGUI()->push(msg);
     }
 }
 
 void DemodAnalyzer::setChannel(ChannelAPI *selectedChannel)
 {
-    if ((selectedChannel == m_selectedChannel) || !m_availableChannels.contains(selectedChannel)) {
+    if ((selectedChannel == m_selectedChannel) || (m_availableChannels.indexOfObject(selectedChannel) == -1)) {
         return;
     }
 
@@ -690,20 +659,32 @@ void DemodAnalyzer::handleDataPipeToBeDeleted(int reason, QObject *object)
             m_worker->getInputMessageQueue()->push(msg);
         }
 
-        m_availableChannels.remove((ChannelAPI*) object);
         m_selectedChannel = nullptr;
-
-        if (getMessageQueueToGUI())
-        {
-            MsgReportChannels *msgToGUI = MsgReportChannels::create();
-            QList<DemodAnalyzerSettings::AvailableChannel>& msgAvailableChannels = msgToGUI->getAvailableChannels();
-            QHash<ChannelAPI*, DemodAnalyzerSettings::AvailableChannel>::iterator it = m_availableChannels.begin();
-
-            for (; it != m_availableChannels.end(); ++it) {
-                msgAvailableChannels.push_back(*it);
-            }
-
-            getMessageQueueToGUI()->push(msgToGUI);
-        }
     }
+}
+
+int DemodAnalyzer::webapiActionsPost(
+            const QStringList&,
+            SWGSDRangel::SWGFeatureActions& query,
+            QString& errorMessage) {
+
+    MainCore* m_core = MainCore::instance();
+    auto action = query.getDemodAnalyzerActions();
+    if (action == nullptr) {
+        errorMessage = QString("missing DemodAnalyzerActions in request");
+        return 404;
+    }
+
+    auto deviceId = action->getDeviceId();
+    auto chanId = action->getChannelId();
+
+    ChannelAPI * chan = m_core->getChannel(deviceId, chanId);
+    if (chan == nullptr) {
+        errorMessage = QString("device(%1) or channel (%2) on the device does not exist").arg(deviceId).arg(chanId);
+        return 404;
+    }
+
+    MsgSelectChannel *msg = MsgSelectChannel::create(chan);
+    getInputMessageQueue()->push(msg);
+    return 200;
 }

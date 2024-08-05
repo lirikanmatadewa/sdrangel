@@ -1,3 +1,21 @@
+///////////////////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2015-2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>        //
+// Copyright (C) 2020, 2023 Jon Beniston, M7RCE <jon@beniston.com>                   //
+//                                                                                   //
+// This program is free software; you can redistribute it and/or modify              //
+// it under the terms of the GNU General Public License as published by              //
+// the Free Software Foundation as version 3 of the License, or                      //
+// (at your option) any later version.                                               //
+//                                                                                   //
+// This program is distributed in the hope that it will be useful,                   //
+// but WITHOUT ANY WARRANTY; without even the implied warranty of                    //
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                      //
+// GNU General Public License V3 for more details.                                   //
+//                                                                                   //
+// You should have received a copy of the GNU General Public License                 //
+// along with this program. If not, see <http://www.gnu.org/licenses/>.              //
+///////////////////////////////////////////////////////////////////////////////////////
+#include <QtAlgorithms>
 #include <QSettings>
 #include <QStringList>
 #include <QDebug>
@@ -17,24 +35,11 @@ MainSettings::MainSettings() :
 
 MainSettings::~MainSettings()
 {
-	for (int i = 0; i < m_presets.count(); ++i)
-	{
-		delete m_presets[i];
-	}
-
-	for (int i = 0; i < m_commands.count(); ++i)
-    {
-        delete m_commands[i];
-    }
-
-	for (int i = 0; i < m_featureSetPresets.count(); ++i)
-    {
-        delete m_featureSetPresets[i];
-    }
-    for (int i = 0; i < m_pluginPresets.count(); ++i)
-    {
-        delete m_pluginPresets[i];
-    }
+    qDeleteAll(m_presets);
+    qDeleteAll(m_commands);
+    qDeleteAll(m_featureSetPresets);
+    qDeleteAll(m_pluginPresets);
+    qDeleteAll(m_configurations);
 }
 
 QString MainSettings::getFileLocation() const
@@ -166,7 +171,7 @@ void MainSettings::save() const
 
 	for(int i = 0; i < groups.size(); ++i)
 	{
-		if ((groups[i].startsWith("preset")) || (groups[i].startsWith("command")))
+		if (groups[i] != "General")
 		{
 			s.remove(groups[i]);
 		}

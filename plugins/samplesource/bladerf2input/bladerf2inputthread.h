@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2018 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2018-2020 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -21,7 +21,7 @@
 // BladerRF2 is a SISO/MIMO device with a single stream supporting one or two Rx
 // Therefore only one thread can be allocated for the Rx side
 // All FIFOs must be registered before calling startWork() else SISO/MIMO switch will not work properly
-// with unpredicatable results
+// with unpredictable results
 
 #include <QThread>
 #include <QMutex>

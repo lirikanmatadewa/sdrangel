@@ -1,6 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2015 F4EXB                                                      //
-// written by Edouard Griffiths                                                  //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2014 John Greb <hexameron@spam.no>                              //
+// Copyright (C) 2015-2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2020 Kacper Michajłow <kasper93@gmail.com>                      //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -73,7 +76,6 @@ public:
     virtual void setDeviceAPI(DeviceAPI *deviceAPI);
     virtual DeviceAPI *getDeviceAPI() { return m_deviceAPI; }
     SpectrumVis *getSpectrumVis() { return &m_spectrumVis; }
-    void setBasebandMessageQueueToGUI(MessageQueue *messageQueue) { m_basebandSink->setMessageQueueToGUI(messageQueue); }
 
     using BasebandSampleSink::feed;
     virtual void feed(const SampleVector::const_iterator& begin, const SampleVector::const_iterator& end, bool po);
@@ -93,6 +95,7 @@ public:
 
     virtual int getNbSinkStreams() const { return 1; }
     virtual int getNbSourceStreams() const { return 0; }
+    virtual int getStreamIndex() const { return m_settings.m_streamIndex; }
 
     virtual qint64 getStreamCenterFrequency(int streamIndex, bool sinkElseSource) const
     {
@@ -101,21 +104,27 @@ public:
         return m_settings.m_inputFrequencyOffset;
     }
 
-	double getMagSq() const { return m_basebandSink->getMagSq(); }
+	double getMagSq() const { return m_running ? m_basebandSink->getMagSq() : 0.0; }
 
-	bool getPilotLock() const { return m_basebandSink->getPilotLock(); }
-	Real getPilotLevel() const { return m_basebandSink->getPilotLevel(); }
+	bool getPilotLock() const { return m_running ? m_basebandSink->getPilotLock() : false; }
+	Real getPilotLevel() const { return m_running ? m_basebandSink->getPilotLevel() : 0.0f; }
 
-	Real getDecoderQua() const { return m_basebandSink->getDecoderQua(); }
-	bool getDecoderSynced() const { return m_basebandSink->getDecoderSynced(); }
-	Real getDemodAcc() const { return m_basebandSink->getDemodAcc(); }
-	Real getDemodQua() const { return m_basebandSink->getDemodQua(); }
-	Real getDemodFclk() const { return m_basebandSink->getDemodFclk(); }
-    int getAudioSampleRate() const { return m_basebandSink->getAudioSampleRate(); }
+	Real getDecoderQua() const { return m_running ? m_basebandSink->getDecoderQua() : 0.0f; }
+	bool getDecoderSynced() const { return m_running ? m_basebandSink->getDecoderSynced() : false; }
+	Real getDemodAcc() const { return m_running ? m_basebandSink->getDemodAcc() : 0.0f; }
+	Real getDemodQua() const { return m_running ? m_basebandSink->getDemodQua() : 0.0f; }
+	Real getDemodFclk() const { return m_running ? m_basebandSink->getDemodFclk() : 0.0f; }
+    int getAudioSampleRate() const { return m_running ? m_basebandSink->getAudioSampleRate() : 0; }
 
-    void getMagSqLevels(double& avg, double& peak, int& nbSamples) { m_basebandSink->getMagSqLevels(avg, peak, nbSamples); }
+    void getMagSqLevels(double& avg, double& peak, int& nbSamples) {
+        if (m_running) {
+            m_basebandSink->getMagSqLevels(avg, peak, nbSamples);
+        } else {
+            avg = 0.0; peak = 0.0; nbSamples = 1;
+        }
+    }
 
-    RDSParser& getRDSParser() { return m_basebandSink->getRDSParser(); }
+    RDSParser *getRDSParser() { return m_running ? &m_basebandSink->getRDSParser() : nullptr; }
 
     virtual int webapiSettingsGet(
             SWGSDRangel::SWGChannelSettings& response,
@@ -153,6 +162,7 @@ private:
 	DeviceAPI *m_deviceAPI;
     QThread *m_thread;
     BFMDemodBaseband* m_basebandSink;
+    bool m_running;
 	BFMDemodSettings m_settings;
     SpectrumVis m_spectrumVis;
     int m_basebandSampleRate; //!< stored from device message used when starting baseband sink

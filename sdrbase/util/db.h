@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2015 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2019, 2021 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -24,7 +26,7 @@
 class SDRBASE_API CalcDb
 {
 public:
-	static double dbPower(double magsq, double floor = 1e-12);
+	static double dbPower(double magsq, double floor = 1e-15); // Floor at -150dB
 	static double powerFromdB(double powerdB);
 	static double frexp10(double arg, int *exp);
 };

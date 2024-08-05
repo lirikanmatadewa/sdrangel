@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2020 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2020-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2020-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -25,7 +25,6 @@
 
 #include "device/deviceuiset.h"
 #include "plugin/pluginapi.h"
-#include "util/simpleserializer.h"
 #include "util/db.h"
 #include "dsp/spectrumvis.h"
 #include "dsp/scopevis.h"
@@ -35,7 +34,6 @@
 #include "gui/glspectrum.h"
 #include "gui/crightclickenabler.h"
 #include "gui/basicchannelsettingsdialog.h"
-#include "gui/devicestreamselectiondialog.h"
 #include "gui/dialpopup.h"
 #include "gui/dialogpositioner.h"
 #include "maincore.h"
@@ -484,6 +482,7 @@ IEEE_802_15_4_ModGUI::IEEE_802_15_4_ModGUI(PluginAPI* pluginAPI, DeviceUISet *de
     makeUIConnections();
     applySettings();
     DialPopup::addPopupsToChildDials(this);
+    m_resizer.enableChildMouseTracking();
 }
 
 IEEE_802_15_4_ModGUI::~IEEE_802_15_4_ModGUI()

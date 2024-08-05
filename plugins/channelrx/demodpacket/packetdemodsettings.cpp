@@ -1,6 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2015 Edouard Griffiths, F4EXB.                                  //
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2020-2021, 2023 Jon Beniston, M7RCE <jon@beniston.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -18,7 +20,6 @@
 
 #include <QColor>
 
-#include "dsp/dspengine.h"
 #include "util/simpleserializer.h"
 #include "settings/serializable.h"
 #include "packetdemodsettings.h"
@@ -44,6 +45,7 @@ void PacketDemodSettings::resetToDefaults()
     m_udpPort = 9999;
     m_logFilename = "packet_log.csv";
     m_logEnabled = false;
+    m_useFileTime = false;
 
     m_rgbColor = QColor(0, 105, 2).rgb();
     m_title = "Packet Demodulator";
@@ -100,6 +102,8 @@ QByteArray PacketDemodSettings::serialize() const
     s.writeS32(28, m_workspaceIndex);
     s.writeBlob(29, m_geometryBytes);
     s.writeBool(30, m_hidden);
+
+    s.writeBool(31, m_useFileTime);
 
     for (int i = 0; i < PACKETDEMOD_COLUMNS; i++) {
         s.writeS32(100 + i, m_columnIndexes[i]);
@@ -182,6 +186,8 @@ bool PacketDemodSettings::deserialize(const QByteArray& data)
         d.readS32(28, &m_workspaceIndex, 0);
         d.readBlob(29, &m_geometryBytes);
         d.readBool(30, &m_hidden, false);
+
+        d.readBool(31, &m_useFileTime, false);
 
         for (int i = 0; i < PACKETDEMOD_COLUMNS; i++) {
             d.readS32(100 + i, &m_columnIndexes[i], i);

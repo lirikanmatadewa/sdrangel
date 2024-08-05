@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2018-2019 Edouard Griffiths, F4EXB                              //
+// Copyright (C) 2018-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -24,11 +25,8 @@
 #include "dsp/hbfilterchainconverter.h"
 #include "dsp/dspcommands.h"
 #include "gui/basicchannelsettingsdialog.h"
-#include "gui/devicestreamselectiondialog.h"
 #include "gui/dialogpositioner.h"
 #include "util/db.h"
-
-#include "mainwindow.h"
 
 #include "filesourcereport.h"
 #include "filesourcegui.h"
@@ -218,6 +216,7 @@ FileSourceGUI::FileSourceGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, Bas
     displaySettings();
     makeUIConnections();
     applySettings(true);
+    m_resizer.enableChildMouseTracking();
 }
 
 FileSourceGUI::~FileSourceGUI()

@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2019-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2022 Jiří Pinkava <jiri.pinkava@rossum.ai>                      //
+// Copyright (C) 2022 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -60,12 +62,15 @@ public:
     BFMDemodBaseband();
     ~BFMDemodBaseband();
     void reset();
+    void startWork();
+    void stopWork();
     void feed(const SampleVector::const_iterator& begin, const SampleVector::const_iterator& end);
     MessageQueue *getInputMessageQueue() { return &m_inputMessageQueue; } //!< Get the queue for asynchronous inbound communication
     int getChannelSampleRate() const;
     void setBasebandSampleRate(int sampleRate);
     void setSpectrumSink(SpectrumVis* spectrumSink) { m_spectrumVis = spectrumSink; m_sink.setSpectrumSink((BasebandSampleSink*) spectrumSink); }
     void setChannel(ChannelAPI *channel);
+    bool isRunning() const { return m_running; }
     void setMessageQueueToGUI(MessageQueue *messageQueue) { m_messageQueueToGUI = messageQueue; }
 
     int getAudioSampleRate() const { return m_sink.getAudioSampleRate(); }
@@ -90,6 +95,7 @@ private:
     BFMDemodSink m_sink;
 	MessageQueue m_inputMessageQueue; //!< Queue for asynchronous inbound communication
     BFMDemodSettings m_settings;
+    bool m_running;
     QRecursiveMutex m_mutex;
     MessageQueue *m_messageQueueToGUI;
     SpectrumVis *m_spectrumVis;

@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2021 Edouard Griffiths, F4EXB.                                  //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2021 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -18,8 +20,6 @@
 #ifndef SDRBASE_DSP_GLSCOPEINTERFACE_H_
 #define SDRBASE_DSP_GLSCOPEINTERFACE_H_
 
-#include "dsptypes.h"
-#include "physicalunit.h"
 #include "glscopesettings.h"
 
 class GLScopeInterface

@@ -84,6 +84,8 @@
 #include "SWGChannelConfig.h"
 #include "SWGChannelListItem.h"
 #include "SWGChannelMarker.h"
+#include "SWGChannelPowerReport.h"
+#include "SWGChannelPowerSettings.h"
 #include "SWGChannelReport.h"
 #include "SWGChannelSettings.h"
 #include "SWGChannelsDetail.h"
@@ -111,6 +113,7 @@
 #include "SWGDSDDemodSettings.h"
 #include "SWGDVSerialDevice.h"
 #include "SWGDVSerialDevices.h"
+#include "SWGDemodAnalyzerActions.h"
 #include "SWGDemodAnalyzerSettings.h"
 #include "SWGDeviceActions.h"
 #include "SWGDeviceConfig.h"
@@ -120,6 +123,8 @@
 #include "SWGDeviceSetList.h"
 #include "SWGDeviceSettings.h"
 #include "SWGDeviceState.h"
+#include "SWGEndOfTrainDemodReport.h"
+#include "SWGEndOfTrainDemodSettings.h"
 #include "SWGErrorResponse.h"
 #include "SWGFCDProPlusSettings.h"
 #include "SWGFCDProSettings.h"
@@ -152,6 +157,8 @@
 #include "SWGFreeDVDemodSettings.h"
 #include "SWGFreeDVModReport.h"
 #include "SWGFreeDVModSettings.h"
+#include "SWGFreqScannerActions.h"
+#include "SWGFreqScannerChannelState.h"
 #include "SWGFreqScannerFrequency.h"
 #include "SWGFreqScannerReport.h"
 #include "SWGFreqScannerSettings.h"
@@ -215,6 +222,8 @@
 #include "SWGMapReport.h"
 #include "SWGMapSettings.h"
 #include "SWGMetisMISOSettings.h"
+#include "SWGMorseDecoderActions.h"
+#include "SWGMorseDecoderSettings.h"
 #include "SWGNFMDemodReport.h"
 #include "SWGNFMDemodSettings.h"
 #include "SWGNFMModReport.h"
@@ -296,6 +305,7 @@
 #include "SWGSDRPlaySettings.h"
 #include "SWGSDRPlayV3Report.h"
 #include "SWGSDRPlayV3Settings.h"
+#include "SWGSIDSettings.h"
 #include "SWGSSBDemodReport.h"
 #include "SWGSSBDemodSettings.h"
 #include "SWGSSBModReport.h"
@@ -318,6 +328,11 @@
 #include "SWGSimplePTTActions.h"
 #include "SWGSimplePTTReport.h"
 #include "SWGSimplePTTSettings.h"
+#include "SWGSkyMapActions.h"
+#include "SWGSkyMapReport.h"
+#include "SWGSkyMapSettings.h"
+#include "SWGSkyMapTarget.h"
+#include "SWGSkyMapTarget_2.h"
 #include "SWGSoapySDRFrequencySetting.h"
 #include "SWGSoapySDRGainSetting.h"
 #include "SWGSoapySDRInputSettings.h"
@@ -359,6 +374,8 @@
 #include "SWGVORLocalizerActions.h"
 #include "SWGVORLocalizerReport.h"
 #include "SWGVORLocalizerSettings.h"
+#include "SWGWDSPRxReport.h"
+#include "SWGWDSPRxSettings.h"
 #include "SWGWFMDemodReport.h"
 #include "SWGWFMDemodSettings.h"
 #include "SWGWFMModReport.h"
@@ -724,6 +741,16 @@ namespace SWGSDRangel {
       obj->init();
       return obj;
     }
+    if(QString("SWGChannelPowerReport").compare(type) == 0) {
+      SWGChannelPowerReport *obj = new SWGChannelPowerReport();
+      obj->init();
+      return obj;
+    }
+    if(QString("SWGChannelPowerSettings").compare(type) == 0) {
+      SWGChannelPowerSettings *obj = new SWGChannelPowerSettings();
+      obj->init();
+      return obj;
+    }
     if(QString("SWGChannelReport").compare(type) == 0) {
       SWGChannelReport *obj = new SWGChannelReport();
       obj->init();
@@ -859,6 +886,11 @@ namespace SWGSDRangel {
       obj->init();
       return obj;
     }
+    if(QString("SWGDemodAnalyzerActions").compare(type) == 0) {
+      SWGDemodAnalyzerActions *obj = new SWGDemodAnalyzerActions();
+      obj->init();
+      return obj;
+    }
     if(QString("SWGDemodAnalyzerSettings").compare(type) == 0) {
       SWGDemodAnalyzerSettings *obj = new SWGDemodAnalyzerSettings();
       obj->init();
@@ -901,6 +933,16 @@ namespace SWGSDRangel {
     }
     if(QString("SWGDeviceState").compare(type) == 0) {
       SWGDeviceState *obj = new SWGDeviceState();
+      obj->init();
+      return obj;
+    }
+    if(QString("SWGEndOfTrainDemodReport").compare(type) == 0) {
+      SWGEndOfTrainDemodReport *obj = new SWGEndOfTrainDemodReport();
+      obj->init();
+      return obj;
+    }
+    if(QString("SWGEndOfTrainDemodSettings").compare(type) == 0) {
+      SWGEndOfTrainDemodSettings *obj = new SWGEndOfTrainDemodSettings();
       obj->init();
       return obj;
     }
@@ -1061,6 +1103,16 @@ namespace SWGSDRangel {
     }
     if(QString("SWGFreeDVModSettings").compare(type) == 0) {
       SWGFreeDVModSettings *obj = new SWGFreeDVModSettings();
+      obj->init();
+      return obj;
+    }
+    if(QString("SWGFreqScannerActions").compare(type) == 0) {
+      SWGFreqScannerActions *obj = new SWGFreqScannerActions();
+      obj->init();
+      return obj;
+    }
+    if(QString("SWGFreqScannerChannelState").compare(type) == 0) {
+      SWGFreqScannerChannelState *obj = new SWGFreqScannerChannelState();
       obj->init();
       return obj;
     }
@@ -1376,6 +1428,16 @@ namespace SWGSDRangel {
     }
     if(QString("SWGMetisMISOSettings").compare(type) == 0) {
       SWGMetisMISOSettings *obj = new SWGMetisMISOSettings();
+      obj->init();
+      return obj;
+    }
+    if(QString("SWGMorseDecoderActions").compare(type) == 0) {
+      SWGMorseDecoderActions *obj = new SWGMorseDecoderActions();
+      obj->init();
+      return obj;
+    }
+    if(QString("SWGMorseDecoderSettings").compare(type) == 0) {
+      SWGMorseDecoderSettings *obj = new SWGMorseDecoderSettings();
       obj->init();
       return obj;
     }
@@ -1784,6 +1846,11 @@ namespace SWGSDRangel {
       obj->init();
       return obj;
     }
+    if(QString("SWGSIDSettings").compare(type) == 0) {
+      SWGSIDSettings *obj = new SWGSIDSettings();
+      obj->init();
+      return obj;
+    }
     if(QString("SWGSSBDemodReport").compare(type) == 0) {
       SWGSSBDemodReport *obj = new SWGSSBDemodReport();
       obj->init();
@@ -1891,6 +1958,31 @@ namespace SWGSDRangel {
     }
     if(QString("SWGSimplePTTSettings").compare(type) == 0) {
       SWGSimplePTTSettings *obj = new SWGSimplePTTSettings();
+      obj->init();
+      return obj;
+    }
+    if(QString("SWGSkyMapActions").compare(type) == 0) {
+      SWGSkyMapActions *obj = new SWGSkyMapActions();
+      obj->init();
+      return obj;
+    }
+    if(QString("SWGSkyMapReport").compare(type) == 0) {
+      SWGSkyMapReport *obj = new SWGSkyMapReport();
+      obj->init();
+      return obj;
+    }
+    if(QString("SWGSkyMapSettings").compare(type) == 0) {
+      SWGSkyMapSettings *obj = new SWGSkyMapSettings();
+      obj->init();
+      return obj;
+    }
+    if(QString("SWGSkyMapTarget").compare(type) == 0) {
+      SWGSkyMapTarget *obj = new SWGSkyMapTarget();
+      obj->init();
+      return obj;
+    }
+    if(QString("SWGSkyMapTarget_2").compare(type) == 0) {
+      SWGSkyMapTarget_2 *obj = new SWGSkyMapTarget_2();
       obj->init();
       return obj;
     }
@@ -2096,6 +2188,16 @@ namespace SWGSDRangel {
     }
     if(QString("SWGVORLocalizerSettings").compare(type) == 0) {
       SWGVORLocalizerSettings *obj = new SWGVORLocalizerSettings();
+      obj->init();
+      return obj;
+    }
+    if(QString("SWGWDSPRxReport").compare(type) == 0) {
+      SWGWDSPRxReport *obj = new SWGWDSPRxReport();
+      obj->init();
+      return obj;
+    }
+    if(QString("SWGWDSPRxSettings").compare(type) == 0) {
+      SWGWDSPRxSettings *obj = new SWGWDSPRxSettings();
       obj->init();
       return obj;
     }

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2021-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -21,7 +21,7 @@
 
 #include <QDebug>
 #include <QAction>
-#include <QRegExp>
+#include <QRegularExpression>
 
 #include "dabdemodgui.h"
 
@@ -30,11 +30,9 @@
 #include "dsp/dspcommands.h"
 #include "ui_dabdemodgui.h"
 #include "plugin/pluginapi.h"
-#include "util/simpleserializer.h"
 #include "util/db.h"
 #include "gui/audioselectdialog.h"
 #include "gui/basicchannelsettingsdialog.h"
-#include "gui/devicestreamselectiondialog.h"
 #include "gui/crightclickenabler.h"
 #include "gui/dialogpositioner.h"
 #include "channel/channelwebapiutils.h"
@@ -42,7 +40,6 @@
 #include "maincore.h"
 
 #include "dabdemod.h"
-#include "dabdemodsink.h"
 
 // Table column indexes
 #define PROGRAMS_COL_NAME            0
@@ -426,9 +423,10 @@ void DABDemodGUI::filterRow(int row)
     bool hidden = false;
     if (m_settings.m_filter != "")
     {
-        QRegExp re(m_settings.m_filter);
+        QRegularExpression re(m_settings.m_filter);
         QTableWidgetItem *fromItem = ui->programs->item(row, PROGRAMS_COL_NAME);
-        if (re.indexIn(fromItem->text()) == -1)
+        QRegularExpressionMatch match = re.match(fromItem->text());
+        if (!match.hasMatch())
             hidden = true;
     }
     ui->programs->setRowHidden(row, hidden);
@@ -577,6 +575,7 @@ DABDemodGUI::DABDemodGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, Baseban
     displaySettings();
     makeUIConnections();
     applySettings(true);
+    m_resizer.enableChildMouseTracking();
 }
 
 DABDemodGUI::~DABDemodGUI()
@@ -701,6 +700,7 @@ void DABDemodGUI::audioSelect(const QPoint& p)
 {
     AudioSelectDialog audioSelect(DSPEngine::instance()->getAudioDeviceManager(), m_settings.m_audioDeviceName);
     audioSelect.move(p);
+    new DialogPositioner(&audioSelect, false);
     audioSelect.exec();
 
     if (audioSelect.m_selected)

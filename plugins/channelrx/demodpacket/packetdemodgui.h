@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2020-2022 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>         //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -31,7 +31,6 @@
 
 #include "channel/channelgui.h"
 #include "dsp/channelmarker.h"
-#include "dsp/movingaverage.h"
 #include "util/messagequeue.h"
 #include "settings/rollupstate.h"
 #include "packetdemodsettings.h"
@@ -97,7 +96,7 @@ private:
     void blockApplySettings(bool block);
     void applySettings(bool force = false);
     void displaySettings();
-    void packetReceived(QByteArray packet);
+    void packetReceived(const QByteArray& packet, QDateTime dateTime);
     bool handleMessage(const Message& message);
     void makeUIConnections();
     void updateAbsoluteCenterFrequency();
@@ -107,6 +106,18 @@ private:
 
     void resizeTable();
     QAction *createCheckableItem(QString& text, int idx, bool checked);
+
+    enum PacketCol {
+        PACKET_COL_DATE,
+        PACKET_COL_TIME,
+        PACKET_COL_FROM,
+        PACKET_COL_TO,
+        PACKET_COL_VIA,
+        PACKET_COL_TYPE,
+        PACKET_COL_PID,
+        PACKET_COL_DATA_STRING,
+        PACKET_COL_DATA_HEX
+    };
 
 private slots:
     void on_deltaFrequency_changed(qint64 value);
@@ -123,6 +134,7 @@ private slots:
     void on_logEnable_clicked(bool checked=false);
     void on_logFilename_clicked();
     void on_logOpen_clicked();
+    void on_useFileTime_toggled(bool checked=false);
     void filterRow(int row);
     void filter();
     void packets_sectionMoved(int logicalIndex, int oldVisualIndex, int newVisualIndex);

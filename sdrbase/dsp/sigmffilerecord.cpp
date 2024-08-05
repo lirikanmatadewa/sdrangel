@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2020-2021 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2021 Christoph Berg <myon@debian.org>                           //
+// Copyright (C) 2021 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // File recorder in SigMF format single channel for SI plugins                   //
 //                                                                               //
@@ -49,6 +51,8 @@ SigMFFileRecord::SigMFFileRecord() :
     m_metaRecord = new sigmf::SigMF<sigmf::Global<core::DescrT, sdrangel::DescrT>,
             sigmf::Capture<core::DescrT, sdrangel::DescrT>,
             sigmf::Annotation<core::DescrT> >();
+    // sizeof(FixReal) is either 2 or 4 thus log2 sample size is either 4 (size 16) or 5 (size 32)
+    m_log2RecordSampleSize = (sizeof(FixReal) / 2) + 3;
 }
 
 SigMFFileRecord::SigMFFileRecord(const QString& fileName, const QString& hardwareId) :
@@ -69,6 +73,8 @@ SigMFFileRecord::SigMFFileRecord(const QString& fileName, const QString& hardwar
     m_metaRecord = new sigmf::SigMF<sigmf::Global<core::DescrT, sdrangel::DescrT>,
             sigmf::Capture<core::DescrT, sdrangel::DescrT>,
             sigmf::Annotation<core::DescrT> >();
+    // sizeof(FixReal) is either 2 or 4 thus log2 sample size is either 4 (size 16) or 5 (size 32)
+    m_log2RecordSampleSize = (sizeof(FixReal) / 2) + 3;
 }
 
 SigMFFileRecord::~SigMFFileRecord()
@@ -77,11 +83,11 @@ SigMFFileRecord::~SigMFFileRecord()
 
     stopRecording();
 
-    if (m_metaFile.is_open()) {
+    if (m_metaFile.isOpen()) {
         m_metaFile.close();
     }
 
-    if (m_sampleFile.is_open()) {
+    if (m_sampleFile.isOpen()) {
         m_sampleFile.close();
     }
 
@@ -94,37 +100,33 @@ void SigMFFileRecord::setFileName(const QString& fileName)
     {
         qDebug("SigMFFileRecord::setFileName: %s", qPrintable(fileName));
 
-        if (m_metaFile.is_open()) {
+        if (m_metaFile.isOpen()) {
             m_metaFile.close();
         }
 
-        if (m_sampleFile.is_open()) {
+        if (m_sampleFile.isOpen()) {
             m_sampleFile.close();
         }
 
         m_fileName = fileName;
+        QString metaFileName = m_fileName + ".sigmf-meta";
+        m_metaFile.setFileName(metaFileName);
+        QString sampleFileName = m_fileName + ".sigmf-data";
+        m_sampleFile.setFileName(sampleFileName);
 
-        if (QFile::exists(fileName + ".sigmf-data") && QFile::exists(fileName + ".sigmf-meta"))
+        if (QFile::exists(metaFileName) && QFile::exists(sampleFileName))
         {
-            m_metaFileName = m_fileName + ".sigmf-meta";
-            std::ifstream metaStream;
-#ifdef Q_OS_WIN
-        	metaStream.open(m_metaFileName.toStdWString().c_str());
-#else
-        	metaStream.open(m_metaFileName.toStdString().c_str());
-#endif
-            std::ostringstream meta_buffer;
-            meta_buffer << metaStream.rdbuf();
+            QFile metaStream(metaFileName);
+            metaStream.open(QIODevice::ReadOnly);
             try
             {
-                from_json(json::parse(meta_buffer.str()), *m_metaRecord);
+                from_json(json::parse(metaStream.readAll().toStdString()), *m_metaRecord);
                 metaStream.close();
                 std::string sdrAngelVersion = m_metaRecord->global.access<sdrangel::GlobalT>().version;
 
                 if (sdrAngelVersion.size() != 0)
                 {
                     qDebug("SigMFFileRecord::setFileName: appending mode");
-                    m_metaFile.open(m_metaFileName.toStdString().c_str(), std::ofstream::out);
                     m_initialMsCount = 0;
 
                     for (auto capture : m_metaRecord->captures)
@@ -134,10 +136,18 @@ void SigMFFileRecord::setFileName(const QString& fileName)
                         m_initialMsCount += (length * 1000) / sampleRate;
                     }
 
-                    m_sampleFileName = m_fileName + ".sigmf-data";
-                    m_sampleFile.open(m_sampleFileName.toStdString().c_str(), std::ios::binary & std::ios::app);
-                    m_initialBytesCount = (uint64_t) m_sampleFile.tellp();
-                    m_sampleStart =  m_initialBytesCount / sizeof(Sample);
+                    m_sampleFile.setFileName(m_fileName + ".sigmf-data");
+                    if (!m_sampleFile.open(QIODevice::WriteOnly | QIODevice::Append))
+                    {
+                        qWarning() << "SigMFFileRecord::setFileName: failed to open file: " << m_sampleFile.fileName();
+                    }
+                    m_initialBytesCount = (uint64_t) m_sampleFile.size();
+                    m_sampleStart =  m_initialBytesCount / ((1<<m_log2RecordSampleSize)/4); // sizeof(Sample);
+
+                    if (!m_metaFile.open(QIODevice::WriteOnly | QIODevice::Append))
+                    {
+                        qWarning() << "SigMFFileRecord::setFileName: failed to open file: " << m_metaFile.fileName();
+                    }
 
                     m_recordStart = false;
                 }
@@ -180,18 +190,14 @@ bool SigMFFileRecord::startRecording()
       	qDebug("SigMFFileRecord::startRecording: new record %s", qPrintable(m_fileName));
         clearMeta();
         m_sampleStart = 0;
-        m_sampleFileName = m_fileName + ".sigmf-data";
-        m_metaFileName = m_fileName + ".sigmf-meta";
-        m_sampleFile.open(m_sampleFileName.toStdString().c_str(), std::ios::binary);
-        if (!m_sampleFile.is_open())
+        if (!m_sampleFile.open(QIODevice::WriteOnly))
         {
-            qWarning() << "SigMFFileRecord::startRecording: failed to open file: " << m_sampleFileName;
+            qWarning() << "SigMFFileRecord::startRecording: failed to open file: " << m_sampleFile.fileName();
             success = false;
         }
-        m_metaFile.open(m_metaFileName.toStdString().c_str(), std::ofstream::out);
-        if (!m_metaFile.is_open())
+        if (!m_metaFile.open(QIODevice::WriteOnly | QIODevice::Append))
         {
-            qWarning() << "SigMFFileRecord::startRecording: failed to open file: " << m_metaFileName;
+            qWarning() << "SigMFFileRecord::startRecording: failed to open file: " << m_metaFile.fileName();
             success = false;
         }
         makeHeader();
@@ -212,17 +218,17 @@ bool SigMFFileRecord::stopRecording()
 {
     if (m_recordOn)
     {
-      	qDebug("SigMFFileRecord::stopRecording: file previous capture");
+        qDebug("SigMFFileRecord::stopRecording: file previous capture");
         makeCapture();
         m_recordOn = false;
-        if (m_sampleFile.bad())
+        if (m_sampleFile.error())
         {
-            qWarning() << "SigMFFileRecord::stopRecording: an error occurred while writing to " << m_sampleFileName;
+            qWarning() << "SigMFFileRecord::stopRecording: an error occurred while writing to " << m_sampleFile.fileName();
             return false;
         }
-        if (m_metaFile.bad())
+        if (m_metaFile.error())
         {
-            qWarning() << "SigMFFileRecord::stopRecording: an error occurred while writing to " << m_metaFileName;
+            qWarning() << "SigMFFileRecord::stopRecording: an error occurred while writing to " << m_metaFile.fileName();
             return false;
         }
     }
@@ -243,7 +249,8 @@ void SigMFFileRecord::makeHeader()
     m_metaRecord->global.access<sdrangel::GlobalT>().arch = QString(QSysInfo::currentCpuArchitecture()).toStdString();
     m_metaRecord->global.access<sdrangel::GlobalT>().os = QString(QSysInfo::prettyProductName()).toStdString();
     QString endianSuffix = QSysInfo::ByteOrder == QSysInfo::LittleEndian ? "le" : "be";
-    int size = 8*sizeof(FixReal);
+    int size = 1<<m_log2RecordSampleSize;
+    qDebug("SigMFFileRecord::makeHeader: %u %u", m_log2RecordSampleSize, (1<<m_log2RecordSampleSize));
     m_metaRecord->global.access<core::GlobalT>().datatype = QString("ci%1_%2").arg(size).arg(endianSuffix).toStdString();
 }
 
@@ -267,10 +274,11 @@ void SigMFFileRecord::makeCapture()
         m_metaRecord->captures.emplace_back(recording_capture);
         m_sampleStart += m_sampleCount;
         // Flush meta to disk
-        m_metaFile.seekp(0);
+        m_metaFile.seek(0);
         std::string jsonRecord = json(*m_metaRecord).dump(2);
-        m_metaFile << jsonRecord;
+        m_metaFile.write(jsonRecord.c_str(), jsonRecord.size());
         m_metaFile.flush();
+        m_metaFile.resize(m_metaFile.pos());
     }
     else
     {
@@ -292,8 +300,72 @@ void SigMFFileRecord::feed(const SampleVector::const_iterator& begin, const Samp
 
     if (begin < end) // if there is something to put out
     {
-        m_sampleFile.write(reinterpret_cast<const char*>(&*(begin)), (end - begin)*sizeof(Sample));
+        // m_sampleFile.write(reinterpret_cast<const char*>(&*(begin)), (end - begin)*sizeof(Sample));
+        feedConv(begin, end);
         m_sampleCount += end - begin;
+    }
+}
+
+void SigMFFileRecord::feedConv(const SampleVector::const_iterator& begin, const SampleVector::const_iterator& end)
+{
+    uint32_t desiredIorQSampleSize = 1<<m_log2RecordSampleSize;
+
+    if (2*desiredIorQSampleSize ==  8*sizeof(Sample)) // if size of sample matches desired sample size write directly
+    {
+        m_sampleFile.write(reinterpret_cast<const char*>(&*(begin)), (end - begin)*sizeof(Sample));
+    }
+    else
+    {
+        uint32_t nsamples = (end - begin);
+
+        // Only the 24 LSBits of the 32 bits samples are significant
+        if (desiredIorQSampleSize == 32) // can only be 16 bit samples => x8 (16 -> 24)
+        {
+            if (nsamples > m_samples32.size()) {
+                m_samples32.resize(nsamples);
+            }
+            std::transform(
+                begin,
+                end,
+                m_samples32.begin(),
+                [](const Sample& s) -> Sample32 {
+                    return Sample32{s.real()<<8, s.imag()<<8};
+                }
+            );
+            m_sampleFile.write(reinterpret_cast<const char*>(&*(m_samples32.begin())), nsamples*sizeof(Sample32));
+        }
+        else if (desiredIorQSampleSize == 16) // can only be 32 bit samples size => /8 (24 -> 16)
+        {
+            if (nsamples > m_samples16.size()) {
+                m_samples16.resize(nsamples);
+            }
+            std::transform(
+                begin,
+                end,
+                m_samples16.begin(),
+                [](const Sample& s) -> Sample16 {
+                    return Sample16{(qint16)(s.real()>>8), (qint16)(s.imag()>>8)};
+                }
+            );
+            m_sampleFile.write(reinterpret_cast<const char*>(&*(m_samples16.begin())), nsamples*sizeof(Sample16));
+        }
+        else // can only be 8 bit desired sample size
+        {
+            // divide by 8 for 16 -> 8 (sizeof(sample) == 4) or 16 for 24 -> 8 (sizeod(Sample) == 8)
+            // thus division of a I or Q sample is done with >>(2*sizeof(sample)) operation
+            if (nsamples > m_samples8.size()) {
+                m_samples8.resize(nsamples);
+            }
+            std::transform(
+                begin,
+                end,
+                m_samples8.begin(),
+                [](const Sample& s) -> Sample8 {
+                    return Sample8{(qint8)(s.real()>>(2*sizeof(Sample))), (qint8)(s.imag()>>(2*sizeof(Sample)))};
+                }
+            );
+            m_sampleFile.write(reinterpret_cast<const char*>(&*(m_samples8.begin())), nsamples*sizeof(Sample8));
+        }
     }
 }
 

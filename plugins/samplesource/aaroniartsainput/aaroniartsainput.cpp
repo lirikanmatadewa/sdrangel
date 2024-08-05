@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2023 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2019-2020, 2022-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com> //
+// Copyright (C) 2019 Vort <vvort@yandex.ru>                                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -33,7 +34,6 @@
 #include "device/deviceapi.h"
 #include "aaroniartsainputworker.h"
 #include "dsp/dspcommands.h"
-#include "dsp/dspengine.h"
 
 MESSAGE_CLASS_DEFINITION(AaroniaRTSAInput::MsgConfigureAaroniaRTSA, Message)
 MESSAGE_CLASS_DEFINITION(AaroniaRTSAInput::MsgStartStop, Message)
@@ -299,7 +299,7 @@ bool AaroniaRTSAInput::applySettings(const AaroniaRTSAInputSettings& settings, c
         emit setWorkerSampleRate(settings.m_sampleRate);
     }
 
-    if (settingsKeys.contains("useReverseAPI"))
+    if (settings.m_useReverseAPI)
     {
         bool fullUpdate = (settingsKeys.contains("useReverseAPI") && settings.m_useReverseAPI) ||
             settingsKeys.contains("reverseAPIAddress") ||

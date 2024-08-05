@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2017 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2017-2020 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2020 Vort <vvort@yandex.ru>                                     //
+// Copyright (C) 2020 Sergei I. Korolev <exception0x0d@gmail.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -24,9 +26,6 @@
 
 #include "opencv2/imgproc/imgproc.hpp"
 
-#include "dsp/dspcommands.h"
-#include "device/deviceapi.h"
-#include "util/db.h"
 #include "util/messagequeue.h"
 
 #include "atvmodreport.h"

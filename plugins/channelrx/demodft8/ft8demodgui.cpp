@@ -1,5 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2023 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -22,15 +25,12 @@
 #include "dsp/spectrumvis.h"
 #include "dsp/dspengine.h"
 #include "dsp/dspcommands.h"
-#include "util/simpleserializer.h"
 #include "gui/glspectrum.h"
 #include "gui/basicchannelsettingsdialog.h"
-#include "gui/devicestreamselectiondialog.h"
-#include "gui/crightclickenabler.h"
-#include "gui/audioselectdialog.h"
 #include "gui/dialpopup.h"
 #include "gui/dialogpositioner.h"
 #include "util/db.h"
+#include "util/callsign.h"
 #include "maincore.h"
 
 #include "ui_ft8demodgui.h"
@@ -87,6 +87,8 @@ QVariant FT8MessagesTableModel::data(const QModelIndex &index, int role) const
                 return ft8Message.m_call2;
             case FT8DemodSettings::MESSAGE_COL_LOC:
                 return ft8Message.m_loc;
+            case FT8DemodSettings::MESSAGE_COL_COUNTRY:
+                return ft8Message.m_country;
             case FT8DemodSettings::MESSAGE_COL_INFO:
                 return ft8Message.m_info;
             default:
@@ -135,6 +137,8 @@ QVariant FT8MessagesTableModel::headerData(int section, Qt::Orientation orientat
                 return tr("Call2");
             case FT8DemodSettings::MESSAGE_COL_LOC:
                 return tr("Loc");
+            case FT8DemodSettings::MESSAGE_COL_COUNTRY:
+                return tr("Country");
             case FT8DemodSettings::MESSAGE_COL_INFO:
                 return tr("Info");
             default:
@@ -165,6 +169,8 @@ QVariant FT8MessagesTableModel::headerData(int section, Qt::Orientation orientat
                 return tr("Second call area");
             case FT8DemodSettings::MESSAGE_COL_LOC:
                 return tr("Locator area");
+            case FT8DemodSettings::MESSAGE_COL_COUNTRY:
+                return tr("DXCC country name");
             case FT8DemodSettings::MESSAGE_COL_INFO:
                 return tr("Decoder information");
             default:
@@ -188,6 +194,7 @@ void FT8MessagesTableModel::messagesReceived(const QList<FT8Message>& messages)
 
     for (const auto& message : messages)
     {
+        CountryDat::CountryInfo countryInfo = Callsign::instance()->getCountryInfo(getCaller(message.call1, message.call2));
         m_ft8Messages.push_back(FT8MesssageData{
             message.ts.toString("HHmmss"),
             message.type,
@@ -199,11 +206,23 @@ void FT8MessagesTableModel::messagesReceived(const QList<FT8Message>& messages)
             message.call1,
             message.call2,
             message.loc,
+            countryInfo.country,
             message.decoderInfo
         });
     }
 
     endInsertRows();
+}
+
+QString FT8MessagesTableModel::getCaller(const QString& call1, const QString& call2)
+{
+    if (!call2.isEmpty()) {
+        return call2;
+    }
+    if (call1.startsWith("CQ ")) {
+        return call1.mid(3);
+    }
+    return "";
 }
 
 void FT8MessagesTableModel::setDefaultMessage()
@@ -224,6 +243,7 @@ void FT8MessagesTableModel::setDefaultMessage()
         "CQ PA900RAALTE",
         "PA900RAALTE",
         "JN000",
+        "Bosnia-Herzegovina",
         "OSD-0-73"
     });
     endInsertRows();
@@ -656,6 +676,7 @@ FT8DemodGUI::FT8DemodGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, Baseban
 
 	applyBandwidths(m_settings.m_filterBank[m_settings.m_filterIndex].m_spanLog2, true); // does applySettings(true)
     DialPopup::addPopupsToChildDials(this);
+    m_resizer.enableChildMouseTracking();
 
     populateBandPresets();
     setupMessagesView();
@@ -947,6 +968,8 @@ void FT8DemodGUI::filterMessages()
         m_messagesFilterProxy.setFilterUTC(m_selectedData.toString());
     } else if (m_selectedColumn == FT8DemodSettings::MESSAGE_COL_DF) {
         m_messagesFilterProxy.setFilterDf(m_selectedData.toInt());
+    } else if (m_selectedColumn == FT8DemodSettings::MESSAGE_COL_COUNTRY) {
+        m_messagesFilterProxy.setFilterCountry(m_selectedData.toString());
     } else if (m_selectedColumn == FT8DemodSettings::MESSAGE_COL_INFO) {
         m_messagesFilterProxy.setFilterInfo(m_selectedData.toString());
     }

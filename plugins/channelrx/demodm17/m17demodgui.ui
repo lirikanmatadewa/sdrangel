@@ -841,7 +841,7 @@
       </property>
       <widget class="QWidget" name="settingsTab">
        <property name="toolTip">
-        <string>Dgital Settings</string>
+        <string>Digital settings</string>
        </property>
        <attribute name="icon">
         <iconset resource="../../../sdrgui/resources/res.qrc">
@@ -921,7 +921,7 @@
              </size>
             </property>
             <property name="toolTip">
-             <string>Baud rate: 2.4k: NXDN48, dPMR 4.8k: DMR, D-Star, YSF, NXDN96</string>
+             <string>Baud rate</string>
             </property>
             <item>
              <property name="text">

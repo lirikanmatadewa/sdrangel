@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2021, 2023 Jon Beniston, M7RCE <jon@beniston.com>               //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -40,6 +40,7 @@ public:
     static double julianDate(int year, int month, int day, int hours, int minutes, int seconds);
     static double julianDate(QDateTime dt);
     static double modifiedJulianDate(QDateTime dt);
+    static QDateTime julianDateToDateTime(double jd);
 
     static double jd_j2000(void);
     static double jd_b1950(void);
@@ -63,9 +64,6 @@ public:
     static double refractionSaemundsson(double alt, double pressure, double temperature);
     static double refractionPAL(double alt, double pressure, double temperature, double humidity, double frequency, double latitude, double heightAboveSeaLevel, double temperatureLapseRate);
 
-    static double raToDecimal(const QString& value);
-    static double decToDecimal(const QString& value);
-
     static double lstAndRAToLongitude(double lst, double raHours);
 
     static void equatorialToGalactic(double ra, double dec, double& l, double& b);
@@ -79,6 +77,8 @@ public:
     static double earthOrbitVelocityBCRS(RADec rd, QDateTime dt);
     static double sunVelocityLSRK(RADec rd);
     static double observerVelocityLSRK(RADec rd, double latitude, double longitude, QDateTime dt);
+
+    static void sunrise(QDate date, double latitude, double longitude, QDateTime& rise, QDateTime& set);
 
     static double noisePowerdBm(double temp, double bw);
     static double noiseTemp(double dBm, double bw);

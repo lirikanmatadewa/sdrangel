@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB.                                  //
+// Copyright (C) 2019, 2021 Edouard Griffiths, F4EXB <f4exb06@gmail.com>         //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -19,8 +19,6 @@
 #define INCLUDE_CHANALYZER_WEBAPIADAPTER_H
 
 #include "channel/channelwebapiadapter.h"
-#include "dsp/glscopesettings.h"
-#include "dsp/spectrumsettings.h"
 #include "chanalyzersettings.h"
 
 /**

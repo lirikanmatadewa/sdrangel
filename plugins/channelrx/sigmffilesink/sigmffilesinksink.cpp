@@ -1,5 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Edouard Griffiths, F4EXB.                                  //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2021 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2021 Christoph Berg <myon@debian.org>                           //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -69,7 +72,7 @@ void SigMFFileSinkSink::startRecording()
             m_fileSink.feed(p2Begin, p2End, false);
         }
 
-        m_byteCount += m_preRecordFill * sizeof(Sample);
+        m_byteCount += m_preRecordFill * ((1<<m_settings.m_log2RecordSampleSize)/4); //  sizeof(Sample);
 
         if (m_sinkSampleRate > 0) {
             m_msCount += (m_preRecordFill * 1000) / m_sinkSampleRate;
@@ -146,7 +149,7 @@ void SigMFFileSinkSink::feed(const SampleVector::const_iterator& begin, const Sa
             }
         }
 
-        m_byteCount += nbToWrite * sizeof(Sample);
+        m_byteCount += nbToWrite * ((1<<m_settings.m_log2RecordSampleSize)/4); // sizeof(Sample);
 
         if (m_sinkSampleRate > 0) {
             m_msCount += (nbToWrite * 1000) / m_sinkSampleRate;
@@ -156,7 +159,7 @@ void SigMFFileSinkSink::feed(const SampleVector::const_iterator& begin, const Sa
     {
         m_fileSink.feed(beginw, endw, true);
         int nbSamples = endw - beginw;
-        m_byteCount += nbSamples * sizeof(Sample);
+        m_byteCount += nbSamples * ((1<<m_settings.m_log2RecordSampleSize)/4); // sizeof(Sample);
 
         if (m_sinkSampleRate > 0) {
             m_msCount += (nbSamples * 1000) / m_sinkSampleRate;
@@ -288,6 +291,10 @@ void SigMFFileSinkSink::applySettings(const SigMFFileSinkSettings& settings, boo
         if (settings.m_preRecordTime  == 0) {
             m_preRecordFill = 0;
         }
+    }
+
+    if ((settings.m_log2RecordSampleSize != m_settings.m_log2RecordSampleSize) || force) {
+        m_fileSink.setLog2RecordSampleSize(settings.m_log2RecordSampleSize);
     }
 
     m_settings = settings;

@@ -1,6 +1,11 @@
 ///////////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
 // written by Christian Daniel                                                   //
+// Copyright (C) 2015-2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2018 Jason Gerecke <killertofu@gmail.com>                       //
+// Copyright (C) 2019 Davide Gerhard <rainbow@irh.it>                            //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2023 Daniele Forsi <iu5hkx@gmail.com>                           //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -143,7 +148,7 @@ static int runQtApplication(int argc, char* argv[], qtwebapp::LoggerWithFile *lo
 #endif
 
 #ifdef ANDROID
-    // Default sized sliders can be hard to move using touch GUIs, so increase szie
+    // Default sized sliders can be hard to move using touch GUIs, so increase size
     // FIXME: How can we do a double border around the handle, as Fusion style seems to use?
     // Dialog borders are hard to see as is (perhaps as Android doesn't have a title bar), so use same color as for MDI
     qApp->setStyleSheet("QSlider {min-height: 20px; } "
@@ -184,7 +189,7 @@ static int runQtApplication(int argc, char* argv[], qtwebapp::LoggerWithFile *lo
     {
         // Disable log on console, so we can more easily see device list
         logger->setConsoleMinMessageLevel(QtFatalMsg);
-        // Don't pass logger to MainWindow, otherwise it can reenable log output
+        // Don't pass logger to MainWindow, otherwise it can re-enable log output
         logger = nullptr;
     }
 
@@ -194,7 +199,7 @@ static int runQtApplication(int argc, char* argv[], qtwebapp::LoggerWithFile *lo
     {
         // List available physical devices and exit
         RemoteTCPSinkStarter::listAvailableDevices();
-        exit (EXIT_SUCCESS);
+        return EXIT_SUCCESS;
     }
 
     if (parser.getRemoteTCPSink()) {
@@ -212,7 +217,7 @@ int main(int argc, char* argv[])
     // Request OpenGL 3.3 context, needed for glspectrum and 3D Map feature
     // Note that Mac only supports CoreProfile, so any deprecated OpenGL 2 features
     // will not work. Because of this, we have two versions of the shaders:
-    // OpenGL 2 versions for compatiblity with older drivers and OpenGL 3.3
+    // OpenGL 2 versions for compatibility with older drivers and OpenGL 3.3
     // versions for newer drivers
 #if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
     QGLFormat fmt;
@@ -242,8 +247,17 @@ int main(int argc, char* argv[])
 
     int res = runQtApplication(argc, argv, logger);
 
+<<<<<<< HEAD
     delete logger;
     
     qWarning("SDR Analyzer quit.");
     return res;
+=======
+    if (logger) {
+        delete logger;
+    }
+
+	qWarning("SDRangel quit.");
+	return res;
+>>>>>>> remotes/origin/master
 }

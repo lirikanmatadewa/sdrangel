@@ -1,5 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2015 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2015-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2018 beta-tester <alpha-beta-release@gmx.net>                   //
+// Copyright (C) 2018 Jason Gerecke <killertofu@gmail.com>                       //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2021 Andreas Baulig <free.geronimo@hotmail.de>                  //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -24,15 +28,10 @@
 #include <QMessageBox>
 
 #include "ui_fileinputgui.h"
-#include "plugin/pluginapi.h"
-#include "gui/colormapper.h"
 #include "gui/glspectrum.h"
 #include "gui/basicdevicesettingsdialog.h"
 #include "gui/dialogpositioner.h"
-#include "dsp/dspengine.h"
 #include "dsp/dspcommands.h"
-
-#include "mainwindow.h"
 
 #include "fileinputgui.h"
 #include "device/deviceapi.h"
@@ -79,7 +78,12 @@ FileInputGUI::FileInputGUI(DeviceUISet* deviceUISet, QWidget* parent) :
 	connect(&m_inputMessageQueue, SIGNAL(messageEnqueued()), this, SLOT(handleInputMessages()), Qt::QueuedConnection);
 	m_sampleSource->setMessageQueueToGUI(&m_inputMessageQueue);
 
+<<<<<<< HEAD
 	makeUIConnections();
+=======
+    makeUIConnections();
+    m_resizer.enableChildMouseTracking();
+>>>>>>> remotes/origin/master
 }
 
 FileInputGUI::~FileInputGUI()
@@ -316,7 +320,11 @@ void FileInputGUI::on_showFileDialog_clicked(bool checked)
 {
 	(void)checked;
 	QString fileName = QFileDialog::getOpenFileName(this,
+<<<<<<< HEAD
 		tr("Open I/Q record file"), ".", tr("SDR I/Q Files (*.sdriq *.wav)"), 0);
+=======
+	    tr("Open I/Q record file"), QFileInfo(m_settings.m_fileName).dir().path(), tr("SDR I/Q Files (*.sdriq *.wav)"), 0);
+>>>>>>> remotes/origin/master
 
 
 	if (fileName != "")

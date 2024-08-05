@@ -1,5 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2017 Edouard Griffiths, F4EXB.                                  //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2019, 2022-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com> //
+// Copyright (C) 2021 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -19,6 +22,7 @@
 #define PLUGINS_CHANNELRX_DEMODSSB_SSBDEMODSETTINGS_H_
 
 #include <QByteArray>
+#include <QString>
 
 #include "dsp/fftwindow.h"
 
@@ -30,6 +34,12 @@ struct SSBDemodFilterSettings
     Real m_rfBandwidth;
     Real m_lowCutoff;
     FFTWindow::Function m_fftWindow;
+    bool m_dnr;
+    int  m_dnrScheme;
+    float m_dnrAboveAvgFactor;
+    float m_dnrSigmaFactor;
+    int  m_dnrNbPeaks;
+    float m_dnrAlpha;
 
     SSBDemodFilterSettings() :
         m_spanLog2(3),
@@ -55,6 +65,12 @@ struct SSBDemodSettings
     int  m_agcTimeLog2;
     int  m_agcPowerThreshold;
     int  m_agcThresholdGate;
+    bool m_dnr;
+    int  m_dnrScheme;
+    float m_dnrAboveAvgFactor;
+    float m_dnrSigmaFactor;
+    int  m_dnrNbPeaks;
+    float m_dnrAlpha;
     quint32 m_rgbColor;
     QString m_title;
     QString m_audioDeviceName;

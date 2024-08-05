@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2015-2018 Edouard Griffiths, F4EXB.                             //
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2021-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -30,13 +30,9 @@
 
 #include "SWGChannelSettings.h"
 #include "SWGWorkspaceInfo.h"
-#include "SWGChannelReport.h"
 
-#include "dsp/dspengine.h"
 #include "dsp/dspcommands.h"
 #include "device/deviceapi.h"
-#include "feature/feature.h"
-#include "util/db.h"
 #include "maincore.h"
 
 MESSAGE_CLASS_DEFINITION(RadiosondeDemod::MsgConfigureRadiosondeDemod, Message)
@@ -233,11 +229,16 @@ bool RadiosondeDemod::handleMessage(const Message& cmd)
             if (frame->m_posValid)
             {
                 m_logStream << frame->m_latitude << ","
-                            << frame->m_longitude << ",";
+                            << frame->m_longitude << ","
+                            << frame->m_height << ","
+                            << frame->m_speed << ","
+                            << frame->m_verticalRate << ","
+                            << frame->m_heading << ","
+                            ;
             }
             else
             {
-                m_logStream << ",,";
+                m_logStream << ",,,,,,";
             }
             if (frame->m_measValid)
             {
@@ -332,6 +333,9 @@ void RadiosondeDemod::applySettings(const RadiosondeDemodSettings& settings, boo
     if ((settings.m_logEnabled != m_settings.m_logEnabled) || force) {
         reverseAPIKeys.append("logEnabled");
     }
+    if ((settings.m_useFileTime != m_settings.m_useFileTime) || force) {
+        reverseAPIKeys.append("useFileTime");
+    }
     if (m_settings.m_streamIndex != settings.m_streamIndex)
     {
         if (m_deviceAPI->getSampleMIMO()) // change of stream is possible for MIMO devices only
@@ -340,6 +344,8 @@ void RadiosondeDemod::applySettings(const RadiosondeDemodSettings& settings, boo
             m_deviceAPI->removeChannelSink(this, m_settings.m_streamIndex);
             m_deviceAPI->addChannelSink(this, settings.m_streamIndex);
             m_deviceAPI->addChannelSinkAPI(this);
+            m_settings.m_streamIndex = settings.m_streamIndex; // make sure ChannelAPI::getStreamIndex() is consistent
+            emit streamIndexChanged(settings.m_streamIndex);
         }
 
         reverseAPIKeys.append("streamIndex");
@@ -378,7 +384,7 @@ void RadiosondeDemod::applySettings(const RadiosondeDemodSettings& settings, boo
                 if (newFile)
                 {
                     // Write header
-                    m_logStream << "Date,Time,Data,Serial,Frame,Lat,Lon,P (hPa),T (C), U (%)\n";
+                    m_logStream << "Date,Time,Data,Serial,Frame,Lat,Lon,Alt (m),Speed (m/s),V/R (m/s),Heading,P (hPa),T (C),U (%)\n";
                 }
             }
             else
@@ -509,6 +515,9 @@ void RadiosondeDemod::webapiUpdateChannelSettings(
     if (channelSettingsKeys.contains("logEnabled")) {
         settings.m_logEnabled = response.getRadiosondeDemodSettings()->getLogEnabled();
     }
+    if (channelSettingsKeys.contains("useFileTime")) {
+        settings.m_useFileTime = response.getRadiosondeDemodSettings()->getUseFileTime();
+    }
     if (channelSettingsKeys.contains("rgbColor")) {
         settings.m_rgbColor = response.getRadiosondeDemodSettings()->getRgbColor();
     }
@@ -556,6 +565,7 @@ void RadiosondeDemod::webapiFormatChannelSettings(SWGSDRangel::SWGChannelSetting
     response.getRadiosondeDemodSettings()->setUdpPort(settings.m_udpPort);
     response.getRadiosondeDemodSettings()->setLogFilename(new QString(settings.m_logFilename));
     response.getRadiosondeDemodSettings()->setLogEnabled(settings.m_logEnabled);
+    response.getRadiosondeDemodSettings()->setUseFileTime(settings.m_useFileTime);
 
     response.getRadiosondeDemodSettings()->setRgbColor(settings.m_rgbColor);
     if (response.getRadiosondeDemodSettings()->getTitle()) {
@@ -690,6 +700,9 @@ void RadiosondeDemod::webapiFormatChannelSettings(
     }
     if (channelSettingsKeys.contains("logEnabled") || force) {
         swgRadiosondeDemodSettings->setLogEnabled(settings.m_logEnabled);
+    }
+    if (channelSettingsKeys.contains("useFileTime") || force) {
+        swgRadiosondeDemodSettings->setUseFileTime(settings.m_useFileTime);
     }
     if (channelSettingsKeys.contains("rgbColor") || force) {
         swgRadiosondeDemodSettings->setRgbColor(settings.m_rgbColor);

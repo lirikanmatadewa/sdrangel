@@ -1,5 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2022-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -36,8 +39,8 @@ FeatureGUI::FeatureGUI(QWidget *parent) :
     QMdiSubWindow(parent),
     m_featureIndex(0),
     m_contextMenuType(ContextMenuNone),
-    m_drag(false),
     m_resizer(this),
+    m_drag(false),
     m_disableResize(false),
     m_mdi(nullptr)
 {
@@ -153,8 +156,6 @@ FeatureGUI::FeatureGUI(QWidget *parent) :
         this,
         &FeatureGUI::onWidgetRolled
     );
-
-    m_resizer.enableChildMouseTracking();
 }
 
 FeatureGUI::~FeatureGUI()
@@ -249,7 +250,7 @@ void FeatureGUI::showHelp()
 void FeatureGUI::openMoveToWorkspaceDialog()
 {
     int numberOfWorkspaces = MainWindow::getInstance()->getNumberOfWorkspaces();
-    WorkspaceSelectionDialog dialog(numberOfWorkspaces, this);
+    WorkspaceSelectionDialog dialog(numberOfWorkspaces, getWorkspaceIndex(), this);
     dialog.exec();
 
     if (dialog.hasChanged()) {
@@ -415,4 +416,9 @@ void FeatureGUI::setDisplayedame(const QString& name)
 {
     m_displayedName = name;
     m_indexLabel->setToolTip(tr("%1").arg(m_displayedName));
+}
+
+void FeatureGUI::setStatusText(const QString& text)
+{
+    m_statusLabel->setText(text);
 }

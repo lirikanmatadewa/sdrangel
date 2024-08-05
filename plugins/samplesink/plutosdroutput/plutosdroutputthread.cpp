@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2017 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2017-2019, 2021 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -15,11 +15,8 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.          //
 ///////////////////////////////////////////////////////////////////////////////////
 
-#include "iio.h"
-
 #include "dsp/samplesourcefifo.h"
 #include "plutosdr/deviceplutosdrbox.h"
-#include "plutosdroutputsettings.h"
 #include "plutosdroutputthread.h"
 
 PlutoSDROutputThread::PlutoSDROutputThread(uint32_t blocksizeSamples, DevicePlutoSDRBox* plutoBox, SampleSourceFifo* sampleFifo, QObject* parent) :

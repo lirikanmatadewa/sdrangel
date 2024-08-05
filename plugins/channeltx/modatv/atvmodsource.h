@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2017 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2017-2020 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2022 CRD716 <crd716@gmail.com>                                  //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -89,8 +90,8 @@ private:
         int m_videoHeight;            //!< camera frame height
         float m_videoFx;              //!< camera horizontal scaling factor
         float m_videoFy;              //!< camera vertictal scaling factor
-        float m_videoFPSq;            //!< camera FPS sacaling factor
-        float m_videoFPSqManual;      //!< camera FPS sacaling factor manually set
+        float m_videoFPSq;            //!< camera FPS scaling factor
+        float m_videoFPSqManual;      //!< camera FPS scaling factor manually set
         float m_videoFPSCount;        //!< camera FPS fractional counter
         int m_videoPrevFPSCount;      //!< camera FPS previous integer counter
 
@@ -200,7 +201,7 @@ private:
     int m_videoHeight;           //!< current video frame height
     float m_videoFx;             //!< current video horizontal scaling factor
     float m_videoFy;             //!< current video vertictal scaling factor
-    float m_videoFPSq;           //!< current video FPS sacaling factor
+    float m_videoFPSq;           //!< current video FPS scaling factor
     float m_videoFPSCount;       //!< current video FPS fractional counter
     int m_videoPrevFPSCount;     //!< current video FPS previous integer counter
     int m_videoLength;           //!< current video length in frames

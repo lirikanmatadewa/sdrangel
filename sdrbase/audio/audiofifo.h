@@ -1,6 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
 // written by Christian Daniel                                                   //
+// Copyright (C) 2015-2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2023 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -23,7 +25,6 @@
 #include <QMutex>
 #include <QWaitCondition>
 
-#include "dsp/dsptypes.h"
 #include "export.h"
 
 class SDRBASE_API AudioFifo : public QObject {
@@ -39,6 +40,7 @@ public:
 	uint32_t write(const quint8* data, uint32_t numSamples);
 	uint32_t read(quint8* data, uint32_t numSamples);
     bool readOne(quint8* data);
+    uint32_t writeOne(const quint8* data);
 
 	uint32_t drain(uint32_t numSamples);
 	void clear();
@@ -68,6 +70,7 @@ private:
 signals:
 	void dataReady();
 	void overflow(int nsamples);
+    void underflow();
 };
 
 #endif // INCLUDE_AUDIOFIFO_H

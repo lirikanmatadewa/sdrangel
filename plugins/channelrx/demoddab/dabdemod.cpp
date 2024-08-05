@@ -1,6 +1,10 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2015-2018 Edouard Griffiths, F4EXB.                             //
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2014 John Greb <hexameron@spam.no>                              //
+// Copyright (C) 2015-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2020-2021, 2023 Jon Beniston, M7RCE <jon@beniston.com>          //
+// Copyright (C) 2020 Kacper Michajłow <kasper93@gmail.com>                      //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -30,15 +34,10 @@
 #include "SWGChannelSettings.h"
 #include "SWGWorkspaceInfo.h"
 #include "SWGDABDemodSettings.h"
-#include "SWGChannelReport.h"
-#include "SWGMapItem.h"
 
-#include "dsp/dspengine.h"
 #include "dsp/dspcommands.h"
 #include "device/deviceapi.h"
-#include "feature/feature.h"
 #include "settings/serializable.h"
-#include "util/db.h"
 #include "maincore.h"
 
 MESSAGE_CLASS_DEFINITION(DABDemod::MsgConfigureDABDemod, Message)
@@ -362,6 +361,8 @@ void DABDemod::applySettings(const DABDemodSettings& settings, bool force)
             m_deviceAPI->removeChannelSink(this, m_settings.m_streamIndex);
             m_deviceAPI->addChannelSink(this, settings.m_streamIndex);
             m_deviceAPI->addChannelSinkAPI(this);
+            m_settings.m_streamIndex = settings.m_streamIndex; // make sure ChannelAPI::getStreamIndex() is consistent
+            emit streamIndexChanged(settings.m_streamIndex);
         }
 
         reverseAPIKeys.append("streamIndex");

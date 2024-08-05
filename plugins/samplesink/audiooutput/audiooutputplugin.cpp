@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2015-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2019 Davide Gerhard <rainbow@irh.it>                            //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -18,7 +19,6 @@
 #include <QtPlugin>
 
 #include "plugin/pluginapi.h"
-#include "util/simpleserializer.h"
 #include "audiooutputplugin.h"
 #include "audiooutputwebapiadapter.h"
 
@@ -31,7 +31,7 @@
 const PluginDescriptor AudioOutputPlugin::m_pluginDescriptor = {
     QStringLiteral("AudioOutput"),
 	QStringLiteral("Audio output"),
-    QStringLiteral("7.15.1"),
+    QStringLiteral("7.21.2"),
 	QStringLiteral("(c) Edouard Griffiths, F4EXB"),
 	QStringLiteral("https://github.com/f4exb/sdrangel"),
 	true,

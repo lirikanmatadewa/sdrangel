@@ -33,6 +33,7 @@
 #include "SWGBFMDemodSettings.h"
 #include "SWGBeamSteeringCWModSettings.h"
 #include "SWGChannelAnalyzerSettings.h"
+#include "SWGChannelPowerSettings.h"
 #include "SWGChirpChatDemodSettings.h"
 #include "SWGChirpChatModSettings.h"
 #include "SWGDABDemodSettings.h"
@@ -41,6 +42,7 @@
 #include "SWGDOA2Settings.h"
 #include "SWGDSCDemodSettings.h"
 #include "SWGDSDDemodSettings.h"
+#include "SWGEndOfTrainDemodSettings.h"
 #include "SWGFT8DemodSettings.h"
 #include "SWGFileSinkSettings.h"
 #include "SWGFileSourceSettings.h"
@@ -78,6 +80,7 @@
 #include "SWGUDPSinkSettings.h"
 #include "SWGUDPSourceSettings.h"
 #include "SWGVORDemodSettings.h"
+#include "SWGWDSPRxSettings.h"
 #include "SWGWFMDemodSettings.h"
 #include "SWGWFMModSettings.h"
 #include <QString>
@@ -145,6 +148,9 @@ public:
     SWGChannelAnalyzerSettings* getChannelAnalyzerSettings();
     void setChannelAnalyzerSettings(SWGChannelAnalyzerSettings* channel_analyzer_settings);
 
+    SWGChannelPowerSettings* getChannelPowerSettings();
+    void setChannelPowerSettings(SWGChannelPowerSettings* channel_power_settings);
+
     SWGChirpChatDemodSettings* getChirpChatDemodSettings();
     void setChirpChatDemodSettings(SWGChirpChatDemodSettings* chirp_chat_demod_settings);
 
@@ -168,6 +174,9 @@ public:
 
     SWGDSDDemodSettings* getDsdDemodSettings();
     void setDsdDemodSettings(SWGDSDDemodSettings* dsd_demod_settings);
+
+    SWGEndOfTrainDemodSettings* getEndOfTrainDemodSettings();
+    void setEndOfTrainDemodSettings(SWGEndOfTrainDemodSettings* end_of_train_demod_settings);
 
     SWGFileSinkSettings* getFileSinkSettings();
     void setFileSinkSettings(SWGFileSinkSettings* file_sink_settings);
@@ -280,6 +289,9 @@ public:
     SWGVORDemodSettings* getVorDemodSettings();
     void setVorDemodSettings(SWGVORDemodSettings* vor_demod_settings);
 
+    SWGWDSPRxSettings* getWdspRxSettings();
+    void setWdspRxSettings(SWGWDSPRxSettings* wdsp_rx_settings);
+
     SWGWFMDemodSettings* getWfmDemodSettings();
     void setWfmDemodSettings(SWGWFMDemodSettings* wfm_demod_settings);
 
@@ -335,6 +347,9 @@ private:
     SWGChannelAnalyzerSettings* channel_analyzer_settings;
     bool m_channel_analyzer_settings_isSet;
 
+    SWGChannelPowerSettings* channel_power_settings;
+    bool m_channel_power_settings_isSet;
+
     SWGChirpChatDemodSettings* chirp_chat_demod_settings;
     bool m_chirp_chat_demod_settings_isSet;
 
@@ -358,6 +373,9 @@ private:
 
     SWGDSDDemodSettings* dsd_demod_settings;
     bool m_dsd_demod_settings_isSet;
+
+    SWGEndOfTrainDemodSettings* end_of_train_demod_settings;
+    bool m_end_of_train_demod_settings_isSet;
 
     SWGFileSinkSettings* file_sink_settings;
     bool m_file_sink_settings_isSet;
@@ -469,6 +487,9 @@ private:
 
     SWGVORDemodSettings* vor_demod_settings;
     bool m_vor_demod_settings_isSet;
+
+    SWGWDSPRxSettings* wdsp_rx_settings;
+    bool m_wdsp_rx_settings_isSet;
 
     SWGWFMDemodSettings* wfm_demod_settings;
     bool m_wfm_demod_settings_isSet;

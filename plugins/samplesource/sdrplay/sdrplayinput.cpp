@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2016-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2018 beta-tester <alpha-beta-release@gmx.net>                   //
+// Copyright (C) 2022 ericek111 <erik.brocko@letemsvetemapplem.eu>               //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -29,7 +31,6 @@
 
 #include "util/simpleserializer.h"
 #include "dsp/dspcommands.h"
-#include "dsp/dspengine.h"
 #include "sdrplayinput.h"
 
 #include <device/deviceapi.h>
@@ -109,12 +110,6 @@ bool SDRPlayInput::openDevice()
         return false;
     }
 
-    if ((res = mirisdr_set_hw_flavour(m_dev, MIRISDR_HW_SDRPLAY)) < 0)
-    {
-        qCritical("SDRPlayInput::openDevice: failed to set HW flavour: %s", strerror(errno));
-        return false;
-    }
-
     char vendor[256];
     char product[256];
     char serial[256];
@@ -139,6 +134,12 @@ bool SDRPlayInput::openDevice()
         m_variant = SDRPlayRSP2;
     } else {
         m_variant = SDRPlayRSP1;
+    }
+
+    if ((res = mirisdr_set_hw_flavour(m_dev, (m_variant == SDRPlayRSP1) ? MIRISDR_HW_DEFAULT : MIRISDR_HW_SDRPLAY)) < 0)
+    {
+        qCritical("SDRPlayInput::openDevice: failed to set HW flavour: %s", strerror(errno));
+        return false;
     }
 
     qDebug("SDRPlayInput::openDevice: m_variant: %d", (int) m_variant);
@@ -567,7 +568,7 @@ bool SDRPlayInput::applySettings(const SDRPlaySettings& settings, const QList<QS
         }
     }
 
-    if (settingsKeys.contains("useReverseAPI"))
+    if (settings.m_useReverseAPI)
     {
         bool fullUpdate = (settingsKeys.contains("useReverseAPI") && settings.m_useReverseAPI) ||
             settingsKeys.contains("reverseAPIAddress") ||

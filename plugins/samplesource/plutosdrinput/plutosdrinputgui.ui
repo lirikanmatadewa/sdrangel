@@ -607,7 +607,6 @@
         <font>
          <family>Liberation Mono</family>
          <pointsize>12</pointsize>
-         <weight>50</weight>
          <bold>false</bold>
         </font>
        </property>
@@ -664,7 +663,6 @@
         <font>
          <family>Liberation Mono</family>
          <pointsize>12</pointsize>
-         <weight>50</weight>
          <bold>false</bold>
         </font>
        </property>
@@ -672,7 +670,7 @@
         <cursorShape>PointingHandCursor</cursorShape>
        </property>
        <property name="toolTip">
-        <string>Analog lowpass filer bandwidth (kHz)</string>
+        <string>Analog lowpass filter bandwidth (kHz)</string>
        </property>
       </widget>
      </item>
@@ -734,7 +732,7 @@
         <cursorShape>PointingHandCursor</cursorShape>
        </property>
        <property name="toolTip">
-        <string>Digital FIR lowpass filers bandwidth (kHz) @ ~-6dB</string>
+        <string>Digital FIR lowpass filters bandwidth (kHz) @ ~-6dB</string>
        </property>
       </widget>
      </item>

@@ -1,5 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2023 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2020, 2022-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com> //
+// Copyright (C) 2022-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -21,7 +24,6 @@
 
 #include "channel/channelgui.h"
 #include "dsp/channelmarker.h"
-#include "dsp/movingaverage.h"
 #include "util/messagequeue.h"
 #include "util/ft8message.h"
 #include "settings/rollupstate.h"
@@ -53,6 +55,7 @@ struct FT8MesssageData
     QString m_call1;
     QString m_call2;
     QString m_loc;
+    QString m_country;
     QString m_info;
 };
 
@@ -74,7 +77,8 @@ public:
 
 private:
     QVector<FT8MesssageData> m_ft8Messages;
-    static const int m_columnCount = 11;
+    static const int m_columnCount = 12;
+    static QString getCaller(const QString& call1, const QString& call2);
 };
 
 class FT8DemodGUI : public ChannelGUI {

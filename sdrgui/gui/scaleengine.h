@@ -1,6 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
 // written by Christian Daniel                                                   //
+// Copyright (C) 2015-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -93,6 +94,10 @@ private:
 	int calcTickTextSize(double distance);
 	void forceTwoTicks();
 	void reCalc();
+    void reCalcStd();
+    void reCalcS();
+    void truncS(int nbMaxTicks, std::vector<double>& sVals, std::vector<double>& dbVals);
+    void adjustText(const QFontMetricsF& fontMetrics, Tick& tick);
     void updateTruncation();
 
     inline int order(double value) {

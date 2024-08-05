@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2023 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2015-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2022 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -88,6 +89,7 @@ private slots:
     void on_streamSide_currentIndexChanged(int index);
     void on_spectrumSide_currentIndexChanged(int index);
     void on_streamLock_toggled(bool checked);
+    void on_freqRxToTx_clicked();
 	void on_startStop_toggled(bool checked);
     void on_ptt_toggled(bool checked);
     void on_pttSpectrumLinkToggled(bool checked);

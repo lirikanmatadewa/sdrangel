@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2021 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2021-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2022 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -22,7 +23,6 @@
 #include <QString>
 #include <QMessageBox>
 
-#include "plugin/pluginapi.h"
 #include "device/deviceapi.h"
 #include "device/deviceuiset.h"
 #include "gui/colormapper.h"
@@ -30,16 +30,11 @@
 #include "gui/basicdevicesettingsdialog.h"
 #include "gui/dialpopup.h"
 #include "gui/dialogpositioner.h"
-#include "dsp/dspengine.h"
-#include "dsp/dspdevicemimoengine.h"
 #include "dsp/dspcommands.h"
 #include "dsp/devicesamplestatic.h"
 #include "dsp/devicesamplesource.h"
 #include "dsp/devicesamplesink.h"
-#include "util/db.h"
 #include "plutosdr/deviceplutosdr.h"
-
-#include "mainwindow.h"
 
 #include "plutosdrmimo.h"
 #include "ui_plutosdrmimogui.h"
@@ -109,6 +104,7 @@ PlutoSDRMIMOGUI::PlutoSDRMIMOGUI(DeviceUISet *deviceUISet, QWidget* parent) :
 
     makeUIConnections();
     DialPopup::addPopupsToChildDials(this);
+    m_resizer.enableChildMouseTracking();
 }
 
 PlutoSDRMIMOGUI::~PlutoSDRMIMOGUI()
@@ -431,6 +427,15 @@ bool PlutoSDRMIMOGUI::handleMessage(const Message& message)
         }
 
         displaySettings();
+
+        return true;
+    }
+    else if (PlutoSDRMIMO::MsgStartStop::match(message))
+    {
+        PlutoSDRMIMO::MsgStartStop& notif = (PlutoSDRMIMO::MsgStartStop&) message;
+        blockApplySettings(true);
+        (notif.getRxElseTx() ? ui->startStopRx : ui->startStopTx)->setChecked(notif.getStartStop());
+        blockApplySettings(false);
 
         return true;
     }

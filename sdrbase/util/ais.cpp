@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -179,6 +179,10 @@ QString AISMessage::typeToString(quint8 type)
 
 AISMessage* AISMessage::decode(const QByteArray ba)
 {
+    if (ba.size() < 1) {
+        return nullptr;
+    }
+
     int id = (ba[0] >> 2) & 0x3f;
 
     if ((id == 1) || (id == 2) || (id == 3)) {
@@ -260,7 +264,7 @@ QString AISMessage::getString(const QByteArray ba, int byteIdx, int bitsLeft, in
     }
     // Remove leading/trailing spaces
     s = s.trimmed();
-    // Remave @s, which indiciate no character
+    // Remove @s, which indicate no character
     while (s.endsWith("@")) {
         s = s.left(s.length() - 1);
     }
@@ -502,7 +506,7 @@ AISSafetyMessage::AISSafetyMessage(QByteArray ba) :
     m_sequenceNumber = ba[4] & 0x3;
     m_destinationId = ((ba[5] & 0xff) << 22) | ((ba[6] & 0xff) << 14) | ((ba[7] & 0xff) << 6) | ((ba[8] >> 2) & 0x3f);
     m_retransmitFlag = (ba[8] >> 1) & 0x1;
-    m_safetyRelatedText = AISMessage::getString(ba, 9, 0, (ba.size() - 9) * 8 / 6);
+    m_safetyRelatedText = AISMessage::getString(ba, 9, 8, (ba.size() - 9) * 8 / 6);
 }
 
 QString AISSafetyMessage::toString()
@@ -518,7 +522,7 @@ AISSafetyAck::AISSafetyAck(QByteArray ba) :
 AISSafetyBroadcast::AISSafetyBroadcast(QByteArray ba) :
     AISMessage(ba)
 {
-    m_safetyRelatedText = AISMessage::getString(ba, 5, 0, (ba.size() - 6) * 8 / 6);
+    m_safetyRelatedText = AISMessage::getString(ba, 5, 8, (ba.size() - 5) * 8 / 6);
 }
 
 QString AISSafetyBroadcast::toString()

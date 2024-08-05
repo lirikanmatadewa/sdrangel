@@ -1,6 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2023 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2023 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -32,22 +31,15 @@
 #include "dsp/dspcommands.h"
 #include "ui_rttydemodgui.h"
 #include "plugin/pluginapi.h"
-#include "util/simpleserializer.h"
 #include "util/db.h"
 #include "util/rtty.h"
 #include "gui/basicchannelsettingsdialog.h"
-#include "gui/devicestreamselectiondialog.h"
 #include "dsp/dspengine.h"
 #include "dsp/glscopesettings.h"
-#include "gui/crightclickenabler.h"
-#include "gui/tabletapandhold.h"
 #include "gui/dialogpositioner.h"
-#include "channel/channelwebapiutils.h"
-#include "feature/featurewebapiutils.h"
 #include "maincore.h"
 
 #include "rttydemod.h"
-#include "rttydemodsink.h"
 
 RttyDemodGUI* RttyDemodGUI::create(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, BasebandSampleSink *rxChannel)
 {
@@ -501,6 +493,7 @@ RttyDemodGUI::RttyDemodGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, Baseb
     displaySettings();
     makeUIConnections();
     applySettings(true);
+    m_resizer.enableChildMouseTracking();
 }
 
 RttyDemodGUI::~RttyDemodGUI()

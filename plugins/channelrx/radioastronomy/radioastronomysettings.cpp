@@ -18,18 +18,9 @@
 
 #include <QColor>
 
-#include "dsp/dspengine.h"
 #include "util/simpleserializer.h"
 #include "settings/serializable.h"
 #include "radioastronomysettings.h"
-
-const QStringList RadioAstronomySettings::m_pipeTypes = {
-    QStringLiteral("StarTracker")
-};
-
-const QStringList RadioAstronomySettings::m_pipeURIs = {
-    QStringLiteral("sdrangel.feature.startracker")
-};
 
 RadioAstronomySettings::RadioAstronomySettings() :
     m_channelMarker(nullptr),

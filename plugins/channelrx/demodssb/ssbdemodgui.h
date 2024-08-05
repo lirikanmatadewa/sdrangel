@@ -1,3 +1,22 @@
+///////////////////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany     //
+// written by Christian Daniel                                                       //
+// Copyright (C) 2015-2020, 2022-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>   //
+// Copyright (C) 2022 Jon Beniston, M7RCE <jon@beniston.com>                         //
+//                                                                                   //
+// This program is free software; you can redistribute it and/or modify              //
+// it under the terms of the GNU General Public License as published by              //
+// the Free Software Foundation as version 3 of the License, or                      //
+// (at your option) any later version.                                               //
+//                                                                                   //
+// This program is distributed in the hope that it will be useful,                   //
+// but WITHOUT ANY WARRANTY; without even the implied warranty of                    //
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                      //
+// GNU General Public License V3 for more details.                                   //
+//                                                                                   //
+// You should have received a copy of the GNU General Public License                 //
+// along with this program. If not, see <http://www.gnu.org/licenses/>.              //
+///////////////////////////////////////////////////////////////////////////////////////
 #ifndef INCLUDE_SSBDEMODGUI_H
 #define INCLUDE_SSBDEMODGUI_H
 
@@ -5,7 +24,7 @@
 
 #include "channel/channelgui.h"
 #include "dsp/channelmarker.h"
-#include "dsp/movingaverage.h"
+#include "gui/fftnrdialog.h"
 #include "util/messagequeue.h"
 #include "settings/rollupstate.h"
 #include "ssbdemodsettings.h"
@@ -70,6 +89,7 @@ private:
 	SSBDemod* m_ssbDemod;
 	SpectrumVis* m_spectrumVis;
 	MessageQueue m_inputMessageQueue;
+    FFTNRDialog* m_fftNRDialog;
 
 	QIcon m_iconDSBUSB;
 	QIcon m_iconDSBLSB;
@@ -82,11 +102,13 @@ private:
 	void applyBandwidths(unsigned int spanLog2, bool force = false);
     unsigned int spanLog2Max();
 	void displaySettings();
+	void displayAGC();
 	void displayAGCPowerThreshold(int value);
     void displayAGCThresholdGate(int value);
 	bool handleMessage(const Message& message);
     void makeUIConnections();
     void updateAbsoluteCenterFrequency();
+	uint32_t getValidAudioSampleRate() const;
 
 	void leaveEvent(QEvent*);
 	void enterEvent(EnterEventType*);
@@ -101,6 +123,7 @@ private slots:
 	void on_volume_valueChanged(int value);
 	void on_agc_toggled(bool checked);
     void on_agcClamping_toggled(bool checked);
+    void on_dnr_toggled(bool checked);
 	void on_agcTimeLog2_valueChanged(int value);
     void on_agcPowerThreshold_valueChanged(int value);
     void on_agcThresholdGate_valueChanged(int value);
@@ -113,6 +136,8 @@ private slots:
     void onMenuDialogCalled(const QPoint& p);
     void handleInputMessages();
     void audioSelect(const QPoint& p);
+    void dnrSetupDialog(const QPoint& p);
+    void dnrSetup(int valueChanged);
 	void tick();
 };
 

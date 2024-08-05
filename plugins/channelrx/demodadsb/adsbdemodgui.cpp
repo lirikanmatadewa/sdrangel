@@ -34,6 +34,7 @@
 #include <QQmlProperty>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QGeoServiceProvider>
 
 #include "ui_adsbdemodgui.h"
 #include "device/deviceapi.h"
@@ -42,12 +43,10 @@
 #include "plugin/pluginapi.h"
 #include "util/airlines.h"
 #include "util/crc.h"
-#include "util/simpleserializer.h"
 #include "util/db.h"
 #include "util/units.h"
 #include "util/morse.h"
 #include "gui/basicchannelsettingsdialog.h"
-#include "gui/devicestreamselectiondialog.h"
 #include "gui/crightclickenabler.h"
 #include "gui/clickablelabel.h"
 #include "gui/tabletapandhold.h"
@@ -55,7 +54,6 @@
 #include "gui/dialogpositioner.h"
 #include "dsp/dspengine.h"
 #include "dsp/dspcommands.h"
-#include "mainwindow.h"
 
 #include "adsbdemodreport.h"
 #include "adsbdemod.h"
@@ -408,7 +406,6 @@ QString Aircraft::getLabel(const ADSBDemodSettings *settings) const
         if (m_altitudeValid)
         {
             QStringList row1;
-            int transitionAlt = 6500;
             QChar c = m_altitude >= settings->m_transitionAlt ? 'F' : 'A';
             // Convert altitude to flight level
             int fl = m_altitude / 100;
@@ -578,12 +575,7 @@ void AircraftModel::findOnMap(int index)
 // Get list of frequeny scanners to use in menu
 QStringList AirportModel::getFreqScanners() const
 {
-    QStringList list;
-    std::vector<ChannelAPI*> channels = MainCore::instance()->getChannels("sdrangel.channel.freqscanner");
-    for (const auto channel : channels) {
-        list.append(QString("R%1:%2").arg(channel->getDeviceSetIndex()).arg(channel->getIndexInDeviceSet()));
-    }
-    return list;
+    return MainCore::instance()->getChannelIds("sdrangel.channel.freqscanner");
 }
 
 // Send airport frequencies to frequency scanner with given id (Rn:n)
@@ -593,14 +585,10 @@ void AirportModel::sendToFreqScanner(int index, const QString& id)
         return;
     }
     const AirportInformation *airport = m_airports[index];
+    unsigned int deviceSet, channelIndex;
 
-    const QRegularExpression re("R([0-9]+):([0-9]+)");
-    QRegularExpressionMatch match = re.match(id);
-    if (match.hasMatch())
+    if (MainCore::getDeviceAndChannelIndexFromId(id, deviceSet, channelIndex))
     {
-        int deviceSet = match.capturedTexts()[1].toInt();
-        int channelIndex = match.capturedTexts()[2].toInt();
-
         QJsonArray array;
         for (const auto airportFrequency : airport->m_frequencies)
         {
@@ -868,12 +856,10 @@ bool NavAidModel::setData(const QModelIndex &index, const QVariant& value, int r
 // Set selected AM Demod to the given frequency (used to tune to ATC selected from airports on map)
 bool ADSBDemodGUI::setFrequency(qint64 targetFrequencyHz)
 {
-    const QRegularExpression re("R([0-9]+):([0-9]+)");
-    QRegularExpressionMatch match = re.match(m_settings.m_amDemod);
-    if (match.hasMatch())
+    unsigned int deviceSet, channelIndex;
+
+    if (MainCore::getDeviceAndChannelIndexFromId(m_settings.m_amDemod, deviceSet, channelIndex))
     {
-        int deviceSet = match.capturedTexts()[1].toInt();
-        int channelIndex = match.capturedTexts()[2].toInt();
         const int halfChannelBW = 20000/2;
         int dcOffset = halfChannelBW;
 
@@ -1245,7 +1231,7 @@ void ADSBDemodGUI::callsignToFlight(Aircraft *aircraft)
     if (!aircraft->m_callsign.isEmpty())
     {
         QRegularExpression flightNoExp("^[A-Z]{2,3}[0-9]{1,4}$");
-        // Airlines line BA add a single charater suffix that can be stripped
+        // Airlines line BA add a single character suffix that can be stripped
         // If the suffix is two characters, then it typically means a digit
         // has been replaced which I don't know how to guess
         // E.g Easyjet might use callsign EZY67JQ for flight EZY6267
@@ -1438,7 +1424,7 @@ void ADSBDemodGUI::handleADSB(
 
             if (wasOnSurface != aircraft->m_onSurface)
             {
-                // Can't mix CPR values used on surface and those that are airbourne
+                // Can't mix CPR values used on surface and those that are airborne
                 aircraft->m_cprValid[0] = false;
                 aircraft->m_cprValid[1] = false;
             }
@@ -1530,7 +1516,7 @@ void ADSBDemodGUI::handleADSB(
             }
             else if (((tc >= 9) && (tc <= 18)) || ((tc >= 20) && (tc <= 22)))
             {
-                // Airbourne position (9-18 baro, 20-22 GNSS)
+                // Airborne position (9-18 baro, 20-22 GNSS)
                 int alt = ((data[5] & 0xff) << 4) | ((data[6] >> 4) & 0xf); // Altitude
                 int q = (alt & 0x10) != 0;
                 int n = ((alt >> 1) & 0x7f0) | (alt & 0xf);  // Remove Q-bit
@@ -1645,9 +1631,9 @@ void ADSBDemodGUI::handleADSB(
             else
             {
                 // Local decode using a single aircraft position + location of receiver
-                // Only valid if airbourne within 180nm/333km (C.2.6.4) or 45nm for surface
+                // Only valid if airborne within 180nm/333km (C.2.6.4) or 45nm for surface
 
-                // Caclulate latitude
+                // Calculate latitude
                 const double maxDeg = aircraft->m_onSurface ? 90.0 : 360.0;
                 const double dLatEven = maxDeg/60.0;
                 const double dLatOdd = maxDeg/59.0;
@@ -1657,7 +1643,7 @@ void ADSBDemodGUI::handleADSB(
                 int j = std::floor(m_azEl.getLocationSpherical().m_latitude/dLat) + std::floor(modulus(m_azEl.getLocationSpherical().m_latitude, dLat)/dLat - aircraft->m_cprLat[f] + 0.5);
                 latitude = dLat * (j + aircraft->m_cprLat[f]);
 
-                // Caclulate longitude
+                // Calculate longitude
                 double dLong;
                 int latNL = cprNL(latitude);
                 if (f == 0)
@@ -1692,7 +1678,7 @@ void ADSBDemodGUI::handleADSB(
         }
         else if (tc == 19)
         {
-            // Airbourne velocity - BDS 0,9
+            // Airborne velocity - BDS 0,9
             int st = data[4] & 0x7;   // Subtype
             if ((st == 1) || (st == 2))
             {
@@ -1888,7 +1874,7 @@ void ADSBDemodGUI::handleADSB(
 
             if (resetAnimation)
             {
-                // Wait until after model has changed before reseting
+                // Wait until after model has changed before resetting
                 // otherwise animation might play on old model
                 aircraft->m_gearDown = false;
                 aircraft->m_flaps = 0.0;
@@ -1938,7 +1924,7 @@ void ADSBDemodGUI::decodeModeS(const QByteArray data, int df, Aircraft *aircraft
     }
     if (wasOnSurface != aircraft->m_onSurface)
     {
-        // Can't mix CPR values used on surface and those that are airbourne
+        // Can't mix CPR values used on surface and those that are airborne
         aircraft->m_cprValid[0] = false;
         aircraft->m_cprValid[1] = false;
     }
@@ -1999,7 +1985,7 @@ void ADSBDemodGUI::decodeModeS(const QByteArray data, int df, Aircraft *aircraft
 
 void ADSBDemodGUI::decodeCommB(const QByteArray data, const QDateTime dateTime, int df, Aircraft *aircraft, bool &updatedCallsign)
 {
-    // We only see downlink messages, so do not know the data format, so have to decode all posibilities
+    // We only see downlink messages, so do not know the data format, so have to decode all possibilities
     // and then see which have legal values and values that are consistent with ADS-B data
 
     // All IFR aircraft should support ELS (Elementary Surveillance) which includes BDS 1,0 1,7 2,0 3,0
@@ -2261,7 +2247,7 @@ void ADSBDemodGUI::decodeCommB(const QByteArray data, const QDateTime dateTime, 
         int windSpeedFix = ((data[4] & 0x7) << 6) | ((data[5] >> 2) & 0x3f);
         int windSpeed = windSpeedFix; // knots
         int windDirectionFix = ((data[5] & 0x3) << 6) | ((data[6] >> 2) & 0x3f);
-        int windDirection = windDirectionFix * 180.0f / 256.0f; // Degreees
+        int windDirection = windDirectionFix * 180.0f / 256.0f; // Degrees
         bool windSpeedInconsistent = (windSpeed > 250.0f) || (!windSpeedStatus && ((windSpeedFix != 0) || (windDirectionFix != 0)));
 
         int staticAirTemperatureFix = ((data[6] & 0x1) << 10) | ((data[7] & 0xff) << 2) | ((data[8] >> 6) & 0x3);
@@ -2898,7 +2884,7 @@ QList<SWGSDRangel::SWGMapAnimation *> * ADSBDemodGUI::animate(QDateTime dateTime
     bool debug = false;
 
     // Landing gear should be down when on surface
-    // Check speed in case we get a mixture of surface and airbourne positions
+    // Check speed in case we get a mixture of surface and airborne positions
     // during take-off
     if (   aircraft->m_onSurface
         && !aircraft->m_gearDown
@@ -3605,7 +3591,7 @@ void ADSBDemodGUI::on_flightInfo_clicked()
     }
 }
 
-// Find highlighed aircraft on Map Feature
+// Find highlighted aircraft on Map Feature
 void ADSBDemodGUI::on_findOnMapFeature_clicked()
 {
     QModelIndexList indexList = ui->adsbData->selectionModel()->selectedRows();
@@ -3986,7 +3972,7 @@ void ADSBDemodGUI::updateChannelList()
 
     ui->amDemod->blockSignals(false);
 
-    // If no current settting, select first channel
+    // If no current setting, select first channel
     if (m_settings.m_amDemod.isEmpty())
     {
         ui->amDemod->setCurrentIndex(0);
@@ -4682,6 +4668,7 @@ void ADSBDemodGUI::feedSelect(const QPoint& p)
 {
     ADSBDemodFeedDialog dialog(&m_settings);
     dialog.move(p);
+    new DialogPositioner(&dialog, false);
 
     if (dialog.exec() == QDialog::Accepted)
     {
@@ -4737,14 +4724,24 @@ void ADSBDemodGUI::applyMapSettings()
         zoom = 10.0;
     }
 
+    // Check requested map provider is available - if not, try the other
+    QString mapProvider = m_settings.m_mapProvider;
+    QStringList mapProviders = QGeoServiceProvider::availableServiceProviders();
+    if ((mapProvider == "osm") && (!mapProviders.contains(mapProvider))) {
+        mapProvider = "mapboxgl";
+    }
+    if ((mapProvider == "mapboxgl") && (!mapProviders.contains(mapProvider))) {
+        mapProvider = "osm";
+    }
+
     // Create the map using the specified provider
     QQmlProperty::write(item, "smoothing", MainCore::instance()->getSettings().getMapSmoothing());
     QQmlProperty::write(item, "aircraftMinZoomLevel", m_settings.m_aircraftMinZoom);
-    QQmlProperty::write(item, "mapProvider", m_settings.m_mapProvider);
+    QQmlProperty::write(item, "mapProvider", mapProvider);
     QVariantMap parameters;
     QString mapType;
 
-    if (m_settings.m_mapProvider == "osm")
+    if (mapProvider == "osm")
     {
         // Use our repo, so we can append API key and redefine transmit maps
         parameters["osm.mapping.providersrepository.address"] = QString("http://127.0.0.1:%1/").arg(m_osmPort);
@@ -4772,7 +4769,7 @@ void ADSBDemodGUI::applyMapSettings()
             break;
         }
     }
-    else if (m_settings.m_mapProvider == "mapboxgl")
+    else if (mapProvider == "mapboxgl")
     {
         switch (m_settings.m_mapType)
         {
@@ -4805,6 +4802,25 @@ void ADSBDemodGUI::applyMapSettings()
     // Restore position of map
     if (newMap != nullptr)
     {
+        // Move antenna icon to My Position
+        QObject *stationObject = newMap->findChild<QObject*>("station");
+        if(stationObject != NULL)
+        {
+            QGeoCoordinate coords = stationObject->property("coordinate").value<QGeoCoordinate>();
+            coords.setLatitude(stationLatitude);
+            coords.setLongitude(stationLongitude);
+            coords.setAltitude(stationAltitude);
+            stationObject->setProperty("coordinate", QVariant::fromValue(coords));
+            stationObject->setProperty("stationName", QVariant::fromValue(MainCore::instance()->getSettings().getStationName()));
+        }
+        else
+        {
+            qDebug() << "ADSBDemodGUI::applyMapSettings - Couldn't find station";
+        }
+
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
+        newMap = newMap->findChild<QObject*>("map");
+#endif
         if (coords.isValid())
         {
             newMap->setProperty("zoomLevel", QVariant::fromValue(zoom));
@@ -4814,22 +4830,6 @@ void ADSBDemodGUI::applyMapSettings()
     else
     {
         qDebug() << "ADSBDemodGUI::applyMapSettings - createMap returned a nullptr";
-    }
-
-    // Move antenna icon to My Position
-    QObject *stationObject = newMap->findChild<QObject*>("station");
-    if(stationObject != NULL)
-    {
-        QGeoCoordinate coords = stationObject->property("coordinate").value<QGeoCoordinate>();
-        coords.setLatitude(stationLatitude);
-        coords.setLongitude(stationLongitude);
-        coords.setAltitude(stationAltitude);
-        stationObject->setProperty("coordinate", QVariant::fromValue(coords));
-        stationObject->setProperty("stationName", QVariant::fromValue(MainCore::instance()->getSettings().getStationName()));
-    }
-    else
-    {
-        qDebug() << "ADSBDemodGUI::applyMapSettings - Couldn't find station";
     }
 }
 
@@ -4887,8 +4887,11 @@ ADSBDemodGUI::ADSBDemodGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, Baseb
     ui->map->rootContext()->setContextProperty("airportModel", &m_airportModel);
     ui->map->rootContext()->setContextProperty("airspaceModel", &m_airspaceModel);
     ui->map->rootContext()->setContextProperty("navAidModel", &m_navAidModel);
+#if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
     ui->map->setSource(QUrl(QStringLiteral("qrc:/map/map.qml")));
-
+#else
+    ui->map->setSource(QUrl(QStringLiteral("qrc:/map/map_6.qml")));
+#endif
     connect(this, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(onMenuDialogCalled(const QPoint &)));
 
     m_adsbDemod = reinterpret_cast<ADSBDemod*>(rxChannel); //new ADSBDemod(m_deviceUISet->m_deviceSourceAPI);
@@ -5033,10 +5036,12 @@ ADSBDemodGUI::ADSBDemodGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, Baseb
     m_redrawMapTimer.setSingleShot(true);
     ui->map->installEventFilter(this);
     DialPopup::addPopupsToChildDials(this);
+    m_resizer.enableChildMouseTracking();
 }
 
 ADSBDemodGUI::~ADSBDemodGUI()
 {
+    disconnect(&MainCore::instance()->getSettings(), &MainSettings::preferenceChanged, this, &ADSBDemodGUI::preferenceChanged);
     if (m_templateServer)
     {
         m_templateServer->close();
@@ -5559,7 +5564,7 @@ void ADSBDemodGUI::on_logOpen_clicked()
                                     crc.calculate((const uint8_t *)bytes.data(), bytes.size()-3);
                                     crcCalc = crc.get();
                                 }
-                                //qDebug() << "bytes.szie " << bytes.size() << " crc " << Qt::hex <<  crcCalc;
+                                //qDebug() << "bytes.size " << bytes.size() << " crc " << Qt::hex <<  crcCalc;
                                 handleADSB(bytes, dateTime, correlation, correlation, crcCalc, false);
                                 if ((count > 0) && (count % 100000 == 0))
                                 {
@@ -5998,7 +6003,11 @@ void ADSBDemodGUI::preferenceChanged(int elementType)
 
             // Update icon position on Map
             QQuickItem *item = ui->map->rootObject();
+#if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
             QObject *map = item->findChild<QObject*>("map");
+#else
+            QObject *map = item->findChild<QObject*>("mapView");
+#endif
             if (map != nullptr)
             {
                 QObject *stationObject = map->findChild<QObject*>("station");
@@ -6017,7 +6026,11 @@ void ADSBDemodGUI::preferenceChanged(int elementType)
     {
         // Update icon label on Map
         QQuickItem *item = ui->map->rootObject();
+#if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
         QObject *map = item->findChild<QObject*>("map");
+#else
+        QObject *map = item->findChild<QObject*>("mapView");
+#endif
         if (map != nullptr)
         {
             QObject *stationObject = map->findChild<QObject*>("station");

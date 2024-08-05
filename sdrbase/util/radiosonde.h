@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2022 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -24,8 +24,6 @@
 
 #include <QtCore>
 #include <QDateTime>
-
-#include "util/units.h"
 
 #include "export.h"
 
@@ -99,7 +97,7 @@ public:
     double m_longitude;                 // In degrees
     double m_height;                    // In metres
     double m_speed;                     // In m/s
-    double m_heading;                   // In degreees
+    double m_heading;                   // In degrees
     double m_verticalRate;              // In m/s
     int m_satellitesUsed;
 
@@ -113,11 +111,14 @@ public:
 
     float getPressureFloat(const RS41Subframe *subframe);
     QString getPressureString(const RS41Subframe *subframe);
+    bool isPressureCalibrated() const { return m_pressureCalibrated; }
     float getTemperatureFloat(const RS41Subframe *subframe);
     QString getTemperatureString(const RS41Subframe *subframe);
+    bool isTemperatureCalibrated() const { return m_temperatureCalibrated; }
     float getHumidityTemperatureFloat(const RS41Subframe *subframe);
     float getHumidityFloat(const RS41Subframe *subframe);
     QString getHumidityString(const RS41Subframe *subframe);
+    bool isHumidityCalibrated() const { return m_humidityCalibrated; }
 
     static RS41Frame* decode(const QByteArray ba);
     static int getFrameLength(int frameType);
@@ -162,6 +163,8 @@ public:
     bool getHumidityTempCal(float &r1, float &r2, float *poly, float *cal) const;
     bool hasPressureCal() const;
     bool getPressureCal(float *cal) const;
+    bool hasHumidityPressureCal() const;
+    bool getHumidityPressureCal(float *vec, float *mat) const;
     QString getType() const;
     QString getFrequencyMHz() const;
     QString getBurstKillStatus() const;

@@ -32,7 +32,6 @@
    <font>
     <family>Liberation Sans</family>
     <pointsize>9</pointsize>
-    <weight>50</weight>
     <italic>false</italic>
     <bold>false</bold>
    </font>
@@ -129,10 +128,12 @@
         <font>
          <family>Liberation Sans</family>
          <pointsize>16</pointsize>
-         <weight>50</weight>
          <italic>false</italic>
          <bold>false</bold>
         </font>
+       </property>
+       <property name="toolTip">
+        <string>Record center frequency in Hz</string>
        </property>
        <property name="text">
         <string>10,000,000,000</string>
@@ -238,7 +239,6 @@
         <font>
          <family>Liberation Sans</family>
          <pointsize>8</pointsize>
-         <weight>50</weight>
          <italic>false</italic>
          <bold>false</bold>
         </font>
@@ -273,7 +273,6 @@
         <font>
          <family>Liberation Sans</family>
          <pointsize>8</pointsize>
-         <weight>50</weight>
          <italic>false</italic>
          <bold>false</bold>
         </font>
@@ -302,7 +301,6 @@
         <font>
          <family>Liberation Sans</family>
          <pointsize>8</pointsize>
-         <weight>50</weight>
          <italic>false</italic>
          <bold>false</bold>
         </font>
@@ -371,7 +369,7 @@
      <item>
       <widget class="ButtonSwitch" name="playLoop">
        <property name="toolTip">
-        <string>Play in a loop</string>
+        <string>Play file in a loop</string>
        </property>
        <property name="text">
         <string/>
@@ -442,7 +440,6 @@
         <font>
          <family>Liberation Sans</family>
          <pointsize>8</pointsize>
-         <weight>50</weight>
          <italic>false</italic>
          <bold>false</bold>
         </font>

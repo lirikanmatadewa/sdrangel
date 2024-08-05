@@ -230,12 +230,16 @@ Use this combo box to select which window is applied to the FFT:
 <h4>B.4.2. FFT size</h4>
 
 Select the size of the FFT window among these values:
+  - 64
   - 128
   - 256
   - 512
   - 1k = 1024 (default)
   - 2k = 2048
   - 4k = 4096
+  - 8k = 8192
+  - 16k = 16384
+  - 32k = 32768
 
 <h4>B.4.3: FFT Overlap</h4>
 
@@ -278,7 +282,7 @@ This is the range of display in dB. You can select values between 1 and 100 in 1
 
 <h4>B.5.4: FPS capping</h4>
 
-The refresh rate of the spectrum is capped by this value in FPS i.e the refresh period in seconds is 1 &divide; FPS. The default value is 20 and corresponds to general usage. You may use a lower value to limit GPU usage and power consumption. You may also use a higher value for an even more reactive display. "NL" corresponds to "No Limit". With "No Limit" the spectrum update will be triggered immediately when a new FFT is calculated. Note that actual refresh rate will be limited by other factors related to hardware and graphics drivers.
+The refresh rate of the spectrum is capped by this value in FPS i.e. the refresh period in seconds is 1 &divide; FPS. The default value is 20 and corresponds to general usage. You may use a lower value to limit GPU usage and power consumption. You may also use a higher value for an even more reactive display. "NL" corresponds to "No Limit". With "No Limit" the spectrum update will be triggered immediately when a new FFT is calculated. Note that actual refresh rate will be limited by other factors related to hardware and graphics drivers.
 
 The refresh period is limited anyway by the FFT period which is the FFT size divided by the baseband sampling rate and multiplied by the fixed average or max size (3A.5) in case these features are engaged (3A.4). Setting a resulting FFT refresh time above the refresh rate will make sure that a short burst is not missed particularly when using the max mode.
 

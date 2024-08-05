@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2022 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -64,6 +64,7 @@ private:
 
 public:
     WebServer(quint16 &port, QObject* parent = 0);
+    ~WebServer();
     void incomingConnection(qintptr socket) override;
     void addPathSubstitution(const QString &from, const QString &to);
     void addSubstitution(QString path, QString from, QString to);

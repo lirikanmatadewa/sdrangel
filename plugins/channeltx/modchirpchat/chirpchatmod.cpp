@@ -1,5 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2020-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2020 Kacper Michajłow <kasper93@gmail.com>                      //
+// Copyright (C) 2021 Jon Beniston, M7RCE <jon@beniston.com>                     //
+// Copyright (C) 2022 Jiří Pinkava <jiri.pinkava@rossum.ai>                      //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -17,7 +20,6 @@
 
 #include <QTime>
 #include <QDebug>
-#include <QMutexLocker>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QUdpSocket>
@@ -34,10 +36,8 @@
 #include <complex.h>
 #include <algorithm>
 
-#include "dsp/dspengine.h"
 #include "dsp/dspcommands.h"
 #include "device/deviceapi.h"
-#include "feature/feature.h"
 #include "settings/serializable.h"
 #include "util/db.h"
 #include "maincore.h"
@@ -281,74 +281,19 @@ void ChirpChatMod::applySettings(const ChirpChatModSettings& settings, bool forc
     {
         payloadMsg = ChirpChatModBaseband::MsgConfigureChirpChatModPayload::create();
     }
-    else if ((settings.m_messageType == ChirpChatModSettings::MessageBeacon)
-        && ((settings.m_messageType != m_settings.m_messageType)
-         || (settings.m_beaconMessage != m_settings.m_beaconMessage) || force))
+    else if ((settings.m_messageType != m_settings.m_messageType)
+        || (settings.m_beaconMessage != m_settings.m_beaconMessage)
+        || (settings.m_cqMessage != m_settings.m_cqMessage)
+        || (settings.m_replyMessage != m_settings.m_replyMessage)
+        || (settings.m_reportMessage != m_settings.m_reportMessage)
+        || (settings.m_replyReportMessage != m_settings.m_replyReportMessage)
+        || (settings.m_rrrMessage != m_settings.m_rrrMessage)
+        || (settings.m_73Message != m_settings.m_73Message)
+        || (settings.m_qsoTextMessage != m_settings.m_qsoTextMessage)
+        || (settings.m_textMessage != m_settings.m_textMessage)
+        || (settings.m_bytesMessage != m_settings.m_bytesMessage) || force)
     {
-        m_encoder.encodeString(settings.m_beaconMessage, symbols);
-        payloadMsg = ChirpChatModBaseband::MsgConfigureChirpChatModPayload::create(symbols);
-    }
-    else if ((settings.m_messageType == ChirpChatModSettings::MessageCQ)
-        && ((settings.m_messageType != m_settings.m_messageType)
-         || (settings.m_cqMessage != m_settings.m_cqMessage) || force))
-    {
-        m_encoder.encodeString(settings.m_cqMessage, symbols);
-        payloadMsg = ChirpChatModBaseband::MsgConfigureChirpChatModPayload::create(symbols);
-    }
-    else if ((settings.m_messageType == ChirpChatModSettings::MessageReply)
-        && ((settings.m_messageType != m_settings.m_messageType)
-         || (settings.m_replyMessage != m_settings.m_replyMessage) || force))
-    {
-        m_encoder.encodeString(settings.m_replyMessage, symbols);
-        payloadMsg = ChirpChatModBaseband::MsgConfigureChirpChatModPayload::create(symbols);
-    }
-    else if ((settings.m_messageType == ChirpChatModSettings::MessageReport)
-        && ((settings.m_messageType != m_settings.m_messageType)
-         || (settings.m_reportMessage != m_settings.m_reportMessage) || force))
-    {
-        m_encoder.encodeString(settings.m_reportMessage, symbols);
-        payloadMsg = ChirpChatModBaseband::MsgConfigureChirpChatModPayload::create(symbols);
-    }
-    else if ((settings.m_messageType == ChirpChatModSettings::MessageReplyReport)
-        && ((settings.m_messageType != m_settings.m_messageType)
-         || (settings.m_replyReportMessage != m_settings.m_replyReportMessage) || force))
-    {
-        m_encoder.encodeString(settings.m_replyReportMessage, symbols);
-        payloadMsg = ChirpChatModBaseband::MsgConfigureChirpChatModPayload::create(symbols);
-    }
-    else if ((settings.m_messageType == ChirpChatModSettings::MessageRRR)
-        && ((settings.m_messageType != m_settings.m_messageType)
-         || (settings.m_rrrMessage != m_settings.m_rrrMessage) || force))
-    {
-        m_encoder.encodeString(settings.m_rrrMessage, symbols);
-        payloadMsg = ChirpChatModBaseband::MsgConfigureChirpChatModPayload::create(symbols);
-    }
-    else if ((settings.m_messageType == ChirpChatModSettings::Message73)
-        && ((settings.m_messageType != m_settings.m_messageType)
-         || (settings.m_73Message != m_settings.m_73Message) || force))
-    {
-        m_encoder.encodeString(settings.m_73Message, symbols);
-        payloadMsg = ChirpChatModBaseband::MsgConfigureChirpChatModPayload::create(symbols);
-    }
-    else if ((settings.m_messageType == ChirpChatModSettings::MessageQSOText)
-        && ((settings.m_messageType != m_settings.m_messageType)
-         || (settings.m_qsoTextMessage != m_settings.m_qsoTextMessage) || force))
-    {
-        m_encoder.encodeString(settings.m_qsoTextMessage, symbols);
-        payloadMsg = ChirpChatModBaseband::MsgConfigureChirpChatModPayload::create(symbols);
-    }
-    else if ((settings.m_messageType == ChirpChatModSettings::MessageText)
-        && ((settings.m_messageType != m_settings.m_messageType)
-         || (settings.m_textMessage != m_settings.m_textMessage) || force))
-    {
-        m_encoder.encodeString(settings.m_textMessage, symbols);
-        payloadMsg = ChirpChatModBaseband::MsgConfigureChirpChatModPayload::create(symbols);
-    }
-    else if ((settings.m_messageType == ChirpChatModSettings::MessageBytes)
-        && ((settings.m_messageType != m_settings.m_messageType)
-         || (settings.m_bytesMessage != m_settings.m_bytesMessage) || force))
-    {
-        m_encoder.encodeBytes(settings.m_bytesMessage, symbols);
+        m_encoder.encode(settings, symbols);
         payloadMsg = ChirpChatModBaseband::MsgConfigureChirpChatModPayload::create(symbols);
     }
 
@@ -359,7 +304,7 @@ void ChirpChatMod::applySettings(const ChirpChatModSettings& settings, bool forc
 
         if (getMessageQueueToGUI())
         {
-            MsgReportPayloadTime *rpt = MsgReportPayloadTime::create(m_currentPayloadTime);
+            MsgReportPayloadTime *rpt = MsgReportPayloadTime::create(m_currentPayloadTime, symbols.size());
             getMessageQueueToGUI()->push(rpt);
         }
     }
@@ -396,6 +341,8 @@ void ChirpChatMod::applySettings(const ChirpChatModSettings& settings, bool forc
             m_deviceAPI->removeChannelSource(this, m_settings.m_streamIndex);
             m_deviceAPI->addChannelSource(this, settings.m_streamIndex);
             m_deviceAPI->addChannelSourceAPI(this);
+            m_settings.m_streamIndex = settings.m_streamIndex; // make sure ChannelAPI::getStreamIndex() is consistent
+            emit streamIndexChanged(settings.m_streamIndex);
         }
 
         reverseAPIKeys.append("streamIndex");
@@ -1090,7 +1037,7 @@ void ChirpChatMod::udpRx()
 
             if (getMessageQueueToGUI())
             {
-                MsgReportPayloadTime *rpt = MsgReportPayloadTime::create(m_currentPayloadTime);
+                MsgReportPayloadTime *rpt = MsgReportPayloadTime::create(m_currentPayloadTime, symbols.size());
                 getMessageQueueToGUI()->push(rpt);
             }
         }

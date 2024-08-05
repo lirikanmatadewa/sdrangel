@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2022-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>               //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -20,7 +20,7 @@
 #include <QDesktopServices>
 #include <QMessageBox>
 #include <QAction>
-#include <QRegExp>
+#include <QRegularExpression>
 #include <QClipboard>
 #include <QFileDialog>
 #include <QScrollBar>
@@ -32,12 +32,10 @@
 #include "dsp/dspcommands.h"
 #include "ui_radiosondedemodgui.h"
 #include "plugin/pluginapi.h"
-#include "util/simpleserializer.h"
 #include "util/csv.h"
 #include "util/db.h"
 #include "util/units.h"
 #include "gui/basicchannelsettingsdialog.h"
-#include "gui/devicestreamselectiondialog.h"
 #include "gui/datetimedelegate.h"
 #include "gui/decimaldelegate.h"
 #include "gui/timedelegate.h"
@@ -45,14 +43,11 @@
 #include "gui/dialogpositioner.h"
 #include "dsp/dspengine.h"
 #include "dsp/glscopesettings.h"
-#include "gui/crightclickenabler.h"
 #include "gui/tabletapandhold.h"
-#include "channel/channelwebapiutils.h"
 #include "maincore.h"
 #include "feature/featurewebapiutils.h"
 
 #include "radiosondedemod.h"
-#include "radiosondedemodsink.h"
 
 void RadiosondeDemodGUI::resizeTable()
 {
@@ -86,6 +81,8 @@ void RadiosondeDemodGUI::resizeTable()
     ui->frames->setItem(row, FRAME_COL_GPS_SATS, new QTableWidgetItem("12"));
     ui->frames->setItem(row, FRAME_COL_ECC, new QTableWidgetItem("12"));
     ui->frames->setItem(row, FRAME_COL_CORR, new QTableWidgetItem("-500"));
+    ui->frames->setItem(row, FRAME_COL_RANGE, new QTableWidgetItem("200.0"));
+    ui->frames->setItem(row, FRAME_COL_FREQUENCY, new QTableWidgetItem("434.125"));
     ui->frames->resizeColumnsToContents();
     ui->frames->removeRow(row);
 }
@@ -172,7 +169,7 @@ bool RadiosondeDemodGUI::deserialize(const QByteArray& data)
 }
 
 // Add row to table
-void RadiosondeDemodGUI::frameReceived(const QByteArray& frame, const QDateTime& dateTime, int errorsCorrected, int threshold)
+void RadiosondeDemodGUI::frameReceived(const QByteArray& frame, const QDateTime& dateTime, int errorsCorrected, int threshold, bool loadCSV)
 {
     RS41Frame *radiosonde;
 
@@ -214,6 +211,8 @@ void RadiosondeDemodGUI::frameReceived(const QByteArray& frame, const QDateTime&
     QTableWidgetItem *gpsSatsItem = new QTableWidgetItem();
     QTableWidgetItem *eccItem = new QTableWidgetItem();
     QTableWidgetItem *thItem = new QTableWidgetItem();
+    QTableWidgetItem *rangeItem = new QTableWidgetItem();
+    QTableWidgetItem *frequencyItem = new QTableWidgetItem();
 
     ui->frames->setItem(row, FRAME_COL_DATE, dateItem);
     ui->frames->setItem(row, FRAME_COL_TIME, timeItem);
@@ -241,6 +240,8 @@ void RadiosondeDemodGUI::frameReceived(const QByteArray& frame, const QDateTime&
     ui->frames->setItem(row, FRAME_COL_GPS_SATS, gpsSatsItem);
     ui->frames->setItem(row, FRAME_COL_ECC, eccItem);
     ui->frames->setItem(row, FRAME_COL_CORR, thItem);
+    ui->frames->setItem(row, FRAME_COL_RANGE, rangeItem);
+    ui->frames->setItem(row, FRAME_COL_FREQUENCY, frequencyItem);
 
     dateItem->setData(Qt::DisplayRole, dateTime.date());
     timeItem->setData(Qt::DisplayRole, dateTime.time());
@@ -281,6 +282,14 @@ void RadiosondeDemodGUI::frameReceived(const QByteArray& frame, const QDateTime&
         verticalRateItem->setData(Qt::DisplayRole, radiosonde->m_verticalRate);
         headingItem->setData(Qt::DisplayRole, radiosonde->m_heading);
         gpsSatsItem->setData(Qt::DisplayRole, radiosonde->m_satellitesUsed);
+        // Calc distance from My Position to Radiosone
+        Real stationLatitude = MainCore::instance()->getSettings().getLatitude();
+        Real stationLongitude = MainCore::instance()->getSettings().getLongitude();
+        Real stationAltitude = MainCore::instance()->getSettings().getAltitude();
+        QGeoCoordinate stationPosition(stationLatitude, stationLongitude, stationAltitude);
+        QGeoCoordinate radiosondePosition(radiosonde->m_latitude, radiosonde->m_longitude, radiosonde->m_height);
+        float distance = stationPosition.distanceTo(radiosondePosition);
+        rangeItem->setData(Qt::DisplayRole, (int)std::round(distance / 1000.0));
     }
 
     if (radiosonde->m_gpsInfoValid)
@@ -295,8 +304,12 @@ void RadiosondeDemodGUI::frameReceived(const QByteArray& frame, const QDateTime&
         humidityItem->setData(Qt::DisplayRole, radiosonde->getHumidityString(subframe));
     }
 
-    eccItem->setData(Qt::DisplayRole, errorsCorrected);
-    thItem->setData(Qt::DisplayRole, threshold);
+    if (!loadCSV)
+    {
+        eccItem->setData(Qt::DisplayRole, errorsCorrected);
+        thItem->setData(Qt::DisplayRole, threshold);
+        frequencyItem->setData(Qt::DisplayRole, (m_deviceCenterFrequency + m_settings.m_inputFrequencyOffset) / 1000000.0);
+    }
 
     filterRow(row);
     ui->frames->setSortingEnabled(true);
@@ -324,7 +337,7 @@ bool RadiosondeDemodGUI::handleMessage(const Message& frame)
     else if (RadiosondeDemod::MsgMessage::match(frame))
     {
         RadiosondeDemod::MsgMessage& report = (RadiosondeDemod::MsgMessage&) frame;
-        frameReceived(report.getMessage(), report.getDateTime(), report.getErrorsCorrected(), report.getThreshold());
+        frameReceived(report.getMessage(), report.getDateTime(), report.getErrorsCorrected(), report.getThreshold(), false);
         return true;
     }
     else if (DSPSignalNotification::match(frame))
@@ -460,9 +473,10 @@ void RadiosondeDemodGUI::filterRow(int row)
     bool hidden = false;
     if (m_settings.m_filterSerial != "")
     {
-        QRegExp re(m_settings.m_filterSerial);
+        QRegularExpression re(QRegularExpression::anchoredPattern(m_settings.m_filterSerial));
         QTableWidgetItem *fromItem = ui->frames->item(row, FRAME_COL_SERIAL);
-        if (!re.exactMatch(fromItem->text()))
+        QRegularExpressionMatch match = re.match(fromItem->text());
+        if (!match.hasMatch())
             hidden = true;
     }
     ui->frames->setRowHidden(row, hidden);
@@ -634,15 +648,16 @@ RadiosondeDemodGUI::RadiosondeDemodGUI(PluginAPI* pluginAPI, DeviceUISet *device
     TableTapAndHold *tableTapAndHold = new TableTapAndHold(ui->frames);
     connect(tableTapAndHold, &TableTapAndHold::tapAndHold, this, &RadiosondeDemodGUI::customContextMenuRequested);
 
-    ui->frames->setItemDelegateForColumn(FRAME_COL_DATE, new DateTimeDelegate("yyyy/MM/dd"));
-    ui->frames->setItemDelegateForColumn(FRAME_COL_TIME, new TimeDelegate());
-    ui->frames->setItemDelegateForColumn(FRAME_COL_LATITUDE, new DecimalDelegate(5));
-    ui->frames->setItemDelegateForColumn(FRAME_COL_LONGITUDE, new DecimalDelegate(5));
-    ui->frames->setItemDelegateForColumn(FRAME_COL_ALTITUDE, new DecimalDelegate(1));
-    ui->frames->setItemDelegateForColumn(FRAME_COL_SPEED, new DecimalDelegate(1));
-    ui->frames->setItemDelegateForColumn(FRAME_COL_VERTICAL_RATE, new DecimalDelegate(1));
-    ui->frames->setItemDelegateForColumn(FRAME_COL_HEADING, new DecimalDelegate(1));
-    ui->frames->setItemDelegateForColumn(FRAME_COL_GPS_TIME, new DateTimeDelegate("yyyy/MM/dd hh:mm:ss"));
+    ui->frames->setItemDelegateForColumn(FRAME_COL_DATE, new DateTimeDelegate("yyyy/MM/dd", ui->frames));
+    ui->frames->setItemDelegateForColumn(FRAME_COL_TIME, new TimeDelegate("hh:mm:ss", ui->frames));
+    ui->frames->setItemDelegateForColumn(FRAME_COL_LATITUDE, new DecimalDelegate(5, ui->frames));
+    ui->frames->setItemDelegateForColumn(FRAME_COL_LONGITUDE, new DecimalDelegate(5, ui->frames));
+    ui->frames->setItemDelegateForColumn(FRAME_COL_ALTITUDE, new DecimalDelegate(1, ui->frames));
+    ui->frames->setItemDelegateForColumn(FRAME_COL_SPEED, new DecimalDelegate(1, ui->frames));
+    ui->frames->setItemDelegateForColumn(FRAME_COL_VERTICAL_RATE, new DecimalDelegate(1, ui->frames));
+    ui->frames->setItemDelegateForColumn(FRAME_COL_HEADING, new DecimalDelegate(1, ui->frames));
+    ui->frames->setItemDelegateForColumn(FRAME_COL_GPS_TIME, new DateTimeDelegate("yyyy/MM/dd hh:mm:ss", ui->frames));
+    ui->frames->setItemDelegateForColumn(FRAME_COL_FREQUENCY, new DecimalDelegate(3, ui->frames));
 
     ui->scopeContainer->setVisible(false);
 
@@ -650,6 +665,7 @@ RadiosondeDemodGUI::RadiosondeDemodGUI(PluginAPI* pluginAPI, DeviceUISet *device
     makeUIConnections();
     applySettings(true);
     DialPopup::addPopupsToChildDials(this);
+    m_resizer.enableChildMouseTracking();
 }
 
 void RadiosondeDemodGUI::customContextMenuRequested(QPoint pos)
@@ -750,6 +766,8 @@ void RadiosondeDemodGUI::displaySettings()
 
     ui->logFilename->setToolTip(QString(".csv log filename: %1").arg(m_settings.m_logFilename));
     ui->logEnable->setChecked(m_settings.m_logEnabled);
+
+    ui->useFileTime->setChecked(m_settings.m_useFileTime);
 
     // Order and size columns
     QHeaderView *header = ui->frames->horizontalHeader();
@@ -857,7 +875,7 @@ void RadiosondeDemodGUI::on_logOpen_clicked()
                     QStringList cols;
 
                     QList<ObjectPipe*> radiosondePipes;
-                    MainCore::instance()->getMessagePipes().getMessagePipes(this, "radiosonde", radiosondePipes);
+                    MainCore::instance()->getMessagePipes().getMessagePipes(m_radiosondeDemod, "radiosonde", radiosondePipes);
 
                     while (!cancelled && CSV::readRow(in, &cols))
                     {
@@ -869,7 +887,7 @@ void RadiosondeDemodGUI::on_logOpen_clicked()
                             QByteArray bytes = QByteArray::fromHex(cols[dataCol].toLatin1());
 
                             // Add to table
-                            frameReceived(bytes, dateTime, 0, 0);
+                            frameReceived(bytes, dateTime, 0, 0, true);
 
                             // Forward to Radiosonde feature
                             for (const auto& pipe : radiosondePipes)
@@ -904,6 +922,12 @@ void RadiosondeDemodGUI::on_logOpen_clicked()
     }
 }
 
+void RadiosondeDemodGUI::on_useFileTime_toggled(bool checked)
+{
+    m_settings.m_useFileTime = checked;
+    applySettings();
+}
+
 void RadiosondeDemodGUI::makeUIConnections()
 {
     QObject::connect(ui->deltaFrequency, &ValueDialZ::changed, this, &RadiosondeDemodGUI::on_deltaFrequency_changed);
@@ -919,6 +943,7 @@ void RadiosondeDemodGUI::makeUIConnections()
     QObject::connect(ui->logEnable, &ButtonSwitch::clicked, this, &RadiosondeDemodGUI::on_logEnable_clicked);
     QObject::connect(ui->logFilename, &QToolButton::clicked, this, &RadiosondeDemodGUI::on_logFilename_clicked);
     QObject::connect(ui->logOpen, &QToolButton::clicked, this, &RadiosondeDemodGUI::on_logOpen_clicked);
+    QObject::connect(ui->useFileTime, &ButtonSwitch::toggled, this, &RadiosondeDemodGUI::on_useFileTime_toggled);
 }
 
 void RadiosondeDemodGUI::updateAbsoluteCenterFrequency()

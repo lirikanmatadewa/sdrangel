@@ -1,6 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2022 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2023 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -26,11 +25,7 @@
 #include "gui/glspectrum.h"
 #include "gui/basicdevicesettingsdialog.h"
 #include "gui/dialogpositioner.h"
-#include "dsp/dspengine.h"
 #include "dsp/dspcommands.h"
-#include "dsp/hbfilterchainconverter.h"
-#include "mainwindow.h"
-#include "util/simpleserializer.h"
 #include "device/deviceapi.h"
 #include "device/deviceuiset.h"
 #include "androidsdrdriverinputgui.h"
@@ -82,6 +77,7 @@ AndroidSDRDriverInputGui::AndroidSDRDriverInputGui(DeviceUISet *deviceUISet, QWi
     m_forceSettings = true;
     sendSettings();
     makeUIConnections();
+    m_resizer.enableChildMouseTracking();
 }
 
 AndroidSDRDriverInputGui::~AndroidSDRDriverInputGui()
@@ -312,6 +308,7 @@ const QHash<RemoteTCPProtocol::Device, const AndroidSDRDriverInputGui::DeviceGai
     {RemoteTCPProtocol::HACK_RF, &m_hackRFGains},
     {RemoteTCPProtocol::SDRPLAY_V3_RSP1, &m_sdrplayV3Gains},
     {RemoteTCPProtocol::SDRPLAY_V3_RSP1A, &m_sdrplayV3Gains},
+    {RemoteTCPProtocol::SDRPLAY_V3_RSP1B, &m_sdrplayV3Gains},
     {RemoteTCPProtocol::SDRPLAY_V3_RSP2, &m_sdrplayV3Gains},
     {RemoteTCPProtocol::SDRPLAY_V3_RSPDUO, &m_sdrplayV3Gains},
     {RemoteTCPProtocol::SDRPLAY_V3_RSPDX, &m_sdrplayV3Gains},

@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>         //
+// Copyright (C) 2021 Jon Beniston, M7RCE <jon@beniston.com>                     //
+// Copyright (C) 2022 Jiří Pinkava <jiri.pinkava@rossum.ai>                      //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -17,8 +19,6 @@
 
 #include <QDebug>
 
-#include "SWGDeviceState.h"
-#include "SWGSuccessResponse.h"
 #include "SWGDeviceSettings.h"
 #include "SWGChannelSettings.h"
 #include "SWGErrorResponse.h"
@@ -28,7 +28,6 @@
 #include "device/deviceset.h"
 #include "device/deviceapi.h"
 #include "channel/channelapi.h"
-#include "feature/feature.h"
 #include "maincore.h"
 
 #include "afcreport.h"

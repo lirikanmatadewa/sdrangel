@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2017 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2017-2019 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -49,7 +49,7 @@ void DeviceLimeSDR::enumOriginDevices(const QString& hardwareId, PluginInterface
             findSerial((const char *) deviceList[i], serial);
 
             DeviceLimeSDRParams limeSDRParams;
-            limeSDRParams.open(deviceList[i]);
+            limeSDRParams.open(deviceList[i], false);
             limeSDRParams.close();
 
             QString displayedName(QString("LimeSDR[%1:$1] %2").arg(i).arg(serial.c_str()));

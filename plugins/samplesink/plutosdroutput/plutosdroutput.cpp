@@ -1,5 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2017 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2020, 2022-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com> //
+// Copyright (C) 2019 Robin Getz <robin.getz@analog.com>                         //
+// Copyright (C) 2023 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -25,7 +29,6 @@
 #include "SWGPlutoSdrOutputReport.h"
 
 #include "dsp/dspcommands.h"
-#include "dsp/dspengine.h"
 #include "device/deviceapi.h"
 #include "plutosdr/deviceplutosdrparams.h"
 #include "plutosdr/deviceplutosdrbox.h"
@@ -535,7 +538,7 @@ bool PlutoSDROutput::applySettings(const PlutoSDROutputSettings& settings, const
         plutoBox->set_params(DevicePlutoSDRBox::DEVICE_PHY, params);
     }
 
-    if (settingsKeys.contains("useReverseAPI"))
+    if (settings.m_useReverseAPI)
     {
         bool fullUpdate = (settingsKeys.contains("useReverseAPI") && settings.m_useReverseAPI) ||
             settingsKeys.contains("reverseAPIAddress") ||

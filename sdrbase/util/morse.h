@@ -1,5 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2020 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2020 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -27,13 +30,13 @@ class SDRBASE_API Morse
 {
 public:
     static QString toMorse(char asciiChar);
-    static QString toMorse(QString &string);
-    static QString toUnicode(QString &morse);
-    static QString toSpacedUnicode(QString &morse);
-    static QString toUnicodeMorse(QString &string);
-    static QString toSpacedUnicodeMorse(QString &string);
-    static int toASCII(QString &morse);
-    static QString toString(QString &morse);
+    static QString toMorse(const QString &string);
+    static QString toUnicode(const QString &morse);
+    static QString toSpacedUnicode(const QString &morse);
+    static QString toUnicodeMorse(const QString &string);
+    static QString toSpacedUnicodeMorse(const QString &string);
+    static int toASCII(const QString &morse);
+    static QString toString(const QString &morse);
 
 private:
     struct ASCIIToMorse {

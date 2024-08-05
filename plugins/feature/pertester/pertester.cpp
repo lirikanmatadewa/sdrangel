@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Jon Beniston, M7RCE                                        //
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2021-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2021-2022 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -28,16 +28,11 @@
 #include "SWGDeviceState.h"
 #include "SWGPERTesterActions.h"
 
-#include "dsp/dspengine.h"
-#include "device/deviceset.h"
-#include "channel/channelapi.h"
 #include "feature/featureset.h"
 #include "settings/serializable.h"
-#include "maincore.h"
 
 #include "pertester.h"
 #include "pertesterworker.h"
-#include "pertesterreport.h"
 
 MESSAGE_CLASS_DEFINITION(PERTester::MsgConfigurePERTester, Message)
 MESSAGE_CLASS_DEFINITION(PERTester::MsgStartStop, Message)
@@ -194,14 +189,14 @@ void PERTester::applySettings(const PERTesterSettings& settings, const QList<QSt
 {
     qDebug() << "PERTester::applySettings:" << settings.getDebugString(settingsKeys, force) << " force: " << force;
 
-    PERTesterWorker::MsgConfigurePERTesterWorker *msg = PERTesterWorker::MsgConfigurePERTesterWorker::create(
-        settings, settingsKeys, force
-    );
     if (m_worker) {
+        PERTesterWorker::MsgConfigurePERTesterWorker *msg = PERTesterWorker::MsgConfigurePERTesterWorker::create(
+            settings, settingsKeys, force
+            );
         m_worker->getInputMessageQueue()->push(msg);
     }
 
-    if (settingsKeys.contains("useReverseAPI"))
+    if (settings.m_useReverseAPI)
     {
         bool fullUpdate = (settingsKeys.contains("useReverseAPI") && settings.m_useReverseAPI) ||
                 settingsKeys.contains("reverseAPIAddress") ||

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2017 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2020 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2020, 2022-2023 Jon Beniston, M7RCE <jon@beniston.com>          //
+// Copyright (C) 2020 Edouard Griffiths, F4EXB <f4exb06@gmail.com>               //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -40,7 +40,7 @@ bool DeviceUSRPParams::open(const QString &deviceStr, bool channelNumOnly)
         qDebug() << "DeviceUSRPParams::open: m_nbRxChannels: " << m_nbRxChannels << " m_nbTxChannels: " << m_nbTxChannels;
 
         // Speed up program initialisation, by not getting all properties
-        // If we could find out number of channles without ::make ing the device
+        // If we could find out number of channels without ::make ing the device
         // that would be even better
         if (!channelNumOnly)
         {

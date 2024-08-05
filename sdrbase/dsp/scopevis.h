@@ -1,6 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2017 F4EXB                                                      //
-// written by Edouard Griffiths                                                  //
+// Copyright (C) 2017-2021, 2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2019 Martin Hauke <mardnh@gmx.de>                               //
+// Copyright (C) 2020 Kacper Michajłow <kasper93@gmail.com>                      //
+// Copyright (C) 2022 Jiří Pinkava <jiri.pinkava@rossum.ai>                      //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -36,7 +38,6 @@
 #include "util/message.h"
 #include "util/messagequeue.h"
 #include "util/doublebuffer.h"
-#include "util/doublebuffermultiple.h"
 
 
 class GLScopeInterface;
@@ -1266,7 +1267,7 @@ private:
     /**
      * Moves on to the next trigger if any or increments trigger count if in repeat mode
      * - If not final it returns true
-     * - If final i.e. signal is actually triggerd it returns false
+     * - If final i.e. signal is actually triggered it returns false
      */
     bool nextTrigger(); //!< Returns true if not final
 

@@ -23,7 +23,6 @@
 #include <QDebug>
 #include <QMessageBox>
 #include <QAction>
-#include <QRegExp>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QGraphicsScene>
@@ -37,22 +36,15 @@
 #include "dsp/dspcommands.h"
 #include "ui_aptdemodgui.h"
 #include "plugin/pluginapi.h"
-#include "util/simpleserializer.h"
 #include "util/db.h"
-#include "util/morse.h"
-#include "util/units.h"
 #include "gui/basicchannelsettingsdialog.h"
-#include "gui/devicestreamselectiondialog.h"
 #include "gui/dialpopup.h"
 #include "gui/dialogpositioner.h"
 #include "dsp/dspengine.h"
-#include "gui/crightclickenabler.h"
 #include "gui/graphicsviewzoom.h"
-#include "channel/channelwebapiutils.h"
 #include "maincore.h"
 
 #include "aptdemod.h"
-#include "aptdemodsink.h"
 #include "aptdemodsettingsdialog.h"
 #include "aptdemodselectdialog.h"
 
@@ -210,7 +202,7 @@ bool APTDemodGUI::handleMessage(const Message& message)
         }
         else
         {
-            m_image = m_image.copy(0, 0, m_image.width(), m_image.height()+1); // Add a line at tne bottom
+            m_image = m_image.copy(0, 0, m_image.width(), m_image.height()+1); // Add a line at the bottom
 
             if (m_settings.m_flip)
             {
@@ -512,9 +504,18 @@ void APTDemodGUI::on_saveImage_clicked()
         QStringList fileNames = fileDialog.selectedFiles();
         if (fileNames.size() > 0)
         {
-            qDebug() << "APT: Saving image to " << fileNames;
-            if (!m_image.save(fileNames[0])) {
-                QMessageBox::critical(this, "APT Demodulator", QString("Failed to save image to %1").arg(fileNames[0]));
+            QFileInfo fileInfo(fileNames[0]);
+
+            if (fileInfo.suffix() != "")
+            {
+                qDebug() << "APT: Saving image to " << fileNames;
+                if (!m_image.save(fileNames[0])) {
+                    QMessageBox::critical(this, "APT Demodulator", QString("Failed to save image to %1").arg(fileNames[0]));
+                }
+            }
+            else
+            {
+                QMessageBox::critical(this, "APT Demodulator", QString("Please specify a filename with an extension such as .png or .jpg"));
             }
         }
     }
@@ -680,6 +681,7 @@ APTDemodGUI::APTDemodGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, Baseban
     makeUIConnections();
     applySettings(true);
     DialPopup::addPopupsToChildDials(this);
+    m_resizer.enableChildMouseTracking();
 }
 
 APTDemodGUI::~APTDemodGUI()

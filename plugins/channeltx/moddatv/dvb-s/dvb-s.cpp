@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2021 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -56,8 +56,8 @@ DVBS::~DVBS()
     delete[] m_packet;
 }
 
-// Scramble input packet (except for sync bytes) with psuedo random binary sequence
-// Initiliase PRBS sequence every 8 packets and invert sync byte
+// Scramble input packet (except for sync bytes) with pseudo random binary sequence
+// Initialise PRBS sequence every 8 packets and invert sync byte
 void DVBS::scramble(const uint8_t *packetIn, uint8_t *packetOut)
 {
     if (m_prbsPacketCount == 0)

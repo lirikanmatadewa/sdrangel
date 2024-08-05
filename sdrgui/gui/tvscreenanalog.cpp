@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Vort                                                       //
+// Copyright (C) 2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>         //
+// Copyright (C) 2020 Vort <vvort@yandex.ru>                                     //
+// Copyright (C) 2022-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 // Copyright (C) 2018 F4HKW                                                      //
 // for F4EXB / SDRAngel                                                          //
 //                                                                               //
@@ -129,6 +131,7 @@ TVScreenAnalog::TVScreenAnalog(QWidget *parent)	:
 
 TVScreenAnalog::~TVScreenAnalog()
 {
+	cleanup();
 	delete m_backBuffer;
 	delete m_frontBuffer;
 }

@@ -1,6 +1,16 @@
 ///////////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
 // written by Christian Daniel                                                   //
+// Copyright (C) 2014 John Greb <hexameron@spam.no>                              //
+// Copyright (C) 2015-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2017 Ziga S <ziga.svetina@gmail.com>                            //
+// Copyright (C) 2018 beta-tester <alpha-beta-release@gmx.net>                   //
+// Copyright (C) 2019 Vort <vvort@yandex.ru>                                     //
+// Copyright (C) 2019 Davide Gerhard <rainbow@irh.it>                            //
+// Copyright (C) 2019 Stefan Biereigel <stefan@biereigel.de>                     //
+// Copyright (C) 2020-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2022 CRD716 <crd716@gmail.com>                                  //
+// Copyright (C) 2023 Mohamed <mohamedadlyi@github.com>                          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -54,17 +64,15 @@
 #include "feature/featuregui.h"
 #include "mainspectrum/mainspectrumgui.h"
 #include "commands/commandkeyreceiver.h"
-#include "gui/indicator.h"
 #include "gui/presetitem.h"
-#include "gui/addpresetdialog.h"
 #include "gui/pluginsdialog.h"
 #include "gui/aboutdialog.h"
-#include "gui/rollupwidget.h"
 #include "gui/audiodialog.h"
 #include "gui/graphicsdialog.h"
 #include "gui/loggingdialog.h"
 #include "gui/deviceuserargsdialog.h"
 #include "gui/sdrangelsplash.h"
+#include "gui/mdiutils.h"
 #include "gui/mypositiondialog.h"
 #include "gui/fftdialog.h"
 #include "gui/fftwisdomdialog.h"
@@ -87,7 +95,6 @@
 #include "dsp/dspdevicemimoengine.h"
 #include "plugin/pluginapi.h"
 #include "gui/glspectrum.h"
-#include "gui/glspectrumgui.h"
 #include "loggerwithfile.h"
 #include "webapi/webapirequestmapper.h"
 #include "webapi/webapiserver.h"
@@ -316,7 +323,17 @@ MainWindow::~MainWindow()
 	delete m_requestMapper;
 	delete m_apiAdapter;
 
+<<<<<<< HEAD
 	delete m_pluginManager;
+=======
+    m_statusTimer.stop();
+    m_apiServer->stop();
+    delete m_apiServer;
+    delete m_requestMapper;
+    delete m_apiAdapter;
+
+    delete m_pluginManager;
+>>>>>>> remotes/origin/master
 	delete m_dateTimeWidget;
 	delete m_showSystemWidget;
 
@@ -501,6 +518,7 @@ void MainWindow::sampleSourceCreate(
 				}
 			}
 
+<<<<<<< HEAD
 			if ((*it)->m_deviceSinkEngine) // it is a sink device
 			{
 				if ((deviceUISet->m_deviceAPI->getHardwareId() == (*it)->m_deviceAPI->getHardwareId()) &&
@@ -516,6 +534,20 @@ void MainWindow::sampleSourceCreate(
 	if (nbOfBuddies == 0) {
 		deviceUISet->m_deviceAPI->setBuddyLeader(true);
 	}
+=======
+    for (; it != m_deviceUIs.end(); ++it)
+    {
+        if (*it != deviceUISet) // do not add to itself
+        {
+            if ((deviceUISet->m_deviceAPI->getHardwareId() == (*it)->m_deviceAPI->getHardwareId()) &&
+                (deviceUISet->m_deviceAPI->getSamplingDeviceSerial() == (*it)->m_deviceAPI->getSamplingDeviceSerial()))
+            {
+                (*it)->m_deviceAPI->addBuddy(deviceUISet->m_deviceAPI);
+                nbOfBuddies++;
+            }
+        }
+    }
+>>>>>>> remotes/origin/master
 
 	// DeviceGUI *oldDeviceGUI = deviceUISet->m_deviceGUI; // store old GUI pointer for later
 
@@ -722,6 +754,7 @@ void MainWindow::sampleSinkCreate(
 				}
 			}
 
+<<<<<<< HEAD
 			if ((*it)->m_deviceSinkEngine) // it is a sink device
 			{
 				if ((deviceAPI->getHardwareId() == (*it)->m_deviceAPI->getHardwareId()) &&
@@ -737,6 +770,20 @@ void MainWindow::sampleSinkCreate(
 	if (nbOfBuddies == 0) {
 		deviceAPI->setBuddyLeader(true);
 	}
+=======
+    for (; it != m_deviceUIs.end(); ++it)
+    {
+        if (*it != deviceUISet) // do not add to itself
+        {
+            if ((deviceAPI->getHardwareId() == (*it)->m_deviceAPI->getHardwareId()) &&
+                (deviceAPI->getSamplingDeviceSerial() == (*it)->m_deviceAPI->getSamplingDeviceSerial()))
+            {
+                (*it)->m_deviceAPI->addBuddy(deviceAPI);
+                nbOfBuddies++;
+            }
+        }
+    }
+>>>>>>> remotes/origin/master
 
 	// DeviceGUI *oldDeviceGUI = deviceUISet->m_deviceGUI; // store old GUI pointer for later
 
@@ -1084,8 +1131,14 @@ void MainWindow::removeDeviceSet(int deviceSetIndex)
 		delete mimoAPI;
 	}
 
+<<<<<<< HEAD
 	m_deviceUIs.erase(m_deviceUIs.begin() + deviceSetIndex);
 	m_mainCore->removeDeviceSet(deviceSetIndex);
+=======
+    m_deviceUIs.erase(m_deviceUIs.begin() + deviceSetIndex);
+    m_mainCore->removeDeviceSet(deviceSetIndex);
+    DeviceEnumerator::instance()->renumeratetabIndex(deviceSetIndex);
+>>>>>>> remotes/origin/master
 
 	// Renumerate
 	for (int i = 0; i < (int)m_deviceUIs.size(); i++)
@@ -1453,6 +1506,7 @@ void MainWindow::loadConfiguration(const Configuration* configuration, bool from
 			sampleMIMOAdd(m_workspaces[deviceWorkspaceIndex], m_workspaces[spectrumWorkspaceIndex], bestDeviceIndex);
 		}
 
+<<<<<<< HEAD
 		m_deviceUIs.back()->m_deviceGUI->restoreGeometry(deviceSetPreset.getDeviceGeometry());
 		m_deviceUIs.back()->m_mainSpectrumGUI->restoreGeometry(deviceSetPreset.getSpectrumGeometry());
 		m_deviceUIs.back()->loadDeviceSetSettings(&deviceSetPreset, m_pluginManager->getPluginAPI(), &m_workspaces, nullptr);
@@ -1463,6 +1517,80 @@ void MainWindow::loadConfiguration(const Configuration* configuration, bool from
 			QApplication::processEvents();
 		}
 	}
+=======
+    for (const auto& deviceSetPreset : deviceSetPresets)
+    {
+        if (deviceSetPreset.isSourcePreset())
+        {
+            int bestDeviceIndex = DeviceEnumerator::instance()->getBestRxSamplingDeviceIndex(
+                deviceSetPreset.getSelectedDevice().m_deviceId,
+                deviceSetPreset.getSelectedDevice().m_deviceSerial,
+                deviceSetPreset.getSelectedDevice().m_deviceSequence,
+                deviceSetPreset.getSelectedDevice().m_deviceItemIndex
+            );
+            qDebug("MainWindow::loadConfiguration: add source %s in workspace %d spectrum in %d",
+                qPrintable(deviceSetPreset.getSelectedDevice().m_deviceId),
+                deviceSetPreset.getDeviceWorkspaceIndex(),
+                deviceSetPreset.getSpectrumWorkspaceIndex());
+            int deviceWorkspaceIndex = deviceSetPreset.getDeviceWorkspaceIndex() < m_workspaces.size() ?
+                deviceSetPreset.getDeviceWorkspaceIndex() :
+                0;
+            int spectrumWorkspaceIndex = deviceSetPreset.getSpectrumWorkspaceIndex() < m_workspaces.size() ?
+                deviceSetPreset.getSpectrumWorkspaceIndex() :
+                deviceWorkspaceIndex;
+            sampleSourceAdd(m_workspaces[deviceWorkspaceIndex], m_workspaces[spectrumWorkspaceIndex], bestDeviceIndex);
+        }
+        else if (deviceSetPreset.isSinkPreset())
+        {
+            int bestDeviceIndex = DeviceEnumerator::instance()->getBestTxSamplingDeviceIndex(
+                deviceSetPreset.getSelectedDevice().m_deviceId,
+                deviceSetPreset.getSelectedDevice().m_deviceSerial,
+                deviceSetPreset.getSelectedDevice().m_deviceSequence,
+                deviceSetPreset.getSelectedDevice().m_deviceItemIndex
+            );
+            qDebug("MainWindow::loadConfiguration: add sink %s in workspace %d spectrum in %d",
+                qPrintable(deviceSetPreset.getSelectedDevice().m_deviceId),
+                deviceSetPreset.getDeviceWorkspaceIndex(),
+                deviceSetPreset.getSpectrumWorkspaceIndex());
+            int deviceWorkspaceIndex = deviceSetPreset.getDeviceWorkspaceIndex() < m_workspaces.size() ?
+                deviceSetPreset.getDeviceWorkspaceIndex() :
+                0;
+            int spectrumWorkspaceIndex = deviceSetPreset.getSpectrumWorkspaceIndex() < m_workspaces.size() ?
+                deviceSetPreset.getSpectrumWorkspaceIndex() :
+                deviceWorkspaceIndex;
+            sampleSinkAdd(m_workspaces[deviceWorkspaceIndex], m_workspaces[spectrumWorkspaceIndex], bestDeviceIndex);
+        }
+        else if (deviceSetPreset.isMIMOPreset())
+        {
+            int bestDeviceIndex = DeviceEnumerator::instance()->getBestMIMOSamplingDeviceIndex(
+                deviceSetPreset.getSelectedDevice().m_deviceId,
+                deviceSetPreset.getSelectedDevice().m_deviceSerial,
+                deviceSetPreset.getSelectedDevice().m_deviceSequence
+            );
+            qDebug("MainWindow::loadConfiguration: add MIMO %s in workspace %d spectrum in %d",
+                qPrintable(deviceSetPreset.getSelectedDevice().m_deviceId),
+                deviceSetPreset.getDeviceWorkspaceIndex(),
+                deviceSetPreset.getSpectrumWorkspaceIndex());
+            int deviceWorkspaceIndex = deviceSetPreset.getDeviceWorkspaceIndex() < m_workspaces.size() ?
+                deviceSetPreset.getDeviceWorkspaceIndex() :
+                0;
+            int spectrumWorkspaceIndex = deviceSetPreset.getSpectrumWorkspaceIndex() < m_workspaces.size() ?
+                deviceSetPreset.getSpectrumWorkspaceIndex() :
+                deviceWorkspaceIndex;
+            sampleMIMOAdd(m_workspaces[deviceWorkspaceIndex], m_workspaces[spectrumWorkspaceIndex], bestDeviceIndex);
+        }
+        else
+        {
+            qDebug() << "MainWindow::loadConfiguration: Unknown preset type: " << deviceSetPreset.getPresetType();
+        }
+
+        if (m_deviceUIs.size() > 0)
+        {
+            MDIUtils::restoreMDIGeometry(m_deviceUIs.back()->m_deviceGUI, deviceSetPreset.getDeviceGeometry());
+            MDIUtils::restoreMDIGeometry(m_deviceUIs.back()->m_mainSpectrumGUI, deviceSetPreset.getSpectrumGeometry());
+            m_deviceUIs.back()->loadDeviceSetSettings(&deviceSetPreset, m_pluginManager->getPluginAPI(), &m_workspaces, nullptr);
+        }
+>>>>>>> remotes/origin/master
 
 	// Features
 	if (waitBox)
@@ -1532,7 +1660,23 @@ void MainWindow::saveConfiguration(Configuration* configuration)
 		deviceSetPresets.back().setDeviceWorkspaceIndex(deviceUISet->m_deviceGUI->getWorkspaceIndex());
 	}
 
+<<<<<<< HEAD
 	m_featureUIs[0]->saveFeatureSetSettings(&configuration->getFeatureSetPreset());
+=======
+    for (const auto& deviceUISet : m_deviceUIs)
+    {
+        deviceSetPresets.push_back(Preset());
+        deviceUISet->saveDeviceSetSettings(&deviceSetPresets.back());
+        deviceSetPresets.back().setSpectrumGeometry(MDIUtils::saveMDIGeometry(deviceUISet->m_mainSpectrumGUI));
+        deviceSetPresets.back().setSpectrumWorkspaceIndex(deviceUISet->m_mainSpectrumGUI->getWorkspaceIndex());
+        deviceSetPresets.back().setDeviceGeometry(MDIUtils::saveMDIGeometry(deviceUISet->m_deviceGUI));
+        deviceSetPresets.back().setDeviceWorkspaceIndex(deviceUISet->m_deviceGUI->getWorkspaceIndex());
+        qDebug("MainWindow::saveConfiguration: %s device in workspace %d spectrum in %d",
+            qPrintable(deviceUISet->m_deviceAPI->getSamplingDeviceId()),
+            deviceUISet->m_deviceGUI->getWorkspaceIndex(),
+            deviceUISet->m_mainSpectrumGUI->getWorkspaceIndex());
+    }
+>>>>>>> remotes/origin/master
 
 	for (const auto& workspace : m_workspaces)
 	{
@@ -3028,7 +3172,7 @@ void MainWindow::loadDefaultPreset(const QString& pluginId, SerializableInterfac
 
 void MainWindow::on_action_About_triggered()
 {
-	AboutDialog dlg(m_apiHost.isEmpty() ? "127.0.0.1" : m_apiHost, m_apiPort, m_mainCore->m_settings, this);
+	AboutDialog dlg(m_apiHost.isEmpty() ? "0.0.0.0" : m_apiHost, m_apiPort, m_mainCore->m_settings, this);
 	dlg.exec();
 }
 

@@ -32,8 +32,6 @@
 #include "dsp/interpolator.h"
 #include "dsp/rootraisedcosine.h"
 #include "util/movingaverage.h"
-#include "dsp/fftfilt.h"
-#include "util/message.h"
 
 #include "datvmodsettings.h"
 
@@ -102,7 +100,7 @@ private:
 
     QUdpSocket *m_udpSocket;                                    //!< UDP socket to receive MPEG transport stream via
     int m_udpByteCount;                                         //!< Count of bytes received via UDP for bitrate calculation
-    int64_t m_udpAbsByteCount;                                  //!< Count of bytes received via UDP since the begining
+    int64_t m_udpAbsByteCount;                                  //!< Count of bytes received via UDP since the beginning
     boost::chrono::steady_clock::time_point m_udpTimingStart;   //!< When we last started counting UDP bytes
     uint8_t m_udpBuffer[188*10];
     int m_udpBufferIdx;                                         //!< TS frame index into buffer

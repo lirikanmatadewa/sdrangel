@@ -39,6 +39,8 @@ ChannelSettings:
       $ref: "http://swgserver:8081/api/swagger/include/BFMDemod.yaml#/BFMDemodSettings"
     ChannelAnalyzerSettings:
       $ref: "http://swgserver:8081/api/swagger/include/ChannelAnalyzer.yaml#/ChannelAnalyzerSettings"
+    ChannelPowerSettings:
+      $ref: "http://swgserver:8081/api/swagger/include/ChannelPower.yaml#/ChannelPowerSettings"
     ChirpChatDemodSettings:
       $ref: "http://swgserver:8081/api/swagger/include/ChirpChatDemod.yaml#/ChirpChatDemodSettings"
     ChirpChatModSettings:
@@ -55,6 +57,8 @@ ChannelSettings:
       $ref: "http://swgserver:8081/api/swagger/include/DSCDemod.yaml#/DSCDemodSettings"
     DSDDemodSettings:
       $ref: "http://swgserver:8081/api/swagger/include/DSDDemod.yaml#/DSDDemodSettings"
+    EndOfTrainDemodSettings:
+      $ref: "http://swgserver:8081/api/swagger/include/EndOfTrainDemod.yaml#/EndOfTrainDemodSettings"
     FileSinkSettings:
       $ref: "http://swgserver:8081/api/swagger/include/FileSink.yaml#/FileSinkSettings"
     FileSourceSettings:
@@ -131,6 +135,8 @@ ChannelSettings:
     #   $ref: "http://swgserver:8081/api/swagger/include/VORDemodMC.yaml#/VORDemodMCSettings"
     VORDemodSettings:
       $ref: "http://swgserver:8081/api/swagger/include/VORDemod.yaml#/VORDemodSettings"
+    WDSPRxSettings:
+      $ref: "http://swgserver:8081/api/swagger/include/WDSPRx.yaml#/WDSPRxSettings"
     WFMDemodSettings:
       $ref: "http://swgserver:8081/api/swagger/include/WFMDemod.yaml#/WFMDemodSettings"
     WFMModSettings:

@@ -29,6 +29,7 @@
 #include "SWGAMModReport.h"
 #include "SWGATVModReport.h"
 #include "SWGBFMDemodReport.h"
+#include "SWGChannelPowerReport.h"
 #include "SWGChirpChatDemodReport.h"
 #include "SWGChirpChatModReport.h"
 #include "SWGDATVDemodReport.h"
@@ -36,6 +37,7 @@
 #include "SWGDOA2Report.h"
 #include "SWGDSCDemodReport.h"
 #include "SWGDSDDemodReport.h"
+#include "SWGEndOfTrainDemodReport.h"
 #include "SWGFT8DemodReport.h"
 #include "SWGFileSinkReport.h"
 #include "SWGFileSourceReport.h"
@@ -68,6 +70,7 @@
 #include "SWGUDPSinkReport.h"
 #include "SWGUDPSourceReport.h"
 #include "SWGVORDemodReport.h"
+#include "SWGWDSPRxReport.h"
 #include "SWGWFMDemodReport.h"
 #include "SWGWFMModReport.h"
 #include <QString>
@@ -117,6 +120,9 @@ public:
     SWGBFMDemodReport* getBfmDemodReport();
     void setBfmDemodReport(SWGBFMDemodReport* bfm_demod_report);
 
+    SWGChannelPowerReport* getChannelPowerReport();
+    void setChannelPowerReport(SWGChannelPowerReport* channel_power_report);
+
     SWGChirpChatDemodReport* getChirpChatDemodReport();
     void setChirpChatDemodReport(SWGChirpChatDemodReport* chirp_chat_demod_report);
 
@@ -137,6 +143,9 @@ public:
 
     SWGDSDDemodReport* getDsdDemodReport();
     void setDsdDemodReport(SWGDSDDemodReport* dsd_demod_report);
+
+    SWGEndOfTrainDemodReport* getEndOfTrainDemodReport();
+    void setEndOfTrainDemodReport(SWGEndOfTrainDemodReport* end_of_train_demod_report);
 
     SWGIEEE_802_15_4_ModReport* getIeee802154ModReport();
     void setIeee802154ModReport(SWGIEEE_802_15_4_ModReport* ieee_802_15_4_mod_report);
@@ -234,6 +243,9 @@ public:
     SWGVORDemodReport* getVorDemodReport();
     void setVorDemodReport(SWGVORDemodReport* vor_demod_report);
 
+    SWGWDSPRxReport* getWdspRxReport();
+    void setWdspRxReport(SWGWDSPRxReport* wdsp_rx_report);
+
     SWGWFMDemodReport* getWfmDemodReport();
     void setWfmDemodReport(SWGWFMDemodReport* wfm_demod_report);
 
@@ -271,6 +283,9 @@ private:
     SWGBFMDemodReport* bfm_demod_report;
     bool m_bfm_demod_report_isSet;
 
+    SWGChannelPowerReport* channel_power_report;
+    bool m_channel_power_report_isSet;
+
     SWGChirpChatDemodReport* chirp_chat_demod_report;
     bool m_chirp_chat_demod_report_isSet;
 
@@ -291,6 +306,9 @@ private:
 
     SWGDSDDemodReport* dsd_demod_report;
     bool m_dsd_demod_report_isSet;
+
+    SWGEndOfTrainDemodReport* end_of_train_demod_report;
+    bool m_end_of_train_demod_report_isSet;
 
     SWGIEEE_802_15_4_ModReport* ieee_802_15_4_mod_report;
     bool m_ieee_802_15_4_mod_report_isSet;
@@ -387,6 +405,9 @@ private:
 
     SWGVORDemodReport* vor_demod_report;
     bool m_vor_demod_report_isSet;
+
+    SWGWDSPRxReport* wdsp_rx_report;
+    bool m_wdsp_rx_report_isSet;
 
     SWGWFMDemodReport* wfm_demod_report;
     bool m_wfm_demod_report_isSet;

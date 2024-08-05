@@ -1,6 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Jon Beniston, M7RCE                                        //
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2020-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2021 Christoph Berg <myon@debian.org>                           //
+// Copyright (C) 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>               //
+// Copyright (C) 2022 Jiří Pinkava <jiri.pinkava@rossum.ai>                      //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -23,6 +25,10 @@
 #include <QSerialPort>
 #include <QRegularExpression>
 
+#include "maincore.h"
+
+#include "SWGTargetAzimuthElevation.h"
+
 #include "gs232controller.h"
 #include "gs232controllerworker.h"
 #include "gs232controllerreport.h"
@@ -30,7 +36,8 @@
 MESSAGE_CLASS_DEFINITION(GS232ControllerWorker::MsgConfigureGS232ControllerWorker, Message)
 MESSAGE_CLASS_DEFINITION(GS232ControllerReport::MsgReportAzAl, Message)
 
-GS232ControllerWorker::GS232ControllerWorker() :
+GS232ControllerWorker::GS232ControllerWorker(GS232Controller *controller) :
+    m_controller(controller),
     m_msgQueueToFeature(nullptr),
     m_device(nullptr),
     m_serialPort(this),
@@ -191,6 +198,8 @@ void GS232ControllerWorker::applySettings(const GS232ControllerSettings& setting
         {
             setAzimuth(azimuth);
         }
+
+        sendToSkyMap(azimuth, elevation);
     }
 }
 
@@ -278,3 +287,18 @@ void GS232ControllerWorker::update()
     }
 }
 
+void GS232ControllerWorker::sendToSkyMap(float azimuth, float elevation)
+{
+    QList<ObjectPipe*> targetPipes;
+    MainCore::instance()->getMessagePipes().getMessagePipes(m_controller, "target", targetPipes);
+
+    for (const auto& pipe : targetPipes)
+    {
+        MessageQueue *messageQueue = qobject_cast<MessageQueue*>(pipe->m_element);
+        SWGSDRangel::SWGTargetAzimuthElevation *swgTarget = new SWGSDRangel::SWGTargetAzimuthElevation();
+        swgTarget->setName(new QString("Rotator"));
+        swgTarget->setAzimuth(azimuth);
+        swgTarget->setElevation(elevation);
+        messageQueue->push(MainCore::MsgTargetAzimuthElevation::create(m_controller, swgTarget));
+    }
+}

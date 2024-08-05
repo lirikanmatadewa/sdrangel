@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2017, 2018 Edouard Griffiths, F4EXB                             //
+// Copyright (C) 2018-2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
 // Copyright (C) 2017 Sergey Kostanbaev, Fairwaves Inc.                          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
@@ -1007,7 +1007,7 @@ bool XTRXInput::applySettings(const XTRXInputSettings& settings, const QList<QSt
         forceNCOFrequency = true;
     }
 
-    if (settingsKeys.contains("useReverseAPI"))
+    if (settings.m_useReverseAPI)
     {
         bool fullUpdate = (settingsKeys.contains("useReverseAPI") && settings.m_useReverseAPI) ||
             settingsKeys.contains("reverseAPIAddress") ||

@@ -1,6 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 F4EXB                                                      //
-// written by Edouard Griffiths                                                  //
+// Copyright (C) 2019, 2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>         //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -23,7 +22,6 @@
 #include <algorithm>
 
 #include "export.h"
-#include "util/message.h"
 
 #include "channelsamplesource.h"
 

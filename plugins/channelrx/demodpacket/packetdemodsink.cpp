@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2021, 2023 Jon Beniston, M7RCE <jon@beniston.com>               //
+// Copyright (C) 2021-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -20,10 +20,9 @@
 
 #include <complex.h>
 
-#include "dsp/dspengine.h"
 #include "dsp/datafifo.h"
-#include "util/db.h"
-#include "util/stepfunctions.h"
+#include "device/deviceapi.h"
+#include "channel/channelwebapiutils.h"
 #include "maincore.h"
 
 #include "packetdemod.h"
@@ -191,7 +190,23 @@ void PacketDemodSink::processOneSample(Complex &ci)
                                 qDebug() << "RX: " << rxPacket.toHex();
                                 if (getMessageQueueToChannel())
                                 {
-                                    MainCore::MsgPacket *msg = MainCore::MsgPacket::create(m_packetDemod, rxPacket, QDateTime::currentDateTime()); // FIXME pointer
+                                    QDateTime dateTime = QDateTime::currentDateTime();
+                                    if (m_settings.m_useFileTime)
+                                    {
+                                        QString hardwareId = m_packetDemod->getDeviceAPI()->getHardwareId();
+
+                                        if ((hardwareId == "FileInput") || (hardwareId == "SigMFFileInput"))
+                                        {
+                                            QString dateTimeStr;
+                                            int deviceIdx = m_packetDemod->getDeviceSetIndex();
+
+                                            if (ChannelWebAPIUtils::getDeviceReportValue(deviceIdx, "absoluteTime", dateTimeStr)) {
+                                                dateTime = QDateTime::fromString(dateTimeStr, Qt::ISODateWithMs);
+                                            }
+                                        }
+                                    }
+
+                                    MainCore::MsgPacket *msg = MainCore::MsgPacket::create(m_packetDemod, rxPacket, dateTime);
                                     getMessageQueueToChannel()->push(msg);
                                 }
                             }

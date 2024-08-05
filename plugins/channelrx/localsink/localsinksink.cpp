@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2019-2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -20,7 +20,6 @@
 #include <boost/crc.hpp>
 #include <boost/cstdint.hpp>
 #include "dsp/devicesamplesource.h"
-#include "dsp/hbfilterchainconverter.h"
 #include "dsp/spectrumvis.h"
 #include "dsp/fftfilt.h"
 #include "util/db.h"

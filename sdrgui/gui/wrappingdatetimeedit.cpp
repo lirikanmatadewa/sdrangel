@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2021 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -29,7 +29,11 @@ WrappingDateTimeEdit::WrappingDateTimeEdit(QWidget *parent) :
 
 void WrappingDateTimeEdit::stepBy(int steps)
 {
-    if (currentSection() == QDateTimeEdit::MonthSection)
+    if (currentSection() == QDateTimeEdit::YearSection)
+    {
+        clipAndSetDate(date().addYears(steps));
+    }
+    else if (currentSection() == QDateTimeEdit::MonthSection)
     {
         clipAndSetDate(date().addMonths(steps));
     }

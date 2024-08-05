@@ -1,6 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2023 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2023 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -20,12 +19,7 @@
 
 #include <complex.h>
 
-#include "dsp/dspengine.h"
-#include "dsp/datafifo.h"
 #include "dsp/scopevis.h"
-#include "util/db.h"
-#include "util/stepfunctions.h"
-#include "maincore.h"
 
 #include "heatmap.h"
 #include "heatmapsink.h"
@@ -199,7 +193,7 @@ void HeatMapSink::applySettings(const HeatMapSettings& settings, bool force)
         || (settings.m_sampleRate != m_settings.m_sampleRate)
         || force)
     {
-        m_averageCnt = (int)((settings.m_averagePeriodUS * settings.m_sampleRate / 1e6));
+        m_averageCnt = (int)((settings.m_averagePeriodUS * (qint64)settings.m_sampleRate / 1e6));
         // For low sample rates, we want a small buffer, so scope update isn't too slow
         if (settings.m_sampleRate < 100) {
             m_sampleBufferSize = 1;

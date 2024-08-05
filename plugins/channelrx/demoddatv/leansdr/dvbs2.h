@@ -1,18 +1,23 @@
-// This file is part of LeanSDR Copyright (C) 2016-2019 <pabr@pabr.org>.
-// See the toplevel README for more information.
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+///////////////////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2019-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>              //
+// Copyright (C) 2019 Davide Gerhard <rainbow@irh.it>                                //
+// Copyright (C) 2022 Jon Beniston, M7RCE <jon@beniston.com>                         //
+//                                                                                   //
+// This file is part of LeanSDR Copyright (C) 2016-2019 <pabr@pabr.org>.             //
+//                                                                                   //
+// This program is free software; you can redistribute it and/or modify              //
+// it under the terms of the GNU General Public License as published by              //
+// the Free Software Foundation as version 3 of the License, or                      //
+// (at your option) any later version.                                               //
+//                                                                                   //
+// This program is distributed in the hope that it will be useful,                   //
+// but WITHOUT ANY WARRANTY; without even the implied warranty of                    //
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                      //
+// GNU General Public License V3 for more details.                                   //
+//                                                                                   //
+// You should have received a copy of the GNU General Public License                 //
+// along with this program. If not, see <http://www.gnu.org/licenses/>.              //
+///////////////////////////////////////////////////////////////////////////////////////
 
 // Latest updates:
 //   |  S2: Revert to tracking all symbols. pabr committed on Mar 6, 2019
@@ -576,7 +581,7 @@ struct s2_frame_receiver : runnable
     bool strongpls;      // PL symbols at max amplitude (default: RMS)
     uint32_t modcods;    // Bitmask of desired modcods
     uint8_t framesizes;  // Bitmask of desired frame sizes
-    bool fastlock;       // Synchronize more agressively
+    bool fastlock;       // Synchronize more aggressively
     bool fastdrift;      // Carrier drift faster than pilots
     float freq_tol;      // Tolerance on carrier frequency
     float sr_tol;        // Tolerance on symbol rate
@@ -750,7 +755,7 @@ struct s2_frame_receiver : runnable
         }
     }
 
-    // State transtion
+    // State transition
     void enter_frame_detect()
     {
         state = FRAME_DETECT;

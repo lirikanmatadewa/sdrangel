@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2017 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2017-2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2021 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -31,7 +32,7 @@ struct ATVModSettings
         ATVStdPAL625,          //!< standard 625 lines B, D, G, H, I, K, K1 and N
         ATVStdPAL525,          //!< standard 525 lines M
         ATVStd819,             //!< standard 819 lines F (Belgium)
-        ATVStdShortInterlaced, //!< non-standard with mimimal vertical sync sequences permitted by SDR technology
+        ATVStdShortInterlaced, //!< non-standard with minimal vertical sync sequences permitted by SDR technology
         ATVStdShort,           //!< same as above
         ATVStdHSkip            //!< first introduced vertical sync by skipping horizontal sync to indicate start of image
     } ATVStd;

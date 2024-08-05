@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2022 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2019-2020, 2022-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com> //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -24,9 +24,6 @@
 #include "dsp/phasediscri.h"
 #include "dsp/nco.h"
 #include "dsp/interpolator.h"
-#include "dsp/firfilter.h"
-#include "dsp/afsquelch.h"
-#include "dsp/afsquelch.h"
 #include "audio/audiofifo.h"
 #include "util/movingaverage.h"
 #include "util/doublebufferfifo.h"

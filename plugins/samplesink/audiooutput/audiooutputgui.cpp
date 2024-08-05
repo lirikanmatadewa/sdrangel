@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>         //
+// Copyright (C) 2022-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -19,7 +20,6 @@
 #include <QFileDialog>
 
 #include "ui_audiooutputgui.h"
-#include "gui/colormapper.h"
 #include "gui/glspectrum.h"
 #include "gui/basicdevicesettingsdialog.h"
 #include "gui/audioselectdialog.h"
@@ -63,6 +63,7 @@ AudioOutputGui::AudioOutputGui(DeviceUISet *deviceUISet, QWidget* parent) :
 
     makeUIConnections();
     DialPopup::addPopupsToChildDials(this);
+    m_resizer.enableChildMouseTracking();
 }
 
 AudioOutputGui::~AudioOutputGui()
@@ -180,6 +181,7 @@ void AudioOutputGui::displaySettings()
 void AudioOutputGui::on_deviceSelect_clicked()
 {
     AudioSelectDialog audioSelect(DSPEngine::instance()->getAudioDeviceManager(), m_settings.m_deviceName, false, this);
+    new DialogPositioner(&audioSelect, false);
     audioSelect.exec();
 
     if (audioSelect.m_selected)

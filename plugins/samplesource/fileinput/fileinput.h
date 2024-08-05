@@ -1,5 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2015-2019 Edouard Griffiths, F4EXB                              //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2014 John Greb <hexameron@spam.no>                              //
+// Copyright (C) 2015-2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2021, 2023 Jon Beniston, M7RCE <jon@beniston.com>               //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -346,6 +350,7 @@ public:
 	int m_sampleRate;
 	quint32 m_sampleSize;
 	quint64 m_centerFrequency;
+	qint64 m_dataStartPos;       //!< Position of IQ data in file
     quint64 m_recordLengthMuSec; //!< record length in microseconds computed from file size
     quint64 m_startingTimeStamp;
 	QTimer m_masterTimer;

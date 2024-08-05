@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2020-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -23,13 +24,10 @@
 
 #include "device/deviceuiset.h"
 #include "plugin/pluginapi.h"
-#include "util/simpleserializer.h"
 #include "util/db.h"
 #include "dsp/dspengine.h"
 #include "dsp/dspcommands.h"
-#include "gui/crightclickenabler.h"
 #include "gui/basicchannelsettingsdialog.h"
-#include "gui/devicestreamselectiondialog.h"
 #include "gui/dialpopup.h"
 #include "gui/dialogpositioner.h"
 #include "maincore.h"
@@ -96,6 +94,7 @@ bool ChirpChatModGUI::handleMessage(const Message& message)
         fourthsChirps += m_settings.hasSyncWord() ? 8 : 0;
         fourthsChirps += m_settings.getNbSFDFourths();
         float controlMs = fourthsChirps * fourthsMs; // preamble + sync word + SFD
+        ui->timeMessageLengthText->setText(tr("%1").arg(rpt.getNbSymbols()));
         ui->timePayloadText->setText(tr("%1 ms").arg(QString::number(rpt.getPayloadTimeMs(), 'f', 0)));
         ui->timeTotalText->setText(tr("%1 ms").arg(QString::number(rpt.getPayloadTimeMs() + controlMs, 'f', 0)));
         ui->timeSymbolText->setText(tr("%1 ms").arg(QString::number(4.0*fourthsMs, 'f', 1)));
@@ -469,6 +468,7 @@ ChirpChatModGUI::ChirpChatModGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet,
     makeUIConnections();
     applySettings();
     DialPopup::addPopupsToChildDials(this);
+    m_resizer.enableChildMouseTracking();
 }
 
 ChirpChatModGUI::~ChirpChatModGUI()

@@ -1,6 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2018 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2022 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2022-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -22,12 +21,9 @@
 
 #include "device/deviceuiset.h"
 #include "gui/basicchannelsettingsdialog.h"
-#include "gui/devicestreamselectiondialog.h"
 #include "gui/dialpopup.h"
 #include "gui/dialogpositioner.h"
-#include "dsp/hbfilterchainconverter.h"
 #include "dsp/dspcommands.h"
-#include "mainwindow.h"
 
 #include "remotetcpsinkgui.h"
 #include "remotetcpsink.h"
@@ -215,6 +211,7 @@ RemoteTCPSinkGUI::RemoteTCPSinkGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISe
     makeUIConnections();
     applyAllSettings();
     DialPopup::addPopupsToChildDials(this);
+    m_resizer.enableChildMouseTracking();
 }
 
 RemoteTCPSinkGUI::~RemoteTCPSinkGUI()
@@ -282,6 +279,7 @@ void RemoteTCPSinkGUI::displayRateAndShift()
 {
     m_channelMarker.setCenterFrequency(m_settings.m_inputFrequencyOffset);
     m_channelMarker.setBandwidth(m_settings.m_channelSampleRate);
+    //m_channelMarker.setVisible(m_settings.m_channelSampleRate != m_basebandSampleRate); // Hide marker if it takes up full bandwidth
 }
 
 void RemoteTCPSinkGUI::leaveEvent(QEvent* event)
@@ -389,17 +387,19 @@ void RemoteTCPSinkGUI::channelMarkerHighlightedByCursor()
     setHighlighted(m_channelMarker.getHighlighted());
 }
 
-void RemoteTCPSinkGUI::on_deltaFrequency_changed(int index)
+void RemoteTCPSinkGUI::on_deltaFrequency_changed(qint64 value)
 {
-    m_settings.m_inputFrequencyOffset = index;
+    m_channelMarker.setCenterFrequency(value);
+    m_settings.m_inputFrequencyOffset = value;
     applySetting("inputFrequencyOffset");
 }
 
-void RemoteTCPSinkGUI::on_channelSampleRate_changed(int index)
+void RemoteTCPSinkGUI::on_channelSampleRate_changed(int value)
 {
-    m_settings.m_channelSampleRate = index;
+    m_settings.m_channelSampleRate = value;
     m_bwAvg.reset();
     applySetting("channelSampleRate");
+    displayRateAndShift();
 }
 
 void RemoteTCPSinkGUI::on_gain_valueChanged(int value)

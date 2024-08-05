@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2018 F4EXB                                                      //
-// written by Edouard Griffiths                                                  //
+// Copyright (C) 2018-2020 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2022 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -40,7 +40,7 @@ AudioSelectDialog::AudioSelectDialog(const AudioDeviceManager* audioDeviceManage
     defaultItem->setText(2, tr("%1").arg(sampleRate));
     defaultItem->setTextAlignment(2, Qt::AlignRight);
 
-    QList<AudioDeviceInfo> devices = input ? m_audioDeviceManager->getInputDevices() : m_audioDeviceManager->getOutputDevices();
+    const QList<AudioDeviceInfo> &devices = input ? AudioDeviceInfo::availableInputDevices() : AudioDeviceInfo::availableOutputDevices();
 
     for(QList<AudioDeviceInfo>::const_iterator it = devices.begin(); it != devices.end(); ++it)
     {

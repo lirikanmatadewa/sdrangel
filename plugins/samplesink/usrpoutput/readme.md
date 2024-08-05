@@ -4,7 +4,7 @@
 
 This output sample sink plugin sends its samples to a [USRP device](https://www.ettus.com/products/).
 
-When using a USRP device over a network, you have to create a non discoverable device reference in the [user arguments dialog](https://github.com/f4exb/sdrangel/blob/master/sdrgui/deviceuserargs.md) from the main window Preferences > Devices menu. You must use the USRP hardware ID then specify the device address with an addr parameter in the user arguments for example: addr=192.168.1.10. Note that this will become effective once SDRangel is restarted.
+When using a USRP device over a network, you have to create a non discoverable device reference in the [user arguments dialog](https://github.com/f4exb/sdrangel/blob/master/sdrgui/deviceuserargs.md) from the main window Preferences > Devices menu. You must use the USRP hardware ID then specify the device address with an addr parameter in the user arguments for example: `addr=192.168.1.10`. Note that this will become effective once SDRangel is restarted.
 
 <h2>Interface</h2>
 
@@ -101,7 +101,7 @@ Use this toggle button to switch the sample rate input next (8) between host to 
 
 The I/Q stream from the baseband can be upsampled by a power of two by software inside the plugin before being sent to the USRP device. Possible values are increasing powers of two: 1 (no interpolation), 2, 4, 8, 16, 32.
 
-<h3>10: Gain</h2>
+<h3>10: Gain</h3>
 
 Use this slider to adjust the global gain of the Tx chain. The allowable values of gain while depend upon the USRP device. The value in dB appears at the right of the slider.
 

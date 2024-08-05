@@ -1,6 +1,12 @@
 ///////////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
 // written by Christian Daniel                                                   //
+// Copyright (C) 2015-2020, 2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2018 fire <fire@80211.at>                                       //
+// Copyright (C) 2019 Davide Gerhard <rainbow@irh.it>                            //
+// Copyright (C) 2020 Vort <vvort@yandex.ru>                                     //
+// Copyright (C) 2022-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2022 Jiří Pinkava <jiri.pinkava@rossum.ai>                      //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -144,12 +150,25 @@ void ValueDial::setValueRange(uint numDigits, quint64 min, quint64 max)
     m_valueMin = min;
     m_valueMax = max;
 
-    m_text = formatText(m_value);
+    if (m_animationTimer.isActive())
+    {
+        m_textNew = formatText(m_valueNew);
 
-    if (m_value < min) {
-        setValue(min);
-    } else if (m_value > max) {
-        setValue(max);
+        if (m_valueNew < min) {
+            setValue(min);
+        } else if (m_valueNew > max) {
+            setValue(max);
+        }
+    }
+    else
+    {
+        m_text = formatText(m_value);
+
+        if (m_value < min) {
+            setValue(min);
+        } else if (m_value > max) {
+            setValue(max);
+        }
     }
 
     setFixedWidth((m_numDigits + m_numDecimalPoints) * m_digitWidth + 2);
@@ -582,7 +601,7 @@ void ValueDial::keyPressEvent(QKeyEvent *value)
         emit changed(m_valueNew);
         m_cursor++;
 
-        if (m_text[m_cursor] == m_groupSeparator) {
+        if ((m_cursor >= 0) && (m_cursor < m_text.size()) && (m_text[m_cursor] == m_groupSeparator)) {
             m_cursor++;
         }
 

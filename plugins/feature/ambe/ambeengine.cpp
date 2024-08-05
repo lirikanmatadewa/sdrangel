@@ -1,6 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 F4EXB                                                      //
-// written by Edouard Griffiths                                                  //
+// Copyright (C) 2016-2019, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2017 Ziga S <ziga.svetina@gmail.com>                            //
+// Copyright (C) 2020 Kacper Michajłow <kasper93@gmail.com>                      //
+// Copyright (C) 2022 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -150,7 +152,7 @@ void AMBEEngine::register_comport(
         //std::cerr << "register_comport: dir: "<< dir << " driver: " << driver << std::endl;
         std::string devfile = std::string("/dev/") + basename((char *) dir.c_str());
 
-        // Put serial8250-devices in a seperate list
+        // Put serial8250-devices in a separate list
         if (driver == "serial8250") {
             comList8250.push_back(devfile);
         } else {

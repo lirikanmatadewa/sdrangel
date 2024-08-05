@@ -1,5 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2021 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2022 Jiří Pinkava <jiri.pinkava@rossum.ai>                      //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -22,6 +25,7 @@
 #include <QRecursiveMutex>
 
 #include "dsp/samplemififo.h"
+#include "util/message.h"
 #include "util/messagequeue.h"
 #include "interferometerstreamsink.h"
 #include "interferometercorr.h"
@@ -29,6 +33,7 @@
 class DownChannelizer;
 class BasebandSampleSink;
 class ScopeVis;
+class DeviceSampleSource;
 
 class InterferometerBaseband : public QObject
 {
@@ -99,6 +104,26 @@ public:
         { }
     };
 
+    class MsgConfigureLocalDeviceSampleSource : public Message {
+        MESSAGE_CLASS_DECLARATION
+
+    public:
+        static MsgConfigureLocalDeviceSampleSource* create(DeviceSampleSource *deviceSampleSource) {
+            return new MsgConfigureLocalDeviceSampleSource(deviceSampleSource);
+        }
+
+        DeviceSampleSource *getDeviceSampleSource() const { return m_deviceSampleSource; }
+
+    private:
+
+        MsgConfigureLocalDeviceSampleSource(DeviceSampleSource *deviceSampleSource) :
+            Message(),
+            m_deviceSampleSource(deviceSampleSource)
+        { }
+
+        DeviceSampleSource *m_deviceSampleSource;
+    };
+
     InterferometerBaseband(int fftSize);
     ~InterferometerBaseband();
     void reset();
@@ -108,9 +133,11 @@ public:
     void setSpectrumSink(BasebandSampleSink *spectrumSink) { m_spectrumSink = spectrumSink; }
     void setScopeSink(ScopeVis *scopeSink) { m_scopeSink = scopeSink; }
     void setPhase(int phase) { m_correlator.setPhase(phase); }
+    void setGain(int gain) { m_correlator.setGain(gain); }
 
 	void feed(const SampleVector::const_iterator& begin, const SampleVector::const_iterator& end, unsigned int streamIndex);
     void setBasebandSampleRate(unsigned int sampleRate);
+    void play(bool play) { m_play = play; }
 
 private:
     void processFifo(const std::vector<SampleVector>& data, unsigned int ibegin, unsigned int iend);
@@ -128,6 +155,8 @@ private:
 	MessageQueue m_inputMessageQueue; //!< Queue for asynchronous inbound communication
     QRecursiveMutex m_mutex;
     unsigned int m_lastStream;
+    DeviceSampleSource *m_localSampleSource;
+    bool m_play;
 
 private slots:
     void handleInputMessages();

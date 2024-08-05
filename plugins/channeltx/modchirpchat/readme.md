@@ -13,15 +13,13 @@ LoRa is a property of Semtech and the details of the protocol are not made publi
 
 This LoRa encoder is designed for experimentation. For production grade applications it is recommended to use dedicated hardware instead.
 
-Modulation characteristics from LoRa have been augmented with more bandwidths and FFT bin collations (DE factor). Plain TTY and ASCII have also been added and there are plans to add some more complex typically amateur radio MFSK based modes like JT65.
-
-Note: this plugin is officially supported since version 6.
+Modulation characteristics from LoRa have been augmented with more bandwidths and FFT bin collations (DE factor). Plain TTY and ASCII have also been added that match character value to symbols directly. The FT protocol used in FT8 and FT4 is introduced packing the 174 bits payload into (SF -DE) bits symbols. There are plans to add some more of these typically amateur radio MFSK based modes like JT65.
 
 <h2>Interface</h2>
 
 The top and bottom bars of the channel window are described [here](../../../sdrgui/channel/readme.md)
 
-![ChitpChat Modulator plugin GUI](../../../doc/img/ChirpChatMod_plugin.png)
+![ChirpChat Modulator plugin GUI](../../../doc/img/ChirpChatMod_plugin.png)
 
 <h3>1: Frequency shift from center frequency of reception</h3>
 
@@ -69,19 +67,22 @@ Thus available bandwidths are:
   - **2604** (333333 / 128) Hz not in LoRa standard
   - **1500** (384000 / 256) Hz not in LoRa standard
   - **750** (384000 / 512) Hz not in LoRa standard
+  - **488** (500000 / 1024) Hz not in LoRa standard
   - **375** (384000 / 1024) Hz not in LoRa standard
 
 The ChirpChat signal is oversampled by four therefore it needs a baseband of at least four times the bandwidth. This drives the maximum value on the slider automatically.
 
 <h3>5: Spread Factor</h3>
 
-This is the Spread Factor parameter of the ChirpChat signal. This is the log2 of the possible frequency shifts used over the bandwidth (3). The number of symbols is 2<sup>SF-DE</sup> where SF is the spread factor and DE the  Distance Enhancement factor (8). To
+This is the Spread Factor parameter of the ChirpChat signal. This is the log2 of the possible frequency shifts used over the bandwidth (3). The number of symbols is 2<sup>SF-DE</sup> where SF is the spread factor and DE the  Distance Enhancement factor (6).
 
 <h3>6: Distance Enhancement factor</h3>
 
 The LoRa standard specifies 0 (no DE) or 2 (DE active). The ChirpChat range is extended to all values between 0 and 4 bits.
 
-This is the log2 of the number of frequency shifts separating two consecutive shifts that represent a symbol. On the receiving side this decreases the probability to detect the wrong symbol as an adjacent FFT bin. It can also overcome frequency drift on long messages.
+The LoRa standard also specifies that the LowDataRateOptimization flag (thus DE=2 vs DE=0 here) should be set when the symbol time defined as BW / 2^SF exceeds 16 ms (See section 4.1.1.6 of the SX127x datasheet). In practice this happens for SF=11 and SF=12 and large enough bandwidths (you can do the maths).
+
+Here this value is the log2 of the number of frequency shifts separating two consecutive shifts that represent a symbol. On the receiving side this decreases the probability to detect the wrong symbol as an adjacent FFT bin. It can also overcome frequency or sampling time drift on long messages particularly for small bandwidths.
 
 In practice it is difficult on the Rx side to make correct decodes if only one FFT bin is used to code one symbol (DE=0). It is therefore recommended to use a factor of 1 or more.
 
@@ -106,6 +107,7 @@ To populate messages you can specify your callsign (10.5), the other party calls
   - **LoRa**: LoRa compatible
   - **ASCII**: 7 bit plain ASCII without FEC and CRC. Requires exactly 7 bit effective samples thus SF-DE = 7 where SF is the spreading factor (5) and DE the distance enhancement factor (6)
   - **TTY**: 5 bit Baudot (Teletype) without FEC and CRC. Requires exactly 5 bit effective samples thus SF-DE = 5 where SF is the spreading factor (5) and DE the distance enhancement factor (6)
+  - **FT**: FT8/FT4 coding is applied using data in (10.5) to (10.8) to encode the 174 bit message payload with CRC and FEC as per FT8/FT4 protocol using a type 1 (standard) type of message. Note that the report (10.8) must comply with the FT rule (coded "-35" to "+99" with a leading 0 for the number) and would usually represent the integer part of the S/N ratio in the ChirpChat demodulator receiver. Calls should not be prefixed nor suffixed and the first 4 characters of the locator must represent a valid 4 character grid square. Plain text messages (13 characters) are also supported with the 0.0 type of message using the text entered in the message box (11). These 174 bits are packed into (SF - DE) bits symbols padded with zero bits if necessary. For the details of the FT protocol see: https://wsjt.sourceforge.io/FT4_FT8_QEX.pdf
 
 <h4>10.2: Number of FEC parity bits (LoRa)</h4>
 
@@ -156,6 +158,19 @@ This lets you choose which pre-formatted message to send:
   - **QSO text**: (QSO mode) free form message with callsigns
   - **Text**: plain text
   - **Bytes**: binary message in the form of a string of bytes. Use the hex window (12) to specify the message
+
+In FT mode standard FT type messages are generated regardless of placeholders based on MyCall, YourCall, MyLoc, Report and Msg data (entered while in "Text" format). Locators are 4 character grids i.e. only the 4 first characters are taken. Reports must be valid FT reports from -35 to 99 coded as < sign>< zero padded value> (e.g -12, -04, +00, +04, +12) :
+
+  - **Beacon**: DE < MyCall > < MyLoc >
+  - **CQ**: CQ < MyCall> < MyLoc >
+  - **Reply**: < YourCall > < MyCall > < MyLoc >
+  - **Report**: < YourCall > < MyCall > < Report >
+  - **R-Report**: < YourCall > < MyCall > R< Report >
+  - **RRR**: < YourCall > < MyCall > RRR
+  - **73**: < YourCall > < MyCall > 73
+  - **QSO text**: < Msg >
+  - **Text**: < Msg >
+  - **Bytes**: < Msg >
 
 <h4>10.10: Revert to standard messages</h4>
 

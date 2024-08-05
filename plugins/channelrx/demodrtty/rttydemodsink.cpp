@@ -1,6 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2023 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2023 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -22,9 +21,9 @@
 #include <complex.h>
 
 #include "dsp/dspengine.h"
+#include "dsp/fftfactory.h"
 #include "dsp/scopevis.h"
 #include "util/db.h"
-#include "maincore.h"
 
 #include "rttydemod.h"
 #include "rttydemodsink.h"
@@ -220,7 +219,7 @@ void RttyDemodSink::processOneSample(Complex &ci)
 
     // Save current data for edge detection
     m_dataPrev = m_data;
-    // Set data according to stongest correlation
+    // Set data according to strongest correlation
     if (m_settings.m_spaceHigh) {
         m_data = m_settings.m_atc ? biasedData < 0 : unbiasedData < 0;
     } else {

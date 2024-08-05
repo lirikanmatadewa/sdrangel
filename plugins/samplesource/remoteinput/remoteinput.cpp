@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2015-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2018 beta-tester <alpha-beta-release@gmx.net>                   //
+// Copyright (C) 2022 Jiří Pinkava <jiri.pinkava@rossum.ai>                      //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -30,8 +32,6 @@
 #include "SWGRemoteInputReport.h"
 
 #include "util/simpleserializer.h"
-#include "dsp/dspcommands.h"
-#include "dsp/dspengine.h"
 #include "device/deviceapi.h"
 
 #include "remoteinput.h"
@@ -287,7 +287,7 @@ void RemoteInput::applySettings(const RemoteInputSettings& settings, const QList
 
     mutexLocker.unlock();
 
-    if (settingsKeys.contains("useReverseAPI"))
+    if (settings.m_useReverseAPI)
     {
         bool fullUpdate = (settingsKeys.contains("useReverseAPI") && settings.m_useReverseAPI) ||
             settingsKeys.contains("reverseAPIAddress") ||

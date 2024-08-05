@@ -1,5 +1,10 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2022 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2015 John Greb <hexameron@spam.no>                              //
+// Copyright (C) 2018 beta-tester <alpha-beta-release@gmx.net>                   //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -24,15 +29,12 @@
 
 #include "device/deviceuiset.h"
 #include "plugin/pluginapi.h"
-#include "util/simpleserializer.h"
 #include "util/db.h"
 #include "dsp/dspengine.h"
 #include "dsp/dspcommands.h"
-#include "dsp/scopevisxy.h"
 #include "gui/crightclickenabler.h"
 #include "gui/audioselectdialog.h"
 #include "gui/basicchannelsettingsdialog.h"
-#include "gui/devicestreamselectiondialog.h"
 #include "gui/dialpopup.h"
 #include "gui/dialogpositioner.h"
 #include "maincore.h"
@@ -164,7 +166,7 @@ void M17ModGUI::on_rfBW_valueChanged(int value)
 void M17ModGUI::on_fmDev_valueChanged(int value)
 {
 	ui->fmDevText->setText(QString("%1%2k").arg(QChar(0xB1, 0x00)).arg(value / 10.0, 0, 'f', 1));
-	m_settings.m_fmDeviation = value * 200.0;
+	m_settings.m_fmDeviation = value * 100.0;
 	applySettings(QList<QString>{"fmDeviation"});
 }
 
@@ -528,6 +530,7 @@ M17ModGUI::M17ModGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, BasebandSam
     makeUIConnections();
     applySettings(QList<QString>{"channelMarker", "rollupState"});
     DialPopup::addPopupsToChildDials(this);
+    m_resizer.enableChildMouseTracking();
 }
 
 M17ModGUI::~M17ModGUI()
@@ -569,8 +572,8 @@ void M17ModGUI::displaySettings()
     ui->rfBWText->setText(QString("%1k").arg(m_settings.m_rfBandwidth / 1000.0, 0, 'f', 1));
     ui->rfBW->setValue(m_settings.m_rfBandwidth / 100.0);
 
-    ui->fmDevText->setText(QString("%1%2k").arg(QChar(0xB1, 0x00)).arg(m_settings.m_fmDeviation / 2000.0, 0, 'f', 1));
-    ui->fmDev->setValue(m_settings.m_fmDeviation / 200.0);
+    ui->fmDevText->setText(QString("%1%2k").arg(QChar(0xB1, 0x00)).arg(m_settings.m_fmDeviation / 1000.0, 0, 'f', 1));
+    ui->fmDev->setValue(m_settings.m_fmDeviation / 100.0);
 
     ui->volumeText->setText(QString("%1").arg(m_settings.m_volumeFactor, 0, 'f', 1));
     ui->volume->setValue(m_settings.m_volumeFactor * 10.0);
@@ -717,6 +720,7 @@ void M17ModGUI::audioSelect(const QPoint& p)
     qDebug("M17ModGUI::audioSelect");
     AudioSelectDialog audioSelect(DSPEngine::instance()->getAudioDeviceManager(), m_settings.m_audioDeviceName, true); // true for input
     audioSelect.move(p);
+    new DialogPositioner(&audioSelect, false);
     audioSelect.exec();
 
     if (audioSelect.m_selected)
@@ -731,6 +735,7 @@ void M17ModGUI::audioFeedbackSelect(const QPoint& p)
     qDebug("M17ModGUI::audioFeedbackSelect");
     AudioSelectDialog audioSelect(DSPEngine::instance()->getAudioDeviceManager(), m_settings.m_audioDeviceName, false); // false for output
     audioSelect.move(p);
+    new DialogPositioner(&audioSelect, false);
     audioSelect.exec();
 
     if (audioSelect.m_selected)

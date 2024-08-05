@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2021 Jon Beniston, M7RCE <jon@beniston.com>                     //
+// Copyright (C) 2023 Daniele Forsi <iu5hkx@gmail.com>                           //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -28,6 +29,7 @@ MapRadioTimeDialog::MapRadioTimeDialog(MapGUI *gui, QWidget* parent) :
     ui(new Ui::MapRadioTimeDialog)
 {
     ui->setupUi(this);
+    setAttribute(Qt::WA_QuitOnClose, false);
     // Don't call updateTable until m_gui->getAzEl() will return valid location
 }
 

@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2015-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2018 beta-tester <alpha-beta-release@gmx.net>                   //
+// Copyright (C) 2020, 2022-2023 Jon Beniston, M7RCE <jon@beniston.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -24,15 +26,11 @@
 #include <QMessageBox>
 
 #include "ui_fileoutputgui.h"
-#include "plugin/pluginapi.h"
 #include "gui/colormapper.h"
 #include "gui/glspectrum.h"
 #include "gui/basicdevicesettingsdialog.h"
 #include "gui/dialogpositioner.h"
-#include "dsp/dspengine.h"
 #include "dsp/dspcommands.h"
-
-#include "mainwindow.h"
 
 #include "device/deviceapi.h"
 #include "device/deviceuiset.h"
@@ -75,6 +73,7 @@ FileOutputGui::FileOutputGui(DeviceUISet *deviceUISet, QWidget* parent) :
 
 	displaySettings();
     makeUIConnections();
+    m_resizer.enableChildMouseTracking();
 
     m_deviceSampleSink = (FileOutput*) m_deviceUISet->m_deviceAPI->getSampleSink();
     connect(&m_inputMessageQueue, SIGNAL(messageEnqueued()), this, SLOT(handleInputMessages()), Qt::QueuedConnection);

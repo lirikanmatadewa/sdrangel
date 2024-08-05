@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2018 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2018-2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2018 beta-tester <alpha-beta-release@gmx.net>                   //
+// Copyright (C) 2022 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -29,11 +31,9 @@
 
 #include "device/deviceapi.h"
 #include "dsp/dspcommands.h"
-#include "dsp/dspengine.h"
 
 #include "airspyhfinput.h"
 
-#include "airspyhfplugin.h"
 #include "airspyhfsettings.h"
 #include "airspyhfworker.h"
 #ifdef ANDROID
@@ -42,6 +42,7 @@
 
 MESSAGE_CLASS_DEFINITION(AirspyHFInput::MsgConfigureAirspyHF, Message)
 MESSAGE_CLASS_DEFINITION(AirspyHFInput::MsgStartStop, Message)
+MESSAGE_CLASS_DEFINITION(AirspyHFInput::MsgSaveReplay, Message)
 
 const qint64 AirspyHFInput::loLowLimitFreqHF   =      9000L;
 const qint64 AirspyHFInput::loHighLimitFreqHF  =  31000000L;
@@ -179,7 +180,7 @@ bool AirspyHFInput::start()
     }
 
     m_airspyHFWorkerThread = new QThread();
-    m_airspyHFWorker = new AirspyHFWorker(m_dev, &m_sampleFifo);
+    m_airspyHFWorker = new AirspyHFWorker(m_dev, &m_sampleFifo, &m_replayBuffer);
     m_airspyHFWorker->moveToThread(m_airspyHFWorkerThread);
 	int sampleRateIndex = m_settings.m_devSampleRateIndex;
 
@@ -287,6 +288,20 @@ int AirspyHFInput::getSampleRate() const
     }
 }
 
+uint32_t AirspyHFInput::getSampleRateFromIndex(quint32 devSampleRateIndex) const
+{
+    int index = (int) devSampleRateIndex;
+
+    if (devSampleRateIndex >= m_sampleRates.size()) {
+        index = m_sampleRates.size() - 1;
+    }
+    if (index >= 0) {
+        return m_sampleRates[index];
+    } else {
+        return 0;
+    }
+}
+
 quint64 AirspyHFInput::getCenterFrequency() const
 {
 	return m_settings.m_centerFrequency;
@@ -342,6 +357,12 @@ bool AirspyHFInput::handleMessage(const Message& message)
             webapiReverseSendStartStop(cmd.getStartStop());
         }
 
+        return true;
+    }
+    else if (MsgSaveReplay::match(message))
+    {
+        MsgSaveReplay& cmd = (MsgSaveReplay&) message;
+        m_replayBuffer.save(cmd.getFilename(), getSampleRateFromIndex(m_settings.m_devSampleRateIndex), getCenterFrequency());
         return true;
     }
 	else
@@ -414,6 +435,10 @@ bool AirspyHFInput::applySettings(const AirspyHFSettings& settings, const QList<
 				m_airspyHFWorker->setSamplerate(m_sampleRates[sampleRateIndex]);
 			}
 		}
+
+        if (settings.m_devSampleRateIndex != m_settings.m_devSampleRateIndex) {
+            m_replayBuffer.clear();
+        }
 	}
 
 	if (settingsKeys.contains("log2Decim") || force)
@@ -551,7 +576,7 @@ bool AirspyHFInput::applySettings(const AirspyHFSettings& settings, const QList<
         m_deviceAPI->getDeviceEngineInputMessageQueue()->push(notif);
 	}
 
-    if (settingsKeys.contains("useReverseAPI"))
+    if (settings.m_useReverseAPI)
     {
         bool fullUpdate = (settingsKeys.contains("useReverseAPI") && settings.m_useReverseAPI) ||
             settingsKeys.contains("reverseAPIAddress") ||
@@ -564,6 +589,18 @@ bool AirspyHFInput::applySettings(const AirspyHFSettings& settings, const QList<
     	m_settings = settings;
     } else {
         m_settings.applySettings(settingsKeys, settings);
+    }
+
+    if (settingsKeys.contains("replayLength") || settingsKeys.contains("devSampleRate") || force) {
+        m_replayBuffer.setSize(m_settings.m_replayLength, getSampleRateFromIndex(m_settings.m_devSampleRateIndex));
+    }
+
+    if (settingsKeys.contains("replayOffset") || settingsKeys.contains("devSampleRate")  || force) {
+        m_replayBuffer.setReadOffset(((unsigned)(m_settings.m_replayOffset * getSampleRateFromIndex(m_settings.m_devSampleRateIndex))) * 2);
+    }
+
+    if (settingsKeys.contains("replayLoop") || force) {
+        m_replayBuffer.setLoop(m_settings.m_replayLoop);
     }
 
 	return true;

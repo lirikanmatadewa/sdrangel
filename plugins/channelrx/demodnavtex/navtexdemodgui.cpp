@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2023 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2021-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -33,25 +33,18 @@
 #include "dsp/dspcommands.h"
 #include "ui_navtexdemodgui.h"
 #include "plugin/pluginapi.h"
-#include "util/simpleserializer.h"
 #include "util/csv.h"
 #include "util/db.h"
-#include "util/morse.h"
-#include "util/units.h"
 #include "gui/basicchannelsettingsdialog.h"
-#include "gui/devicestreamselectiondialog.h"
 #include "gui/decimaldelegate.h"
 #include "dsp/dspengine.h"
 #include "dsp/glscopesettings.h"
-#include "gui/crightclickenabler.h"
 #include "gui/tabletapandhold.h"
 #include "gui/dialogpositioner.h"
-#include "channel/channelwebapiutils.h"
 #include "feature/featurewebapiutils.h"
 #include "maincore.h"
 
 #include "navtexdemod.h"
-#include "navtexdemodsink.h"
 
 void NavtexDemodGUI::resizeTable()
 {
@@ -532,8 +525,8 @@ NavtexDemodGUI::NavtexDemodGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, B
     ui->deltaFrequency->setValueRange(false, 7, -9999999, 9999999);
     ui->channelPowerMeter->setColorTheme(LevelMeterSignalDB::ColorGreenAndBlue);
 
-    ui->messages->setItemDelegateForColumn(MESSAGE_COL_ERROR_PERCENT, new DecimalDelegate(1));
-    ui->messages->setItemDelegateForColumn(MESSAGE_COL_RSSI, new DecimalDelegate(1));
+    ui->messages->setItemDelegateForColumn(MESSAGE_COL_ERROR_PERCENT, new DecimalDelegate(1, ui->messages));
+    ui->messages->setItemDelegateForColumn(MESSAGE_COL_RSSI, new DecimalDelegate(1, ui->messages));
 
     m_scopeVis = m_navtexDemod->getScopeSink();
     m_scopeVis->setGLScope(ui->glScope);
@@ -613,6 +606,7 @@ NavtexDemodGUI::NavtexDemodGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, B
     displaySettings();
     makeUIConnections();
     applySettings(true);
+    m_resizer.enableChildMouseTracking();
 }
 
 void NavtexDemodGUI::customContextMenuRequested(QPoint pos)

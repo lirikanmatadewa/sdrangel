@@ -1,5 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2018 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2018-2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2019 Davide Gerhard <rainbow@irh.it>                            //
+// Copyright (C) 2020 Kacper Michajłow <kasper93@gmail.com>                      //
+// Copyright (C) 2022 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -19,7 +22,6 @@
 #include <libairspyhf/airspyhf.h>
 
 #include "plugin/pluginapi.h"
-#include "util/simpleserializer.h"
 #include "airspyhfplugin.h"
 #include "airspyhfwebapiadapter.h"
 #ifdef SERVER_MODE
@@ -34,7 +36,7 @@
 const PluginDescriptor AirspyHFPlugin::m_pluginDescriptor = {
     QStringLiteral("AirspyHF"),
 	QStringLiteral("AirspyHF Input"),
-    QStringLiteral("7.8.2"),
+    QStringLiteral("7.21.3"),
 	QStringLiteral("(c) Edouard Griffiths, F4EXB"),
 	QStringLiteral("https://github.com/f4exb/sdrangel"),
 	true,

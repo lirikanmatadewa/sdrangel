@@ -1,5 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2015-2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2018 Christopher Hewitt <hewitt@ieee.org>                       //
+// Copyright (C) 2019 Davide Gerhard <rainbow@irh.it>                            //
+// Copyright (C) 2020 Kacper Michajłow <kasper93@gmail.com>                      //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -18,7 +21,6 @@
 #include <QtPlugin>
 
 #include "plugin/pluginapi.h"
-#include "util/simpleserializer.h"
 #include "xtrx/devicextrx.h"
 
 #ifndef SERVER_MODE
@@ -31,7 +33,7 @@
 const PluginDescriptor XTRXMIMOPlugin::m_pluginDescriptor = {
     QStringLiteral("XTRX"),
 	QStringLiteral("XTRX MIMO"),
-    QStringLiteral("7.8.2"),
+    QStringLiteral("7.21.3"),
 	QStringLiteral("(c) Edouard Griffiths, F4EXB"),
 	QStringLiteral("https://github.com/f4exb/sdrangel"),
 	true,

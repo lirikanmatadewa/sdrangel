@@ -1,6 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2015-2018 Edouard Griffiths, F4EXB.                             //
-// Copyright (C) 2023 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2023 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -28,6 +27,7 @@
 #include "dsp/basebandsamplesink.h"
 #include "channel/channelapi.h"
 #include "util/message.h"
+#include "availablechannelorfeaturehandler.h"
 
 #include "freqscannerbaseband.h"
 #include "freqscannersettings.h"
@@ -72,17 +72,23 @@ public:
 
     public:
 
-        QList<FreqScannerSettings::AvailableChannel>& getChannels() { return m_channels; }
+        AvailableChannelOrFeatureList& getChannels() { return m_channels; }
+        const QStringList& getRenameFrom() const { return m_renameFrom; }
+        const QStringList& getRenameTo() const { return m_renameTo; }
 
-        static MsgReportChannels* create() {
-            return new MsgReportChannels();
+        static MsgReportChannels* create(const QStringList& renameFrom, const QStringList& renameTo) {
+            return new MsgReportChannels(renameFrom, renameTo);
         }
 
     private:
-        QList<FreqScannerSettings::AvailableChannel> m_channels;
+        AvailableChannelOrFeatureList m_channels;
+        QStringList m_renameFrom;
+        QStringList m_renameTo;
 
-        MsgReportChannels() :
-            Message()
+        MsgReportChannels(const QStringList& renameFrom, const QStringList& renameTo) :
+            Message(),
+            m_renameFrom(renameFrom),
+            m_renameTo(renameTo)
         {}
     };
 
@@ -308,6 +314,7 @@ public:
 
     virtual int getNbSinkStreams() const { return 1; }
     virtual int getNbSourceStreams() const { return 0; }
+    virtual int getStreamIndex() const { return m_settings.m_streamIndex; }
 
     virtual qint64 getStreamCenterFrequency(int streamIndex, bool sinkElseSource) const
     {
@@ -334,6 +341,11 @@ public:
             SWGSDRangel::SWGChannelReport& response,
             QString& errorMessage);
 
+    virtual int webapiActionsPost(
+            const QStringList& channelActionsKeys,
+            SWGSDRangel::SWGChannelActions& query,
+            QString& errorMessage);
+
     static void webapiFormatChannelSettings(
             SWGSDRangel::SWGChannelSettings& response,
             const FreqScannerSettings& settings);
@@ -351,6 +363,7 @@ public:
     uint32_t getNumberOfDeviceStreams() const;
 
     void calcScannerSampleRate(int channelBW, int basebandSampleRate, int& scannerSampleRate, int& fftSize, int& binsPerChannel);
+    static void muteAll(const FreqScannerSettings& settings);
 
     static const char * const m_channelIdURI;
     static const char * const m_channelId;
@@ -368,10 +381,11 @@ private:
     QNetworkAccessManager *m_networkManager;
     QNetworkRequest m_networkRequest;
 
-    QHash<ChannelAPI*, FreqScannerSettings::AvailableChannel> m_availableChannels;
+    AvailableChannelOrFeatureList m_availableChannels;
+    AvailableChannelOrFeatureHandler m_availableChannelHandler;
 
-    int m_scanDeviceSetIndex;
-    int m_scanChannelIndex;
+    unsigned int m_scanDeviceSetIndex;
+    unsigned int m_scanChannelIndex;
     qint64 m_activeFrequency;
     QDateTime m_minFFTStartTime;
     int m_scannerSampleRate;
@@ -379,6 +393,7 @@ private:
     qint64 m_stepStartFrequency;
     qint64 m_stepStopFrequency;
     QList<MsgScanResult::ScanResult> m_scanResults;
+    QList<MsgScanResult::ScanResult> m_scanResultsForReport;
 
     enum State {
         IDLE,
@@ -401,21 +416,21 @@ private:
     );
     void webapiFormatChannelReport(SWGSDRangel::SWGChannelReport& response);
 
-    void scanAvailableChannels();
-    void notifyUpdateChannels();
+    //void scanAvailableChannels();
+    void notifyUpdateChannels(const QStringList& renameFrom, const QStringList& renameTo);
     void startScan();
     void stopScan();
     void initScan();
     void processScanResults(const QDateTime& fftStartTime, const QList<MsgScanResult::ScanResult>& results);
     void setDeviceCenterFrequency(qint64 frequency);
+    void applyChannelSetting(const QString& channel);
 
     static QList<SWGSDRangel::SWGFreqScannerFrequency *> *createFrequencyList(const FreqScannerSettings& settings);
 
 private slots:
     void networkManagerFinished(QNetworkReply *reply);
     void handleIndexInDeviceSetChanged(int index);
-    void handleChannelAdded(int deviceSetIndex, ChannelAPI* channel);
-    void handleChannelRemoved(int deviceSetIndex, ChannelAPI* channel);
+    void channelsChanged(const QStringList& renameFrom, const QStringList& renameTo);
     void timeout();
 
 };

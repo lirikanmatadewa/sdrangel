@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2021 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2019-2021 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -18,7 +18,6 @@
 #include "plutosdr/deviceplutosdrbox.h"
 #include "dsp/samplemififo.h"
 
-#include "plutosdrmimosettings.h"
 #include "plutosdrmithread.h"
 
 PlutoSDRMIThread::PlutoSDRMIThread(DevicePlutoSDRBox* plutoBox, QObject* parent) :

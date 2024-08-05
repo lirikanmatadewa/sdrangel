@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2018 F4EXB                                                      //
-// written by Edouard Griffiths                                                  //
+// Copyright (C) 2018-2019, 2021-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com> //
+// Copyright (C) 2022 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -24,7 +24,7 @@
 
 ParserBench::ParserBench() :
     m_testOption(QStringList() << "t" << "test",
-        "Test type: decimateii, decimatefi, decimateff, decimateif, decimateinfii, decimatesupii, ambe, golay2312, ft8"
+        "Test type: decimateii, decimatefi, decimateff, decimateif, decimateinfii, decimatesupii, ambe, golay2312, ft8, ft8protocols, callsign"
         "test",
         "decimateii"),
     m_nbSamplesOption(QStringList() << "n" << "nb-samples",
@@ -147,6 +147,10 @@ ParserBench::TestType ParserBench::getTestType() const
         return TestGolay2312;
     } else if (m_testStr == "ft8") {
         return TestFT8;
+    } else if (m_testStr == "callsign") {
+        return TestCallsign;
+    } else if (m_testStr == "ft8protocols") {
+        return TestFT8Protocols;
     } else {
         return TestDecimatorsII;
     }

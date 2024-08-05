@@ -1,5 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2023 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2015-2020, 2022-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com> //
+// Copyright (C) 2019 Vort <vvort@yandex.ru>                                     //
+// Copyright (C) 2019 Davide Gerhard <rainbow@irh.it>                            //
+// Copyright (C) 2020 Kacper Michajłow <kasper93@gmail.com>                      //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -18,7 +21,6 @@
 #include <QtPlugin>
 
 #include "plugin/pluginapi.h"
-#include "util/simpleserializer.h"
 
 #ifdef SERVER_MODE
 #include "aaroniartsainput.h"
@@ -31,7 +33,7 @@
 const PluginDescriptor AaroniaRTSAInputPlugin::m_pluginDescriptor = {
     QStringLiteral("AaroniaRTSA"),
 	QStringLiteral("AaroniaRTSA input"),
-    QStringLiteral("7.14.0"),
+    QStringLiteral("7.21.4"),
 	QStringLiteral("(c) Edouard Griffiths, F4EXB"),
 	QStringLiteral("https://github.com/f4exb/sdrangel"),
 	true,
@@ -63,7 +65,7 @@ void AaroniaRTSAInputPlugin::enumOriginDevices(QStringList& listedHwIds, OriginD
     }
 
     originDevices.append(OriginDevice(
-        "AaroniaRTSA",
+        "AaroniaRTSAInput",
         m_hardwareID,
         QString(),
         0,

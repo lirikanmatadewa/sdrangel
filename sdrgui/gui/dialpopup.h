@@ -1,5 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2022 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2019 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2021-2022 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -29,7 +32,7 @@ class QPushButton;
 class DialogPositioner;
 
 // A popup dialog for QDials that uses a slider instead, which is easier to use
-// on a touch screen. Actived with tap and hold or right mouse click
+// on a touch screen. Activated with tap and hold or right mouse click
 class SDRGUI_API DialPopup : public QDialog {
     Q_OBJECT
 

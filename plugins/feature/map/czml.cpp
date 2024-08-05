@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2022 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2022-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -264,7 +264,9 @@ QJsonObject CZML::update(ObjectMapItem *mapItem, bool isTarget, bool isSelected)
     const QStringList heightReferences = {"NONE", "CLAMP_TO_GROUND", "RELATIVE_TO_GROUND", "NONE"};
     QString dt;
 
-    if (mapItem->m_takenTrackDateTimes.size() > 0) {
+    if (mapItem->m_availableFrom.isValid()) {
+        dt = mapItem->m_availableFrom.toString(Qt::ISODateWithMs);
+    } else if (mapItem->m_takenTrackDateTimes.size() > 0) {
         dt = mapItem->m_takenTrackDateTimes.last()->toString(Qt::ISODateWithMs);
     } else {
         dt = QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs);
@@ -475,6 +477,7 @@ QJsonObject CZML::update(ObjectMapItem *mapItem, bool isTarget, bool isSelected)
     if ((mapItem->m_group == "Beacons")
         || (mapItem->m_group == "AM") || (mapItem->m_group == "FM") || (mapItem->m_group == "DAB")
         || (mapItem->m_group == "NavAid")
+        || (mapItem->m_group == "Waypoints")
        ) {
         displayDistanceMax = 1000000;
     } else if ((mapItem->m_group == "Station") || (mapItem->m_group == "Radar") || (mapItem->m_group == "Radio Time Transmitters")) {
@@ -510,8 +513,10 @@ QJsonObject CZML::update(ObjectMapItem *mapItem, bool isTarget, bool isSelected)
     QJsonObject labelDistanceDisplayCondition {
         {"distanceDisplayCondition", labelDisplayDistance}
     };
+    QString labelText = mapItem->m_label;
+    labelText.replace("<br>", "\n");
     QJsonObject label {
-        {"text", mapItem->m_label},
+        {"text", labelText},
         {"show", m_settings->m_displayNames && mapItem->m_itemSettings->m_enabled && mapItem->m_itemSettings->m_display3DLabel},
         {"scale", mapItem->m_itemSettings->m_3DLabelScale},
         {"pixelOffset", labelPixelOffset},
@@ -575,6 +580,14 @@ QJsonObject CZML::update(ObjectMapItem *mapItem, bool isTarget, bool isSelected)
                     QString period = QString("%1/%2").arg(m_ids[id]).arg(mapItem->m_availableUntil.toString(Qt::ISODateWithMs));
                     obj.insert("availability", period);
                 }
+            }
+        }
+        else
+        {
+            if (mapItem->m_availableUntil.isValid())
+            {
+                QString period = QString("%1/%2").arg(m_ids[id]).arg(mapItem->m_availableUntil.toString(Qt::ISODateWithMs));
+                obj.insert("availability", period);
             }
         }
         m_lastPosition.insert(id, coords);

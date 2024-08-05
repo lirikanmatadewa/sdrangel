@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2019-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2022 Jiří Pinkava <jiri.pinkava@rossum.ai>                      //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -65,7 +66,6 @@ public:
     int getChannelSampleRate() const;
     void getMagSqLevels(double& avg, double& peak, int& nbSamples) { m_sink.getMagSqLevels(avg, peak, nbSamples); }
     bool getSquelchOpen() const { return m_sink.getSquelchOpen(); }
-    const Real *getCtcssToneSet(int& nbTones) const { return m_sink.getCtcssToneSet(nbTones); }
     void setMessageQueueToGUI(MessageQueue *messageQueue) { m_sink.setMessageQueueToGUI(messageQueue); }
     int getAudioSampleRate() const { return m_sink.getAudioSampleRate(); }
     void setBasebandSampleRate(int sampleRate);

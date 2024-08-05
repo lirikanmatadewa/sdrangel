@@ -1,3 +1,19 @@
+///////////////////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2021-2022 Jon Beniston, M7RCE <jon@beniston.com>                    //
+//                                                                                   //
+// This program is free software; you can redistribute it and/or modify              //
+// it under the terms of the GNU General Public License as published by              //
+// the Free Software Foundation as version 3 of the License, or                      //
+// (at your option) any later version.                                               //
+//                                                                                   //
+// This program is distributed in the hope that it will be useful,                   //
+// but WITHOUT ANY WARRANTY; without even the implied warranty of                    //
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                      //
+// GNU General Public License V3 for more details.                                   //
+//                                                                                   //
+// You should have received a copy of the GNU General Public License                 //
+// along with this program. If not, see <http://www.gnu.org/licenses/>.              //
+///////////////////////////////////////////////////////////////////////////////////////
 #ifndef DVB2_H
 #define DVB2_H
 #include <queue>
@@ -8,7 +24,7 @@
 typedef unsigned int u32;
 typedef unsigned char u8;
 
-// BB HEADER fileds
+// BB HEADER fields
 #define TS_GS_TRANSPORT 3
 #define TS_GS_GENERIC_PACKETIZED 0
 #define TS_GS_GENERIC_CONTINUOUS 1
@@ -51,7 +67,7 @@ typedef struct{
 
 typedef int Bit;
 
-// The number of useable and stuff bits in a frame
+// The number of usable and stuff bits in a frame
 typedef struct{
     int data_bits;
     int stuff_bits;

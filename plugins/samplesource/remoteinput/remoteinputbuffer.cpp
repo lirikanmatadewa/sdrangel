@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2016-2021 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -367,7 +367,7 @@ uint8_t *RemoteInputBuffer::readData(int32_t length)
 
     m_nbReads++;
 
-    // SEGFAULT FIX: arbitratily truncate so that it does not exceed buffer length
+    // SEGFAULT FIX: arbitrarily truncate so that it does not exceed buffer length
     if (length > m_framesSize) {
         length = m_framesSize;
     }

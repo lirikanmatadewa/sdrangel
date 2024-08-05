@@ -1,6 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2021-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2021 Franco Venturi <fventuri@comcast.net>                      //
+// Copyright (C) 2022 Piotr Majkrzak <piotr@majkrzak.dev>                        //
+// Copyright (C) 2023 Daniele Forsi <iu5hkx@gmail.com>                           //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -30,7 +33,6 @@
 
 #include "util/simpleserializer.h"
 #include "dsp/dspcommands.h"
-#include "dsp/dspengine.h"
 #include "sdrplayv3input.h"
 
 #include <device/deviceapi.h>
@@ -39,6 +41,7 @@
 
 MESSAGE_CLASS_DEFINITION(SDRPlayV3Input::MsgConfigureSDRPlayV3, Message)
 MESSAGE_CLASS_DEFINITION(SDRPlayV3Input::MsgStartStop, Message)
+MESSAGE_CLASS_DEFINITION(SDRPlayV3Input::MsgSaveReplay, Message)
 
 SDRPlayV3Input::SDRPlayV3Input(DeviceAPI *deviceAPI) :
     m_deviceAPI(deviceAPI),
@@ -152,7 +155,7 @@ bool SDRPlayV3Input::start()
 
     if (m_running) stop();
 
-    m_sdrPlayThread = new SDRPlayV3Thread(m_dev, &m_sampleFifo);
+    m_sdrPlayThread = new SDRPlayV3Thread(m_dev, &m_sampleFifo, &m_replayBuffer);
     m_sdrPlayThread->setLog2Decimation(m_settings.m_log2Decim);
     m_sdrPlayThread->setFcPos((int) m_settings.m_fcPos);
     m_sdrPlayThread->startWork();
@@ -303,6 +306,12 @@ bool SDRPlayV3Input::handleMessage(const Message& message)
 
         return true;
     }
+    else if (MsgSaveReplay::match(message))
+    {
+        MsgSaveReplay& cmd = (MsgSaveReplay&) message;
+        m_replayBuffer.save(cmd.getFilename(), m_settings.m_devSampleRate, getCenterFrequency());
+        return true;
+    }
     else
     {
         return false;
@@ -405,7 +414,10 @@ bool SDRPlayV3Input::applySettings(const SDRPlayV3Settings& settings, const QLis
             else
                 qDebug() <<  "SDRPlayV3Input::applySettings: sample rate set to " << sampleRate;
             forwardChange = true;
-        }
+            if (settings.m_devSampleRate != m_settings.m_devSampleRate) {
+                m_replayBuffer.clear();
+            }
+         }
     }
 
     if (settingsKeys.contains("log2Decim") || force)
@@ -500,6 +512,7 @@ bool SDRPlayV3Input::applySettings(const SDRPlayV3Settings& settings, const QLis
             switch (getDeviceId())
             {
             case SDRPLAY_RSP1A_ID:
+            case SDRPLAY_RSP1B_ID:
                 m_devParams->rxChannelA->rsp1aTunerParams.biasTEnable = settings.m_biasTee;
                 update = sdrplay_api_Update_Rsp1a_BiasTControl;
                 break;
@@ -516,6 +529,7 @@ bool SDRPlayV3Input::applySettings(const SDRPlayV3Settings& settings, const QLis
                 }
                 break;
             case SDRPLAY_RSPdx_ID:
+            case SDRPLAY_RSPdxR2_ID:
                 m_devParams->devParams->rspDxParams.biasTEnable = settings.m_biasTee;
                 updateExt = sdrplay_api_Update_RspDx_BiasTControl;
                 break;
@@ -561,6 +575,7 @@ bool SDRPlayV3Input::applySettings(const SDRPlayV3Settings& settings, const QLis
             switch (getDeviceId())
             {
             case SDRPLAY_RSP1A_ID:
+            case SDRPLAY_RSP1B_ID:
                 m_devParams->devParams->rsp1aParams.rfNotchEnable = settings.m_fmNotch;
                 update = sdrplay_api_Update_Rsp1a_RfNotchControl;
                 break;
@@ -576,6 +591,7 @@ bool SDRPlayV3Input::applySettings(const SDRPlayV3Settings& settings, const QLis
                 update = sdrplay_api_Update_RspDuo_RfNotchControl;
                 break;
             case SDRPLAY_RSPdx_ID:
+            case SDRPLAY_RSPdxR2_ID:
                 m_devParams->devParams->rspDxParams.rfNotchEnable = settings.m_fmNotch;
                 updateExt = sdrplay_api_Update_RspDx_RfNotchControl;
                 break;
@@ -597,6 +613,7 @@ bool SDRPlayV3Input::applySettings(const SDRPlayV3Settings& settings, const QLis
             switch (getDeviceId())
             {
             case SDRPLAY_RSP1A_ID:
+            case SDRPLAY_RSP1B_ID:
                 m_devParams->devParams->rsp1aParams.rfDabNotchEnable = settings.m_dabNotch;
                 update = sdrplay_api_Update_Rsp1a_RfDabNotchControl;
                 break;
@@ -608,6 +625,7 @@ bool SDRPlayV3Input::applySettings(const SDRPlayV3Settings& settings, const QLis
                 update = sdrplay_api_Update_RspDuo_RfDabNotchControl;
                 break;
             case SDRPLAY_RSPdx_ID:
+            case SDRPLAY_RSPdxR2_ID:
                 m_devParams->devParams->rspDxParams.rfDabNotchEnable = settings.m_dabNotch;
                 updateExt = sdrplay_api_Update_RspDx_RfDabNotchControl;
                 break;
@@ -641,11 +659,12 @@ bool SDRPlayV3Input::applySettings(const SDRPlayV3Settings& settings, const QLis
                 }
                 break;
             case SDRPLAY_RSPdx_ID:
+            case SDRPLAY_RSPdxR2_ID:
                 m_devParams->devParams->rspDxParams.antennaSel = (sdrplay_api_RspDx_AntennaSelectT)settings.m_antenna;
                 updateExt = sdrplay_api_Update_RspDx_AntennaControl;
                 break;
             default:
-                // SDRPLAY_RSP1_ID and SDRPLAY_RSP1A_ID only have one antenna
+                // SDRPLAY_RSP1_ID, SDRPLAY_RSP1A_ID, SDRPLAY_RSP1B_ID only have one antenna
                 break;
             }
             if ((err = sdrplay_api_Update(m_dev->dev, m_dev->tuner, update, updateExt)) != sdrplay_api_Success)
@@ -678,7 +697,7 @@ bool SDRPlayV3Input::applySettings(const SDRPlayV3Settings& settings, const QLis
         }
     }
 
-    if (settingsKeys.contains("useReverseAPI"))
+    if (settings.m_useReverseAPI)
     {
         bool fullUpdate = (settingsKeys.contains("useReverseAPI") && settings.m_useReverseAPI) ||
             settingsKeys.contains("reverseAPIAddress") ||
@@ -691,6 +710,18 @@ bool SDRPlayV3Input::applySettings(const SDRPlayV3Settings& settings, const QLis
         m_settings = settings;
     } else {
         m_settings.applySettings(settingsKeys, settings);
+    }
+
+    if (settingsKeys.contains("replayLength") || settingsKeys.contains("devSampleRate") || force) {
+        m_replayBuffer.setSize(m_settings.m_replayLength, m_settings.m_devSampleRate);
+    }
+
+    if (settingsKeys.contains("replayOffset") || settingsKeys.contains("devSampleRate")  || force) {
+        m_replayBuffer.setReadOffset(((unsigned)(m_settings.m_replayOffset * m_settings.m_devSampleRate)) * 2);
+    }
+
+    if (settingsKeys.contains("replayLoop") || force) {
+        m_replayBuffer.setLoop(m_settings.m_replayLoop);
     }
 
     if (forwardChange)
@@ -966,6 +997,9 @@ void SDRPlayV3Input::webapiFormatDeviceReport(SWGSDRangel::SWGDeviceReport& resp
     case SDRPLAY_RSP1A_ID:
         response.getSdrPlayV3Report()->setDeviceType(new QString("RSP1A"));
         break;
+    case SDRPLAY_RSP1B_ID:
+        response.getSdrPlayV3Report()->setDeviceType(new QString("RSP1B"));
+        break;
     case SDRPLAY_RSP2_ID:
         response.getSdrPlayV3Report()->setDeviceType(new QString("RSP2"));
         break;
@@ -974,6 +1008,9 @@ void SDRPlayV3Input::webapiFormatDeviceReport(SWGSDRangel::SWGDeviceReport& resp
         break;
     case SDRPLAY_RSPdx_ID:
         response.getSdrPlayV3Report()->setDeviceType(new QString("RSPdx"));
+        break;
+    case SDRPLAY_RSPdxR2_ID:
+        response.getSdrPlayV3Report()->setDeviceType(new QString("RSPdx-R2"));
         break;
     default:
         response.getSdrPlayV3Report()->setDeviceType(new QString("Unknown"));
@@ -1310,6 +1347,15 @@ const int SDRPlayV3LNA::rsp1AAttenuation[4][11] =
     { 9, 0, 6, 12, 20, 26, 32, 38, 43, 62}
 };
 
+const int SDRPlayV3LNA::rsp1BAttenuation[5][11] =
+{
+    {7,  0, 6, 12, 18, 37, 42, 61},
+    {10, 0, 6, 12, 18, 20, 26, 32, 38, 57, 62},
+    {10, 0, 6, 12, 18, 20, 26, 32, 38, 57, 62},
+    {10, 0, 7, 13, 19, 20, 27, 33, 39, 45, 64},
+    { 9, 0, 6, 12, 20, 26, 32, 38, 43, 62}
+};
+
 const int SDRPlayV3LNA::rsp2Attenuation[3][10] =
 {
     {9, 0, 10, 15, 21, 24, 34, 39, 45, 64},
@@ -1364,6 +1410,19 @@ const int *SDRPlayV3LNA::getAttenuations(int deviceId, qint64 frequency)
             row = 3;
         lnaAttenuation = &rsp1AAttenuation[row][0];
         break;
+    case SDRPLAY_RSP1B_ID:
+        if (frequency < 50000000)
+            row = 0;
+        else if (frequency < 60000000)
+            row = 1;
+        else if (frequency < 420000000)
+            row = 2;
+        else if (frequency < 1000000000)
+            row = 3;
+        else
+            row = 4;
+        lnaAttenuation = &rsp1BAttenuation[row][0];
+        break;
     case SDRPLAY_RSP2_ID:
         if (frequency < 420000000)
             row = 0;
@@ -1385,6 +1444,7 @@ const int *SDRPlayV3LNA::getAttenuations(int deviceId, qint64 frequency)
         lnaAttenuation = &rspDuoAttenuation[row][0];
         break;
     case SDRPLAY_RSPdx_ID:
+    case SDRPLAY_RSPdxR2_ID:
         if (frequency < 2000000)
             row = 0;
         else if (frequency < 12000000)

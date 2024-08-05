@@ -39,6 +39,8 @@ ChannelSettings:
       $ref: "/doc/swagger/include/BFMDemod.yaml#/BFMDemodSettings"
     ChannelAnalyzerSettings:
       $ref: "/doc/swagger/include/ChannelAnalyzer.yaml#/ChannelAnalyzerSettings"
+    ChannelPowerSettings:
+      $ref: "/doc/swagger/include/ChannelPower.yaml#/ChannelPowerSettings"
     ChirpChatDemodSettings:
       $ref: "/doc/swagger/include/ChirpChatDemod.yaml#/ChirpChatDemodSettings"
     ChirpChatModSettings:
@@ -55,6 +57,8 @@ ChannelSettings:
       $ref: "/doc/swagger/include/DSCDemod.yaml#/DSCDemodSettings"
     DSDDemodSettings:
       $ref: "/doc/swagger/include/DSDDemod.yaml#/DSDDemodSettings"
+    EndOfTrainDemodSettings:
+      $ref: "/doc/swagger/include/EndOfTrainDemod.yaml#/EndOfTrainDemodSettings"
     FileSinkSettings:
       $ref: "/doc/swagger/include/FileSink.yaml#/FileSinkSettings"
     FileSourceSettings:
@@ -131,6 +135,8 @@ ChannelSettings:
     #   $ref: "/doc/swagger/include/VORDemodMC.yaml#/VORDemodMCSettings"
     VORDemodSettings:
       $ref: "/doc/swagger/include/VORDemod.yaml#/VORDemodSettings"
+    WDSPRxSettings:
+      $ref: "/doc/swagger/include/WDSPRx.yaml#/WDSPRxSettings"
     WFMDemodSettings:
       $ref: "/doc/swagger/include/WFMDemod.yaml#/WFMDemodSettings"
     WFMModSettings:

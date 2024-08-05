@@ -1,5 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2017, 2019-2020, 2022-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com> //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -22,30 +25,6 @@
 
 #include "demodanalyzersettings.h"
 
-const QStringList DemodAnalyzerSettings::m_channelTypes = {
-    QStringLiteral("AISDemod"),
-    QStringLiteral("AISMod"),
-    QStringLiteral("AMDemod"),
-    QStringLiteral("AMMod"),
-    QStringLiteral("BFMDemod"),
-    QStringLiteral("DABDemod"),
-    QStringLiteral("DSDDemod"),
-    QStringLiteral("FT8Demod"),
-    QStringLiteral("M17Demod"),
-    QStringLiteral("M17Mmod"),
-    QStringLiteral("NFMDemod"),
-    QStringLiteral("NFMMod"),
-    QStringLiteral("PacketDemod"),
-    QStringLiteral("PacketMod"),
-    QStringLiteral("RadiosondeDemod"),
-    QStringLiteral("PSK31Mod"),
-    QStringLiteral("RTTYMod"),
-    QStringLiteral("SSBDemod"),
-    QStringLiteral("SSBMod"),
-    QStringLiteral("WFMDemod"),
-    QStringLiteral("WFMMod"),
-};
-
 const QStringList DemodAnalyzerSettings::m_channelURIs = {
     QStringLiteral("sdrangel.channel.aisdemod"),
     QStringLiteral("sdrangel.channel.modais"),
@@ -54,6 +33,7 @@ const QStringList DemodAnalyzerSettings::m_channelURIs = {
     QStringLiteral("sdrangel.channel.bfm"),
     QStringLiteral("sdrangel.channel.dabdemod"),
     QStringLiteral("sdrangel.channel.dsddemod"),
+    QStringLiteral("sdrangel.channel.endoftraindemod"),
     QStringLiteral("sdrangel.channel.ft8demod"),
     QStringLiteral("sdrangel.channel.m17demod"),
     QStringLiteral("sdrangel.channeltx.modm17"),

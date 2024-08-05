@@ -924,7 +924,8 @@ margin-bottom: 20px;
     },
     "trackerDeviceFrequency" : {
       "type" : "integer",
-      "format" : "int64"
+      "format" : "int64",
+      "description" : "Center frequency of tracker device"
     },
     "trackerChannelOffset" : {
       "type" : "integer",
@@ -963,7 +964,8 @@ margin-bottom: 20px;
       "description" : "Target frequency for the tracker"
     },
     "freqTolerance" : {
-      "type" : "integer"
+      "type" : "integer",
+      "description" : "Frequency shift tolerance before tracker frequency is (re)adjusted"
     },
     "trackerAdjustPeriod" : {
       "type" : "integer",
@@ -1046,6 +1048,9 @@ margin-bottom: 20px;
       "type" : "string"
     },
     "logEnabled" : {
+      "type" : "integer"
+    },
+    "useFileTime" : {
       "type" : "integer"
     },
     "rgbColor" : {
@@ -1472,6 +1477,19 @@ margin-bottom: 20px;
     "syncAMOperation" : {
       "type" : "integer",
       "description" : "Synchronous AM sidebands mode (DSB, USB, LSB)"
+    },
+    "frequencyMode" : {
+      "type" : "integer",
+      "description" : "(0 for Offset, 1 for MW, 2 for 25k, 3 for 8.33k)"
+    },
+    "frequency" : {
+      "type" : "integer",
+      "format" : "int64",
+      "description" : "Channel center frequency"
+    },
+    "snap" : {
+      "type" : "integer",
+      "description" : "Snap channel marker to channel center frequencies"
     },
     "streamIndex" : {
       "type" : "integer",
@@ -2540,7 +2558,8 @@ margin-bottom: 20px;
         "type" : "string"
       }
     }
-  }
+  },
+  "description" : "Generic argument information"
 };
             defs.ArgValue = {
   "properties" : {
@@ -2554,7 +2573,8 @@ margin-bottom: 20px;
     "valueString" : {
       "type" : "string"
     }
-  }
+  },
+  "description" : "Generic argument value"
 };
             defs.AudioCATSISOSettings = {
   "properties" : {
@@ -2626,7 +2646,8 @@ margin-bottom: 20px;
       "description" : "Tx volume in dB usually negative"
     },
     "catSpeedIndex" : {
-      "type" : "integer"
+      "type" : "integer",
+      "description" : "CAT serial link baud rate\n  * 0 - 1200\n  * 1 - 2400\n  * 2 - 4800\n  * 3 - 9800\n  * 4 - 19200 (default)\n  * 5 - 38400\n  * 6 - 57600\n  * 7 - 115200\n"
     },
     "catDataBitsIndex" : {
       "type" : "integer",
@@ -2634,7 +2655,7 @@ margin-bottom: 20px;
     },
     "catStopBitsIndex" : {
       "type" : "integer",
-      "description" : "CAT serial linkj stop bits\n  * 0 - 1 (default)\n  * 1 - 2\n"
+      "description" : "CAT serial link stop bits\n  * 0 - 1 (default)\n  * 1 - 2\n"
     },
     "catHandshakeIndex" : {
       "type" : "integer",
@@ -2642,7 +2663,7 @@ margin-bottom: 20px;
     },
     "catPTTMethodIndex" : {
       "type" : "integer",
-      "description" : "CAT PTT metgod\n  * 0 - PTT (default)\n  * 1 - DTR\n  * 2 - RTS\n"
+      "description" : "CAT PTT method\n  * 0 - PTT (default)\n  * 1 - DTR\n  * 2 - RTS\n"
     },
     "catDTRHigh" : {
       "type" : "integer",
@@ -3514,7 +3535,8 @@ margin-bottom: 20px;
       "format" : "int64",
       "description" : "Time in milliseconds of track start since beginning of record"
     }
-  }
+  },
+  "description" : "Capture (track) information"
 };
             defs.Channel = {
   "required" : [ "deltaFrequency", "id", "index", "title", "uid" ],
@@ -3581,6 +3603,9 @@ margin-bottom: 20px;
     },
     "FileSourceActions" : {
       "$ref" : "#/definitions/FileSourceActions"
+    },
+    "FreqScannerActions" : {
+      "$ref" : "#/definitions/FreqScannerActions"
     },
     "IEEE_802_15_4_ModActions" : {
       "$ref" : "#/definitions/IEEE_802_15_4_ModActions"
@@ -3769,6 +3794,97 @@ margin-bottom: 20px;
   },
   "description" : "ChannelMarker settings"
 };
+            defs.ChannelPowerReport = {
+  "properties" : {
+    "channelPowerDB" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "power received in channel (dB)"
+    },
+    "channelPowerMaxDB" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "max power received in channel (dB)"
+    },
+    "channelPowerMinDB" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "min power received in channel (dB)"
+    },
+    "channelPowerPulseDB" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "pulse power received in channel (dB)"
+    },
+    "channelSampleRate" : {
+      "type" : "integer"
+    }
+  },
+  "description" : "ChannelPower"
+};
+            defs.ChannelPowerSettings = {
+  "properties" : {
+    "inputFrequencyOffset" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "frequencyMode" : {
+      "type" : "integer",
+      "description" : "(0 for Offset, 1 for Absolute)"
+    },
+    "frequency" : {
+      "type" : "integer",
+      "format" : "int64",
+      "description" : "Channel center frequency"
+    },
+    "rfBandwidth" : {
+      "type" : "number",
+      "format" : "float"
+    },
+    "pulseThreshold" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "In dB"
+    },
+    "averagePeriodUS" : {
+      "type" : "integer",
+      "description" : "Average period in microseconds"
+    },
+    "rgbColor" : {
+      "type" : "integer"
+    },
+    "title" : {
+      "type" : "string"
+    },
+    "streamIndex" : {
+      "type" : "integer",
+      "description" : "MIMO channel. Not relevant when connected to SI (single Rx)."
+    },
+    "useReverseAPI" : {
+      "type" : "integer",
+      "description" : "Synchronize with reverse API (1 for yes, 0 for no)"
+    },
+    "reverseAPIAddress" : {
+      "type" : "string"
+    },
+    "reverseAPIPort" : {
+      "type" : "integer"
+    },
+    "reverseAPIDeviceIndex" : {
+      "type" : "integer"
+    },
+    "reverseAPIChannelIndex" : {
+      "type" : "integer"
+    },
+    "channelMarker" : {
+      "$ref" : "#/definitions/ChannelMarker"
+    },
+    "rollupState" : {
+      "$ref" : "#/definitions/RollupState"
+    }
+  },
+  "description" : "ChannelPower"
+};
             defs.ChannelReport = {
   "required" : [ "direction" ],
   "discriminator" : "channelType",
@@ -3802,6 +3918,9 @@ margin-bottom: 20px;
     "BFMDemodReport" : {
       "$ref" : "#/definitions/BFMDemodReport"
     },
+    "ChannelPowerReport" : {
+      "$ref" : "#/definitions/ChannelPowerReport"
+    },
     "ChirpChatDemodReport" : {
       "$ref" : "#/definitions/ChirpChatDemodReport"
     },
@@ -3822,6 +3941,9 @@ margin-bottom: 20px;
     },
     "DSDDemodReport" : {
       "$ref" : "#/definitions/DSDDemodReport"
+    },
+    "EndOfTrainDemodReport" : {
+      "$ref" : "#/definitions/EndOfTrainDemodReport"
     },
     "IEEE_802_15_4_ModReport" : {
       "$ref" : "#/definitions/IEEE_802_15_4_ModReport"
@@ -3919,6 +4041,9 @@ margin-bottom: 20px;
     "VORDemodReport" : {
       "$ref" : "#/definitions/VORDemodReport"
     },
+    "WDSPRxReport" : {
+      "$ref" : "#/definitions/WDSPRxReport"
+    },
     "WFMDemodReport" : {
       "$ref" : "#/definitions/WFMDemodReport"
     },
@@ -3981,6 +4106,9 @@ margin-bottom: 20px;
     "ChannelAnalyzerSettings" : {
       "$ref" : "#/definitions/ChannelAnalyzerSettings"
     },
+    "ChannelPowerSettings" : {
+      "$ref" : "#/definitions/ChannelPowerSettings"
+    },
     "ChirpChatDemodSettings" : {
       "$ref" : "#/definitions/ChirpChatDemodSettings"
     },
@@ -4004,6 +4132,9 @@ margin-bottom: 20px;
     },
     "DSDDemodSettings" : {
       "$ref" : "#/definitions/DSDDemodSettings"
+    },
+    "EndOfTrainDemodSettings" : {
+      "$ref" : "#/definitions/EndOfTrainDemodSettings"
     },
     "FileSinkSettings" : {
       "$ref" : "#/definitions/FileSinkSettings"
@@ -4116,6 +4247,9 @@ margin-bottom: 20px;
     "VORDemodSettings" : {
       "$ref" : "#/definitions/VORDemodSettings"
     },
+    "WDSPRxSettings" : {
+      "$ref" : "#/definitions/WDSPRxSettings"
+    },
     "WFMDemodSettings" : {
       "$ref" : "#/definitions/WFMDemodSettings"
     },
@@ -4224,7 +4358,7 @@ margin-bottom: 20px;
     },
     "decoding" : {
       "type" : "integer",
-      "description" : "Boolean - decoding status\n  * 0 - no deconding\n  * 1 - decoding\n"
+      "description" : "Boolean - decoding status\n  * 0 - no decoding\n  * 1 - decoding\n"
     }
   },
   "description" : "ChirpChatDemod"
@@ -4244,7 +4378,7 @@ margin-bottom: 20px;
     },
     "deBits" : {
       "type" : "integer",
-      "description" : "Low data rate optmize (DE) bits i.e. nb of FFT bins per effective symbol"
+      "description" : "Low data rate optimize (DE) bits i.e. nb of FFT bins per effective symbol"
     },
     "fftWindow" : {
       "type" : "integer",
@@ -4391,7 +4525,7 @@ margin-bottom: 20px;
     },
     "deBits" : {
       "type" : "integer",
-      "description" : "Low data rate optmize (DE) bits i.e. nb of FFT bins per effective symbol"
+      "description" : "Low data rate optimize (DE) bits i.e. nb of FFT bins per effective symbol"
     },
     "preambleChirps" : {
       "type" : "integer",
@@ -4558,7 +4692,8 @@ margin-bottom: 20px;
       "description" : "Qt::Key"
     },
     "keyModifiers" : {
-      "type" : "integer"
+      "type" : "integer",
+      "description" : "Qt::KeyboardModifiers"
     },
     "associateKey" : {
       "type" : "integer",
@@ -4629,7 +4764,7 @@ margin-bottom: 20px;
       "$ref" : "#/definitions/ConfigurationIdentifier"
     }
   },
-  "description" : "Details to impprt/export a configuration from/to file"
+  "description" : "Details to import/export a configuration from/to file"
 };
             defs.ConfigurationItem = {
   "required" : [ "name" ],
@@ -4830,7 +4965,7 @@ margin-bottom: 20px;
     },
     "filter" : {
       "type" : "integer",
-      "description" : "Type of sumbol filtering (see DATVDemodSettings::dvb_sampler)\n  * 0 - Nearest\n  * 1 - Linear\n  * 2 - Root Raised Cosine\n"
+      "description" : "Type of symbol filtering (see DATVDemodSettings::dvb_sampler)\n  * 0 - Nearest\n  * 1 - Linear\n  * 2 - Root Raised Cosine\n"
     },
     "hardMetric" : {
       "type" : "integer",
@@ -5076,7 +5211,7 @@ margin-bottom: 20px;
     },
     "squelchdB" : {
       "type" : "integer",
-      "description" : "Porcessing squared magnitude threshold (squelch) in dB from -140 t0 0"
+      "description" : "Processing squared magnitude threshold (squelch) in dB from -140 t0 0"
     },
     "fftAveragingValue" : {
       "type" : "integer",
@@ -5155,6 +5290,9 @@ margin-bottom: 20px;
       "type" : "string"
     },
     "logEnabled" : {
+      "type" : "integer"
+    },
+    "useFileTime" : {
       "type" : "integer"
     },
     "rgbColor" : {
@@ -5390,6 +5528,19 @@ margin-bottom: 20px;
     }
   },
   "description" : "List of DV serial devices available in the system"
+};
+            defs.DemodAnalyzerActions = {
+  "properties" : {
+    "deviceId" : {
+      "type" : "integer",
+      "description" : "Device Id/Number that channel belongs to"
+    },
+    "channelId" : {
+      "type" : "integer",
+      "description" : "Channel Id/Number of the channel within the device"
+    }
+  },
+  "description" : "Demod Analyzer actions"
 };
             defs.DemodAnalyzerSettings = {
   "properties" : {
@@ -5845,6 +5996,89 @@ margin-bottom: 20px;
   },
   "description" : "Device running state"
 };
+            defs.EndOfTrainDemodReport = {
+  "properties" : {
+    "channelPowerDB" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "power received in channel (dB)"
+    },
+    "channelSampleRate" : {
+      "type" : "integer"
+    }
+  },
+  "description" : "EndOfTrainDemod"
+};
+            defs.EndOfTrainDemodSettings = {
+  "properties" : {
+    "inputFrequencyOffset" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "rfBandwidth" : {
+      "type" : "number",
+      "format" : "float"
+    },
+    "fmDeviation" : {
+      "type" : "number",
+      "format" : "float"
+    },
+    "udpEnabled" : {
+      "type" : "integer",
+      "description" : "Whether to forward received packets to specified UDP port"
+    },
+    "udpAddress" : {
+      "type" : "string",
+      "description" : "UDP address to forward received packets to"
+    },
+    "udpPort" : {
+      "type" : "integer",
+      "description" : "UDP port to forward received packets to"
+    },
+    "logFilename" : {
+      "type" : "string"
+    },
+    "logEnabled" : {
+      "type" : "integer"
+    },
+    "useFileTime" : {
+      "type" : "integer"
+    },
+    "rgbColor" : {
+      "type" : "integer"
+    },
+    "title" : {
+      "type" : "string"
+    },
+    "streamIndex" : {
+      "type" : "integer",
+      "description" : "MIMO channel. Not relevant when connected to SI (single Rx)."
+    },
+    "useReverseAPI" : {
+      "type" : "integer",
+      "description" : "Synchronize with reverse API (1 for yes, 0 for no)"
+    },
+    "reverseAPIAddress" : {
+      "type" : "string"
+    },
+    "reverseAPIPort" : {
+      "type" : "integer"
+    },
+    "reverseAPIDeviceIndex" : {
+      "type" : "integer"
+    },
+    "reverseAPIChannelIndex" : {
+      "type" : "integer"
+    },
+    "channelMarker" : {
+      "$ref" : "#/definitions/ChannelMarker"
+    },
+    "rollupState" : {
+      "$ref" : "#/definitions/RollupState"
+    }
+  },
+  "description" : "EndOfTrain"
+};
             defs.ErrorResponse = {
   "required" : [ "message" ],
   "properties" : {
@@ -6101,7 +6335,8 @@ margin-bottom: 20px;
     },
     "decoderTimeBudget" : {
       "type" : "number",
-      "format" : "float"
+      "format" : "float",
+      "description" : "Decoder time budget in seconds (will stop after running this time)"
     },
     "useOSD" : {
       "type" : "integer",
@@ -6211,6 +6446,9 @@ margin-bottom: 20px;
     "MapActions" : {
       "$ref" : "#/definitions/MapActions"
     },
+    "MorseDecoderActions" : {
+      "$ref" : "#/definitions/MorseDecoderActions"
+    },
     "PERTesterActions" : {
       "$ref" : "#/definitions/PERTesterActions"
     },
@@ -6223,11 +6461,17 @@ margin-bottom: 20px;
     "SimplePTTActions" : {
       "$ref" : "#/definitions/SimplePTTActions"
     },
+    "SkyMapActions" : {
+      "$ref" : "#/definitions/SkyMapActions"
+    },
     "StarTrackerActions" : {
       "$ref" : "#/definitions/StarTrackerActions"
     },
     "VORLocalizerActions" : {
       "$ref" : "#/definitions/VORLocalizerActions"
+    },
+    "DemodAnalyzerActions" : {
+      "$ref" : "#/definitions/DemodAnalyzerActions"
     }
   },
   "description" : "Base feature actions. Only the feature actions corresponding to the feature specified in the featureType field is or should be present."
@@ -6365,6 +6609,9 @@ margin-bottom: 20px;
     "SimplePTTReport" : {
       "$ref" : "#/definitions/SimplePTTReport"
     },
+    "SkyMapReport" : {
+      "$ref" : "#/definitions/SkyMapReport"
+    },
     "StarTrackerReport" : {
       "$ref" : "#/definitions/StarTrackerReport"
     },
@@ -6454,6 +6701,9 @@ margin-bottom: 20px;
     "MapSettings" : {
       "$ref" : "#/definitions/MapSettings"
     },
+    "MorseDecoderSettings" : {
+      "$ref" : "#/definitions/MorseDecoderSettings"
+    },
     "PERTesterSettings" : {
       "$ref" : "#/definitions/PERTesterSettings"
     },
@@ -6466,11 +6716,17 @@ margin-bottom: 20px;
     "SatelliteTrackerSettings" : {
       "$ref" : "#/definitions/SatelliteTrackerSettings"
     },
-    "StarTrackerSettings" : {
-      "$ref" : "#/definitions/StarTrackerSettings"
+    "SIDSettings" : {
+      "$ref" : "#/definitions/SIDSettings"
     },
     "SimplePTTSettings" : {
       "$ref" : "#/definitions/SimplePTTSettings"
+    },
+    "SkyMapSettings" : {
+      "$ref" : "#/definitions/SkyMapSettings"
+    },
+    "StarTrackerSettings" : {
+      "$ref" : "#/definitions/StarTrackerSettings"
     },
     "VORLocalizerSettings" : {
       "$ref" : "#/definitions/VORLocalizerSettings"
@@ -6658,11 +6914,11 @@ margin-bottom: 20px;
     },
     "squelchPostRecordTime" : {
       "type" : "integer",
-      "description" : "Number of seconds to record after spectrum squelch cloeses"
+      "description" : "Number of seconds to record after spectrum squelch closes"
     },
     "squelchRecordingEnable" : {
       "type" : "integer",
-      "description" : "Automatic recording triggered by spectrum squalch * 0 - disabled * 1 - enabled\n"
+      "description" : "Automatic recording triggered by spectrum squelch * 0 - disabled * 1 - enabled\n"
     },
     "streamIndex" : {
       "type" : "integer",
@@ -6983,6 +7239,28 @@ margin-bottom: 20px;
   },
   "description" : "FreeDVMod"
 };
+            defs.FreqScannerActions = {
+  "properties" : {
+    "run" : {
+      "type" : "integer",
+      "description" : "Set the plugin running state\n  * 0 - idle\n  * 1 - run\n"
+    }
+  },
+  "description" : "Frequency Scanner actions"
+};
+            defs.FreqScannerChannelState = {
+  "properties" : {
+    "frequency" : {
+      "type" : "integer",
+      "description" : "Channel centre frequency in Hz"
+    },
+    "power" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Channel power in dB"
+    }
+  }
+};
             defs.FreqScannerFrequency = {
   "properties" : {
     "frequency" : {
@@ -6994,6 +7272,18 @@ margin-bottom: 20px;
     },
     "notes" : {
       "type" : "string"
+    },
+    "channel" : {
+      "type" : "string"
+    },
+    "channelBandwidth" : {
+      "type" : "string"
+    },
+    "threshold" : {
+      "type" : "string"
+    },
+    "squelch" : {
+      "type" : "string"
     }
   }
 };
@@ -7001,6 +7291,16 @@ margin-bottom: 20px;
   "properties" : {
     "channelSampleRate" : {
       "type" : "integer"
+    },
+    "scanState" : {
+      "type" : "integer",
+      "description" : "(IDLE=0, START_SCAN=1, SCANNING=2, WAIT_FOR_END_TX=3, WAIT_FOR_RETRANSMISSION=4)"
+    },
+    "channelState" : {
+      "type" : "array",
+      "items" : {
+        "$ref" : "#/definitions/FreqScannerChannelState"
+      }
     }
   },
   "description" : "FreqScanner"
@@ -7218,7 +7518,7 @@ margin-bottom: 20px;
       "type" : "integer"
     }
   },
-  "description" : "A band of frequencies given its boudaries in Hertz (Hz)"
+  "description" : "A band of frequencies given its boundaries in Hertz (Hz)"
 };
             defs.FrequencyRange = {
   "properties" : {
@@ -7238,7 +7538,7 @@ margin-bottom: 20px;
       "format" : "float"
     }
   },
-  "description" : "An frequency range with 64 bit support for min and max"
+  "description" : "A frequency range with 64 bit support for min and max"
 };
             defs.GLScope = {
   "properties" : {
@@ -7448,7 +7748,8 @@ margin-bottom: 20px;
     },
     "targetAzimuth" : {
       "type" : "number",
-      "format" : "float"
+      "format" : "float",
+      "description" : "Target azimuth in degrees (0-450)"
     },
     "targetElevation" : {
       "type" : "number",
@@ -7457,7 +7758,8 @@ margin-bottom: 20px;
     },
     "currentAzimuth" : {
       "type" : "number",
-      "format" : "float"
+      "format" : "float",
+      "description" : "Current azimuth in degrees (0-450)"
     },
     "currentElevation" : {
       "type" : "number",
@@ -7944,7 +8246,7 @@ margin-bottom: 20px;
     "beta" : {
       "type" : "number",
       "format" : "float",
-      "description" : "Pulse shapint filter beta factor"
+      "description" : "Pulse shaping filter beta factor"
     },
     "symbolSpan" : {
       "type" : "integer"
@@ -7983,6 +8285,34 @@ margin-bottom: 20px;
     },
     "channelSampleRate" : {
       "type" : "integer"
+    },
+    "ident" : {
+      "type" : "string"
+    },
+    "deviation" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "deviation in degrees"
+    },
+    "sdm" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Sum of the Depth of Modulation in percent"
+    },
+    "ddm" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Difference in the Depth of Modulation in percent"
+    },
+    "dm90" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Depth of modulation of the 90Hz tone as a percentage of the carrier"
+    },
+    "dm150" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Depth of modulation of the 150Hz tone as percentage of the carrier"
     }
   },
   "description" : "ILSDemod"
@@ -8256,6 +8586,22 @@ margin-bottom: 20px;
     "filterChainHash" : {
       "type" : "integer"
     },
+    "phase" : {
+      "type" : "integer",
+      "description" : "Channel B phase shift in degrees (-180 to 180)"
+    },
+    "gain" : {
+      "type" : "integer",
+      "description" : "Channel B gain in centi-Bels"
+    },
+    "localDeviceIndex" : {
+      "type" : "integer",
+      "description" : "Receiving local input device set index for correlated IQ"
+    },
+    "play" : {
+      "type" : "integer",
+      "description" : "Run correlated IQ samples transfer\n  * 0 - stop\n  * 1 - run\n"
+    },
     "useReverseAPI" : {
       "type" : "integer",
       "description" : "Synchronize with reverse API (1 for yes, 0 for no)"
@@ -8322,6 +8668,18 @@ margin-bottom: 20px;
     "status" : {
       "type" : "integer",
       "description" : "0 for Idle, 1 for Connecting, 2 for Connected, 3 for Error, 4 for Disconnected"
+    },
+    "latitude" : {
+      "type" : "number",
+      "format" : "float"
+    },
+    "longitude" : {
+      "type" : "number",
+      "format" : "float"
+    },
+    "altitude" : {
+      "type" : "number",
+      "format" : "float"
     }
   },
   "description" : "KiwiSDR"
@@ -8369,7 +8727,8 @@ margin-bottom: 20px;
       "description" : "Select channel\n  * 0 - Rx\n  * 1 - Tx\n"
     },
     "deviceSetIndex" : {
-      "type" : "integer"
+      "type" : "integer",
+      "description" : "Index of device set to synchronize switch with"
     },
     "switchChannel" : {
       "type" : "integer",
@@ -8482,7 +8841,8 @@ margin-bottom: 20px;
       "description" : "Rx attenuation factor. Attenuation is 2 times this factor in dB (0..7 => 0..14dB)"
     },
     "amfmNotch" : {
-      "type" : "integer"
+      "type" : "integer",
+      "description" : "Rx AM/FM notch filter (boolean)"
     },
     "txChannels" : {
       "type" : "integer",
@@ -8542,7 +8902,7 @@ margin-bottom: 20px;
   "properties" : {
     "success" : {
       "type" : "integer",
-      "description" : "1 if info was successfullt retrieved else 0"
+      "description" : "1 if info was successfully retrieved else 0"
     },
     "streamActive" : {
       "type" : "integer",
@@ -8703,7 +9063,7 @@ margin-bottom: 20px;
     },
     "successRx" : {
       "type" : "integer",
-      "description" : "1 if Rx info was successfullt retrieved else 0"
+      "description" : "1 if Rx info was successfully retrieved else 0"
     },
     "streamActiveRx" : {
       "type" : "integer",
@@ -8730,7 +9090,7 @@ margin-bottom: 20px;
     },
     "successTx" : {
       "type" : "integer",
-      "description" : "1 if Tx info was successfullt retrieved else 0"
+      "description" : "1 if Tx info was successfully retrieved else 0"
     },
     "streamActiveTx" : {
       "type" : "integer",
@@ -8985,7 +9345,7 @@ margin-bottom: 20px;
   "properties" : {
     "success" : {
       "type" : "integer",
-      "description" : "1 if info was successfullt retrieved else 0"
+      "description" : "1 if info was successfully retrieved else 0"
     },
     "streamActive" : {
       "type" : "integer",
@@ -9817,6 +10177,10 @@ margin-bottom: 20px;
       "format" : "float",
       "description" : "Extruded height (from surface) for polygons"
     },
+    "availableFrom" : {
+      "type" : "string",
+      "description" : "Date and time at which the item should first appear on 3D map"
+    },
     "availableUntil" : {
       "type" : "string",
       "description" : "Date and time until after which this item should no longer appear on 3D map"
@@ -9977,6 +10341,10 @@ margin-bottom: 20px;
       "format" : "float",
       "description" : "Extruded height (from surface) for polygons"
     },
+    "availableFrom" : {
+      "type" : "string",
+      "description" : "Date and time at which the item should first appear on 3D map"
+    },
     "availableUntil" : {
       "type" : "string",
       "description" : "Date and time until after which this item should no longer appear on 3D map"
@@ -10052,42 +10420,42 @@ margin-bottom: 20px;
     "rx1CenterFrequency" : {
       "type" : "integer",
       "format" : "int64",
-      "description" : "center fequencies of receiver 1"
+      "description" : "center frequencies of receiver 1"
     },
     "rx2CenterFrequency" : {
       "type" : "integer",
       "format" : "int64",
-      "description" : "center fequencies of receiver 2"
+      "description" : "center frequencies of receiver 2"
     },
     "rx3CenterFrequency" : {
       "type" : "integer",
       "format" : "int64",
-      "description" : "center fequencies of receiver 3"
+      "description" : "center frequencies of receiver 3"
     },
     "rx4CenterFrequency" : {
       "type" : "integer",
       "format" : "int64",
-      "description" : "center fequencies of receiver 4"
+      "description" : "center frequencies of receiver 4"
     },
     "rx5CenterFrequency" : {
       "type" : "integer",
       "format" : "int64",
-      "description" : "center fequencies of receiver 5"
+      "description" : "center frequencies of receiver 5"
     },
     "rx6CenterFrequency" : {
       "type" : "integer",
       "format" : "int64",
-      "description" : "center fequencies of receiver 6"
+      "description" : "center frequencies of receiver 6"
     },
     "rx7CenterFrequency" : {
       "type" : "integer",
       "format" : "int64",
-      "description" : "center fequencies of receiver 7"
+      "description" : "center frequencies of receiver 7"
     },
     "rx8CenterFrequency" : {
       "type" : "integer",
       "format" : "int64",
-      "description" : "center fequencies of receiver 8"
+      "description" : "center frequencies of receiver 8"
     },
     "txCenterFrequency" : {
       "type" : "integer",
@@ -10191,6 +10559,14 @@ margin-bottom: 20px;
       "type" : "integer",
       "description" : "The index of the stream that is used as source of the main spectrum"
     },
+    "streamLock" : {
+      "type" : "integer",
+      "description" : "Ties together the stream selection and spectrum source stream selections * 0 - stream unlocked * 1 - stream locked\n"
+    },
+    "rxLock" : {
+      "type" : "integer",
+      "description" : "Ties together all Rx frequencies * 0 - Rx frequencies untied * 1 - Rx frequencies tied\n"
+    },
     "useReverseAPI" : {
       "type" : "integer",
       "description" : "Synchronize with reverse API * 0 - disabled * 1 - enabled\n"
@@ -10206,6 +10582,80 @@ margin-bottom: 20px;
     }
   },
   "description" : "MetisMISOSettings"
+};
+            defs.MorseDecoderActions = {
+  "properties" : {
+    "deviceId" : {
+      "type" : "integer",
+      "description" : "Device Id/Number that channel belongs to"
+    },
+    "channelId" : {
+      "type" : "integer",
+      "description" : "Channel Id/Number of the channel within the device"
+    }
+  },
+  "description" : "Morse Decoder actions"
+};
+            defs.MorseDecoderSettings = {
+  "properties" : {
+    "title" : {
+      "type" : "string"
+    },
+    "rgbColor" : {
+      "type" : "integer"
+    },
+    "useReverseAPI" : {
+      "type" : "integer",
+      "description" : "Synchronize with reverse API\n  * 1 - yes\n  * 0 - no\n"
+    },
+    "reverseAPIAddress" : {
+      "type" : "string"
+    },
+    "reverseAPIPort" : {
+      "type" : "integer"
+    },
+    "udpEnabled" : {
+      "type" : "integer",
+      "description" : "Send decoded text via UDP\n  * 1 - send\n  * 0 - do not send\n"
+    },
+    "udpAddress" : {
+      "type" : "string",
+      "description" : "Address to send text via UDP"
+    },
+    "udpPort" : {
+      "type" : "integer",
+      "description" : "Port to send text via UDP"
+    },
+    "logFiledName" : {
+      "type" : "string",
+      "description" : "File to log the decoded text to"
+    },
+    "logEnabled" : {
+      "type" : "integer",
+      "description" : "Log decoded text to file\n  * 1 - log\n  * 0 - do not log\n"
+    },
+    "auto" : {
+      "type" : "integer",
+      "description" : "Auto detect CW pitch and keying speed\n  * 1 - auto detect\n  * 0 - use last values\n"
+    },
+    "showThreshold" : {
+      "type" : "integer",
+      "description" : "Show GGMorse decoder threshold on the imaginary part of the scope trace\n  * 1 - show\n  * 0 - do not show\n"
+    },
+    "reverseAPIFeatureSetIndex" : {
+      "type" : "integer"
+    },
+    "reverseAPIFeatureIndex" : {
+      "type" : "integer"
+    },
+    "scopeConfig" : {
+      "$ref" : "#/definitions/GLScope"
+    },
+    "rollupState" : {
+      "$ref" : "#/definitions/RollupState"
+    }
+  },
+  "description" : "MorseDecoder"
 };
             defs.NFMDemodReport = {
   "properties" : {
@@ -10893,7 +11343,7 @@ margin-bottom: 20px;
       "type" : "integer"
     }
   },
-  "description" : "AMDemod"
+  "description" : "PacketDemod"
 };
             defs.PacketDemodSettings = {
   "properties" : {
@@ -10929,6 +11379,9 @@ margin-bottom: 20px;
       "type" : "string"
     },
     "logEnabled" : {
+      "type" : "integer"
+    },
+    "useFileTime" : {
       "type" : "integer"
     },
     "rgbColor" : {
@@ -11783,7 +12236,7 @@ margin-bottom: 20px;
       "description" : "See QtMsgType"
     }
   },
-  "description" : "Repreents a Prefernce object"
+  "description" : "Represents a Preference object"
 };
             defs.Preset = {
   "properties" : {
@@ -11874,7 +12327,7 @@ margin-bottom: 20px;
     "centerFrequency" : {
       "type" : "integer",
       "format" : "int64",
-      "description" : "Center freqeuency in Hz"
+      "description" : "Center frequency in Hz"
     },
     "type" : {
       "type" : "string",
@@ -11907,7 +12360,7 @@ margin-bottom: 20px;
     "centerFrequency" : {
       "type" : "integer",
       "format" : "int64",
-      "description" : "Center freqeuency in Hz"
+      "description" : "Center frequency in Hz"
     },
     "type" : {
       "type" : "string",
@@ -12433,6 +12886,15 @@ margin-bottom: 20px;
       "format" : "int64",
       "description" : "channel center frequency shift from baseband center in Hz"
     },
+    "frequencyMode" : {
+      "type" : "integer",
+      "description" : "(0 for Offset, 1 for Absolute)"
+    },
+    "frequency" : {
+      "type" : "integer",
+      "format" : "int64",
+      "description" : "Channel center frequency"
+    },
     "rfBandwidth" : {
       "type" : "number",
       "format" : "float",
@@ -12444,7 +12906,7 @@ margin-bottom: 20px;
     },
     "modulation" : {
       "type" : "integer",
-      "description" : "0 - MSF, 1 - DCF77, 2 - TDF, 3 - WWVB"
+      "description" : "0 - MSF, 1 - DCF77, 2 - TDF, 3 - WWVB, 4 - JJY"
     },
     "timezone" : {
       "type" : "integer",
@@ -12539,6 +13001,9 @@ margin-bottom: 20px;
       "type" : "string"
     },
     "logEnabled" : {
+      "type" : "integer"
+    },
+    "useFileTime" : {
       "type" : "integer"
     },
     "rgbColor" : {
@@ -12703,7 +13168,7 @@ margin-bottom: 20px;
     },
     "multicastJoin" : {
       "type" : "integer",
-      "description" : "Joim multicast group * 0 - leave group * 1 - join group\n"
+      "description" : "Join multicast group * 0 - leave group * 1 - join group\n"
     },
     "dcBlock" : {
       "type" : "integer"
@@ -12774,7 +13239,7 @@ margin-bottom: 20px;
     },
     "nbTxBytes" : {
       "type" : "integer",
-      "description" : "Number of bytes in a transmited I or Q sample\n  * 1\n  * 2\n  * 4\n"
+      "description" : "Number of bytes in a transmitted I or Q sample\n  * 1\n  * 2\n  * 4\n"
     },
     "apiAddress" : {
       "type" : "string"
@@ -12818,7 +13283,7 @@ margin-bottom: 20px;
     },
     "nbTxBytes" : {
       "type" : "integer",
-      "description" : "Number of bytes in a transmited I or Q sample\n  * 1\n  * 2\n  * 4\n"
+      "description" : "Number of bytes in a transmitted I or Q sample\n  * 1\n  * 2\n  * 4\n"
     },
     "deviceCenterFrequency" : {
       "type" : "integer",
@@ -13053,6 +13518,10 @@ margin-bottom: 20px;
     },
     "preFill" : {
       "type" : "integer"
+    },
+    "protocol" : {
+      "type" : "string",
+      "description" : "(SDRangel or Spy Server)"
     },
     "useReverseAPI" : {
       "type" : "integer",
@@ -13410,7 +13879,7 @@ margin-bottom: 20px;
   "properties" : {
     "deviceType" : {
       "type" : "string",
-      "description" : "SDRplay device type. Can be RSP1, RSP1A, RSP2, RSPduo, RSPdx, Unknown"
+      "description" : "SDRplay device type. Can be RSP1, RSP1A, RSP1B, RSP2, RSPduo, RSPdx, Unknown"
     },
     "bandwidths" : {
       "type" : "array",
@@ -13519,6 +13988,52 @@ margin-bottom: 20px;
   },
   "description" : "SDRplayV3"
 };
+            defs.SIDSettings = {
+  "properties" : {
+    "period" : {
+      "type" : "number",
+      "format" : "float"
+    },
+    "autosave" : {
+      "type" : "integer"
+    },
+    "autoload" : {
+      "type" : "integer"
+    },
+    "filename" : {
+      "type" : "integer"
+    },
+    "autosavePeriod" : {
+      "type" : "integer"
+    },
+    "title" : {
+      "type" : "string"
+    },
+    "rgbColor" : {
+      "type" : "integer"
+    },
+    "useReverseAPI" : {
+      "type" : "integer",
+      "description" : "Synchronize with reverse API (1 for yes, 0 for no)"
+    },
+    "reverseAPIAddress" : {
+      "type" : "string"
+    },
+    "reverseAPIPort" : {
+      "type" : "integer"
+    },
+    "reverseAPIFeatureSetIndex" : {
+      "type" : "integer"
+    },
+    "reverseAPIFeatureIndex" : {
+      "type" : "integer"
+    },
+    "rollupState" : {
+      "$ref" : "#/definitions/RollupState"
+    }
+  },
+  "description" : "SID settings"
+};
             defs.SSBDemodReport = {
   "properties" : {
     "channelPowerDB" : {
@@ -13602,6 +14117,33 @@ margin-bottom: 20px;
     "agcThresholdGate" : {
       "type" : "integer",
       "description" : "Audio squelch gate in ms"
+    },
+    "dnr" : {
+      "type" : "integer",
+      "description" : "Toggle noise reduction:\n  * 0 - Noise reduction off\n  * 1 - Noise reduction on\n"
+    },
+    "dnrScheme" : {
+      "type" : "integer",
+      "description" : "Noise reduction scheme:\n  * 0 - Average of magnitudes\n  * 1 - Average and standard deviation of magnitudes\n  * 2 - Magnitude maxima (peaks)\n"
+    },
+    "dnrAboveAvgFactor" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Multiplier of the average to determine magnitude threshold in average scheme"
+    },
+    "dnrSigmaFactor" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Standard deviation (sigma) multiplier to determine magnitude threshold in average and standard deviation scheme"
+    },
+    "dnrNbPeaks" : {
+      "type" : "integer",
+      "description" : "Number of magnitude peak maxima selected in peaks scheme"
+    },
+    "dnrAlpha" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Smoothing constant (alpha) of the exponential smoothing filter. Must be between  0 and 1."
     },
     "rgbColor" : {
       "type" : "integer"
@@ -14063,7 +14605,8 @@ margin-bottom: 20px;
       "description" : "Number of points used to draw ground tracks"
     },
     "dateFormat" : {
-      "type" : "string"
+      "type" : "string",
+      "description" : "Format for dates in the GUI (E.g: yy/MM/dd)"
     },
     "utc" : {
       "type" : "integer",
@@ -14374,11 +14917,15 @@ margin-bottom: 20px;
     },
     "squelchPostRecordTime" : {
       "type" : "integer",
-      "description" : "Number of seconds to record after spectrum squelch cloeses"
+      "description" : "Number of seconds to record after spectrum squelch closes"
     },
     "squelchRecordingEnable" : {
       "type" : "integer",
-      "description" : "Automatic recording triggered by spectrum squalch * 0 - disabled * 1 - enabled\n"
+      "description" : "Automatic recording triggered by spectrum squelch * 0 - disabled * 1 - enabled\n"
+    },
+    "log2RecordSampleSize" : {
+      "type" : "integer",
+      "description" : "log2 of recording sample (I or Q) size in bits. Can be 3, 4 or 5."
     },
     "streamIndex" : {
       "type" : "integer",
@@ -14550,6 +15097,236 @@ margin-bottom: 20px;
     }
   },
   "description" : "Simple PTT settings"
+};
+            defs.SkyMapActions = {
+  "properties" : {
+    "find" : {
+      "type" : "string",
+      "description" : "The name of the object or the coordinates to centre the sky map on"
+    }
+  },
+  "description" : "Sky Map"
+};
+            defs.SkyMapReport = {
+  "properties" : {
+    "dateTime" : {
+      "type" : "string",
+      "description" : "Current date and time being used for sky map"
+    },
+    "ra" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Right ascension of target (In decimal hours, J2000)"
+    },
+    "dec" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Declination of target (In decimal degrees, J2000)"
+    },
+    "latitude" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Latitude in decimal degrees (North positive) of observation/antenna location"
+    },
+    "longitude" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Longitude in decimal degrees (East positive) of observation/antenna location"
+    },
+    "altitude" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Altitude in metres of observation/antenna location"
+    },
+    "azimuth" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "The azimuth angle in degrees to the target"
+    },
+    "elevation" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "The elevation angle in degrees to the target"
+    },
+    "fov" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Current field-of-view in degrees"
+    }
+  },
+  "description" : "Sky Map"
+};
+            defs.SkyMapSettings = {
+  "properties" : {
+    "displayNames" : {
+      "type" : "integer",
+      "description" : "Display names on the sky map (1 for yes, 0 for no)"
+    },
+    "displayConstellations" : {
+      "type" : "integer",
+      "description" : "Display constellations on the sky map (1 for yes, 0 for no)"
+    },
+    "displayReticle" : {
+      "type" : "integer",
+      "description" : "Display reticle on the sky map (1 for yes, 0 for no)"
+    },
+    "displayGrid" : {
+      "type" : "integer",
+      "description" : "Display grid on the sky map (1 for yes, 0 for no)"
+    },
+    "displayAntennaFoV" : {
+      "type" : "integer",
+      "description" : "Display antenna field-of-view on the sky map (1 for yes, 0 for no)"
+    },
+    "map" : {
+      "type" : "string",
+      "description" : "WWT, ESASky or Aladin"
+    },
+    "background" : {
+      "type" : "string",
+      "description" : "Name of background image set"
+    },
+    "projection" : {
+      "type" : "string"
+    },
+    "source" : {
+      "type" : "string",
+      "description" : "Channel or Feature plugin to get target from"
+    },
+    "track" : {
+      "type" : "integer",
+      "description" : "Whether to track the specified source plugin"
+    },
+    "latitude" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Latitude in decimal degrees (North positive) of observation/antenna location"
+    },
+    "longitude" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Longitude in decimal degrees (East positive) of observation/antenna location"
+    },
+    "altitude" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Altitude in metres of observation/antenna location"
+    },
+    "hpbw" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Antenna half-power beam width in degrees"
+    },
+    "useMyPosition" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Use My Position instead of latitude/longitude settings"
+    },
+    "title" : {
+      "type" : "string"
+    },
+    "rgbColor" : {
+      "type" : "integer"
+    },
+    "useReverseAPI" : {
+      "type" : "integer",
+      "description" : "Synchronize with reverse API (1 for yes, 0 for no)"
+    },
+    "reverseAPIAddress" : {
+      "type" : "string"
+    },
+    "reverseAPIPort" : {
+      "type" : "integer"
+    },
+    "reverseAPIFeatureSetIndex" : {
+      "type" : "integer"
+    },
+    "reverseAPIFeatureIndex" : {
+      "type" : "integer"
+    },
+    "rollupState" : {
+      "$ref" : "#/definitions/RollupState"
+    }
+  },
+  "description" : "Sky Map"
+};
+            defs.SkyMapTarget = {
+  "properties" : {
+    "ra" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Right ascension of target (In decimal hours, J2000)"
+    },
+    "dec" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Declination of target (In decimal degrees, J2000)"
+    },
+    "latitude" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Latitude in decimal degrees (North positive) of observation/antenna location"
+    },
+    "longitude" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Longitude in decimal degrees (East positive) of observation/antenna location"
+    },
+    "altitude" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Altitude in metres of observation/antenna location"
+    },
+    "hpbw" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Antenna half-power beam width in degrees"
+    },
+    "dateTime" : {
+      "type" : "string",
+      "description" : "Date and time of observation. ISO 8601 extended format: yyyy-MM-ddTHH:mm:ss with Z suffix for UTC. Empty string for current time."
+    }
+  },
+  "description" : "Sky Map target. Sent by other plugins to skymap.target message queue."
+};
+            defs.SkyMapTarget_2 = {
+  "properties" : {
+    "ra" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Right ascension of target (In decimal hours, J2000)"
+    },
+    "dec" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Declination of target (In decimal degrees, J2000)"
+    },
+    "latitude" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Latitude in decimal degrees (North positive) of observation/antenna location"
+    },
+    "longitude" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Longitude in decimal degrees (East positive) of observation/antenna location"
+    },
+    "altitude" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Altitude in metres of observation/antenna location"
+    },
+    "hpbw" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Antenna half-power beam width in degrees"
+    },
+    "dateTime" : {
+      "type" : "string",
+      "description" : "Date and time of observation. ISO 8601 extended format: yyyy-MM-ddTHH:mm:ss with Z suffix for UTC. Empty string for current time."
+    }
+  },
+  "description" : "Sky Map target. Sent by other plugins to skymap.target message queue."
 };
             defs.SoapySDRFrequencySetting = {
   "properties" : {
@@ -14858,7 +15635,7 @@ margin-bottom: 20px;
     },
     "markerColor" : {
       "type" : "integer",
-      "description" : "Color in 8 bit BGR serie"
+      "description" : "Color in 8 bit BGR series"
     },
     "show" : {
       "type" : "integer",
@@ -14901,7 +15678,7 @@ margin-bottom: 20px;
     },
     "markerColor" : {
       "type" : "integer",
-      "description" : "Color in 8 bit BGR serie"
+      "description" : "Color in 8 bit BGR series"
     },
     "show" : {
       "type" : "integer",
@@ -14955,7 +15732,7 @@ margin-bottom: 20px;
     },
     "markerColor" : {
       "type" : "integer",
-      "description" : "Color in 8 bit BGR serie"
+      "description" : "Color in 8 bit BGR series"
     },
     "show" : {
       "type" : "integer",
@@ -15274,7 +16051,7 @@ margin-bottom: 20px;
     "airTemperature" : {
       "type" : "number",
       "format" : "float",
-      "description" : "Surface air temperature in degrees celsius at antenna location"
+      "description" : "Surface air temperature in degrees Celsius at antenna location"
     },
     "skyTemperature" : {
       "type" : "number",
@@ -15348,7 +16125,7 @@ margin-bottom: 20px;
     "airTemperature" : {
       "type" : "number",
       "format" : "float",
-      "description" : "Surface air temperature in degrees celsius at antenna location"
+      "description" : "Surface air temperature in degrees Celsius at antenna location"
     },
     "skyTemperature" : {
       "type" : "number",
@@ -15947,7 +16724,7 @@ margin-bottom: 20px;
     },
     "multicastJoin" : {
       "type" : "integer",
-      "description" : "Joim multicast group * 0 - leave group * 1 - join group\n"
+      "description" : "Join multicast group * 0 - leave group * 1 - join group\n"
     },
     "title" : {
       "type" : "string"
@@ -16330,6 +17107,307 @@ margin-bottom: 20px;
     }
   },
   "description" : "VORLocalizer"
+};
+            defs.WDSPRxReport = {
+  "properties" : {
+    "channelPowerDB" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "power received in channel (dB)"
+    },
+    "squelch" : {
+      "type" : "integer",
+      "description" : "Audio squelch status (1 if open else 0)"
+    },
+    "audioSampleRate" : {
+      "type" : "integer"
+    },
+    "channelSampleRate" : {
+      "type" : "integer"
+    }
+  },
+  "description" : "WDSPRx"
+};
+            defs.WDSPRxSettings = {
+  "properties" : {
+    "inputFrequencyOffset" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "profileIndex" : {
+      "type" : "integer"
+    },
+    "demod" : {
+      "type" : "integer",
+      "description" : "Demodulator type:\n  * 0 - SSB\n  * 1 - AM\n  * 2 - SAM\n  * 3 - FM\n"
+    },
+    "volume" : {
+      "type" : "number",
+      "format" : "float"
+    },
+    "audioBinaural" : {
+      "type" : "integer",
+      "description" : "Audio binaural mode (1 if active else 0)"
+    },
+    "audioFlipChannels" : {
+      "type" : "integer",
+      "description" : "Flip audio channels (1 if flipped else 0)"
+    },
+    "dsb" : {
+      "type" : "integer",
+      "description" : "Double sidebands mode (1 if DSB else 0)"
+    },
+    "audioMute" : {
+      "type" : "integer",
+      "description" : "Mute audio (1 if muted else 0)"
+    },
+    "agc" : {
+      "type" : "integer",
+      "description" : "AGC (1 if AGC active else 0)"
+    },
+    "agcMode" : {
+      "type" : "integer",
+      "description" : "AGC Mode:\n  * 0 - Long\n  * 1 - Slow\n  * 2 - Medium\n  * 3 - Fast\n"
+    },
+    "agcGain" : {
+      "type" : "integer",
+      "description" : "Top gain level"
+    },
+    "agcSlope" : {
+      "type" : "integer",
+      "description" : "Slope in centi-Bels"
+    },
+    "agcHangThreshold" : {
+      "type" : "integer"
+    },
+    "dnb" : {
+      "type" : "integer",
+      "description" : "Digital Noise Blanker:\n  * 0 - Off\n  * 1 - On\n"
+    },
+    "nbScheme" : {
+      "type" : "integer",
+      "description" : "Noise blanker scheme:\n  * 0 - NB or Preemptive Wideband Noise Blanker\n  * 1 - NB2 or Interpolating Wideband Noise Blanker\n"
+    },
+    "nb2Mode" : {
+      "type" : "integer",
+      "description" : "NB2 Noise blanking mode:\n  * 0 - Zero mode (estimate as zero)\n  * 1 - Sample‐hold (take the value of non‐corrupt signal at the beginning of the impulse and hold that throughout the corrupt sequence)\n  * 2 - Mean‐hold (average the non‐corrupt values at the beginning and end of the corrupt sequence and use that as the estimate during the corrupt sequence)\n  * 3 - hold‐sample (take the value of non‐corrupt signal at the end of the impulse and hold that throughout the corrupt sequence)\n  * 4 - linearly interpolate across the corrupt sequence.\n"
+    },
+    "nbSlewTime" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Advance slew time (s)"
+    },
+    "nbLeadTime" : {
+      "type" : "number",
+      "format" : "float"
+    },
+    "nbLagTime" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Hang time (S)"
+    },
+    "nbThreshold" : {
+      "type" : "integer"
+    },
+    "nbAvgTime" : {
+      "type" : "number",
+      "format" : "float"
+    },
+    "dnr" : {
+      "type" : "integer",
+      "description" : "Digital Noise Reduction:\n  * 0 - Off\n  * 1 - On\n"
+    },
+    "anf" : {
+      "type" : "integer",
+      "description" : "Automatic Notch Filter:\n  * 0 - Off\n  * 1 - On\n"
+    },
+    "nrScheme" : {
+      "type" : "integer",
+      "description" : "Noise Reduction Scheme:\n  * 0 - NR or LMS Noise Reduction\n  * 1 - NR2 or Spectral Noise Reduction\n"
+    },
+    "nr2Gain" : {
+      "type" : "integer",
+      "description" : "Noise Reduction gain for NR2:\n  * 0 - Linear\n  * 1 - Log\n  * 2 - Gamma\n"
+    },
+    "nr2NPE" : {
+      "type" : "integer",
+      "description" : "Noise Power Estimation algorithm for NR2:\n  * 0 - Optimal Smoothing Minimum Statistics (OSMS)\n  * 1 - Minimum Mean‐Square Error (MMSE)\n"
+    },
+    "nrPosition" : {
+      "type" : "integer",
+      "description" : "Noise reduction position:\n  * 0 - Before AGC\n  * 1 - After AGC\n"
+    },
+    "nr2ArtifactReduction" : {
+      "type" : "integer",
+      "description" : "NR2 artifacts reduction:\n  * 0 - Off\n  * 1 - On\n"
+    },
+    "amFadeLevel" : {
+      "type" : "integer",
+      "description" : "AM fade levelling:\n  * 0 - Off\n  * 1 - On\n"
+    },
+    "cwPeaking" : {
+      "type" : "integer",
+      "description" : "CW peaking filter:\n  * 0 - Off\n  * 1 - On\n"
+    },
+    "cwPeakFrequency" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "CW peaking filter center frequency (Hz)\n"
+    },
+    "cwBandwidth" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "CW peaking filter bandwidth (Hz)\n"
+    },
+    "cwGain" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "CW peaking filter gain (linear)\n"
+    },
+    "fmDeviation" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "FM demodulator deviation (Hz)\n"
+    },
+    "fmAFLow" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "FM Audio filter low cutoff frequency (HZ)\n"
+    },
+    "fmAFHigh" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "FM Audio filter high cutoff frequency (HZ)\n"
+    },
+    "fmAFLimiter" : {
+      "type" : "integer",
+      "description" : "FM Audio level limiter (audio AGC)\n  * 0 - Off\n  * 1 - On\n"
+    },
+    "fmAFLimiterGain" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "FM Audio level limiter top gain (Audio AGC top gain)\n"
+    },
+    "fmCTCSSNotch" : {
+      "type" : "integer",
+      "description" : "FM CTCSS notch filter\n  * 0 - Off\n  * 1 - On\n"
+    },
+    "fmCTCSSNotchFrequency" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "FM CTCSS notch filter frequency (Hz)\n"
+    },
+    "squelch" : {
+      "type" : "integer",
+      "description" : "Squelch:\n  * 0 - Off\n  * 1 - On\n"
+    },
+    "squelchThreshold" : {
+      "type" : "integer",
+      "description" : "Squelch threshold (percent)"
+    },
+    "squelchMode" : {
+      "type" : "integer",
+      "description" : "Squelch mode:\n  * 0 - Voice squelch (for SSB). Based on voice artifacts.\n  * 1 - AM squelch (for AM, SAM, CW). Signal power based.\n  * 2 - FM squelch (for FM). Demod noise based squelch\n"
+    },
+    "ssqlTauMute" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Voice squelch tau mute (s)"
+    },
+    "ssqlTauUnmute" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "Voice squelch tau unmute (s)"
+    },
+    "amsqMaxTail" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "AM squelch max tail length (s)"
+    },
+    "equalizer" : {
+      "type" : "integer",
+      "description" : "AF equalizer:\n  * 0 - Off\n  * 1 - On\n"
+    },
+    "eqF" : {
+      "type" : "array",
+      "description" : "Frequency points (Hz). Position 0 is preamp then 10 frequency points",
+      "items" : {
+        "type" : "number",
+        "format" : "float"
+      }
+    },
+    "eqG" : {
+      "type" : "array",
+      "description" : "Frequency points gains (dB). Position 0 is for preamp gain then for the 10 frequency points",
+      "items" : {
+        "type" : "number",
+        "format" : "float"
+      }
+    },
+    "rit" : {
+      "type" : "integer",
+      "description" : "RIT:\n  * 0 - Off\n  * 1 - On\n"
+    },
+    "ritFrequency" : {
+      "type" : "number",
+      "format" : "float",
+      "description" : "RIT shift frequency (Hz)"
+    },
+    "spanLog2" : {
+      "type" : "integer"
+    },
+    "rfBandwidth" : {
+      "type" : "number",
+      "format" : "float"
+    },
+    "lowCutoff" : {
+      "type" : "number",
+      "format" : "float"
+    },
+    "fftWindow" : {
+      "type" : "integer",
+      "description" : "FFT Window index (FFTWindow::Function):\n  * 0 - Blackman-Harris 4 term\n  * 1 - Blackman-Harris 7 term\n"
+    },
+    "rgbColor" : {
+      "type" : "integer"
+    },
+    "title" : {
+      "type" : "string"
+    },
+    "audioDeviceName" : {
+      "type" : "string"
+    },
+    "streamIndex" : {
+      "type" : "integer",
+      "description" : "MIMO channel. Not relevant when connected to SI (single Rx)."
+    },
+    "useReverseAPI" : {
+      "type" : "integer",
+      "description" : "Synchronize with reverse API (1 for yes, 0 for no)"
+    },
+    "reverseAPIAddress" : {
+      "type" : "string"
+    },
+    "reverseAPIPort" : {
+      "type" : "integer"
+    },
+    "reverseAPIDeviceIndex" : {
+      "type" : "integer"
+    },
+    "reverseAPIChannelIndex" : {
+      "type" : "integer"
+    },
+    "spectrumConfig" : {
+      "$ref" : "#/definitions/GLSpectrum"
+    },
+    "channelMarker" : {
+      "$ref" : "#/definitions/ChannelMarker"
+    },
+    "rollupState" : {
+      "$ref" : "#/definitions/RollupState"
+    }
+  },
+  "description" : "WDSPRx"
 };
             defs.WFMDemodReport = {
   "properties" : {
@@ -57882,7 +58960,7 @@ except ApiException as e:
 
 
                           <h2>Responses</h2>
-                            <h3> Status: 202 -  </h3>
+                            <h3> Status: 202 - Successful sending of the message </h3>
 
                             <ul class="nav nav-tabs nav-tabs-examples" >
                                 <li class="active">
@@ -57897,6 +58975,7 @@ except ApiException as e:
                                     <script>
                                       $(document).ready(function() {
                                         var schemaWrapper = {
+  "description" : "Successful sending of the message",
   "schema" : {
     "$ref" : "#/definitions/SuccessResponse"
   }
@@ -58216,7 +59295,7 @@ except ApiException as e:
 
 
                           <h2>Responses</h2>
-                            <h3> Status: 202 -  </h3>
+                            <h3> Status: 202 - Successful sending of the message </h3>
 
                             <ul class="nav nav-tabs nav-tabs-examples" >
                                 <li class="active">
@@ -58231,6 +59310,7 @@ except ApiException as e:
                                     <script>
                                       $(document).ready(function() {
                                         var schemaWrapper = {
+  "description" : "Successful sending of the message",
   "schema" : {
     "$ref" : "#/definitions/SuccessResponse"
   }
@@ -58361,7 +59441,7 @@ except ApiException as e:
           </div>
           <div id="generator">
             <div class="content">
-              Generated 2023-10-26T10:32:08.802+02:00
+              Generated 2024-07-16T23:20:27.082+02:00
             </div>
           </div>
       </div>

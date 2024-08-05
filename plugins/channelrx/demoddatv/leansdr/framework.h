@@ -1,3 +1,5 @@
+// Copyright (C) 2018-2019, 2021, 2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com> //
+
 // This file is part of LeanSDR Copyright (C) 2016-2018 <pabr@pabr.org>.
 // See the toplevel README for more information.
 //
@@ -492,7 +494,7 @@ T max(const T &x, const T &y) {
     return (x < y) ? y : x;
 }
 
-// Abreviations for integer types
+// Abbreviations for integer types
 
 typedef unsigned char u8;
 typedef unsigned short u16;

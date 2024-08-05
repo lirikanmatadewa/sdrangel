@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2018-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -25,12 +26,9 @@
 #include "device/deviceuiset.h"
 #include "device/deviceapi.h"
 #include "gui/basicchannelsettingsdialog.h"
-#include "gui/devicestreamselectiondialog.h"
 #include "gui/dialpopup.h"
 #include "gui/dialogpositioner.h"
-#include "dsp/hbfilterchainconverter.h"
 #include "dsp/dspcommands.h"
-#include "mainwindow.h"
 
 #include "filesinkmessages.h"
 #include "filesink.h"
@@ -235,10 +233,18 @@ FileSinkGUI::FileSinkGUI(PluginAPI* pluginAPI, DeviceUISet* deviceUISet, Baseban
 	//    connect(getInputMessageQueue(), SIGNAL(messageEnqueued()), this, SLOT(handleSourceMessages()));
 	connect(&(m_deviceUISet->m_deviceAPI->getMasterTimer()), SIGNAL(timeout()), this, SLOT(tick()));
 
+<<<<<<< HEAD
 	displaySettings();
 	makeUIConnections();
 	applySettings(true);
 	DialPopup::addPopupsToChildDials(this);
+=======
+    displaySettings();
+    makeUIConnections();
+    applySettings(true);
+    DialPopup::addPopupsToChildDials(this);
+    m_resizer.enableChildMouseTracking();
+>>>>>>> remotes/origin/master
 }
 
 FileSinkGUI::~FileSinkGUI()

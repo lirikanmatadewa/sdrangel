@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2017, 2018 Edouard Griffiths, F4EXB                             //
+// Copyright (C) 2016, 2018-2020 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
 // Copyright (C) 2017 Sergey Kostanbaev, Fairwaves Inc.                          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
@@ -21,7 +21,6 @@
 #include <thread>
 
 #include "xtrx/devicextrx.h"
-#include "xtrxinputsettings.h"
 #include "xtrxinputthread.h"
 
 XTRXInputThread::XTRXInputThread(struct xtrx_dev *dev, unsigned int nbChannels, unsigned int uniqueChannelIndex, QObject* parent) :

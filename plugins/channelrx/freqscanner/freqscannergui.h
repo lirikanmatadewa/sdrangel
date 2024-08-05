@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2023 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2020-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>         //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -32,6 +32,7 @@ class BasebandSampleSink;
 class FreqScanner;
 class FreqScannerGUI;
 class QMenu;
+class QComboBox;
 
 namespace Ui {
     class FreqScannerGUI;
@@ -66,6 +67,7 @@ public slots:
    void channelMarkerHighlightedByCursor();
 
 private:
+<<<<<<< HEAD
    Ui::FreqScannerGUI* ui;
    PluginAPI* m_pluginAPI;
    DeviceUISet* m_deviceUISet;
@@ -74,6 +76,17 @@ private:
    FreqScannerSettings m_settings;
    qint64 m_deviceCenterFrequency;
    bool m_doApplySettings;
+=======
+    Ui::FreqScannerGUI* ui;
+    PluginAPI* m_pluginAPI;
+    DeviceUISet* m_deviceUISet;
+    ChannelMarker m_channelMarker;
+    RollupState m_rollupState;
+    FreqScannerSettings m_settings;
+    QList<QString> m_settingsKeys;
+    qint64 m_deviceCenterFrequency;
+    bool m_doApplySettings;
+>>>>>>> remotes/origin/master
 
    FreqScanner* m_freqScanner;
    int m_basebandSampleRate;
@@ -81,6 +94,7 @@ private:
 
    QMenu* m_menu;
 
+<<<<<<< HEAD
    explicit FreqScannerGUI(PluginAPI* pluginAPI, DeviceUISet* deviceUISet, BasebandSampleSink* rxChannel, QWidget* parent = 0);
    virtual ~FreqScannerGUI();
 
@@ -97,6 +111,27 @@ private:
    void updateAnnotations();
    void updateChannelsList(const QList<FreqScannerSettings::AvailableChannel>& channels);
    void setAllEnabled(bool enable);
+=======
+    AvailableChannelOrFeatureList m_availableChannels;
+
+    explicit FreqScannerGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, BasebandSampleSink *rxChannel, QWidget* parent = 0);
+    virtual ~FreqScannerGUI();
+
+    void blockApplySettings(bool block);
+    void applySetting(const QString& settingsKey);
+    void applySettings(const QStringList& settingsKeys, bool force = false);
+    void applyAllSettings();
+    void displaySettings();
+    bool handleMessage(const Message& message);
+    void makeUIConnections();
+    void updateAbsoluteCenterFrequency();
+    void addRow(const FreqScannerSettings::FrequencySettings& frequencySettings);
+    void updateAnnotation(int row);
+    void updateAnnotations();
+    void updateChannelsCombo(QComboBox *combo, const AvailableChannelOrFeatureList& channels, const QString& channel, bool empty);
+    void updateChannelsList(const AvailableChannelOrFeatureList& channels, const QStringList& renameFrom, const QStringList& renameTo);
+    void setAllEnabled(bool enable);
+>>>>>>> remotes/origin/master
 
    void leaveEvent(QEvent*);
    void enterEvent(EnterEventType*);
@@ -104,6 +139,7 @@ private:
    void resizeTable();
    QAction* createCheckableItem(QString& text, int idx, bool checked);
 
+<<<<<<< HEAD
    enum Col {
       COL_FREQUENCY,
       COL_ANNOTATION,
@@ -149,6 +185,50 @@ private slots:
    void scanTimeDecClick();
    void retransmitTimeIncClick();
    void retransmitTimeDecClick();
+=======
+    enum Col {
+        COL_FREQUENCY,
+        COL_ANNOTATION,
+        COL_ENABLE,
+        COL_POWER,
+        COL_ACTIVE_COUNT,
+        COL_NOTES,
+        COL_CHANNEL,
+        COL_CHANNEL_BW,
+        COL_TH,
+        COL_SQ
+    };
+
+private slots:
+    void on_channels_currentIndexChanged(int index);
+    void on_deltaFrequency_changed(qint64 value);
+    void on_channelBandwidth_changed(qint64 index);
+    void on_scanTime_valueChanged(int value);
+    void on_retransmitTime_valueChanged(int value);
+    void on_tuneTime_valueChanged(int value);
+    void on_thresh_valueChanged(int value);
+    void on_priority_currentIndexChanged(int index);
+    void on_measurement_currentIndexChanged(int index);
+    void on_mode_currentIndexChanged(int index);
+    void on_table_cellChanged(int row, int column);
+    void on_table_channel_currentIndexChanged(int index);
+    void table_customContextMenuRequested(QPoint pos);
+    void table_sectionMoved(int logicalIndex, int oldVisualIndex, int newVisualIndex);
+    void table_sectionResized(int logicalIndex, int oldSize, int newSize);
+    void columnSelectMenu(QPoint pos);
+    void columnSelectMenuChecked(bool checked = false);
+    void on_startStop_toggled(bool checked = false);
+    void on_addSingle_clicked();
+    void on_addRange_clicked();
+    void on_remove_clicked();
+    void on_removeInactive_clicked();
+    void on_up_clicked();
+    void on_down_clicked();
+    void on_clearActiveCount_clicked();
+    void onWidgetRolled(QWidget* widget, bool rollDown);
+    void onMenuDialogCalled(const QPoint& p);
+    void handleInputMessages();
+>>>>>>> remotes/origin/master
 };
 
 #endif // INCLUDE_FREQSCANNERGUI_H

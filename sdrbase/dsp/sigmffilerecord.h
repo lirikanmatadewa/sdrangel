@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2015-2016, 2018-2021 Edouard Griffiths, F4EXB <f4exb06@gmail.com> //
+// Copyright (C) 2018 beta-tester <alpha-beta-release@gmx.net>                   //
+// Copyright (C) 2021 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // File recorder in SigMF format single channel for SI plugins                   //
 //                                                                               //
@@ -20,12 +22,10 @@
 #ifndef INCLUDE_SIGMF_FILERECORD_H
 #define INCLUDE_SIGMF_FILERECORD_H
 
-#include <string>
-#include <iostream>
-#include <fstream>
 #include <ctime>
 
 #include <QDateTime>
+#include <QFile>
 
 #include "dsp/sigmf_forward.h"
 #include "dsp/filerecordinterface.h"
@@ -55,30 +55,49 @@ public:
     unsigned int getNbCaptures() const;
     uint64_t getInitialMsCount() const { return m_initialMsCount; }
     uint64_t getInitialBytesCount() const { return m_initialBytesCount; }
+    void setLog2RecordSampleSize(uint32_t log2RecordSampleSize) { m_log2RecordSampleSize = log2RecordSampleSize; }
 
 private:
+    struct Sample8 {
+        qint8 m_real;
+        qint8 m_imag;
+    };
+
+    struct Sample16 {
+        qint16 m_real;
+        qint16 m_imag;
+    };
+
+    struct Sample32 {
+        qint32 m_real;
+        qint32 m_imag;
+    };
+
     QString m_hardwareId;
 	QString m_fileName;
-    QString m_sampleFileName;
-    QString m_metaFileName;
     quint32 m_sampleRate;
     quint64 m_centerFrequency;
     qint64 m_msShift;
     bool m_recordOn;
     bool m_recordStart;
     QDateTime m_captureStartDT;
-    std::ofstream m_metaFile;
-    std::ofstream m_sampleFile;
+    QFile m_metaFile;
+    QFile m_sampleFile;
     quint64 m_sampleStart;
     quint64 m_sampleCount;
     quint64 m_initialMsCount;
     quint64 m_initialBytesCount;
+    uint32_t m_log2RecordSampleSize;
     sigmf::SigMF<sigmf::Global<core::DescrT, sdrangel::DescrT>,
             sigmf::Capture<core::DescrT, sdrangel::DescrT>,
             sigmf::Annotation<core::DescrT> > *m_metaRecord;
+    std::vector<Sample8> m_samples8;
+    std::vector<Sample16> m_samples16;
+    std::vector<Sample32> m_samples32;
     void makeHeader();
     void makeCapture();
     void clearMeta();
+    void feedConv(const SampleVector::const_iterator& begin, const SampleVector::const_iterator& end);
 };
 
 #endif // INCLUDE_SIGMF_FILERECORD_H

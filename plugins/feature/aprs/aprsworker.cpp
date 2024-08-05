@@ -1,6 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2021-2022 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>               //
+// Copyright (C) 2022 Jiří Pinkava <jiri.pinkava@rossum.ai>                      //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -20,9 +21,9 @@
 #include <QAbstractSocket>
 #include <QTcpServer>
 #include <QTcpSocket>
+#include <QCoreApplication>
 
 #include "webapi/webapiadapterinterface.h"
-#include "webapi/webapiutils.h"
 #include "maincore.h"
 #include "util/ax25.h"
 #include "util/aprs.h"
@@ -101,20 +102,25 @@ bool APRSWorker::handleMessage(const Message& cmd)
     {
         MainCore::MsgPacket& report = (MainCore::MsgPacket&) cmd;
         AX25Packet ax25;
-        APRSPacket *aprs = new APRSPacket();
+
         if (ax25.decode(report.getPacket()))
         {
-            if (aprs->decode(ax25))
+            APRSPacket aprs;
+
+            // #2029 - Forward data even if we can't decode it fully
+            aprs.decode(ax25);
+
+            if (!aprs.m_data.isEmpty())
             {
                 // See: http://www.aprs-is.net/IGateDetails.aspx for gating rules
-                if (!aprs->m_via.contains("TCPIP")
-                    && !aprs->m_via.contains("TCPXX")
-                    && !aprs->m_via.contains("NOGATE")
-                    && !aprs->m_via.contains("RFONLY"))
+                if (!aprs.m_via.contains("TCPIP")
+                    && !aprs.m_via.contains("TCPXX")
+                    && !aprs.m_via.contains("NOGATE")
+                    && !aprs.m_via.contains("RFONLY"))
                 {
-                    aprs->m_dateTime = report.getDateTime();
-                    QString igateMsg = aprs->toTNC2(m_settings.m_igateCallsign);
-                    send(igateMsg.toUtf8(), igateMsg.length());
+                    aprs.m_dateTime = report.getDateTime();
+                    QByteArray igateMsg = aprs.toTNC2(m_settings.m_igateCallsign);
+                    send(igateMsg.data(), igateMsg.length());
                 }
             }
         }
@@ -206,7 +212,12 @@ void APRSWorker::recv()
             if (!m_loggedIn)
             {
                 // Log in with callsign and passcode
-                QString login = QString("user %1 pass %2 vers SDRangel 6.4.0%3\r\n").arg(m_settings.m_igateCallsign).arg(m_settings.m_igatePasscode).arg(m_settings.m_igateFilter.isEmpty() ? "" : QString(" filter %1").arg(m_settings.m_igateFilter));
+                QString login = QString("user %1 pass %2 vers SDRangel %3%4\r\n")
+                    .arg(m_settings.m_igateCallsign)
+                    .arg(m_settings.m_igatePasscode)
+                    .arg(qApp->applicationVersion())
+                    .arg(m_settings.m_igateFilter.isEmpty() ? "" : QString(" filter %1").arg(m_settings.m_igateFilter)
+                    );
                 send(login.toLatin1(), login.length());
                 m_loggedIn = true;
                 if (m_msgQueueToFeature)

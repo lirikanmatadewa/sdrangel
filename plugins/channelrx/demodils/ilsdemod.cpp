@@ -1,6 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2015-2018 Edouard Griffiths, F4EXB.                             //
-// Copyright (C) 2023 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2023 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -32,15 +31,13 @@
 #include "SWGWorkspaceInfo.h"
 #include "SWGILSDemodSettings.h"
 #include "SWGChannelReport.h"
-#include "SWGMapItem.h"
 
-#include "dsp/dspengine.h"
 #include "dsp/dspcommands.h"
 #include "dsp/morsedemod.h"
 #include "device/deviceapi.h"
-#include "feature/feature.h"
 #include "settings/serializable.h"
 #include "util/db.h"
+#include "util/morse.h"
 #include "maincore.h"
 
 MESSAGE_CLASS_DEFINITION(ILSDemod::MsgConfigureILSDemod, Message)
@@ -50,11 +47,17 @@ const char * const ILSDemod::m_channelIdURI = "sdrangel.channel.ilsdemod";
 const char * const ILSDemod::m_channelId = "ILSDemod";
 
 ILSDemod::ILSDemod(DeviceAPI *deviceAPI) :
-        ChannelAPI(m_channelIdURI, ChannelAPI::StreamSingleSink),
-        m_deviceAPI(deviceAPI),
-        m_running(false),
-        m_spectrumVis(SDR_RX_SCALEF),
-        m_basebandSampleRate(0)
+    ChannelAPI(m_channelIdURI, ChannelAPI::StreamSingleSink),
+    m_deviceAPI(deviceAPI),
+    m_running(false),
+    m_spectrumVis(SDR_RX_SCALEF),
+    m_basebandSampleRate(0),
+    m_ident(""),
+    m_dm90(NAN),
+    m_dm150(NAN),
+    m_sdm(NAN),
+    m_ddm(NAN),
+    m_angle(NAN)
 {
     setObjectName(m_channelId);
 
@@ -205,6 +208,9 @@ bool ILSDemod::handleMessage(const Message& cmd)
             m_guiMessageQueue->push(msg);
         }
 
+        // Save for channel report
+        m_ident = Morse::toString(report.getIdent());
+
         return true;
     }
     else if (ILSDemod::MsgAngleEstimate::match(cmd))
@@ -249,6 +255,13 @@ bool ILSDemod::handleMessage(const Message& cmd)
                         << "," << report.getPower150()
                         << "\n";
         }
+
+        // Save for channel report
+        m_sdm = report.getSDM();
+        m_ddm = report.getDDM();
+        m_dm90 = report.getModDepth90();
+        m_dm150 = report.getModDepth150();
+        m_angle = report.getAngle();
 
         return true;
     }
@@ -378,6 +391,8 @@ void ILSDemod::applySettings(const ILSDemodSettings& settings, bool force)
             m_deviceAPI->removeChannelSink(this, m_settings.m_streamIndex);
             m_deviceAPI->addChannelSink(this, settings.m_streamIndex);
             m_deviceAPI->addChannelSinkAPI(this);
+            m_settings.m_streamIndex = settings.m_streamIndex; // make sure ChannelAPI::getStreamIndex() is consistent
+            emit streamIndexChanged(settings.m_streamIndex);
         }
 
         reverseAPIKeys.append("streamIndex");
@@ -738,6 +753,12 @@ void ILSDemod::webapiFormatChannelReport(SWGSDRangel::SWGChannelReport& response
 
     response.getIlsDemodReport()->setChannelPowerDb(CalcDb::dbPower(magsqAvg));
     response.getIlsDemodReport()->setChannelSampleRate(m_basebandSink->getChannelSampleRate());
+    response.getIlsDemodReport()->setIdent(new QString(m_ident));
+    response.getIlsDemodReport()->setDeviation(m_angle);
+    response.getIlsDemodReport()->setSdm(m_sdm);
+    response.getIlsDemodReport()->setDdm(m_ddm);
+    response.getIlsDemodReport()->setDm90(m_dm90);
+    response.getIlsDemodReport()->setDm150(m_dm150);
 }
 
 void ILSDemod::webapiReverseSendSettings(QList<QString>& channelSettingsKeys, const ILSDemodSettings& settings, bool force)

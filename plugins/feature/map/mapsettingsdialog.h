@@ -1,5 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2019 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -24,30 +27,13 @@
 #include <QProgressDialog>
 
 #include "gui/httpdownloadmanagergui.h"
+#include "gui/tablecolorchooser.h"
 #include "util/openaip.h"
 #include "util/ourairportsdb.h"
+#include "util/waypoints.h"
 
 #include "ui_mapsettingsdialog.h"
 #include "mapsettings.h"
-
-class MapColorGUI : public QObject {
-    Q_OBJECT
-public:
-
-    MapColorGUI(QTableWidget *table, int row, int col, bool noColor, quint32 color);
-
-public slots:
-    void on_color_clicked();
-
-private:
-    QToolButton *m_colorButton;
-
-public:
-    // Have copies of settings, so we don't change unless main dialog is accepted
-    bool m_noColor;
-    quint32 m_color;
-
-};
 
 class MapItemSettingsGUI : public QObject {
     Q_OBJECT
@@ -55,12 +41,13 @@ public:
 
     MapItemSettingsGUI(QTableWidget *table, int row, MapSettings::MapItemSettings *settings);
 
-    MapColorGUI m_track2D;
-    MapColorGUI m_point3D;
-    MapColorGUI m_track3D;
+    TableColorChooser m_track2D;
+    TableColorChooser m_point3D;
+    TableColorChooser m_track3D;
     QSpinBox *m_minZoom;
     QSpinBox *m_minPixels;
     QDoubleSpinBox *m_labelScale;
+    QSpinBox *m_filterDistance;
 };
 
 class MapSettingsDialog : public QDialog {
@@ -101,6 +88,7 @@ private:
     QProgressDialog *m_progressDialog;
     OpenAIP m_openAIP;
     OurAirportsDB m_ourAirportsDB;
+    Waypoints m_waypoints;
 
     void unzip(const QString &filename);
 
@@ -111,6 +99,7 @@ private slots:
     void on_downloadModels_clicked();
     void on_getAirportDB_clicked();
     void on_getAirspacesDB_clicked();
+    void on_getWaypoints_clicked();
     void downloadComplete(const QString &filename, bool success, const QString &url, const QString &errorMessage);
     void downloadingURL(const QString& url);
     void downloadProgress(qint64 bytesRead, qint64 totalBytes);
@@ -118,11 +107,13 @@ private slots:
     void downloadAirspaceFinished();
     void downloadNavAidsFinished();
     void downloadAirportInformationFinished();
+    void downloadWaypointsFinished();
 
 signals:
     void navAidsUpdated();
     void airspacesUpdated();
     void airportsUpdated();
+    void waypointsUpdated();
 
 private:
     Ui::MapSettingsDialog* ui;

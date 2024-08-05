@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2019-2020, 2022-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com> //
+// Copyright (C) 2022 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -15,21 +16,15 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.          //
 ///////////////////////////////////////////////////////////////////////////////////
 
-#include "boost/format.hpp"
 #include <stdio.h>
 #include <complex.h>
 
 #include <QTime>
 #include <QDebug>
 
-#include "audio/audiooutputdevice.h"
-#include "dsp/dspengine.h"
-#include "dsp/dspcommands.h"
-#include "dsp/devicesamplemimo.h"
 #include "dsp/basebandsamplesink.h"
 #include "dsp/datafifo.h"
 #include "pipes/datapipes.h"
-#include "util/db.h"
 #include "maincore.h"
 
 #include "rdsparser.h"
@@ -227,8 +222,10 @@ void BFMDemodSink::feed(const SampleVector::const_iterator& begin, const SampleV
 				{
 					std::size_t res = m_audioFifo.write((const quint8*)&m_audioBuffer[0], std::min(m_audioBufferFill, m_audioBuffer.size()));
 
-					if(res != m_audioBufferFill) {
+					if (res != m_audioBufferFill)
+                    {
 						qDebug("BFMDemodSink::feed: %lu/%lu audio samples written", res, m_audioBufferFill);
+                        m_audioFifo.clear();
 					}
 
 					m_audioBufferFill = 0;

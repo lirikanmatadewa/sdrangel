@@ -1,5 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019-2020 Edouard Griffiths, F4EXB                              //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2014 John Greb <hexameron@spam.no>                              //
+// Copyright (C) 2015-2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -86,14 +89,6 @@ private slots:
 	void tick();
 
 private:
-	enum ParityStatus // matches decoder status
-	{
-		ParityUndefined,
-		ParityError,
-		ParityCorrected,
-		ParityOK
-	};
-
 	Ui::ChirpChatDemodGUI* ui;
 	PluginAPI* m_pluginAPI;
 	DeviceUISet* m_deviceUISet;
@@ -117,12 +112,14 @@ private:
 	void displaySettings();
     void displaySquelch();
     void setBandwidths();
-    void showLoRaMessage(const Message& message);
+    void showLoRaMessage(const Message& message); //!< For LoRa coding scheme
     void showTextMessage(const Message& message); //!< For TTY and ASCII
+    void showFTMessage(const Message& message);   //!< For FT coding scheme
 	void displayText(const QString& text);
 	void displayBytes(const QByteArray& bytes);
 	void displayStatus(const QString& status);
     void displayLoRaStatus(int headerParityStatus, bool headerCRCStatus, int payloadParityStatus, bool payloadCRCStatus);
+    void displayFTStatus(int payloadParityStatus, bool payloadCRCStatus);
 	QString getParityStr(int parityStatus);
     void resetLoRaStatus();
 	bool handleMessage(const Message& message);

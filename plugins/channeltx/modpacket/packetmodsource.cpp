@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2020 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2020-2021, 2023 Jon Beniston, M7RCE <jon@beniston.com>          //
+// Copyright (C) 2020-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -574,6 +574,7 @@ void PacketModSource::addTXPacket(QString callsign, QString to, QString via, QSt
     uint16_t crcValue;
     int len;
     int packet_length;
+    QStringList viaList = via.split(',', Qt::SkipEmptyParts);
 
     // Create AX.25 packet
     p = packet;
@@ -584,16 +585,18 @@ void PacketModSource::addTXPacket(QString callsign, QString to, QString via, QSt
     // Dest
     p = ax25_address(p, to, 0xe0);
     // From
-    p = ax25_address(p, callsign, 0x60);
+    p = ax25_address(p, callsign, 0x60 | (viaList.empty() ? 0x01 : 0x00));
     // Via
-    p = ax25_address(p, via, 0x61);
+    for (int i = 0; i < viaList.size(); i++)
+        p = ax25_address(p, std::move(viaList[i]), 0x60 | (i == viaList.size()-1 ? 0x01 : 0x00));
     // Control
     *p++ = m_settings.m_ax25Control;
     // PID
     *p++ = m_settings.m_ax25PID;
     // Data
-    len = data.length();
-    memcpy(p, data.toUtf8(), len);
+    QByteArray dataBytes = data.toUtf8();
+    len = dataBytes.length();
+    memcpy(p, dataBytes, len);
     p += len;
     // CRC (do not include flags)
     crc.calculate(crc_start, p-crc_start);

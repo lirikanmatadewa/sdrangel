@@ -1,6 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Jon Beniston, M7RCE                                        //
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2015 John Greb <hexameron@spam.no>                              //
+// Copyright (C) 2020-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -82,12 +85,14 @@ private:
     virtual ~GS232ControllerGUI();
 
     void blockApplySettings(bool block);
-    void applySettings(bool force = false);
+    void applySetting(const QString& settingsKey);
+    void applySettings(const QStringList& settingsKeys, bool force = false);
+    void applyAllSettings();
     void displaySettings();
     void setProtocol(GS232ControllerSettings::Protocol protocol);
     void setPrecision();
     void updateConnectionWidgets();
-    void updatePipeList(const QList<GS232ControllerSettings::AvailableChannelOrFeature>& sources);
+    void updatePipeList(const AvailableChannelOrFeatureList& sources, const QStringList& renameFrom, const QStringList& renameTo);
     void updateSerialPortList();
     void updateSerialPortList(const QStringList& serialPorts);
     bool handleMessage(const Message& message);

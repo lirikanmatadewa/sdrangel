@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2019-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2020 Kacper Michajłow <kasper93@gmail.com>                      //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -27,7 +28,6 @@
 #include "dsp/fftfilt.h"
 #include "dsp/firfilter.h"
 #include "dsp/afsquelch.h"
-#include "dsp/agc.h"
 #include "dsp/ctcssdetector.h"
 #include "dsp/dcscodes.h"
 #include "util/movingaverage.h"
@@ -44,11 +44,6 @@ public:
     NFMDemodSink();
 
     virtual void feed(const SampleVector::const_iterator& begin, const SampleVector::const_iterator& end);
-
-    const Real *getCtcssToneSet(int& nbTones) const {
-        nbTones = m_ctcssDetector.getNTones();
-        return m_ctcssDetector.getToneSet();
-    }
 
     bool getSquelchOpen() const { return m_squelchOpen; }
 

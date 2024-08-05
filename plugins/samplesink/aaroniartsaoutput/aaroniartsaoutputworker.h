@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2023 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>               //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -21,7 +21,6 @@
 #include <QTimer>
 
 #include "dsp/samplesourcefifo.h"
-#include "util/message.h"
 
 #include <QProcess>
 #include <QNetworkAccessManager>
@@ -29,7 +28,6 @@
 #include <QTimer>
 #include <QJsonDocument>
 #include <QObject>
-#include "dsp/decimatorsfi.h"
 
 class AaroniaRTSAOutputWorker : public QObject {
 	Q_OBJECT

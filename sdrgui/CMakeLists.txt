@@ -17,6 +17,7 @@ set(sdrgui_SOURCES
     gui/buttonswitch.cpp
     gui/channeladddialog.cpp
     gui/clickablelabel.cpp
+    gui/colordialog.cpp
     gui/colormapper.cpp
     gui/commanditem.cpp
     gui/commandsdialog.cpp
@@ -26,6 +27,7 @@ set(sdrgui_SOURCES
     gui/crightclickenabler.cpp
     gui/customtextedit.cpp
     gui/cwkeyergui.cpp
+    gui/cwmousekeyerenabler.cpp
     gui/datetimedelegate.cpp
     gui/decimaldelegate.cpp
     gui/devicesetselectiondialog.cpp
@@ -43,6 +45,7 @@ set(sdrgui_SOURCES
     gui/featurelayout.cpp
     gui/featurepresetsdialog.cpp
     gui/fftdialog.cpp
+    gui/fftnrdialog.cpp
     gui/fftwisdomdialog.cpp
     gui/flowlayout.cpp
     gui/framelesswindowresizer.cpp
@@ -62,10 +65,13 @@ set(sdrgui_SOURCES
     gui/graphicsviewzoom.cpp
     gui/httpdownloadmanagergui.cpp
     gui/indicator.cpp
+    gui/int64delegate.cpp
+    gui/int64validator.cpp
     gui/levelmeter.cpp
     gui/loggingdialog.cpp
     gui/logslider.cpp
     gui/loglabelslider.cpp
+    gui/mdiutils.cpp
     gui/mypositiondialog.cpp
     gui/nanosecondsdelegate.cpp
     gui/pluginsdialog.cpp
@@ -73,7 +79,6 @@ set(sdrgui_SOURCES
     gui/presetitem.cpp
     gui/profiledialog.cpp
     gui/rollupcontents.cpp
-    gui/rollupwidget.cpp
     gui/samplingdevicedialog.cpp
     gui/scaleengine.cpp
     gui/scaledimage.cpp
@@ -83,6 +88,7 @@ set(sdrgui_SOURCES
     gui/spectrummarkersdialog.cpp
     gui/spectrummeasurementsdialog.cpp
     gui/spectrummeasurements.cpp
+    gui/tablecolorchooser.cpp
     gui/tabletapandhold.cpp
     gui/tickedslider.cpp
     gui/timedelegate.cpp
@@ -137,6 +143,7 @@ set(sdrgui_HEADERS
     gui/basicfeaturesettingsdialog.h
     gui/buttonswitch.h
     gui/channeladddialog.h
+    gui/colordialog.h
     gui/colormapper.h
     gui/commanditem.h
     gui/commandsdialog.h
@@ -146,6 +153,7 @@ set(sdrgui_HEADERS
     gui/crightclickenabler.h
     gui/customtextedit.h
     gui/cwkeyergui.h
+    gui/cwmousekeyerenabler.h
     gui/datetimedelegate.h
     gui/decimaldelegate.h
     gui/devicesetselectiondialog.h
@@ -164,6 +172,7 @@ set(sdrgui_HEADERS
     gui/featurelayout.h
     gui/featurepresetsdialog.h
     gui/fftdialog.h
+    gui/fftnrdialog.h
     gui/fftwisdomdialog.h
     gui/flowlayout.h
     gui/framelesswindowresizer.h
@@ -183,10 +192,13 @@ set(sdrgui_HEADERS
     gui/graphicsviewzoom.h
     gui/httpdownloadmanagergui.h
     gui/indicator.h
+    gui/int64delegate.h
+    gui/int64validator.h
     gui/levelmeter.h
     gui/loggingdialog.h
     gui/logslider.h
     gui/loglabelslider.h
+    gui/mdiutils.h
     gui/mypositiondialog.h
     gui/nanosecondsdelegate.h
     gui/physicalunit.h
@@ -197,7 +209,6 @@ set(sdrgui_HEADERS
     gui/profiledialog.h
     gui/qtcompatibility.h
     gui/rollupcontents.h
-    gui/rollupwidget.h
     gui/samplingdevicedialog.h
     gui/scaleengine.h
     gui/scaledimage.h
@@ -207,6 +218,7 @@ set(sdrgui_HEADERS
     gui/spectrummarkersdialog.h
     gui/spectrummeasurementsdialog.h
     gui/spectrummeasurements.h
+    gui/tablecolorchooser.h
     gui/tabletapandhold.h
     gui/tickedslider.h
     gui/timedelegate.h
@@ -266,6 +278,7 @@ set(sdrgui_FORMS
     gui/featureadddialog.ui
     gui/featurepresetsdialog.ui
     gui/fftdialog.ui
+    gui/fftnrdialog.ui
     gui/fftwisdomdialog.ui
     gui/glscopegui.ui
     gui/glspectrumgui.ui

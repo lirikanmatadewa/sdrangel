@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2019-2020 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -25,7 +25,6 @@
 #include "dsp/nco.h"
 #include "dsp/interpolator.h"
 #include "dsp/fftwindow.h"
-#include "util/message.h"
 #include "util/movingaverage.h"
 
 #include "chirpchatdemodsettings.h"
@@ -138,6 +137,16 @@ private:
         Complex *specBuffer,
         unsigned int specDecim
         );
+    unsigned int extractMagnitudes(
+        std::vector<float>& magnitudes,
+        const Complex *fftBins,
+        unsigned int fftMult,
+        unsigned int fftLength,
+        double& magsqMax,
+        double& magSqTotal,
+        Complex *specBuffer,
+        unsigned int specDecim
+    );
     void decimateSpectrum(Complex *in, Complex *out, unsigned int size, unsigned int decimation);
     int toSigned(int u, int intSize);
     unsigned int evalSymbol(unsigned int rawSymbol);

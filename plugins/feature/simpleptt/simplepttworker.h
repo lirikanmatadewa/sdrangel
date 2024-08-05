@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2019-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2020 Vort <vvort@yandex.ru>                                     //
+// Copyright (C) 2022 Jiří Pinkava <jiri.pinkava@rossum.ai>                      //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -21,6 +23,7 @@
 #include <QObject>
 #include <QTimer>
 
+#include "dsp/dsptypes.h"
 #include "util/message.h"
 #include "util/messagequeue.h"
 #include "audio/audiofifo.h"

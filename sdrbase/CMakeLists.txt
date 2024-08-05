@@ -145,6 +145,7 @@ set(sdrbase_SOURCES
     dsp/fftengine.cpp
     dsp/fftfactory.cpp
     dsp/fftfilt.cpp
+    dsp/fftnr.cpp
     dsp/fftwindow.cpp
     dsp/filterrc.cpp
     dsp/filtermbe.cpp
@@ -223,8 +224,10 @@ set(sdrbase_SOURCES
     util/astronomy.cpp
     util/azel.cpp
     util/baudot.cpp
+    util/callsign.cpp
     util/colormap.cpp
     util/coordinates.cpp
+    util/countrydat.cpp
     util/crc.cpp
     util/CRC64.cpp
     util/csv.cpp
@@ -235,15 +238,19 @@ set(sdrbase_SOURCES
     util/flightinformation.cpp
     util/ft8message.cpp
     util/giro.cpp
+    util/goesxray.cpp
     util/golay2312.cpp
+    util/grb.cpp
     util/httpdownloadmanager.cpp
     util/interpolation.cpp
+    util/kiwisdrlist.cpp
     util/lfsr.cpp
     util/maidenhead.cpp
     util/message.cpp
     util/messagequeue.cpp
     util/mmsi.cpp
     util/morse.cpp
+    util/nasaglobalimagery.cpp
     util/navtex.cpp
     util/openaip.cpp
     util/osndb.cpp
@@ -255,17 +262,24 @@ set(sdrbase_SOURCES
     util/profiler.cpp
     util/psk31.cpp
     util/radiosonde.cpp
+    util/rainviewer.cpp
     util/rtpsink.cpp
     util/syncmessenger.cpp
     util/samplesourceserializer.cpp
     util/simpleserializer.cpp
     util/serialutil.cpp
+    util/solardynamicsobservatory.cpp
+    util/sondehub.cpp
     #util/spinlock.cpp
+    util/spyserverlist.cpp
+    util/stix.cpp
     util/rtty.cpp
     util/uid.cpp
     util/units.cpp
     util/timeutil.cpp
     util/visa.cpp
+    util/vlftransmitters.cpp
+    util/waypoints.cpp
     util/weather.cpp
     util/iot/device.cpp
     util/iot/homeassistant.cpp
@@ -285,10 +299,13 @@ set(sdrbase_SOURCES
 
     websockets/wsspectrum.cpp
 
+    availablechannelorfeature.cpp
+    availablechannelorfeaturehandler.cpp
     mainparser.cpp
     maincore.cpp
     remotetcpsinkstarter.cpp
 
+    resources/data.qrc
     resources/webapi.qrc
 )
 
@@ -351,6 +368,7 @@ set(sdrbase_HEADERS
     dsp/fftengine.h
     dsp/fftfactory.h
     dsp/fftfilt.h
+    dsp/fftnr.h
     dsp/fftwengine.h
     dsp/fftwindow.h
     dsp/filterrc.h
@@ -397,6 +415,7 @@ set(sdrbase_HEADERS
     dsp/projector.h
     dsp/raisedcosine.h
     dsp/recursivefilters.h
+    dsp/replaybuffer.h
     dsp/rootraisedcosine.h
     dsp/samplemififo.h
     dsp/samplemofifo.h
@@ -458,8 +477,10 @@ set(sdrbase_HEADERS
     util/astronomy.h
     util/azel.h
     util/baudot.h
+    util/callsign.h
     util/colormap.h
     util/coordinates.h
+    util/countrydat.h
     util/CRC64.h
     util/csv.h
     util/db.h
@@ -472,11 +493,14 @@ set(sdrbase_HEADERS
     util/flightinformation.h
     util/ft8message.h
     util/giro.h
+    util/goesxray.h
     util/golay2312.h
+    util/grb.h
     util/httpdownloadmanager.h
     util/incrementalarray.h
     util/incrementalvector.h
     util/interpolation.h
+    util/kiwisdrlist.h
     util/lfsr.h
     util/maidenhead.h
     util/message.h
@@ -485,6 +509,7 @@ set(sdrbase_HEADERS
     util/morse.h
     util/movingaverage.h
     util/movingmaximum.h
+    util/nasaglobalimagery.h
     util/navtex.h
     util/openaip.h
     util/osndb.h
@@ -496,17 +521,24 @@ set(sdrbase_HEADERS
     util/profiler.h
     util/psk31.h
     util/radiosonde.h
+    util/rainviewer.h
     util/rtpsink.h
     util/rtty.h
     util/syncmessenger.h
     util/samplesourceserializer.h
     util/simpleserializer.h
     util/serialutil.h
+    util/solardynamicsobservatory.h
+    util/sondehub.h
     #util/spinlock.h
+    util/spyserverlist.h
+    util/stix.h
     util/uid.h
     util/units.h
     util/timeutil.h
     util/visa.h
+    util/vlftransmitters.h
+    util/waypoints.h
     util/weather.h
     util/iot/device.h
     util/iot/homeassistant.h
@@ -522,6 +554,8 @@ set(sdrbase_HEADERS
 
     websockets/wsspectrum.h
 
+    availablechannelorfeature.h
+    availablechannelorfeaturehandler.h
     mainparser.h
     maincore.h
     remotetcpsinkstarter.h
@@ -572,8 +606,6 @@ if(Vulkan_FOUND AND (${VKFFT_BACKEND} EQUAL 0))
     find_library(VULKAN_SPIRV_TOOLS_LIB SPIRV-Tools HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
     find_library(VULKAN_SPIRV_TOOLS_OPT_LIB SPIRV-Tools-opt HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
     find_library(VULKAN_SPIRV_TOOLS_SHARED_LIB SPIRV-Tools-shared HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
-    find_library(VULKAN_HLSL_LIB HLSL HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
-    find_library(VULKAN_OGLCOMPILER_LIB OGLCompiler HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
     find_library(VULKAN_OSDEPENDENT_LIB OSDependent HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
     find_library(VULKAN_GLSLANG_LIB glslang HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
     find_library(VULKAN_GLSLANG_RES_LIB glslang-default-resource-limits HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
@@ -590,8 +622,6 @@ if(Vulkan_FOUND AND (${VKFFT_BACKEND} EQUAL 0))
     find_library(VULKAN_SPIRV_TOOLSD_LIB SPIRV-Tools${VULKAN_DEBUG_POSTFIX} HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
     find_library(VULKAN_SPIRV_TOOLS_OPTD_LIB SPIRV-Tools-opt${VULKAN_DEBUG_POSTFIX} HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
     find_library(VULKAN_SPIRV_TOOLS_SHAREDD_LIB SPIRV-Tools-shared${VULKAN_DEBUG_POSTFIX} HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
-    find_library(VULKAN_HLSLD_LIB HLSL${VULKAN_DEBUG_POSTFIX} HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
-    find_library(VULKAN_OGLCOMPILERD_LIB OGLCompiler${VULKAN_DEBUG_POSTFIX} HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
     find_library(VULKAN_OSDEPENDENTD_LIB OSDependent${VULKAN_DEBUG_POSTFIX} HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
     find_library(VULKAN_GLSLANGD_LIB glslang${VULKAN_DEBUG_POSTFIX} HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
     find_library(VULKAN_GLSLANG_RESD_LIB glslang-default-resource-limits${VULKAN_DEBUG_POSTFIX} HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
@@ -604,8 +634,6 @@ if(Vulkan_FOUND AND (${VKFFT_BACKEND} EQUAL 0))
         optimized ${VULKAN_SPIRV_TOOLS_LIB}
         optimized ${VULKAN_SPIRV_TOOLS_OPT_LIB}
         optimized ${VULKAN_SPIRV_TOOLS_SHARED_LIB}
-        optimized ${VULKAN_HLSL_LIB}
-        optimized ${VULKAN_OGLCOMPILER_LIB}
         optimized ${VULKAN_OSDEPENDENT_LIB}
         optimized ${VULKAN_GLSLANG_LIB}
         optimized ${VULKAN_GLSLANG_RES_LIB}
@@ -617,8 +645,6 @@ if(Vulkan_FOUND AND (${VKFFT_BACKEND} EQUAL 0))
         debug ${VULKAN_SPIRV_TOOLSD_LIB}
         debug ${VULKAN_SPIRV_TOOLS_OPTD_LIB}
         debug ${VULKAN_SPIRV_TOOLS_SHAREDD_LIB}
-        debug ${VULKAN_HLSLD_LIB}
-        debug ${VULKAN_OGLCOMPILERD_LIB}
         debug ${VULKAN_OSDEPENDENTD_LIB}
         debug ${VULKAN_GLSLANGD_LIB}
         debug ${VULKAN_GLSLANG_RESD_LIB}

@@ -1,6 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2017 F4EXB                                                      //
-// written by Edouard Griffiths                                                  //
+// Copyright (C) 2017-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -28,14 +27,11 @@
 #include <QAtomicInt>
 
 #include "dsp/glscopeinterface.h"
-#include "dsp/dsptypes.h"
-#include "dsp/scopevis.h"
 #include "gui/scaleengine.h"
 #include "gui/glshadercolors.h"
 #include "gui/glshadersimple.h"
 #include "gui/glshadertextured.h"
 #include "export.h"
-#include "util/bitfieldindex.h"
 #include "util/incrementalarray.h"
 
 class QPainter;

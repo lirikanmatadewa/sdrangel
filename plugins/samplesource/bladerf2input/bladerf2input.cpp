@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2018 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2018-2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2023 Daniele Forsi <iu5hkx@gmail.com>                           //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -29,7 +30,6 @@
 
 #include "device/deviceapi.h"
 #include "dsp/dspcommands.h"
-#include "dsp/dspengine.h"
 
 #include "bladerf2/devicebladerf2shared.h"
 #include "bladerf2/devicebladerf2.h"
@@ -978,7 +978,7 @@ bool BladeRF2Input::applySettings(const BladeRF2InputSettings& settings, const Q
         }
     }
 
-    if (settingsKeys.contains("useReverseAPI"))
+    if (settings.m_useReverseAPI)
     {
         bool fullUpdate = (settingsKeys.contains("useReverseAPI") && settings.m_useReverseAPI) ||
             settingsKeys.contains("reverseAPIAddress") ||

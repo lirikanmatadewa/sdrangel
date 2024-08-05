@@ -26,7 +26,7 @@ There are 3 main sections
 
 <h3>A.1: Frequency shift from center frequency of reception</h3>
 
-Use the wheels to adjust the frequency shift in Hz from the center frequency of reception. Left click on a digit sets the cursor position at this digit. Right click on a digit sets all digits on the right to zero. This effectively floors value at the digit position. Wheels are moved with the mousewheel while pointing at the wheel or by selecting the wheel with the left mouse click and using the keyboard arrows.Pressing shift simultaneously moves digit by 5 and pressing control moves it by 2.
+Use the wheels to adjust the frequency shift in Hz from the center frequency of reception. Left click on a digit sets the cursor position at this digit. Right click on a digit sets all digits on the right to zero. This effectively floors value at the digit position. Wheels are moved with the mousewheel while pointing at the wheel or by selecting the wheel with the left mouse click and using the keyboard arrows. Pressing shift simultaneously moves digit by 5 and pressing control moves it by 2.
 
 <h3>A.2: Channel bandwidth before discriminator</h3>
 
@@ -191,7 +191,7 @@ Shows status information on the decoder:
   - **Samp**: sampling point offsets from 0 to 9 as there are 10 samples per symbols at 48 kS/s and 4800 Baud. Numbers are arranged in this order: symbol, sync and clock. The clock offset wins. These numbers should not differ by more than 1 (0 to 9 wrapping considered).
   - **Vit**: Viterbi cost. Should be positive and as low as possible. -1 if unavailable.
 
-<h3>C1.8: FM signal scope controls
+<h3>C1.8: FM signal scope controls</h3>
 
 ![M17 Demodulator scope controls GUI](../../../doc/img/M17Demod_scope_controls.png)
 
@@ -209,7 +209,7 @@ This button tunes the stroke of the points displayed on C1.1. The trace has limi
 
 <h4>C1.8.4: Trace decay</h4>
 
-This button tunes the persistence decay of the points displayed on C1.1.1. The trace has limited persistence based on alpha blending. This controls the alpha value of the black screen printed at the end of each trace and thus the trace points decay time. The value is 255 minus he displayed value using 8 bit unsigned integers.
+This button tunes the persistence decay of the points displayed on C1.1.1. The trace has limited persistence based on alpha blending. This controls the alpha value of the black screen printed at the end of each trace and thus the trace points decay time. The value is 255 minus the displayed value using 8 bit unsigned integers.
 
   - A value of 0 yields no persistence
   - A value of 255 yields infinite persistence

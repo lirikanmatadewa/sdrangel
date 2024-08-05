@@ -1,6 +1,10 @@
 ///////////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
 // written by Christian Daniel                                                   //
+// Copyright (C) 2014-2015 John Greb <hexameron@spam.no>                         //
+// Copyright (C) 2015-2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2018 beta-tester <alpha-beta-release@gmx.net>                   //
+// Copyright (C) 2022-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -27,20 +31,19 @@
 #include "SWGRtlSdrSettings.h"
 #include "SWGDeviceState.h"
 #include "SWGDeviceReport.h"
-#include "SWGDeviceActions.h"
 #include "SWGRtlSdrReport.h"
 
 #include "rtlsdrinput.h"
 #include "device/deviceapi.h"
 #include "rtlsdrthread.h"
 #include "dsp/dspcommands.h"
-#include "dsp/dspengine.h"
 #ifdef ANDROID
 #include "util/android.h"
 #endif
 
 MESSAGE_CLASS_DEFINITION(RTLSDRInput::MsgConfigureRTLSDR, Message)
 MESSAGE_CLASS_DEFINITION(RTLSDRInput::MsgStartStop, Message)
+MESSAGE_CLASS_DEFINITION(RTLSDRInput::MsgSaveReplay, Message)
 
 const quint64 RTLSDRInput::frequencyLowRangeMin = 0UL;
 const quint64 RTLSDRInput::frequencyLowRangeMax = 275000UL;
@@ -234,7 +237,7 @@ bool RTLSDRInput::start()
 
     if (m_running) stop();
 
-	m_rtlSDRThread = new RTLSDRThread(m_dev, &m_sampleFifo);
+	m_rtlSDRThread = new RTLSDRThread(m_dev, &m_sampleFifo, &m_replayBuffer);
 	m_rtlSDRThread->setSamplerate(m_settings.m_devSampleRate);
 	m_rtlSDRThread->setLog2Decimation(m_settings.m_log2Decim);
 	m_rtlSDRThread->setFcPos((int) m_settings.m_fcPos);
@@ -370,6 +373,12 @@ bool RTLSDRInput::handleMessage(const Message& message)
 
         return true;
     }
+    else if (MsgSaveReplay::match(message))
+    {
+        MsgSaveReplay& cmd = (MsgSaveReplay&) message;
+        m_replayBuffer.save(cmd.getFilename(), m_settings.m_devSampleRate, getCenterFrequency());
+        return true;
+    }
     else
     {
         return false;
@@ -427,6 +436,9 @@ bool RTLSDRInput::applySettings(const RTLSDRSettings& settings, const QList<QStr
                 }
 
                 qDebug("RTLSDRInput::applySettings: sample rate set to %d", settings.m_devSampleRate);
+            }
+            if (settings.m_devSampleRate != m_settings.m_devSampleRate) {
+                m_replayBuffer.clear();
             }
         }
     }
@@ -530,7 +542,7 @@ bool RTLSDRInput::applySettings(const RTLSDRSettings& settings, const QList<QStr
         if(m_dev != 0)
         {
             // Nooelec E4000 SDRs appear to require tuner_gain_mode to be reset to manual before
-            // each call to set_tuner_gain, otherwise tuner AGC seems to be reenabled
+            // each call to set_tuner_gain, otherwise tuner AGC seems to be re-enabled
             if (rtlsdr_set_tuner_gain_mode(m_dev, 1) < 0) {
                 qCritical("RTLSDRInput::applySettings: error setting tuner gain mode to manual");
             }
@@ -555,7 +567,7 @@ bool RTLSDRInput::applySettings(const RTLSDRSettings& settings, const QList<QStr
         }
     }
 
-    if (settingsKeys.contains("useReverseAPI"))
+    if (settings.m_useReverseAPI)
     {
         bool fullUpdate = (settingsKeys.contains("useReverseAPI") && settings.m_useReverseAPI) ||
             settingsKeys.contains("reverseAPIAddress") ||
@@ -568,6 +580,18 @@ bool RTLSDRInput::applySettings(const RTLSDRSettings& settings, const QList<QStr
         m_settings = settings;
     } else {
         m_settings.applySettings(settingsKeys, settings);
+    }
+
+    if (settingsKeys.contains("replayLength") || settingsKeys.contains("devSampleRate") || force) {
+        m_replayBuffer.setSize(m_settings.m_replayLength, m_settings.m_devSampleRate);
+    }
+
+    if (settingsKeys.contains("replayOffset") || settingsKeys.contains("devSampleRate")  || force) {
+        m_replayBuffer.setReadOffset(((unsigned)(m_settings.m_replayOffset * m_settings.m_devSampleRate)) * 2);
+    }
+
+    if (settingsKeys.contains("replayLoop") || force) {
+        m_replayBuffer.setLoop(m_settings.m_replayLoop);
     }
 
     if (forwardChange)

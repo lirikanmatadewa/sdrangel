@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2015-2019 Edouard Griffiths, F4EXB                              //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015, 2017-2019, 2021 Edouard Griffiths, F4EXB <f4exb06@gmail.com> //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -50,6 +52,7 @@ ChannelMarker::ChannelMarker(QObject* parent) :
 	m_bandwidth(0),
     m_oppositeBandwidth(0),
 	m_lowCutoff(0),
+    m_shift(0),
 	m_sidebands(dsb),
 	m_visible(false),
 	m_highlighted(false),
@@ -102,6 +105,12 @@ void ChannelMarker::setOppositeBandwidth(int bandwidth)
 void ChannelMarker::setLowCutoff(int lowCutoff)
 {
 	m_lowCutoff = lowCutoff;
+	emit changedByAPI();
+}
+
+void ChannelMarker::setShift(int shift)
+{
+	m_shift = shift;
 	emit changedByAPI();
 }
 

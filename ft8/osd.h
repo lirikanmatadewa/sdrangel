@@ -1,8 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2023 Edouard Griffiths, F4EXB.                                  //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2019, 2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
 //                                                                               //
 // This is the code from ft8mon: https://github.com/rtmrtmrtmrtm/ft8mon          //
-// written by Robert Morris, AB1HL                                               //
 // reformatted and adapted to Qt and SDRangel context                            //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
@@ -35,7 +36,7 @@ public:
     static int osd_decode(float codeword[174], int depth, int out[91], int *out_depth);
 };
 
-} // namepsace FT8
+} // namespace FT8
 
 #endif // osd_h
 

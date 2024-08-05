@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2018 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2018-2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2018 beta-tester <alpha-beta-release@gmx.net>                   //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -26,7 +27,6 @@
 #include "SWGPerseusReport.h"
 
 #include "dsp/dspcommands.h"
-#include "dsp/dspengine.h"
 #include "device/deviceapi.h"
 #include "perseus/deviceperseus.h"
 
@@ -402,7 +402,7 @@ bool PerseusInput::applySettings(const PerseusSettings& settings, const QList<QS
         m_deviceAPI->getDeviceEngineInputMessageQueue()->push(notif);
     }
 
-    if (settingsKeys.contains("useReverseAPI"))
+    if (settings.m_useReverseAPI)
     {
         bool fullUpdate = (settingsKeys.contains("useReverseAPI") && settings.m_useReverseAPI) ||
             settingsKeys.contains("reverseAPIAddress") ||

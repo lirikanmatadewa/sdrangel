@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2017 F4EXB                                                      //
-// written by Edouard Griffiths                                                  //
+// Copyright (C) 2018-2019, 2021 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2020 Kacper Michajłow <kasper93@gmail.com>                      //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -60,6 +60,15 @@ Real Projector::run(const Sample& s)
             v = re*re + im*im;
         }
             break;
+        case ProjectionDMagSq:
+        {
+            Real re = s.m_real / SDR_RX_SCALEF;
+            Real im = s.m_imag / SDR_RX_SCALEF;
+            Real curMagSq = re*re + im*im;
+            v = curMagSq - m_prevVal;
+            m_prevVal = curMagSq;
+        }
+            break;
         case ProjectionMagDB:
         {
             Real re = s.m_real / SDR_RX_SCALEF;
@@ -75,14 +84,14 @@ Real Projector::run(const Sample& s)
         {
             // calculate phase. Assume phase difference between two sources at half wavelength distance with sources axis as reference (positive side)
             // cos(theta) = phi / 2*pi*k
-            Real p = std::atan2((float) s.m_imag, (float) s.m_real); // do not mormalize phi (phi in -pi..+pi)
+            Real p = std::atan2((float) s.m_imag, (float) s.m_real); // do not normalize phi (phi in -pi..+pi)
             v = acos(p/M_PI) / M_PI; // normalize theta
         }
             break;
         case ProjectionDOAN:
         {
             // calculate phase. Assume phase difference between two sources at half wavelength distance with sources axis as reference (negative source)
-            Real p = std::atan2((float) s.m_imag, (float) s.m_real); // do not mormalize phi (phi in -pi..+pi)
+            Real p = std::atan2((float) s.m_imag, (float) s.m_real); // do not normalize phi (phi in -pi..+pi)
             v = -acos(p/M_PI) / M_PI; // normalize theta
         }
             break;
@@ -235,6 +244,13 @@ Real Projector::run(const std::complex<float>& s)
         case ProjectionMagSq:
             v = std::norm(s);
             break;
+        case ProjectionDMagSq:
+        {
+            Real curMagSq = std::norm(s);
+            v = curMagSq - m_prevVal;
+            m_prevVal = curMagSq;
+        }
+            break;
         case ProjectionMagDB:
         {
             Real magsq = std::norm(s);
@@ -248,14 +264,14 @@ Real Projector::run(const std::complex<float>& s)
         {
             // calculate phase. Assume phase difference between two sources at half wavelength distance with sources axis as reference (positive side)
             // cos(theta) = phi / 2*pi*k
-            Real p = std::arg(s); // do not mormalize phi (phi in -pi..+pi)
+            Real p = std::arg(s); // do not normalize phi (phi in -pi..+pi)
             v = acos(p/M_PI) / M_PI; // normalize theta
         }
             break;
         case ProjectionDOAN:
         {
             // calculate phase. Assume phase difference between two sources at half wavelength distance with sources axis as reference (negative source)
-            Real p = std::arg(s); // do not mormalize phi (phi in -pi..+pi)
+            Real p = std::arg(s); // do not normalize phi (phi in -pi..+pi)
             v = -acos(p/M_PI) / M_PI; // normalize theta
         }
             break;

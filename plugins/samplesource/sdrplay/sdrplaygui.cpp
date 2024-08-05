@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2016-2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2022-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -30,7 +31,6 @@
 #include "gui/basicdevicesettingsdialog.h"
 #include "gui/dialpopup.h"
 #include "gui/dialogpositioner.h"
-#include "dsp/dspengine.h"
 #include "dsp/dspcommands.h"
 
 
@@ -87,6 +87,7 @@ SDRPlayGui::SDRPlayGui(DeviceUISet *deviceUISet, QWidget* parent) :
     connect(&m_inputMessageQueue, SIGNAL(messageEnqueued()), this, SLOT(handleInputMessages()), Qt::QueuedConnection);
     m_sampleSource->setMessageQueueToGUI(&m_inputMessageQueue);
     DialPopup::addPopupsToChildDials(this);
+    m_resizer.enableChildMouseTracking();
 }
 
 SDRPlayGui::~SDRPlayGui()

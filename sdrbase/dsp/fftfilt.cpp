@@ -1,3 +1,23 @@
+///////////////////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany     //
+// written by Christian Daniel                                                       //
+// Copyright (C) 2014-2015 John Greb <hexameron@spam.no>                             //
+// Copyright (C) 2015, 2017-2018, 2020, 2022-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com> //
+// Copyright (C) 2020 Kacper Michajłow <kasper93@gmail.com>                          //
+//                                                                                   //
+// This program is free software; you can redistribute it and/or modify              //
+// it under the terms of the GNU General Public License as published by              //
+// the Free Software Foundation as version 3 of the License, or                      //
+// (at your option) any later version.                                               //
+//                                                                                   //
+// This program is distributed in the hope that it will be useful,                   //
+// but WITHOUT ANY WARRANTY; without even the implied warranty of                    //
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                      //
+// GNU General Public License V3 for more details.                                   //
+//                                                                                   //
+// You should have received a copy of the GNU General Public License                 //
+// along with this program. If not, see <http://www.gnu.org/licenses/>.              //
+///////////////////////////////////////////////////////////////////////////////////////
 // ----------------------------------------------------------------------------
 //	fftfilt.cxx  --  Fast convolution Overlap-Add filter
 //
@@ -78,28 +98,34 @@ void fftfilt::init_filter()
 // f1 == 0 ==> low pass filter
 // f2 == 0 ==> high pass filter
 //------------------------------------------------------------------------------
-fftfilt::fftfilt(int len)
+fftfilt::fftfilt(int len) :
+    m_noiseReduction(len)
 {
 	flen	= len;
 	pass    = 0;
 	window  = 0;
+    m_dnr   = false;
 	init_filter();
 }
 
-fftfilt::fftfilt(float f1, float f2, int len)
+fftfilt::fftfilt(float f1, float f2, int len) :
+    m_noiseReduction(len)
 {
 	flen	= len;
 	pass    = 0;
 	window  = 0;
+    m_dnr   = false;
 	init_filter();
 	create_filter(f1, f2);
 }
 
-fftfilt::fftfilt(float f2, int len)
+fftfilt::fftfilt(float f2, int len) :
+    m_noiseReduction(len)
 {
 	flen	= len;
     pass    = 0;
     window  = 0;
+    m_dnr   = false;
 	init_filter();
 	create_dsb_filter(f2);
 }
@@ -468,22 +494,53 @@ int fftfilt::runSSB(const cmplx & in, cmplx **out, bool usb, bool getDC)
 
 	// get or reject DC component
 	data[0] = getDC ? data[0]*filter[0] : 0;
+    m_noiseReduction.setScheme(m_dnrScheme);
+    m_noiseReduction.init();
 
 	// Discard frequencies for ssb
 	if (usb)
 	{
-		for (int i = 1; i < flen2; i++) {
+		for (int i = 1; i < flen2; i++)
+        {
 			data[i] *= filter[i];
 			data[flen2 + i] = 0;
+
+            if (m_dnr)
+            {
+                m_noiseReduction.push(data[i], i);
+                m_noiseReduction.push(data[flen2 + i], flen2 + i);
+            }
 		}
 	}
 	else
 	{
-		for (int i = 1; i < flen2; i++) {
+		for (int i = 1; i < flen2; i++)
+        {
 			data[i] = 0;
 			data[flen2 + i] *= filter[flen2 + i];
+
+            if (m_dnr)
+            {
+                m_noiseReduction.push(data[i], i);
+                m_noiseReduction.push(data[flen2 + i], flen2 + i);
+            }
 		}
 	}
+
+    if (m_dnr)
+    {
+        m_noiseReduction.m_aboveAvgFactor = m_dnrAboveAvgFactor;
+        m_noiseReduction.m_sigmaFactor = m_dnrSigmaFactor;
+        m_noiseReduction.m_nbPeaks = m_dnrNbPeaks;
+        m_noiseReduction.calc();
+
+        for (int i = 0; i < flen; i++)
+        {
+            if (m_noiseReduction.cut(i)) {
+                data[i] = 0;
+            }
+        }
+    }
 
 	// in-place FFT: freqdata overwritten with filtered timedata
 	fft->InverseComplexFFT(data);

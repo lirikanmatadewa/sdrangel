@@ -1,5 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2015 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2015-2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2018 Christopher Hewitt <hewitt@ieee.org>                       //
+// Copyright (C) 2019 Davide Gerhard <rainbow@irh.it>                            //
+// Copyright (C) 2020 Kacper Michajłow <kasper93@gmail.com>                      //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -18,7 +21,6 @@
 #include <QtPlugin>
 #include <libbladeRF.h>
 #include "plugin/pluginapi.h"
-#include "util/simpleserializer.h"
 
 #include "bladerf1outputplugin.h"
 #include "bladerf1outputwebapiadapter.h"
@@ -32,7 +34,7 @@
 const PluginDescriptor Bladerf1OutputPlugin::m_pluginDescriptor = {
     QStringLiteral("BladeRF1"),
 	QStringLiteral("BladeRF1 Output"),
-    QStringLiteral("7.8.5"),
+    QStringLiteral("7.20.0"),
 	QStringLiteral("(c) Edouard Griffiths, F4EXB"),
 	QStringLiteral("https://github.com/f4exb/sdrangel"),
 	true,

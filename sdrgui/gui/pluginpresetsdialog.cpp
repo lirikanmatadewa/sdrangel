@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2023 Jon Beniston, M7RCE <jon@beniston.com>                     //
 // Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2023 Jon Beniston, M7RCE                                        //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -22,7 +22,6 @@
 #include "gui/addpresetdialog.h"
 #include "settings/serializableinterface.h"
 #include "settings/pluginpreset.h"
-#include "maincore.h"
 
 #include "pluginpresetsdialog.h"
 #include "ui_pluginpresetsdialog.h"

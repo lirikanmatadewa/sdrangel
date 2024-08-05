@@ -1,6 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2015 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2020 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2018-2020, 2022-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com> //
+// Copyright (C) 2019 Davide Gerhard <rainbow@irh.it>                            //
+// Copyright (C) 2020, 2022 Jon Beniston, M7RCE <jon@beniston.com>               //
+// Copyright (C) 2020 Kacper Michajłow <kasper93@gmail.com>                      //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -18,7 +20,6 @@
 
 #include <QtPlugin>
 #include "plugin/pluginapi.h"
-#include "util/simpleserializer.h"
 #include "audioinputplugin.h"
 #include "audioinputwebapiadapter.h"
 
@@ -31,7 +32,7 @@
 const PluginDescriptor AudioInputPlugin::m_pluginDescriptor = {
     QStringLiteral("AudioInput"),
     QStringLiteral("Audio Input"),
-    QStringLiteral("7.15.1"),
+    QStringLiteral("7.21.4"),
     QStringLiteral("(c) Jon Beniston, M7RCE and Edouard Griffiths, F4EXB"),
     QStringLiteral("https://github.com/f4exb/sdrangel"),
     true,
@@ -66,7 +67,7 @@ void AudioInputPlugin::enumOriginDevices(QStringList& listedHwIds, OriginDevices
     // but I thought it makes it simpler to switch between inputs
     // if they are in the AudioInput GUI
     originDevices.append(OriginDevice(
-        "Audio",
+        "AudioInput",
         m_hardwareID,
         "0",
         0,
@@ -92,7 +93,7 @@ PluginInterface::SamplingDevices AudioInputPlugin::enumSampleSources(const Origi
                     m_deviceTypeID,
                     it->serial,
                     it->sequence,
-                    PluginInterface::SamplingDevice::PhysicalDevice,
+                    PluginInterface::SamplingDevice::BuiltInDevice,
                     PluginInterface::SamplingDevice::StreamSingleRx,
                     it->nbRxStreams,
                     j));

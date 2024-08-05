@@ -1,6 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2018 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2022 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2022 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -62,11 +61,12 @@ public:
         SOAPY_SDR,
         TEST_SOURCE,
         USRP,
-        XTRX
+        XTRX,
+        SDRPLAY_V3_RSP1B
     };
 
     enum Command {
-        // These are compatbile with osmocom rtl_tcp: https://github.com/osmocom/rtl-sdr/blob/master/src/rtl_tcp.c
+        // These are compatible with osmocom rtl_tcp: https://github.com/osmocom/rtl-sdr/blob/master/src/rtl_tcp.c
         // and Android https://github.com/signalwareltd/rtl_tcp_andro-/blob/master/rtlsdr/src/main/cpp/src/tcp_commands.h
         setCenterFrequency = 0x1,           // rtlsdr_set_center_freq
         setSampleRate = 0x2,                // rtlsdr_set_sample_rate

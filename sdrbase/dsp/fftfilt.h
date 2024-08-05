@@ -1,3 +1,23 @@
+///////////////////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany     //
+// written by Christian Daniel                                                       //
+// Copyright (C) 2014-2015 John Greb <hexameron@spam.no>                             //
+// Copyright (C) 2015-2018, 2022-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>   //
+// Copyright (C) 2020 Kacper Michajłow <kasper93@gmail.com>                          //
+//                                                                                   //
+// This program is free software; you can redistribute it and/or modify              //
+// it under the terms of the GNU General Public License as published by              //
+// the Free Software Foundation as version 3 of the License, or                      //
+// (at your option) any later version.                                               //
+//                                                                                   //
+// This program is distributed in the hope that it will be useful,                   //
+// but WITHOUT ANY WARRANTY; without even the implied warranty of                    //
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                      //
+// GNU General Public License V3 for more details.                                   //
+//                                                                                   //
+// You should have received a copy of the GNU General Public License                 //
+// along with this program. If not, see <http://www.gnu.org/licenses/>.              //
+///////////////////////////////////////////////////////////////////////////////////////
 /*
  * Filters from Fldigi.
 */
@@ -10,6 +30,7 @@
 
 #include "gfft.h"
 #include "fftwindow.h"
+#include "fftnr.h"
 #include "export.h"
 
 //----------------------------------------------------------------------
@@ -37,9 +58,17 @@ public:
 	int runFilt(const cmplx& in, cmplx **out);
 	int runSSB(const cmplx& in, cmplx **out, bool usb, bool getDC = true);
 	int runDSB(const cmplx& in, cmplx **out, bool getDC = true);
-	int runAsym(const cmplx & in, cmplx **out, bool usb); //!< Asymmetrical fitering can be used for vestigial sideband
+	int runAsym(const cmplx & in, cmplx **out, bool usb); //!< Asymmetrical filtering can be used for vestigial sideband
+
+    void setDNR(bool dnr) { m_dnr = dnr; }
+    void setDNRScheme(FFTNoiseReduction::Scheme scheme) { m_dnrScheme = scheme; }
+    void setDNRAboveAvgFactor(float aboveAvgFactor) { m_dnrAboveAvgFactor = aboveAvgFactor; }
+    void setDNRSigmaFactor(float sigmaFactor) { m_dnrSigmaFactor = sigmaFactor; }
+    void setDNRNbPeaks(int nbPeaks) { m_dnrNbPeaks = nbPeaks; }
+    void setDNRAlpha(float alpha) { m_noiseReduction.setAlpha(alpha); }
 
 protected:
+    // helper class for FFT based noise reduction
 	int flen;
 	int flen2;
 	g_fft<float> *fft;
@@ -51,6 +80,12 @@ protected:
 	int inptr;
 	int pass;
 	int window;
+    bool m_dnr;
+    FFTNoiseReduction::Scheme m_dnrScheme;
+    float m_dnrAboveAvgFactor; //!< above average factor
+    float m_dnrSigmaFactor; //!< sigma multiplicator for average + std deviation
+    int m_dnrNbPeaks; //!< number of peaks (peaks scheme)
+    FFTNoiseReduction m_noiseReduction;
 
 	inline float fsinc(float fc, int i, int len)
 	{

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2022 Jon Beniston, M7RCE <jon@beniston.com>                     //
 // Copyright (C) 2016 Edouard Griffiths, F4EXB.                                  //
-// Copyright (C) 2022 Jon Beniston, M7RCE                                        //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -512,6 +512,8 @@ void GLShaderSpectrogram::drawSurface(SpectrumSettings::SpectrogramStyle style, 
 
 void GLShaderSpectrogram::cleanup()
 {
+    delete m_vao;
+    m_vao = nullptr;
     delete m_programShaded;
     m_programShaded = nullptr;
     delete m_programSimple;
@@ -757,7 +759,7 @@ const QString GLShaderSpectrogram::m_vertexShader = QString(
     );
 
 // We need to use a geometry shader to calculate the normals, as they are only
-// determined after z has been calculated for the verticies in the vertex shader
+// determined after z has been calculated for the vertices in the vertex shader
 const QString GLShaderSpectrogram::m_geometryShader = QString(
     "#version 330\n"
     "layout(triangles) in;\n"

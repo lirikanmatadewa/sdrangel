@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2020-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2022 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -23,7 +24,6 @@
 #include <QMessageBox>
 #include <QFileDialog>
 
-#include "plugin/pluginapi.h"
 #include "device/deviceapi.h"
 #include "device/deviceuiset.h"
 #include "gui/colormapper.h"
@@ -31,12 +31,7 @@
 #include "gui/dialpopup.h"
 #include "gui/dialogpositioner.h"
 #include "gui/basicdevicesettingsdialog.h"
-#include "dsp/dspengine.h"
-#include "dsp/dspdevicemimoengine.h"
 #include "dsp/dspcommands.h"
-#include "util/db.h"
-
-#include "mainwindow.h"
 
 #include "ui_metismisogui.h"
 #include "metismisogui.h"
@@ -78,6 +73,7 @@ MetisMISOGui::MetisMISOGui(DeviceUISet *deviceUISet, QWidget* parent) :
 
     makeUIConnections();
     DialPopup::addPopupsToChildDials(this);
+    m_resizer.enableChildMouseTracking();
 }
 
 MetisMISOGui::~MetisMISOGui()
@@ -218,6 +214,17 @@ void MetisMISOGui::on_streamLock_toggled(bool checked)
     if (checked && (ui->streamIndex->currentIndex() != ui->spectrumSource->currentIndex())) {
         ui->spectrumSource->setCurrentIndex(ui->streamIndex->currentIndex());
     }
+
+    m_settings.m_streamLock = checked;
+    m_settingsKeys.append("streamLock");
+    sendSettings();
+}
+
+void MetisMISOGui::on_rxLock_toggled(bool checked)
+{
+    m_settings.m_rxLock = checked;
+    m_settingsKeys.append("rxLock");
+    sendSettings();
 }
 
 void MetisMISOGui::on_LOppm_valueChanged(int value)
@@ -232,8 +239,18 @@ void MetisMISOGui::on_centerFrequency_changed(quint64 value)
 {
     if (m_settings.m_streamIndex < MetisMISOSettings::m_maxReceivers)
     {
-        m_settings.m_rxCenterFrequencies[m_settings.m_streamIndex] = value * 1000;
-        m_settingsKeys.append(QString("rx%1CenterFrequency").arg(m_settings.m_streamIndex+1));
+        for (int i = 0; i < (int) m_settings.m_nbReceivers; i++)
+        {
+            if (!m_settings.m_rxLock && (i != m_settings.m_streamIndex)) {
+                continue;
+            }
+
+            m_settings.m_rxCenterFrequencies[i] = value * 1000;
+            m_settingsKeys.append(QString("rx%1CenterFrequency").arg(i+1));
+        }
+
+        // m_settings.m_rxCenterFrequencies[m_settings.m_streamIndex] = value * 1000;
+        // m_settingsKeys.append(QString("rx%1CenterFrequency").arg(m_settings.m_streamIndex+1));
     }
     else if (m_settings.m_streamIndex == MetisMISOSettings::m_maxReceivers)
     {
@@ -384,6 +401,8 @@ void MetisMISOGui::displaySettings()
     ui->txEnable->setChecked(m_settings.m_txEnable);
     ui->txDrive->setValue(m_settings.m_txDrive);
     ui->txDriveText->setText(tr("%1").arg(m_settings.m_txDrive));
+    ui->streamLock->setChecked(m_settings.m_streamLock);
+    ui->rxLock->setChecked(m_settings.m_rxLock);
     updateSubsamplingIndex();
     displayFrequency();
     displaySampleRate();
@@ -630,6 +649,7 @@ void MetisMISOGui::makeUIConnections()
 	QObject::connect(ui->streamIndex, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MetisMISOGui::on_streamIndex_currentIndexChanged);
     QObject::connect(ui->spectrumSource, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MetisMISOGui::on_spectrumSource_currentIndexChanged);
     QObject::connect(ui->streamLock, &QToolButton::toggled, this, &MetisMISOGui::on_streamLock_toggled);
+    QObject::connect(ui->rxLock, &QToolButton::toggled, this, &MetisMISOGui::on_rxLock_toggled);
     QObject::connect(ui->LOppm, &QSlider::valueChanged, this, &MetisMISOGui::on_LOppm_valueChanged);
 	QObject::connect(ui->startStop, &ButtonSwitch::toggled, this, &MetisMISOGui::on_startStop_toggled);
     QObject::connect(ui->centerFrequency, &ValueDial::changed, this, &MetisMISOGui::on_centerFrequency_changed);

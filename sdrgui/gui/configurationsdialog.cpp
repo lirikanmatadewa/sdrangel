@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2022 F4EXB                                                      //
-// written by Edouard Griffiths                                                  //
+// Copyright (C) 2022 Jon Beniston, M7RCE <jon@beniston.com>                     //
+// Copyright (C) 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>               //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -59,6 +59,8 @@ void ConfigurationsDialog::populateTree()
     if (!m_configurations) {
         return;
     }
+
+    sortConfigurations();
 
     QList<Configuration*>::const_iterator it = m_configurations->begin();
     int middleIndex = m_configurations->size() / 2;
@@ -373,11 +375,14 @@ void ConfigurationsDialog::on_configurationExport_clicked()
 
 			if (fileName != "")
 			{
+#ifndef ANDROID
+                // Can't change filenames on Android
 				QFileInfo fileInfo(fileName);
 
 				if (fileInfo.suffix() != "cfgx") {
 					fileName += ".cfgx";
 				}
+#endif
 
 				QFile exportFile(fileName);
 
@@ -445,14 +450,14 @@ void ConfigurationsDialog::on_configurationImport_clicked()
 	}
 }
 
-void ConfigurationsDialog::on_configurationTree_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous)
+void ConfigurationsDialog::on_configurationsTree_currentItemChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous)
 {
     (void) current;
     (void) previous;
 	updateConfigurationControls();
 }
 
-void ConfigurationsDialog::on_configurationTree_itemActivated(QTreeWidgetItem *item, int column)
+void ConfigurationsDialog::on_configurationsTree_itemActivated(QTreeWidgetItem *item, int column)
 {
     (void) item;
     (void) column;

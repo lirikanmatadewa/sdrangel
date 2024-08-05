@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2017-2019 Edouard Griffiths, F4EXB                              //
+// Copyright (C) 2019-2020 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -17,12 +17,10 @@
 
 #include <QDebug>
 
-#include "dsp/dspcommands.h"
 #include "dsp/basebandsamplesink.h"
 #include "util/db.h"
 
 #include "udpsourcesource.h"
-#include "udpsourcemsg.h"
 
 UDPSourceSource::UDPSourceSource() :
     m_channelSampleRate(48000),

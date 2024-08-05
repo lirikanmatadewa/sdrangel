@@ -1,5 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2015 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2015-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2018 beta-tester <alpha-beta-release@gmx.net>                   //
+// Copyright (C) 2021 FuzzyCheese <23639418+FuzzyCheese@users.noreply.github.com> //
+// Copyright (C) 2021 your name <you@example.com>                                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -27,9 +30,7 @@
 
 #include "util/simpleserializer.h"
 #include "dsp/dspcommands.h"
-#include "dsp/dspengine.h"
 #include "device/deviceapi.h"
-#include "hackrf/devicehackrfvalues.h"
 #include "hackrf/devicehackrfshared.h"
 
 #include "hackrfinput.h"
@@ -521,7 +522,7 @@ bool HackRFInput::applySettings(const HackRFInputSettings& settings, const QList
         m_deviceAPI->getDeviceEngineInputMessageQueue()->push(notif);
 	}
 
-    if (settingsKeys.contains("useReverseAPI"))
+    if (settings.m_useReverseAPI)
     {
         bool fullUpdate = (settingsKeys.contains("useReverseAPI") && settings.m_useReverseAPI) ||
             settingsKeys.contains("reverseAPIAddress") ||

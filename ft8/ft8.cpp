@@ -1,8 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2023 Edouard Griffiths, F4EXB.                                  //
+// Copyright (C) 2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>               //
 //                                                                               //
 // This is the code from ft8mon: https://github.com/rtmrtmrtmrtm/ft8mon          //
-// written by Robert Morris, AB1HL                                               //
 // reformatted and adapted to Qt and SDRangel context                            //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
@@ -31,7 +30,6 @@
 #include <stdio.h>
 // #include <assert.h>
 #include <math.h>
-#include <complex>
 #include <fftw3.h>
 #include <algorithm>
 #include <complex>
@@ -45,6 +43,7 @@
 #include "ft8.h"
 #include "libldpc.h"
 #include "osd.h"
+#include "arrays.h"
 
 namespace FT8 {
 
@@ -118,178 +117,6 @@ std::vector<float> blackmanharris(int n)
     }
 
     return h;
-}
-
-Stats::Stats(int how, float log_tail, float log_rate) :
-    sum_(0),
-    finalized_(false),
-    how_(how),
-    log_tail_(log_tail),
-    log_rate_(log_rate)
-{}
-
-void Stats::add(float x)
-{
-    a_.push_back(x);
-    sum_ += x;
-    finalized_ = false;
-}
-
-void Stats::finalize()
-{
-    finalized_ = true;
-
-    int n = a_.size();
-    mean_ = sum_ / n;
-    float var = 0;
-    float bsum = 0;
-
-    for (int i = 0; i < n; i++)
-    {
-        float y = a_[i] - mean_;
-        var += y * y;
-        bsum += fabs(y);
-    }
-
-    var /= n;
-    stddev_ = sqrt(var);
-    b_ = bsum / n;
-
-    // prepare for binary search to find where values lie
-    // in the distribution.
-    if (how_ != 0 && how_ != 5) {
-        std::sort(a_.begin(), a_.end());
-    }
-}
-
-float Stats::mean()
-{
-    if (!finalized_) {
-        finalize();
-    }
-
-    return mean_;
-}
-
-float Stats::stddev()
-{
-    if (!finalized_) {
-        finalize();
-    }
-
-    return stddev_;
-}
-
-// fraction of distribution that's less than x.
-// assumes normal distribution.
-// this is PHI(x), or the CDF at x,
-// or the integral from -infinity
-// to x of the PDF.
-float Stats::gaussian_problt(float x)
-{
-    float SDs = (x - mean()) / stddev();
-    float frac = 0.5 * (1.0 + erf(SDs / sqrt(2.0)));
-    return frac;
-}
-
-// https://en.wikipedia.org/wiki/Laplace_distribution
-// m and b from page 116 of Mark Owen's Practical Signal Processing.
-float Stats::laplace_problt(float x)
-{
-    float m = mean();
-    float cdf;
-
-    if (x < m) {
-        cdf = 0.5 * exp((x - m) / b_);
-    } else {
-        cdf = 1.0 - 0.5 * exp(-(x - m) / b_);
-    }
-
-    return cdf;
-}
-
-// look into the actual distribution.
-float Stats::problt(float x)
-{
-    if (!finalized_) {
-        finalize();
-    }
-
-    if (how_ == 0) {
-        return gaussian_problt(x);
-    }
-
-    if (how_ == 5) {
-        return laplace_problt(x);
-    }
-
-    // binary search.
-    auto it = std::lower_bound(a_.begin(), a_.end(), x);
-    int i = it - a_.begin();
-    int n = a_.size();
-
-    if (how_ == 1)
-    {
-        // index into the distribution.
-        // works poorly for values that are off the ends
-        // of the distribution, since those are all
-        // mapped to 0.0 or 1.0, regardless of magnitude.
-        return i / (float)n;
-    }
-
-    if (how_ == 2)
-    {
-        // use a kind of logistic regression for
-        // values near the edges of the distribution.
-        if (i < log_tail_ * n)
-        {
-            float x0 = a_[(int)(log_tail_ * n)];
-            float y = 1.0 / (1.0 + exp(-log_rate_ * (x - x0)));
-            // y is 0..0.5
-            y /= 5;
-            return y;
-        }
-        else if (i > (1 - log_tail_) * n)
-        {
-            float x0 = a_[(int)((1 - log_tail_) * n)];
-            float y = 1.0 / (1.0 + exp(-log_rate_ * (x - x0)));
-            // y is 0.5..1
-            // we want (1-log_tail)..1
-            y -= 0.5;
-            y *= 2;
-            y *= log_tail_;
-            y += (1 - log_tail_);
-            return y;
-        }
-        else
-        {
-            return i / (float)n;
-        }
-    }
-
-    if (how_ == 3)
-    {
-        // gaussian for values near the edge of the distribution.
-        if (i < log_tail_ * n) {
-            return gaussian_problt(x);
-        } else if (i > (1 - log_tail_) * n) {
-            return gaussian_problt(x);
-        } else {
-            return i / (float)n;
-        }
-    }
-
-    if (how_ == 4)
-    {
-        // gaussian for values outside the distribution.
-        if (x < a_[0] || x > a_.back()) {
-            return gaussian_problt(x);
-        } else {
-            return i / (float)n;
-        }
-    }
-
-    return 0;
 }
 
 // a-priori probability of each of the 174 LDPC codeword
@@ -825,7 +652,7 @@ void FT8::go(int npasses)
         // in fractions of bins in off and hz.
         //
 
-        // just do this once, re-use for every fractional fft_shift
+        // just do this once, reuse for every fractional fft_shift
         // and down_v7_f() to 200 sps.
         std::vector<std::complex<float>> bins = fftEngine_->one_fft(
             samples_, 0, samples_.size());
@@ -1407,6 +1234,32 @@ std::vector<std::vector<float>> FT8::un_gray_code_r(const std::vector<std::vecto
 }
 
 //
+// Generic Gray decoding for magnitudes (floats)
+//
+std::vector<std::vector<float>> FT8::un_gray_code_r_gen(const std::vector<std::vector<float>> &mags)
+{
+    if (mags.size() == 0) {
+        return mags;
+    }
+
+    std::vector<std::vector<float>> magsa(mags.size());
+    int nsyms = mags.front().size();
+
+    for (unsigned int si = 0; si < mags.size(); si++)
+    {
+        magsa[si].resize(nsyms);
+
+        for (int bini = 0; bini < nsyms; bini++)
+        {
+            int grayi = bini ^ (bini >> 1);
+            magsa[si][bini] = mags[si][grayi];
+        }
+    }
+
+    return magsa;
+}
+
+//
 // normalize levels by windowed median.
 // this helps, but why?
 //
@@ -1584,6 +1437,93 @@ std::vector<std::vector<std::complex<float>>> FT8::c_convert_to_snr(
     return n79;
 }
 
+std::vector<std::vector<float>> FT8::convert_to_snr_gen(const FT8Params& params, int nbSymbolBits, const std::vector<std::vector<float>> &mags)
+{
+    if (params.snr_how < 0 || params.snr_win < 0) {
+        return mags;
+    }
+
+    //
+    // for each symbol time, what's its "noise" level?
+    //
+    std::vector<float> mm(mags.size());
+    int nbSymbols = 1<<nbSymbolBits;
+
+    for (int si = 0; si < (int) mags.size(); si++)
+    {
+        std::vector<float> v(nbSymbols);
+        float sum = 0.0;
+
+        for (int bini = 0; bini < nbSymbols; bini++)
+        {
+            float x = mags[si][bini];
+            v[bini] = x;
+            sum += x;
+        }
+
+        if (params.snr_how != 1) {
+            std::sort(v.begin(), v.end());
+        }
+
+        int mid = nbSymbols / 2;
+
+        if (params.snr_how == 0) {
+            // median
+            mm[si] = (v[mid-1] + v[mid]) / 2;
+        } else if (params.snr_how == 1) {
+            mm[si] = sum / nbSymbols;
+        } else if (params.snr_how == 2) {
+            // all but strongest tone.
+            mm[si] = std::accumulate(v.begin(), v.end() - 1, 0.0f) / (v.size() - 1);
+        } else if (params.snr_how == 3) {
+            mm[si] = v.front(); // weakest tone
+        } else if (params.snr_how == 4) {
+            mm[si] = v.back(); // strongest tone
+        } else if (params.snr_how == 5) {
+            mm[si] = v[v.size()-2]; // second-strongest tone
+        } else {
+            mm[si] = 1.0;
+        }
+    }
+
+    // we're going to take a windowed average.
+    std::vector<float> winwin;
+
+    if (params.snr_win > 0) {
+        winwin = blackman(2 * params.snr_win + 1);
+    } else {
+        winwin.push_back(1.0);
+    }
+
+    std::vector<std::vector<float>> snr(mags.size());
+
+    for (int si = 0; si < (int) mags.size(); si++)
+    {
+        float sum = 0;
+
+        for (int dd = si - params.snr_win; dd <= si + params.snr_win; dd++)
+        {
+            int wi = dd - (si - params.snr_win);
+
+            if (dd >= 0 && dd < (int) mags.size()) {
+                sum += mm[dd] * winwin[wi];
+            } else if (dd < 0) {
+                sum += mm[0] * winwin[wi];
+            } else {
+                sum += mm[mags.size()-1] * winwin[wi];
+            }
+        }
+
+        snr[si].resize(nbSymbols);
+
+        for (int bi = 0; bi < nbSymbols; bi++) {
+            snr[si][bi] = mags[si][bi] / sum;
+        }
+    }
+
+    return snr;
+}
+
 //
 // statistics to decide soft probabilities,
 // to drive LDPC decoder.
@@ -1640,6 +1580,38 @@ void FT8::make_stats(
 
             bests.add(mx);
         }
+    }
+}
+
+//
+// generalized version of the above for any number of symbols and no Costas
+// used by FT-chirp decoder
+//
+void FT8::make_stats_gen(
+    const std::vector<std::vector<float>> &mags,
+    int nbSymbolBits,
+    Stats &bests,
+    Stats &all
+)
+{
+    int nbBins = 1<<nbSymbolBits;
+
+    for (unsigned int si = 0; si < mags.size(); si++)
+    {
+        float mx = 0;
+
+        for (int bi = 0; bi < nbBins; bi++)
+        {
+            float x = mags[si][bi];
+
+            if (x > mx) {
+                mx = x;
+            }
+
+            all.add(x);
+        }
+
+        bests.add(mx);
     }
 }
 
@@ -1767,6 +1739,7 @@ std::vector<std::vector<float>> FT8::soft_c2m(const FFTEngine::ffts_t &c79)
 // returns log-likelihood, zero is positive, one is negative.
 //
 float FT8::bayes(
+    FT8Params& params,
     float best_zero,
     float best_one,
     int lli,
@@ -1799,6 +1772,7 @@ float FT8::bayes(
 
     // zero
     float a = pzero * bests.problt(best_zero) * (1.0 - all.problt(best_one));
+    // printf("FT8::bayes: a: %f bp: %f ap: %f \n", a, bests.problt(best_zero), all.problt(best_one));
 
     if (params.bayes_how == 1) {
         a *= all.problt(all.mean() + (best_zero - best_one));
@@ -1806,6 +1780,7 @@ float FT8::bayes(
 
     // one
     float b = pone * bests.problt(best_one) * (1.0 - all.problt(best_zero));
+    // printf("FT8::bayes: b: %f bp: %f ap: %f \n", b, bests.problt(best_one), all.problt(best_zero));
 
     if (params.bayes_how == 1) {
         b *= all.problt(all.mean() + (best_one - best_zero));
@@ -1818,6 +1793,8 @@ float FT8::bayes(
     } else {
         p = a / (a + b);
     }
+
+    // printf("FT8::bayes: all.mean: %f a: %f b: %f p: %f\n", all.mean(), a, b, p);
 
     if (1 - p == 0.0) {
         ll = maxlog;
@@ -1856,6 +1833,52 @@ void FT8::soft_decode(const FFTEngine::ffts_t &c79, float ll174[])
     m79 = un_gray_code_r(m79);
     int lli = 0;
 
+    // tone numbers that make second index bit zero or one.
+    int zeroi[4][3];
+    int onei[4][3];
+
+    for (int biti = 0; biti < 3; biti++)
+    {
+        if (biti == 0)
+        {
+            // high bit
+            zeroi[0][0] = 0;
+            zeroi[1][0] = 1;
+            zeroi[2][0] = 2;
+            zeroi[3][0] = 3;
+            onei[0][0] = 4;
+            onei[1][0] = 5;
+            onei[2][0] = 6;
+            onei[3][0] = 7;
+        }
+
+        if (biti == 1)
+        {
+            // middle bit
+            zeroi[0][1] = 0;
+            zeroi[1][1] = 1;
+            zeroi[2][1] = 4;
+            zeroi[3][1] = 5;
+            onei[0][1] = 2;
+            onei[1][1] = 3;
+            onei[2][1] = 6;
+            onei[3][1] = 7;
+        }
+
+        if (biti == 2)
+        {
+            // low bit
+            zeroi[0][2] = 0;
+            zeroi[1][2] = 2;
+            zeroi[2][2] = 4;
+            zeroi[3][2] = 6;
+            onei[0][2] = 1;
+            onei[1][2] = 3;
+            onei[2][2] = 5;
+            onei[3][2] = 7;
+        }
+    }
+
     for (int i79 = 0; i79 < 79; i79++)
     {
         if (i79 < 7 || (i79 >= 36 && i79 < 36 + 7) || i79 >= 72) {
@@ -1872,56 +1895,13 @@ void FT8::soft_decode(const FFTEngine::ffts_t &c79, float ll174[])
 
         for (int biti = 0; biti < 3; biti++)
         {
-            // tone numbers that make this bit zero or one.
-            int zeroi[4];
-            int onei[4];
-
-            if (biti == 0)
-            {
-                // high bit
-                zeroi[0] = 0;
-                zeroi[1] = 1;
-                zeroi[2] = 2;
-                zeroi[3] = 3;
-                onei[0] = 4;
-                onei[1] = 5;
-                onei[2] = 6;
-                onei[3] = 7;
-            }
-
-            if (biti == 1)
-            {
-                // middle bit
-                zeroi[0] = 0;
-                zeroi[1] = 1;
-                zeroi[2] = 4;
-                zeroi[3] = 5;
-                onei[0] = 2;
-                onei[1] = 3;
-                onei[2] = 6;
-                onei[3] = 7;
-            }
-
-            if (biti == 2)
-            {
-                // low bit
-                zeroi[0] = 0;
-                zeroi[1] = 2;
-                zeroi[2] = 4;
-                zeroi[3] = 6;
-                onei[0] = 1;
-                onei[1] = 3;
-                onei[2] = 5;
-                onei[3] = 7;
-            }
-
             // strongest tone that would make this bit be zero.
             int got_best_zero = 0;
             float best_zero = 0;
 
             for (int i = 0; i < 4; i++)
             {
-                float x = m79[i79][zeroi[i]];
+                float x = m79[i79][zeroi[i][biti]];
 
                 if (got_best_zero == 0 || x > best_zero)
                 {
@@ -1936,7 +1916,7 @@ void FT8::soft_decode(const FFTEngine::ffts_t &c79, float ll174[])
 
             for (int i = 0; i < 4; i++)
             {
-                float x = m79[i79][onei[i]];
+                float x = m79[i79][onei[i][biti]];
                 if (got_best_one == 0 || x > best_one)
                 {
                     got_best_one = 1;
@@ -1944,11 +1924,92 @@ void FT8::soft_decode(const FFTEngine::ffts_t &c79, float ll174[])
                 }
             }
 
-            float ll = bayes(best_zero, best_one, lli, bests, all);
+            float ll = bayes(params, best_zero, best_one, lli, bests, all);
             ll174[lli++] = ll;
         }
     }
     // assert(lli == 174);
+}
+
+//
+// mags is the vector of 2^nbSymbolBits vector of magnitudes at each symbol time
+// ll174 is the resulting 174 soft bits of payload
+// used in FT-chirp modulation scheme - generalized to any number of symbol bits
+//
+void FT8::soft_decode_mags(FT8Params& params, const std::vector<std::vector<float>>& mags_, int nbSymbolBits, float ll174[])
+{
+    if ((nbSymbolBits > 16) || (nbSymbolBits < 1)) {
+        return;
+    }
+
+    std::vector<std::vector<float>> mags = convert_to_snr_gen(params, nbSymbolBits, mags_);
+    // statistics to decide soft probabilities.
+    // distribution of strongest tones, and
+    // distribution of noise.
+    Stats bests(params.problt_how_sig, params.log_tail, params.log_rate);
+    Stats all(params.problt_how_noise, params.log_tail, params.log_rate);
+    make_stats_gen(mags, nbSymbolBits, bests, all);
+    mags = un_gray_code_r_gen(mags);
+    int lli = 0;
+    int zoX = 1<<(nbSymbolBits-1);
+    int zoY = nbSymbolBits;
+    std::vector<int> zeroi(zoX*zoY);
+    std::vector<int> onei(zoX*zoY);
+
+    for (int biti = 0; biti < nbSymbolBits; biti++)
+    {
+        int i = biti * zoX;
+        set_ones_zeroes(&onei[i], &zeroi[i], nbSymbolBits, biti);
+    }
+
+    for (unsigned int si = 0; si < mags.size(); si++)
+    {
+        // for each of the symbol bits, look at the strongest tone
+        // that would make it a zero, and the strongest tone that
+        // would make it a one. use Bayes to decide which is more
+        // likely, comparing each against the distribution of noise
+        // and the distribution of strongest tones.
+        // most-significant-bit first.
+        for (int biti = nbSymbolBits - 1; biti >= 0; biti--)
+        {
+            // strongest tone that would make this bit be zero.
+            int got_best_zero = 0;
+            float best_zero = 0;
+
+            for (int i = 0; i < 1<<(nbSymbolBits-1); i++)
+            {
+                float x = mags[si][zeroi[i+biti*zoX]];
+                // printf("FT8::soft_decode_mags:: biti: %d i: %d zeroi: %d x: %f best_zero: %f\n", biti, i, zeroi[i+biti*zoX], x, best_zero);
+
+                if (got_best_zero == 0 || x > best_zero)
+                {
+                    got_best_zero = 1;
+                    best_zero = x;
+                }
+            }
+
+            // strongest tone that would make this bit be one.
+            int got_best_one = 0;
+            float best_one = 0;
+
+            for (int i = 0; i < 1<<(nbSymbolBits-1); i++)
+            {
+                float x = mags[si][onei[i+biti*zoX]];
+                // printf("FT8::soft_decode_mags:: biti: %d i: %d onei: %d x: %f best_one: %f\n", biti, i, onei[i+biti*zoX], x, best_one);
+
+                if (got_best_one == 0 || x > best_one)
+                {
+                    got_best_one = 1;
+                    best_one = x;
+                }
+            }
+
+            // printf("FT8::soft_decode_mags: biti: %d best_zero: %f best_one: %f\n", biti, best_zero, best_one);
+
+            float ll = bayes(params, best_zero, best_one, lli, bests, all);
+            ll174[lli++] = ll;
+        }
+    }
 }
 
 //
@@ -2046,6 +2107,52 @@ void FT8::c_soft_decode(const FFTEngine::ffts_t &c79x, float ll174[])
     m79 = un_gray_code_r(m79);
     int lli = 0;
 
+    // tone numbers that make second index bit zero or one.
+    int zeroi[4][3];
+    int onei[4][3];
+
+    for (int biti = 0; biti < 3; biti++)
+    {
+        if (biti == 0)
+        {
+            // high bit
+            zeroi[0][0] = 0;
+            zeroi[1][0] = 1;
+            zeroi[2][0] = 2;
+            zeroi[3][0] = 3;
+            onei[0][0] = 4;
+            onei[1][0] = 5;
+            onei[2][0] = 6;
+            onei[3][0] = 7;
+        }
+
+        if (biti == 1)
+        {
+            // middle bit
+            zeroi[0][1] = 0;
+            zeroi[1][1] = 1;
+            zeroi[2][1] = 4;
+            zeroi[3][1] = 5;
+            onei[0][1] = 2;
+            onei[1][1] = 3;
+            onei[2][1] = 6;
+            onei[3][1] = 7;
+        }
+
+        if (biti == 2)
+        {
+            // low bit
+            zeroi[0][2] = 0;
+            zeroi[1][2] = 2;
+            zeroi[2][2] = 4;
+            zeroi[3][2] = 6;
+            onei[0][2] = 1;
+            onei[1][2] = 3;
+            onei[2][2] = 5;
+            onei[3][2] = 7;
+        }
+    }
+
     for (int i79 = 0; i79 < 79; i79++)
     {
         if (i79 < 7 || (i79 >= 36 && i79 < 36 + 7) || i79 >= 72) {
@@ -2062,56 +2169,13 @@ void FT8::c_soft_decode(const FFTEngine::ffts_t &c79x, float ll174[])
 
         for (int biti = 0; biti < 3; biti++)
         {
-            // tone numbers that make this bit zero or one.
-            int zeroi[4];
-            int onei[4];
-
-            if (biti == 0)
-            {
-                // high bit
-                zeroi[0] = 0;
-                zeroi[1] = 1;
-                zeroi[2] = 2;
-                zeroi[3] = 3;
-                onei[0] = 4;
-                onei[1] = 5;
-                onei[2] = 6;
-                onei[3] = 7;
-            }
-
-            if (biti == 1)
-            {
-                // middle bit
-                zeroi[0] = 0;
-                zeroi[1] = 1;
-                zeroi[2] = 4;
-                zeroi[3] = 5;
-                onei[0] = 2;
-                onei[1] = 3;
-                onei[2] = 6;
-                onei[3] = 7;
-            }
-
-            if (biti == 2)
-            {
-                // low bit
-                zeroi[0] = 0;
-                zeroi[1] = 2;
-                zeroi[2] = 4;
-                zeroi[3] = 6;
-                onei[0] = 1;
-                onei[1] = 3;
-                onei[2] = 5;
-                onei[3] = 7;
-            }
-
             // strongest tone that would make this bit be zero.
             int got_best_zero = 0;
             float best_zero = 0;
 
             for (int i = 0; i < 4; i++)
             {
-                float x = m79[i79][zeroi[i]];
+                float x = m79[i79][zeroi[i][biti]];
 
                 if (got_best_zero == 0 || x > best_zero)
                 {
@@ -2126,7 +2190,7 @@ void FT8::c_soft_decode(const FFTEngine::ffts_t &c79x, float ll174[])
 
             for (int i = 0; i < 4; i++)
             {
-                float x = m79[i79][onei[i]];
+                float x = m79[i79][onei[i][biti]];
 
                 if (got_best_one == 0 || x > best_one)
                 {
@@ -2135,11 +2199,48 @@ void FT8::c_soft_decode(const FFTEngine::ffts_t &c79x, float ll174[])
                 }
             }
 
-            float ll = bayes(best_zero, best_one, lli, bests, all);
+            float ll = bayes(params, best_zero, best_one, lli, bests, all);
             ll174[lli++] = ll;
         }
     }
     // assert(lli == 174);
+}
+
+//
+// set ones and zero symbol indexes. Bit index is LSB
+//
+void FT8::set_ones_zeroes(int ones[], int zeroes[], int nbBits, int bitIndex)
+{
+    int nbIndexes = 1 << (nbBits - 1);
+
+    if (bitIndex == 0)
+    {
+        for (int i = 0; i < nbIndexes; i++)
+        {
+            zeroes[i] = i<<1;
+            ones[i] = zeroes[i] | 1;
+        }
+    }
+    else if (bitIndex == nbBits - 1)
+    {
+        for (int i = 0; i < nbIndexes; i++)
+        {
+            zeroes[i] = i;
+            ones[i] = (1<<(nbBits-1)) | zeroes[i];
+        }
+    }
+    else
+    {
+        int mask = (1<<nbBits) - 1;
+        int maskLow = (1<<bitIndex) - 1;
+        int maskHigh = mask ^ maskLow;
+
+        for (int i = 0; i < nbIndexes; i++)
+        {
+            zeroes[i] = (i & maskLow) + ((i & maskHigh)<<1);
+            ones[i] = zeroes[i] + (1<<bitIndex);
+        }
+    }
 }
 
 //
@@ -2176,7 +2277,7 @@ std::vector<float> FT8::extract_bits(const std::vector<int> &syms, const std::ve
     return bits;
 }
 
-// decode successive pairs of symbols. exploits the likelyhood
+// decode successive pairs of symbols. exploits the likelihood
 // that they have the same phase, by summing the complex
 // correlations for each possible pair and using the max.
 void FT8::soft_decode_pairs(
@@ -2304,7 +2405,7 @@ void FT8::soft_decode_pairs(
             float best_zero = bitinfo[si * 3 + i].zero;
             float best_one = bitinfo[si * 3 + i].one;
             // ll174[lli++] = best_zero > best_one ? 4.99 : -4.99;
-            float ll = bayes(best_zero, best_one, lli, bests, all);
+            float ll = bayes(params, best_zero, best_one, lli, bests, all);
             ll174[lli++] = ll;
         }
     }
@@ -2468,7 +2569,7 @@ void FT8::soft_decode_triples(
             float best_zero = bitinfo[si * 3 + i].zero;
             float best_one = bitinfo[si * 3 + i].one;
             // ll174[lli++] = best_zero > best_one ? 4.99 : -4.99;
-            float ll = bayes(best_zero, best_one, lli, bests, all);
+            float ll = bayes(params, best_zero, best_one, lli, bests, all);
             ll174[lli++] = ll;
         }
     }
@@ -2476,16 +2577,14 @@ void FT8::soft_decode_triples(
 }
 
 //
-// given log likelyhood for each bit, try LDPC and OSD decoders.
+// given log likelihood for each bit, try LDPC and OSD decoders.
 // on success, puts corrected 174 bits into a174[].
 //
-int FT8::decode(const float ll174[], int a174[], int use_osd, std::string &comment)
+int FT8::decode(const float ll174[], int a174[], FT8Params& _params, int use_osd, std::string &comment)
 {
-    void ldpc_decode(float llcodeword[], int iters, int plain[], int *ok);
-    void ldpc_decode_log(float codeword[], int iters, int plain[], int *ok);
     int plain[174];  // will be 0/1 bits.
     int ldpc_ok = 0; // 83 will mean success.
-    ldpc_decode((float *)ll174, params.ldpc_iters, plain, &ldpc_ok);
+    LDPC::ldpc_decode((float *)ll174, _params.ldpc_iters, plain, &ldpc_ok);
     int ok_thresh = 83; // 83 is perfect
 
     if (ldpc_ok >= ok_thresh)
@@ -2498,14 +2597,20 @@ int FT8::decode(const float ll174[], int a174[], int use_osd, std::string &comme
         if (OSD::check_crc(a174)) {
             // success!
             return 1;
+        } else {
+            comment = "CRC fail";
         }
     }
+    else
+    {
+        comment = "LDPC fail";
+    }
 
-    if (use_osd && params.osd_depth >= 0 && ldpc_ok >= params.osd_ldpc_thresh)
+    if (use_osd && _params.osd_depth >= 0 && ldpc_ok >= _params.osd_ldpc_thresh)
     {
         int oplain[91];
         int got_depth = -1;
-        int osd_ok = OSD::osd_decode((float *)ll174, params.osd_depth, oplain, &got_depth);
+        int osd_ok = OSD::osd_decode((float *)ll174, _params.osd_depth, oplain, &got_depth);
 
         if (osd_ok)
         {
@@ -2514,9 +2619,44 @@ int FT8::decode(const float ll174[], int a174[], int use_osd, std::string &comme
             OSD::ldpc_encode(oplain, a174);
             return 1;
         }
+        else
+        {
+            comment = "OSD fail";
+        }
     }
 
     return 0;
+}
+
+//
+// encode a 77 bit message into a 174 bit payload
+// adds the 14 bit CRC to obtain 91 bits
+// apply (174, 91) generator mastrix to obtain the 83 parity bits
+// append the 83 bits to the 91 bits message + crc to obbain the 174 bit payload
+//
+void FT8::encode(int a174[], int s77[])
+{
+    int a91[91]; // msg + CRC
+    std::fill(a91, a91 + 91, 0);
+    std::copy(s77, s77+77, a91); // copy msg
+    LDPC::ft8_crc(a91, 82, &a91[77]); // append CRC - to match OSD::check_crc
+    std::copy(a91, a91+91, a174); // copy msg + CRC
+    int sum, n, ni, b;
+
+    for (int i=0; i<83; i++)
+    {
+        sum = 0;
+
+        for (int j=0; j<91; j++)
+        {
+            n = j/8;  // byte index in the generator matrix
+            ni = j%8;  // bit index in the generator matrix byte LSB first
+            b = (Arrays::Gm[i][n] >> (7-ni)) & 1; // bit in the generator matrix
+            sum += a91[j] * b;
+        }
+
+        a174[91+i] = sum % 2; // sum modulo 2
+    }
 }
 
 //
@@ -3079,7 +3219,7 @@ int FT8::one_iter1(
             hz1_for_cb,
             params.use_osd,
             "",
-             m79
+            m79
         );
 
         if (ret) {
@@ -3419,7 +3559,7 @@ int FT8::try_decode(
     int a174[174];
     std::string comment(comment1);
 
-    if (decode(ll174, a174, use_osd, comment))
+    if (decode(ll174, a174, params, use_osd, comment))
     {
         // a174 is corrected 91 bits of plain message plus 83 bits of LDPC parity.
         // how many of the corrected 174 bits match the received signal in ll174?

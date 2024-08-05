@@ -1,6 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2022 F4EXB                                                      //
-// written by Edouard Griffiths                                                  //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2019, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2021-2022 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -50,6 +52,7 @@ DeviceSetSelectionDialog::DeviceSetSelectionDialog(std::vector<DeviceUISet*>& de
             m_deviceSetIndexes.push_back(i);
         }
     }
+    selectIndex(channelDeviceSetIndex);
 }
 
 DeviceSetSelectionDialog::~DeviceSetSelectionDialog()
@@ -62,4 +65,15 @@ void DeviceSetSelectionDialog::accept()
     m_selectedDeviceSetIndex = m_deviceSetIndexes[ui->workspaceList->currentRow()];
     m_hasChanged = true;
     QDialog::accept();
+}
+
+void DeviceSetSelectionDialog::selectIndex(int channelDeviceSetIndex)
+{
+    for (int i = 0; i < (int) m_deviceSetIndexes.size(); i++)
+    {
+        if (channelDeviceSetIndex == m_deviceSetIndexes[i]) {
+            ui->workspaceList->setCurrentRow(i);
+            break;
+        }
+    }
 }

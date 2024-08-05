@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2016-2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2020 Kacper Michajłow <kasper93@gmail.com>                      //
+// Copyright (C) 2022 Jiří Pinkava <jiri.pinkava@rossum.ai>                      //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -26,7 +28,6 @@
 #include <QNetworkRequest>
 
 #include "dsp/basebandsamplesource.h"
-#include "dsp/basebandsamplesink.h"
 #include "dsp/spectrumvis.h"
 #include "channel/channelapi.h"
 #include "util/message.h"
@@ -198,6 +199,7 @@ public:
 
     virtual int getNbSinkStreams() const { return 1; }
     virtual int getNbSourceStreams() const { return 0; }
+    virtual int getStreamIndex() const { return m_settings.m_streamIndex; }
 
     virtual qint64 getStreamCenterFrequency(int streamIndex, bool sinkElseSource) const
     {

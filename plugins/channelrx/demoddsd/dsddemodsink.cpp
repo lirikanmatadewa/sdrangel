@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2019-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -25,19 +25,10 @@
 #include <QNetworkReply>
 #include <QBuffer>
 
-#include "SWGChannelSettings.h"
-#include "SWGDSDDemodSettings.h"
-#include "SWGChannelReport.h"
-#include "SWGDSDDemodReport.h"
-#include "SWGRDSReport.h"
-
-#include "dsp/dspengine.h"
 #include "dsp/basebandsamplesink.h"
 #include "dsp/datafifo.h"
 #include "dsp/dspcommands.h"
 #include "feature/feature.h"
-#include "audio/audiooutputdevice.h"
-#include "util/db.h"
 #include "util/messagequeue.h"
 #include "maincore.h"
 

@@ -1,3 +1,20 @@
+///////////////////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2021 Edouard Griffiths, F4EXB <f4exb06@gmail.com>                   //
+// Copyright (C) 2022-2023 Jon Beniston, M7RCE <jon@beniston.com>                    //
+//                                                                                   //
+// This program is free software; you can redistribute it and/or modify              //
+// it under the terms of the GNU General Public License as published by              //
+// the Free Software Foundation as version 3 of the License, or                      //
+// (at your option) any later version.                                               //
+//                                                                                   //
+// This program is distributed in the hope that it will be useful,                   //
+// but WITHOUT ANY WARRANTY; without even the implied warranty of                    //
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                      //
+// GNU General Public License V3 for more details.                                   //
+//                                                                                   //
+// You should have received a copy of the GNU General Public License                 //
+// along with this program. If not, see <http://www.gnu.org/licenses/>.              //
+///////////////////////////////////////////////////////////////////////////////////////
 /*
 LDPC SISO layered decoder
 
@@ -60,18 +77,29 @@ public:
 template <typename TYPE, typename ALG>
 class LDPCDecoder
 {
-	TYPE *bnl, *pty, *inp, *out;
-	uint16_t *pos;
-	uint8_t *cnc;
+private:
+	TYPE *bnl = nullptr;
+	TYPE *pty = nullptr;
+	TYPE *inp = nullptr;
+	TYPE *out = nullptr;
+	uint16_t *pos  = nullptr;
+	uint8_t *cnc  = nullptr;
 	ALG alg;
-	int M, N, K, R, q, CNL, LT;
-	bool initialized;
+	int M = 0;
+	int N = 0;
+	int K = 0;
+	int R = 0;
+	int q = 0;
+	int CNL = 0;
+	int LT = 0;
+	bool initialized = false;
 
 	void reset()
 	{
 		for (int i = 0; i < LT; ++i)
 			bnl[i] = alg.zero();
 	}
+
 	bool bad(TYPE *data, TYPE *parity, int blocks)
 	{
 		for (int i = 0; i < q; ++i) {
@@ -90,6 +118,7 @@ class LDPCDecoder
 		}
 		return false;
 	}
+
 	void update(TYPE *data, TYPE *parity)
 	{
 		TYPE *bl = bnl;
@@ -118,10 +147,12 @@ class LDPCDecoder
 			}
 		}
 	}
+
 public:
-	LDPCDecoder() : initialized(false)
+	LDPCDecoder()
 	{
 	}
+
 	void init(LDPCInterface *it)
 	{
 		if (initialized) {

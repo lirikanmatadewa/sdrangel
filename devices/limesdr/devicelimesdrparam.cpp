@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2017 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2017-2019 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -18,7 +18,7 @@
 #include <QDebug>
 #include "devicelimesdrparam.h"
 
-bool DeviceLimeSDRParams::open(lms_info_str_t deviceStr)
+bool DeviceLimeSDRParams::open(lms_info_str_t deviceStr, bool init)
 {
     getHardwareType((const char *) deviceStr);
 
@@ -30,10 +30,13 @@ bool DeviceLimeSDRParams::open(lms_info_str_t deviceStr)
         return false;
     }
 
-    if (LMS_Init(m_dev) < 0)
+    if (init) 
     {
-        qCritical() << "DeviceLimeSDRParams::open: cannot init device " << deviceStr;
-        return false;
+        if (LMS_Init(m_dev) < 0)
+        {
+            qCritical() << "DeviceLimeSDRParams::open: cannot init device " << deviceStr;
+            return false;
+        }
     }
 
     int n;

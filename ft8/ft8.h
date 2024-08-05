@@ -1,8 +1,10 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2023 Edouard Griffiths, F4EXB.                                  //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2019, 2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2015 John Greb <hexameron@spam.no>                              //
 //                                                                               //
 // This is the code from ft8mon: https://github.com/rtmrtmrtmrtm/ft8mon          //
-// written by Robert Morris, AB1HL                                               //
 // reformatted and adapted to Qt and SDRangel context                            //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
@@ -28,6 +30,7 @@
 #include <QString>
 
 #include "fft.h"
+#include "ft8stats.h"
 #include "export.h"
 
 class QThread;
@@ -49,53 +52,6 @@ public:
     virtual QString get_name() = 0;
 };
 
-//
-// manage statistics for soft decoding, to help
-// decide how likely each symbol is to be correct,
-// to drive LDPC decoding.
-//
-// meaning of the how (problt_how) parameter:
-// 0: gaussian
-// 1: index into the actual distribution
-// 2: do something complex for the tails.
-// 3: index into the actual distribution plus gaussian for tails.
-// 4: similar to 3.
-// 5: laplace
-//
-class FT8_API Stats
-{
-public:
-    std::vector<float> a_;
-    float sum_;
-    bool finalized_;
-    float mean_;   // cached
-    float stddev_; // cached
-    float b_;      // cached
-    int how_;
-
-public:
-    Stats(int how, float log_tail, float log_rate);
-    void add(float x);
-    void finalize();
-    float mean();
-    float stddev();
-
-    // fraction of distribution that's less than x.
-    // assumes normal distribution.
-    // this is PHI(x), or the CDF at x,
-    // or the integral from -infinity
-    // to x of the PDF.
-    float gaussian_problt(float x);
-    // https://en.wikipedia.org/wiki/Laplace_distribution
-    // m and b from page 116 of Mark Owen's Practical Signal Processing.
-    float laplace_problt(float x);
-    // look into the actual distribution.
-    float problt(float x);
-
-private:
-    float log_tail_;
-    float log_rate_;
-};
 
 class FT8_API Strength
 {
@@ -218,8 +174,8 @@ struct FT8_API FT8Params
         third_off_win = 0.075;
         log_tail = 0.1;
         log_rate = 8.0;
-        problt_how_noise = 0;
-        problt_how_sig = 0;
+        problt_how_noise = 0;    // Gaussian
+        problt_how_sig = 0;      // Gaussian
         use_apriori = 1;
         use_hints = 2;           // 1 means use all hints, 2 means just CQ hints
         win_type = 1;
@@ -307,6 +263,33 @@ public:
     std::vector<Strength> coarse(const FFTEngine::ffts_t &bins, int si0, int si1);
 
     FT8Params& getParams() { return params; }
+    //
+    // given log likelihood for each bit, try LDPC and OSD decoders.
+    // on success, puts corrected 174 bits into a174[].
+    //
+    static int decode(const float ll174[], int a174[], FT8Params& params, int use_osd, std::string &comment);
+    // encode a 77 bit message into a 174 bit payload
+    // adds the 14 bit CRC to obtain 91 bits
+    // apply (174, 91) generator mastrix to obtain the 83 parity bits
+    // append the 83 bits to the 91 bits message e+ crc to obtain the 174 bit payload
+    static void encode(int a174[], int s77[]);
+
+    //
+    // set ones and zero symbol indexes
+    //
+    static void set_ones_zeroes(int ones[], int zeroes[], int nbBits, int bitIndex);
+
+    //
+    // mags is the vector of 2^nbSymbolBits vector of magnitudes at each symbol time
+    // ll174 is the resulting 174 soft bits of payload
+    // used in FT-chirp modulation scheme - generalized to any number of symbol bits
+    //
+    static void soft_decode_mags(FT8Params& params, const std::vector<std::vector<float>>& mags, int nbSymbolBits, float ll174[]);
+
+    //
+    // Generic Gray decoding for magnitudes (floats)
+    //
+    static std::vector<std::vector<float>> un_gray_code_r_gen(const std::vector<std::vector<float>> &mags);
 
 private:
     //
@@ -432,6 +415,11 @@ private:
     // normalize levels by windowed median.
     // this helps, but why?
     //
+    static std::vector<std::vector<float>> convert_to_snr_gen(const FT8Params& params, int nbSymbolBits, const std::vector<std::vector<float>> &mags);
+    //
+    // normalize levels by windowed median.
+    // this helps, but why?
+    //
     std::vector<std::vector<std::complex<float>>> c_convert_to_snr(
         const std::vector<std::vector<std::complex<float>>> &m79
     );
@@ -441,8 +429,18 @@ private:
     // distribution of strongest tones, and
     // distribution of noise.
     //
-    void make_stats(
+    static void make_stats(
         const std::vector<std::vector<float>> &m79,
+        Stats &bests,
+        Stats &all
+    );
+    //
+    // generalized version of the above for any number of symbols and no Costas
+    // used by FT-chirp decoder
+    //
+    static void make_stats_gen(
+        const std::vector<std::vector<float>> &mags,
+        int nbSymbolBits,
         Stats &bests,
         Stats &all
     );
@@ -465,7 +463,8 @@ private:
     //
     // returns log-likelihood, zero is positive, one is negative.
     //
-    float bayes(
+    static float bayes(
+        FT8Params& params,
         float best_zero,
         float best_one,
         int lli,
@@ -491,7 +490,7 @@ private:
     // scaled by str.
     //
     std::vector<float> extract_bits(const std::vector<int> &syms, const std::vector<float> str);
-    // decode successive pairs of symbols. exploits the likelyhood
+    // decode successive pairs of symbols. exploits the likelihood
     // that they have the same phase, by summing the complex
     // correlations for each possible pair and using the max.
     void soft_decode_pairs(
@@ -502,11 +501,6 @@ private:
         const FFTEngine::ffts_t &m79x,
         float ll174[]
     );
-    //
-    // given log likelyhood for each bit, try LDPC and OSD decoders.
-    // on success, puts corrected 174 bits into a174[].
-    //
-    int decode(const float ll174[], int a174[], int use_osd, std::string &comment);
     //
     // bandpass filter some FFT bins.
     // smooth transition from stop-band to pass-band,

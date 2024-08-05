@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2018-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -85,12 +86,24 @@ bool InterferometerGUI::handleMessage(const Message& message)
     }
     else if (Interferometer::MsgConfigureInterferometer::match(message))
     {
-        const Interferometer::MsgConfigureInterferometer& notif = (const Interferometer::MsgConfigureInterferometer&) message;
-        m_settings = notif.getSettings();
+        const Interferometer::MsgConfigureInterferometer& cfg = (const Interferometer::MsgConfigureInterferometer&) message;
+
+        if (cfg.getForce()) {
+            m_settings = cfg.getSettings();
+        } else {
+            m_settings.applySettings(cfg.getSettingsKeys(), cfg.getSettings());
+        }
+
         ui->scopeGUI->updateSettings();
         ui->spectrumGUI->updateSettings();
         m_channelMarker.updateSettings(static_cast<const ChannelMarker*>(m_settings.m_channelMarker));
         displaySettings();
+        return true;
+    }
+    else if (Interferometer::MsgReportDevices::match(message))
+    {
+        Interferometer::MsgReportDevices& report = (Interferometer::MsgReportDevices&) message;
+        updateDeviceSetList(report.getDeviceSetIndexes());
         return true;
     }
     else
@@ -164,10 +177,12 @@ InterferometerGUI::InterferometerGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUI
 
     connect(getInputMessageQueue(), SIGNAL(messageEnqueued()), this, SLOT(handleSourceMessages()));
 
+    updateDeviceSetList(m_interferometer->getDeviceSetList());
     displaySettings();
     makeUIConnections();
     displayRateAndShift();
     applySettings(true);
+    m_resizer.enableChildMouseTracking();
 }
 
 InterferometerGUI::~InterferometerGUI()
@@ -186,9 +201,11 @@ void InterferometerGUI::applySettings(bool force)
     {
         setTitleColor(m_channelMarker.getColor());
 
-        Interferometer::MsgConfigureInterferometer* message = Interferometer::MsgConfigureInterferometer::create(m_settings, force);
+        Interferometer::MsgConfigureInterferometer* message = Interferometer::MsgConfigureInterferometer::create(m_settings, m_settingsKeys, force);
         m_interferometer->getInputMessageQueue()->push(message);
     }
+
+    m_settingsKeys.clear();
 }
 
 void InterferometerGUI::displaySettings()
@@ -208,10 +225,17 @@ void InterferometerGUI::displaySettings()
     setTitle(m_channelMarker.getTitle());
 
     blockApplySettings(true);
+    int index = getLocalDeviceIndexInCombo(m_settings.m_localDeviceIndex);
+    if (index >= 0) {
+        ui->localDevice->setCurrentIndex(index);
+    }
+    ui->localDevicePlay->setChecked(m_settings.m_play);
     ui->decimationFactor->setCurrentIndex(m_settings.m_log2Decim);
     applyDecimation();
     ui->phaseCorrection->setValue(m_settings.m_phase);
     ui->phaseCorrectionText->setText(tr("%1").arg(m_settings.m_phase));
+    ui->gain->setValue(m_settings.m_gain);
+    ui->gainText->setText(QString("%1").arg(m_settings.m_gain / 10.0, 0, 'f', 1));
     getRollupContents()->restoreState(m_rollupState);
     updateAbsoluteCenterFrequency();
     blockApplySettings(false);
@@ -290,34 +314,112 @@ void InterferometerGUI::onMenuDialogCalled(const QPoint &p)
         setTitle(m_channelMarker.getTitle());
         setTitleColor(m_settings.m_rgbColor);
 
+        m_settingsKeys.append("title");
+        m_settingsKeys.append("rgbColor");
+        m_settingsKeys.append("useReverseAPI");
+        m_settingsKeys.append("reverseAPIAddress");
+        m_settingsKeys.append("reverseAPIPort");
+        m_settingsKeys.append("reverseAPIFeatureSetIndex");
+        m_settingsKeys.append("reverseAPIFeatureIndex");
+
         applySettings();
     }
 
     resetContextMenuType();
 }
 
+void InterferometerGUI::updateDeviceSetList(const QList<int>& deviceSetIndexes)
+{
+    QList<int>::const_iterator it = deviceSetIndexes.begin();
+
+    ui->localDevice->blockSignals(true);
+
+    ui->localDevice->clear();
+
+    for (; it != deviceSetIndexes.end(); ++it) {
+        ui->localDevice->addItem(QString("R%1").arg(*it), *it);
+    }
+
+    ui->localDevice->blockSignals(false);
+}
+
+int InterferometerGUI::getLocalDeviceIndexInCombo(int localDeviceIndex)
+{
+    int index = 0;
+
+    for (; index < ui->localDevice->count(); index++)
+    {
+        if (localDeviceIndex == ui->localDevice->itemData(index).toInt()) {
+            return index;
+        }
+    }
+
+    return -1;
+}
+
 void InterferometerGUI::on_decimationFactor_currentIndexChanged(int index)
 {
     m_settings.m_log2Decim = index;
+    m_settingsKeys.append("log2Decim");
     applyDecimation();
 }
 
 void InterferometerGUI::on_position_valueChanged(int value)
 {
     m_settings.m_filterChainHash = value;
+    m_settingsKeys.append("filterChainHash");
     applyPosition();
 }
 
 void InterferometerGUI::on_phaseCorrection_valueChanged(int value)
 {
     m_settings.m_phase = value;
+    m_settingsKeys.append("phase");
     ui->phaseCorrectionText->setText(tr("%1").arg(value));
     applySettings();
+}
+
+void InterferometerGUI::on_gain_valueChanged(int value)
+{
+    m_settings.m_gain = value;
+    m_settingsKeys.append("gain");
+    ui->gainText->setText(QString("%1").arg(m_settings.m_gain / 10.0, 0, 'f', 1));
+    applySettings();
+}
+
+void InterferometerGUI::on_phaseCorrectionLabel_clicked()
+{
+    m_settings.m_phase = 0;
+    ui->phaseCorrection->setValue(0);
+}
+
+void InterferometerGUI::on_gainLabel_clicked()
+{
+    m_settings.m_gain = 0;
+    ui->gain->setValue(0);
 }
 
 void InterferometerGUI::on_correlationType_currentIndexChanged(int index)
 {
     m_settings.m_correlationType = (InterferometerSettings::CorrelationType) index;
+    m_settingsKeys.append("correlationType");
+    applySettings();
+}
+
+void InterferometerGUI::on_localDevice_currentIndexChanged(int index)
+{
+    if (index >= 0)
+    {
+        m_settings.m_localDeviceIndex = ui->localDevice->currentData().toInt();
+        m_settingsKeys.append("localDeviceIndex");
+        applySettings();
+    }
+}
+
+void InterferometerGUI::on_localDevicePlay_toggled(bool checked)
+{
+    m_settings.m_play = checked;
+    m_settingsKeys.append("play");
     applySettings();
 }
 
@@ -332,6 +434,7 @@ void InterferometerGUI::applyDecimation()
     ui->position->setMaximum(maxHash-1);
     ui->position->setValue(m_settings.m_filterChainHash);
     m_settings.m_filterChainHash = ui->position->value();
+    m_settingsKeys.append("filterChainHash");
     applyPosition();
 }
 
@@ -359,7 +462,12 @@ void InterferometerGUI::makeUIConnections()
     QObject::connect(ui->decimationFactor, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &InterferometerGUI::on_decimationFactor_currentIndexChanged);
     QObject::connect(ui->position, &QSlider::valueChanged, this, &InterferometerGUI::on_position_valueChanged);
     QObject::connect(ui->phaseCorrection, &QSlider::valueChanged, this, &InterferometerGUI::on_phaseCorrection_valueChanged);
+    QObject::connect(ui->gain, &QDial::valueChanged, this, &InterferometerGUI::on_gain_valueChanged);
+    QObject::connect(ui->phaseCorrectionLabel, &ClickableLabel::clicked, this, &InterferometerGUI::on_phaseCorrectionLabel_clicked);
+    QObject::connect(ui->gainLabel, &ClickableLabel::clicked, this, &InterferometerGUI::on_gainLabel_clicked);
     QObject::connect(ui->correlationType, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &InterferometerGUI::on_correlationType_currentIndexChanged);
+    QObject::connect(ui->localDevice, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &InterferometerGUI::on_localDevice_currentIndexChanged);
+    QObject::connect(ui->localDevicePlay, &ButtonSwitch::toggled, this, &InterferometerGUI::on_localDevicePlay_toggled);
 }
 
 void InterferometerGUI::updateAbsoluteCenterFrequency()

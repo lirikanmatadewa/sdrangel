@@ -1,5 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2017 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2014 John Greb <hexameron@spam.no>                              //
+// Copyright (C) 2015-2019 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -48,7 +51,7 @@ private:
     bool m_running;
 
     DevicePlutoSDRBox *m_plutoBox;
-    int16_t *m_buf;                 //!< holds I+Q values of each sample from devce
+    int16_t *m_buf;                 //!< holds I+Q values of each sample from device
 //    int16_t *m_bufConv;             //!< holds I+Q values of each sample converted to host format via iio_channel_convert
     uint32_t m_blockSizeSamples;    //!< buffer sizes in number of (I,Q) samples
     SampleSourceFifo* m_sampleFifo; //!< DSP sample FIFO (I,Q)

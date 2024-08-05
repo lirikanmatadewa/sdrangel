@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2021-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -34,14 +34,10 @@
 #include "dsp/dspcommands.h"
 #include "ui_pagerdemodgui.h"
 #include "plugin/pluginapi.h"
-#include "util/simpleserializer.h"
 #include "util/db.h"
 #include "util/csv.h"
 #include "gui/basicchannelsettingsdialog.h"
-#include "gui/devicestreamselectiondialog.h"
 #include "dsp/dspengine.h"
-#include "dsp/glscopesettings.h"
-#include "gui/crightclickenabler.h"
 #include "gui/dialogpositioner.h"
 #include "maincore.h"
 
@@ -556,6 +552,7 @@ PagerDemodGUI::PagerDemodGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, Bas
     displaySettings();
     makeUIConnections();
     applySettings(true);
+    m_resizer.enableChildMouseTracking();
 }
 
 void PagerDemodGUI::customContextMenuRequested(QPoint pos)

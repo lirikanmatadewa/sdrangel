@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2015-2018 Edouard Griffiths, F4EXB.                             //
-// Copyright (C) 2023 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2021, 2023 Jon Beniston, M7RCE <jon@beniston.com>               //
+// Copyright (C) 2021-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -33,12 +33,9 @@
 #include "SWGWorkspaceInfo.h"
 #include "SWGDSCDemodSettings.h"
 #include "SWGChannelReport.h"
-#include "SWGMapItem.h"
 
-#include "dsp/dspengine.h"
 #include "dsp/dspcommands.h"
 #include "device/deviceapi.h"
-#include "feature/feature.h"
 #include "settings/serializable.h"
 #include "util/db.h"
 #include "maincore.h"
@@ -314,6 +311,9 @@ void DSCDemod::applySettings(const DSCDemodSettings& settings, bool force)
     if ((settings.m_logEnabled != m_settings.m_logEnabled) || force) {
         reverseAPIKeys.append("logEnabled");
     }
+    if ((settings.m_useFileTime != m_settings.m_useFileTime) || force) {
+        reverseAPIKeys.append("useFileTime");
+    }
     if (m_settings.m_streamIndex != settings.m_streamIndex)
     {
         if (m_deviceAPI->getSampleMIMO()) // change of stream is possible for MIMO devices only
@@ -322,6 +322,8 @@ void DSCDemod::applySettings(const DSCDemodSettings& settings, bool force)
             m_deviceAPI->removeChannelSink(this, m_settings.m_streamIndex);
             m_deviceAPI->addChannelSink(this, settings.m_streamIndex);
             m_deviceAPI->addChannelSinkAPI(this);
+            m_settings.m_streamIndex = settings.m_streamIndex; // make sure ChannelAPI::getStreamIndex() is consistent
+            emit streamIndexChanged(settings.m_streamIndex);
         }
 
         reverseAPIKeys.append("streamIndex");
@@ -500,10 +502,13 @@ void DSCDemod::webapiUpdateChannelSettings(
         settings.m_udpPort = response.getDscDemodSettings()->getUdpPort();
     }
     if (channelSettingsKeys.contains("logFilename")) {
-        settings.m_logFilename = *response.getAdsbDemodSettings()->getLogFilename();
+        settings.m_logFilename = *response.getDscDemodSettings()->getLogFilename();
     }
     if (channelSettingsKeys.contains("logEnabled")) {
-        settings.m_logEnabled = response.getAdsbDemodSettings()->getLogEnabled();
+        settings.m_logEnabled = response.getDscDemodSettings()->getLogEnabled();
+    }
+    if (channelSettingsKeys.contains("useFileTime")) {
+        settings.m_useFileTime = response.getDscDemodSettings()->getUseFileTime();
     }
     if (channelSettingsKeys.contains("rgbColor")) {
         settings.m_rgbColor = response.getDscDemodSettings()->getRgbColor();
@@ -552,6 +557,7 @@ void DSCDemod::webapiFormatChannelSettings(SWGSDRangel::SWGChannelSettings& resp
     response.getDscDemodSettings()->setUdpPort(settings.m_udpPort);
     response.getDscDemodSettings()->setLogFilename(new QString(settings.m_logFilename));
     response.getDscDemodSettings()->setLogEnabled(settings.m_logEnabled);
+    response.getDscDemodSettings()->setUseFileTime(settings.m_useFileTime);
 
     response.getDscDemodSettings()->setRgbColor(settings.m_rgbColor);
     if (response.getDscDemodSettings()->getTitle()) {
@@ -695,6 +701,9 @@ void DSCDemod::webapiFormatChannelSettings(
     }
     if (channelSettingsKeys.contains("logEnabled") || force) {
         swgDSCDemodSettings->setLogEnabled(settings.m_logEnabled);
+    }
+    if (channelSettingsKeys.contains("useFileTime") || force) {
+        swgDSCDemodSettings->setUseFileTime(settings.m_useFileTime);
     }
     if (channelSettingsKeys.contains("rgbColor") || force) {
         swgDSCDemodSettings->setRgbColor(settings.m_rgbColor);

@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2019-2020 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2022 Jiří Pinkava <jiri.pinkava@rossum.ai>                      //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -25,7 +26,6 @@
 #include <fstream>
 
 #include "dsp/channelsamplesource.h"
-#include "dsp/nco.h"
 #include "dsp/ncof.h"
 #include "dsp/interpolator.h"
 #include "dsp/fftfilt.h"

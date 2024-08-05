@@ -1,6 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2022 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2015-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2019 Davide Gerhard <rainbow@irh.it>                            //
+// Copyright (C) 2020 Kacper Michajłow <kasper93@gmail.com>                      //
+// Copyright (C) 2022 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -19,7 +21,6 @@
 #include <QtPlugin>
 
 #include "plugin/pluginapi.h"
-#include "util/simpleserializer.h"
 
 #ifdef SERVER_MODE
 #include "remotetcpinput.h"
@@ -32,7 +33,7 @@
 const PluginDescriptor RemoteTCPInputPlugin::m_pluginDescriptor = {
     QStringLiteral("RemoteTCPInput"),
     QStringLiteral("Remote TCP device input"),
-    QStringLiteral("7.16.0"),
+    QStringLiteral("7.20.0"),
     QStringLiteral("(c) Jon Beniston, M7RCE"),
     QStringLiteral("https://github.com/f4exb/sdrangel"),
     true,

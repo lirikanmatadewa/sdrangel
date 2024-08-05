@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2023 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2016, 2018-2019, 2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com> //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -30,6 +32,7 @@ public:
     void setFilterDf(int df);
     void setFilterCall(const QString& utcString);
     void setFilterLoc(const QString& utcString);
+    void setFilterCountry(const QString& countryString);
     void setFilterInfo(const QString& infoString);
 
 protected:
@@ -43,6 +46,7 @@ private:
         FILTER_DF,
         FILTER_CALL,
         FILTER_LOC,
+        FILTER_COUNTRY,
         FILTER_INFO
     };
 
@@ -52,6 +56,7 @@ private:
     int m_df;
     QString m_call;
     QString m_loc;
+    QString m_country;
     QString m_info;
 };
 

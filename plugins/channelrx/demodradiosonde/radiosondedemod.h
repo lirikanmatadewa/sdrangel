@@ -1,6 +1,10 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2015-2018 Edouard Griffiths, F4EXB.                             //
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2014-2015 John Greb <hexameron@spam.no>                         //
+// Copyright (C) 2015-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2020-2022 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2020 Kacper Michajłow <kasper93@gmail.com>                      //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -78,9 +82,9 @@ public:
         int getErrorsCorrected() const { return m_errorsCorrected; }
         int getThreshold() const { return m_threshold; }
 
-        static MsgMessage* create(QByteArray message, int errorsCorrected, int threshold)
+        static MsgMessage* create(const QByteArray& message, QDateTime dateTime, int errorsCorrected, int threshold)
         {
-            return new MsgMessage(message, QDateTime::currentDateTime(), errorsCorrected, threshold);
+            return new MsgMessage(message, dateTime, errorsCorrected, threshold);
         }
 
     private:
@@ -89,7 +93,7 @@ public:
         int m_errorsCorrected;
         int m_threshold;
 
-        MsgMessage(QByteArray message, QDateTime dateTime, int errorsCorrected, int threshold) :
+        MsgMessage(const QByteArray& message, QDateTime dateTime, int errorsCorrected, int threshold) :
             Message(),
             m_message(message),
             m_dateTime(dateTime),
@@ -124,6 +128,7 @@ public:
 
     virtual int getNbSinkStreams() const { return 1; }
     virtual int getNbSourceStreams() const { return 0; }
+    virtual int getStreamIndex() const { return m_settings.m_streamIndex; }
 
     virtual qint64 getStreamCenterFrequency(int streamIndex, bool sinkElseSource) const
     {

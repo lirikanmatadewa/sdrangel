@@ -1,6 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Jon Beniston, M7RCE                                        //
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2020-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2020-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2023 Lamar Owen <lamar.owen@gmail.com>                          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -25,8 +26,6 @@
 #include "feature/featureuiset.h"
 #include "gui/basicfeaturesettingsdialog.h"
 #include "gui/dialogpositioner.h"
-#include "mainwindow.h"
-#include "device/deviceuiset.h"
 #include "util/astronomy.h"
 
 #include "ui_gs232controllergui.h"
@@ -34,6 +33,7 @@
 #include "gs232controllergui.h"
 #include "gs232controllerreport.h"
 #include "dfmprotocol.h"
+#include "maincore.h"
 
 GS232ControllerGUI* GS232ControllerGUI::create(PluginAPI* pluginAPI, FeatureUISet *featureUISet, Feature *feature)
 {
@@ -50,7 +50,7 @@ void GS232ControllerGUI::resetToDefaults()
 {
     m_settings.resetToDefaults();
     displaySettings();
-    applySettings(true);
+    applyAllSettings();
 }
 
 QByteArray GS232ControllerGUI::serialize() const
@@ -64,7 +64,7 @@ bool GS232ControllerGUI::deserialize(const QByteArray& data)
     {
         m_feature->setWorkspaceIndex(m_settings.m_workspaceIndex);
         displaySettings();
-        applySettings(true);
+        applyAllSettings();
         return true;
     }
     else
@@ -120,9 +120,7 @@ void GS232ControllerGUI::displayToAzEl(float coord1, float coord2)
         m_settings.m_azimuth = coord1;
         m_settings.m_elevation = coord2;
     }
-    m_settingsKeys.append("azimuth");
-    m_settingsKeys.append("elevation");
-    applySettings();
+    applySettings({"azimuth", "elevation"});
 }
 
 bool GS232ControllerGUI::handleMessage(const Message& message)
@@ -148,7 +146,7 @@ bool GS232ControllerGUI::handleMessage(const Message& message)
     {
         GS232Controller::MsgReportAvailableChannelOrFeatures& report =
             (GS232Controller::MsgReportAvailableChannelOrFeatures&) message;
-        updatePipeList(report.getItems());
+        updatePipeList(report.getItems(), report.getRenameFrom(), report.getRenameTo());
         return true;
     }
     else if (GS232ControllerReport::MsgReportAzAl::match(message))
@@ -205,7 +203,7 @@ void GS232ControllerGUI::onWidgetRolled(QWidget* widget, bool rollDown)
     (void) rollDown;
 
     getRollupContents()->saveState(m_rollupState);
-    applySettings();
+    applySetting("rollupState");
 }
 
 GS232ControllerGUI::GS232ControllerGUI(PluginAPI* pluginAPI, FeatureUISet *featureUISet, Feature *feature, QWidget* parent) :
@@ -259,13 +257,14 @@ GS232ControllerGUI::GS232ControllerGUI(PluginAPI* pluginAPI, FeatureUISet *featu
     connect(&m_inputTimer, &QTimer::timeout, this, &GS232ControllerGUI::checkInputController);
 
     displaySettings();
-    applySettings(true);
+    applyAllSettings();
     makeUIConnections();
 
     // Get pre-existing pipes
     m_gs232Controller->getInputMessageQueue()->push(GS232Controller::MsgScanAvailableChannelOrFeatures::create());
 
     new DialogPositioner(&m_dfmStatusDialog, true);
+    m_resizer.enableChildMouseTracking();
 }
 
 void GS232ControllerGUI::updateInputControllerList()
@@ -406,8 +405,7 @@ void GS232ControllerGUI::on_inputController_currentIndexChanged(int index)
     if (index >= 0)
     {
         m_settings.m_inputController = ui->inputController->currentText();
-        m_settingsKeys.append("inputController");
-        applySettings();
+        applySetting("inputController");
         updateInputController();
     }
 }
@@ -423,28 +421,24 @@ void GS232ControllerGUI::on_highSensitivity_clicked(bool checked)
 {
     m_settings.m_highSensitivity = checked;
     ui->highSensitivity->setText(checked ? "H" : "L");
-    m_settingsKeys.append("highSensitivity");
-    applySettings();
+    applySetting("highSensitivity");
 }
 
 void GS232ControllerGUI::on_enableTargetControl_clicked(bool checked)
 {
     m_settings.m_targetControlEnabled = checked;
-    m_settingsKeys.append("targetControlEnabled");
-    applySettings();
+    applySetting("targetControlEnabled");
 }
 
 void GS232ControllerGUI::on_enableOffsetControl_clicked(bool checked)
 {
     m_settings.m_offsetControlEnabled  = checked;
-    m_settingsKeys.append("offsetControlEnabled");
-    applySettings();
+    applySetting("offsetControlEnabled");
 }
 
 void GS232ControllerGUI::inputConfigurationComplete()
 {
-    m_settingsKeys.append("inputControllerSettings");
-    applySettings();
+    applySetting("inputControllerSettings");
 }
 
 GS232ControllerGUI::~GS232ControllerGUI()
@@ -544,57 +538,50 @@ void GS232ControllerGUI::updateSerialPortList(const QStringList& serialPorts)
     ui->serialPort->blockSignals(false);
 }
 
-void GS232ControllerGUI::updatePipeList(const QList<GS232ControllerSettings::AvailableChannelOrFeature>& sources)
+void GS232ControllerGUI::updatePipeList(const AvailableChannelOrFeatureList& sources, const QStringList& renameFrom, const QStringList& renameTo)
 {
-    QString currentText = ui->sources->currentText();
-    QString newText;
+    // Update source setting if it has been renamed
+    if (renameFrom.contains(m_settings.m_source))
+    {
+        m_settings.m_source = renameTo[renameFrom.indexOf(m_settings.m_source)];
+        applySetting("source");
+    }
+
+    int prevIdx = ui->sources->currentIndex();
     ui->sources->blockSignals(true);
     ui->sources->clear();
 
-    for (const auto& source : sources)
-    {
-        QString name = tr("%1%2:%3 %4")
-            .arg(source.m_kind)
-            .arg(source.m_superIndex)
-            .arg(source.m_index)
-            .arg(source.m_type);
-        ui->sources->addItem(name);
+    for (const auto& source : sources) {
+        ui->sources->addItem(source.getLongId());
     }
 
-    int index = ui->sources->findText(m_settings.m_source);
-    ui->sources->setCurrentIndex(index);
-
-    if (index < 0) // current source is not found
+    // Select current setting, if it exists
+    // If not, and no prior setting, make sure nothing selected, as channel/feature may be created later on
+    // If not found and something was previously selected, clear the setting, as probably deleted
+    int idx = ui->sources->findText(m_settings.m_source);
+    if (idx >= 0)
+    {
+        ui->sources->setCurrentIndex(idx);
+    }
+    else if (prevIdx == -1)
+    {
+        ui->sources->setCurrentIndex(-1);
+    }
+    else
     {
         m_settings.m_source = "";
+        applySetting("source");
         ui->targetName->setText("");
-        m_settingsKeys.append("source");
-        applySettings();
     }
-
-    // if (currentText.isEmpty())
-    // {
-    //     // Source feature may be loaded after this, so may not have existed when
-    //     // displaySettings was called
-    //     if (sources.size() > 0) {
-    //         ui->sources->setCurrentIndex(ui->sources->findText(m_settings.m_source));
-    //     }
-    // }
-    // else
-    // {
-    //     ui->sources->setCurrentIndex(ui->sources->findText(currentText));
-    // }
 
     ui->sources->blockSignals(false);
 
-    // QString newText = ui->sources->currentText();
-
-    // if (currentText != newText)
-    // {
-    //    m_settings.m_source = newText;
-    //    ui->targetName->setText("");
-    //    applySettings();
-    // }
+    // If no current setting, select first available
+    if (m_settings.m_source.isEmpty() && (ui->sources->count() > 0))
+    {
+        ui->sources->setCurrentIndex(0);
+        on_sources_currentTextChanged(ui->sources->currentText());
+    }
 }
 
 void GS232ControllerGUI::onMenuDialogCalled(const QPoint &p)
@@ -624,15 +611,17 @@ void GS232ControllerGUI::onMenuDialogCalled(const QPoint &p)
         setTitle(m_settings.m_title);
         setTitleColor(m_settings.m_rgbColor);
 
-        m_settingsKeys.append("title");
-        m_settingsKeys.append("rgbColor");
-        m_settingsKeys.append("useReverseAPI");
-        m_settingsKeys.append("reverseAPIAddress");
-        m_settingsKeys.append("reverseAPIPort");
-        m_settingsKeys.append("reverseAPIFeatureSetIndex");
-        m_settingsKeys.append("reverseAPIFeatureIndex");
+        QList<QString> settingsKeys({
+            "rgbColor",
+            "title",
+            "useReverseAPI",
+            "reverseAPIAddress",
+            "reverseAPIPort",
+            "reverseAPIDeviceIndex",
+            "reverseAPIChannelIndex"
+        });
 
-        applySettings();
+        applySettings(settingsKeys);
     }
 
     resetContextMenuType();
@@ -702,15 +691,13 @@ void GS232ControllerGUI::on_protocol_currentIndexChanged(int index)
 {
     m_settings.m_protocol = (GS232ControllerSettings::Protocol)index;
     setProtocol(m_settings.m_protocol);
-    m_settingsKeys.append("protocol");
-    applySettings();
+    applySetting("protocol");
 }
 
 void GS232ControllerGUI::on_connection_currentIndexChanged(int index)
 {
     m_settings.m_connection = (GS232ControllerSettings::Connection)index;
-    m_settingsKeys.append("connection");
-    applySettings();
+    applySetting("connection");
     updateConnectionWidgets();
 }
 
@@ -718,30 +705,26 @@ void GS232ControllerGUI::on_serialPort_currentIndexChanged(int index)
 {
     (void) index;
     m_settings.m_serialPort = ui->serialPort->currentText();
-    m_settingsKeys.append("serialPort");
-    applySettings();
+    applySetting("serialPort");
 }
 
 void GS232ControllerGUI::on_baudRate_currentIndexChanged(int index)
 {
     (void) index;
     m_settings.m_baudRate = ui->baudRate->currentText().toInt();
-    m_settingsKeys.append("baudRate");
-    applySettings();
+    applySetting("baudRate");
 }
 
 void GS232ControllerGUI::on_host_editingFinished()
 {
     m_settings.m_host = ui->host->text();
-    m_settingsKeys.append("host");
-    applySettings();
+    applySetting("host");
 }
 
 void GS232ControllerGUI::on_port_valueChanged(int value)
 {
     m_settings.m_port = value;
-    m_settingsKeys.append("port");
-    applySettings();
+    applySetting("port");
 }
 
 void GS232ControllerGUI::on_coord1_valueChanged(double value)
@@ -768,8 +751,7 @@ void GS232ControllerGUI::on_azimuthOffset_valueChanged(double value)
         m_inputAzOffset = value;
     }
     m_settings.m_azimuthOffset = (float) value;
-    m_settingsKeys.append("azimuthOffset");
-    applySettings();
+    applySetting("azimuthOffset");
 }
 
 void GS232ControllerGUI::on_elevationOffset_valueChanged(double value)
@@ -778,58 +760,50 @@ void GS232ControllerGUI::on_elevationOffset_valueChanged(double value)
         m_inputElOffset = value;
     }
     m_settings.m_elevationOffset = (float) value;
-    m_settingsKeys.append("elevationOffset");
-    applySettings();
+    applySetting("elevationOffset");
 }
 
 void GS232ControllerGUI::on_azimuthMin_valueChanged(int value)
 {
     m_settings.m_azimuthMin = value;
-    m_settingsKeys.append("azimuthMin");
-    applySettings();
+    applySetting("azimuthMin");
 }
 
 void GS232ControllerGUI::on_azimuthMax_valueChanged(int value)
 {
     m_settings.m_azimuthMax = value;
-    m_settingsKeys.append("azimuthMax");
-    applySettings();
+    applySetting("azimuthMax");
 }
 
 void GS232ControllerGUI::on_elevationMin_valueChanged(int value)
 {
     m_settings.m_elevationMin = value;
-    m_settingsKeys.append("elevationMin");
-    applySettings();
+    applySetting("elevationMin");
 }
 
 void GS232ControllerGUI::on_elevationMax_valueChanged(int value)
 {
     m_settings.m_elevationMax = value;
-    m_settingsKeys.append("elevationMax");
-    applySettings();
+    applySetting("elevationMax");
 }
 
 void GS232ControllerGUI::on_tolerance_valueChanged(double value)
 {
     m_settings.m_tolerance = value;
-    m_settingsKeys.append("tolerance");
-    applySettings();
+    applySetting("tolerance");
 }
 
 void GS232ControllerGUI::on_precision_valueChanged(int value)
 {
     m_settings.m_precision = value;
     setPrecision();
-    m_settingsKeys.append("precision");
-    applySettings();
+    applySetting("precision");
 }
 
 void GS232ControllerGUI::on_coordinates_currentIndexChanged(int index)
 {
     m_settings.m_coordinates = (GS232ControllerSettings::Coordinates)index;
-    m_settingsKeys.append("coordinates");
-    applySettings();
+    applySetting("coordinates");
 
     float coord1, coord2;
     azElToDisplay(m_settings.m_azimuth, m_settings.m_elevation, coord1, coord2);
@@ -884,8 +858,7 @@ void GS232ControllerGUI::on_track_stateChanged(int state)
         ui->targetName->setText("");
     }
 
-    m_settingsKeys.append("track");
-    applySettings();
+    applySetting("track");
 }
 
 void GS232ControllerGUI::on_sources_currentTextChanged(const QString& text)
@@ -893,36 +866,31 @@ void GS232ControllerGUI::on_sources_currentTextChanged(const QString& text)
     qDebug("GS232ControllerGUI::on_sources_currentTextChanged: %s", qPrintable(text));
     m_settings.m_source = text;
     ui->targetName->setText("");
-    m_settingsKeys.append("source");
-    applySettings();
+    applySetting("source");
 }
 
 void GS232ControllerGUI::on_dfmTrack_clicked(bool checked)
 {
     m_settings.m_dfmTrackOn = checked;
-    m_settingsKeys.append("dfmTrackOn");
-    applySettings();
+    applySetting("dfmTrackOn");
 }
 
 void GS232ControllerGUI::on_dfmLubePumps_clicked(bool checked)
 {
     m_settings.m_dfmLubePumpsOn = checked;
-    m_settingsKeys.append("dfmLubePumpsOn");
-    applySettings();
+    applySetting("dfmLubePumpsOn");
 }
 
 void GS232ControllerGUI::on_dfmBrakes_clicked(bool checked)
 {
     m_settings.m_dfmBrakesOn = checked;
-    m_settingsKeys.append("dfmBrakesOn");
-    applySettings();
+    applySetting("dfmBrakesOn");
 }
 
 void GS232ControllerGUI::on_dfmDrives_clicked(bool checked)
 {
     m_settings.m_dfmDrivesOn = checked;
-    m_settingsKeys.append("dfmDrivesOn");
-    applySettings();
+    applySetting("dfmDrivesOn");
 }
 
 void GS232ControllerGUI::on_dfmShowStatus_clicked()
@@ -987,16 +955,27 @@ void GS232ControllerGUI::updateStatus()
     }
 }
 
-void GS232ControllerGUI::applySettings(bool force)
+void GS232ControllerGUI::applySetting(const QString& settingsKey)
 {
+    applySettings({settingsKey});
+}
+
+void GS232ControllerGUI::applySettings(const QStringList& settingsKeys, bool force)
+{
+    m_settingsKeys.append(settingsKeys);
     if (m_doApplySettings)
     {
         GS232Controller::MsgConfigureGS232Controller* message = GS232Controller::MsgConfigureGS232Controller::create(m_settings, m_settingsKeys, force);
         m_gs232Controller->getInputMessageQueue()->push(message);
+        m_settingsKeys.clear();
     }
-
-    m_settingsKeys.clear();
 }
+
+void GS232ControllerGUI::applyAllSettings()
+{
+    applySettings(QStringList(), true);
+}
+
 
 void GS232ControllerGUI::makeUIConnections()
 {

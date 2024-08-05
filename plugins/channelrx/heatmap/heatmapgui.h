@@ -1,6 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2023 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2023 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -31,7 +30,6 @@
 #include "channel/channelgui.h"
 #include "dsp/channelmarker.h"
 #include "util/messagequeue.h"
-#include "util/colormap.h"
 #include "settings/rollupstate.h"
 
 #include "heatmapsettings.h"
@@ -144,7 +142,6 @@ private:
     void blockApplySettings(bool block);
     void applySettings(bool force = false);
     void displaySettings();
-    void messageReceived(const QByteArray& message, const QDateTime& dateTime);
     bool handleMessage(const Message& message);
     void makeUIConnections();
     void updateAbsoluteCenterFrequency();
@@ -160,6 +157,7 @@ private:
     void clearPower();
     void clearPower(float *power);
     void clearPower(float *power, int size);
+    void createImage(int width, int height);
     void clearImage();
     void updatePower(double latitude, double longitude, float power);
     void plotMap();
@@ -211,6 +209,11 @@ private slots:
     void on_displayPulseAverage_clicked(bool checked=false);
     void on_displayPathLoss_clicked(bool checked=false);
     void on_displayMins_valueChanged(int value);
+    void on_recordAverage_clicked(bool checked=false);
+    void on_recordMax_clicked(bool checked=false);
+    void on_recordMin_clicked(bool checked=false);
+    void on_recordPulseAverage_clicked(bool checked=false);
+    void on_recordPathLoss_clicked(bool checked=false);
     void onWidgetRolled(QWidget* widget, bool rollDown);
     void onMenuDialogCalled(const QPoint& p);
     void handleInputMessages();

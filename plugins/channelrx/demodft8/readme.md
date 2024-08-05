@@ -95,7 +95,7 @@ This is the volume of the audio signal in dB from -10 (0.1) to 40 (10000). It ca
 
 This shows the level of the signal entering the FT8 demodulator and decoder and peaks (shown by the tiny red vertical bar) should never exceed 100&percnt;. In fact there is a 10&percnt; guard so 100&percnt; is actually 90&percnt; of the signal volume. Note that the decoder will work well even with a few &percnt; volume however you should try to set the volume (A.10) so that big signals reach at least ~20&percnt; to have the best dynamic range.
 
-Because this volume is based on he RF signal strength it can vary in large proportions and will be more stable if AGC (A.7) is engaged.
+Because this volume is based on the RF signal strength it can vary in large proportions and will be more stable if AGC (A.7) is engaged.
 
 <h2>B: Demodulator baseband spectrum</h2>
 
@@ -124,6 +124,7 @@ Toggles the filtering of messages. Messages are filtered based on the selected c
   - **Call1**: will filter messages matching the call1 area value either in the call1 or call2 areas
   - **Call2**: same as above but taking the call2 value
   - **Loc**: will filter messages matching the value in the locator (loc) area
+  - **Country**: will filter messages matching the value in the country area
   - **Info**: will filter values starting with "OSD" or not starting with "OSD" thus filter messages decoded via OSD or not
 
 <h3>C.5: Band preset selection</h3>
@@ -166,7 +167,7 @@ The file name is constructed as follows where date is the day date in YYYYMMDD f
 
 Files will be stored in the system application data location in the `ft8/logs` folder. The application data location depends on the O/S:
 
-  - Linux: ~/.local/share/f4exb/SDRangel
+  - Linux: `~/.local/share/f4exb/SDRangel`
   - Windows: C:&bsol;Users&bsol;&lt;your user&gt;&bsol;AppData&bsol;Local&bsol;f4exb&bsol;SDRangel
 
 <h3>C.9: Record baseband</h3>
@@ -201,9 +202,10 @@ Displays the received messages in a table which columns are the following:
   - **Call1**: This is the first call area and may contain the caller callsign, a CQ or a custom 13 character message in which case the second call and locator areas are empty. It may be slightly different from the standard for message type 5 (see above).
   - **Call2**: This is the second call area and will contain the callsign of the responding station. This is always a callsign and this may differ slightly from the standard for messages type 5 (see above).
   - **Loc**: Locator area which contains the 4 character Maidenhead locator, a report, an acknowledgement (RRR) or a greetings (73 or RR73)
+  - **Country**: DXCC country name derived from the caller callsign
   - **Info**: FT8 decoder information if any. If OSD is active (see C.1.3) and OSD was activated it reports the OSD decoder status as `OSD-N-MM` where N is the OSD depth reached and MM is the number of correct LDPC bits.
 
-<h3>C.1: More FT8 decoder settings</h2>
+<h3>C.1: More FT8 decoder settings</h3>
 
 This button will open a dialog for more settings
 

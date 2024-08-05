@@ -11,7 +11,7 @@ LoRa is a property of Semtech and the details of the protocol are not made publi
   - To get an idea of what is LoRa: [here](https://www.link-labs.com/blog/what-is-lora)
   - A detailed inspection of LoRa modulation and protocol: [here](https://static1.squarespace.com/static/54cecce7e4b054df1848b5f9/t/57489e6e07eaa0105215dc6c/1464376943218/Reversing-Lora-Knight.pdf)
 
-&#9888; Only spread factors of 11 and 12 are working in LoRa mode thus with the distance enhancement active (DE=2)
+&#9888; Only spread factors of 11 and 12 are working in LoRa mode with the distance enhancement active (DE=2)
 
 Transmissions from the RN2483 module (SF=11 and SF=12 with DE=2) could be successfully received. It has not been tested with Semtech SX127x hardware. This LoRa decoder is designed for experimentation. For production grade applications it is recommended to use dedicated hardware instead.
 
@@ -69,6 +69,7 @@ Thus available bandwidths are:
   - **2604** (333333 / 128) Hz not in LoRa standard
   - **1500** (384000 / 256) Hz not in LoRa standard
   - **750** (384000 / 512) Hz not in LoRa standard
+  - **488** (500000 / 1024) Hz not in LoRa standard
   - **375** (384000 / 1024) Hz not in LoRa standard
 
 The ChirpChat signal is oversampled by two therefore it needs a baseband of at least twice the bandwidth. This drives the maximum value on the slider automatically.
@@ -109,7 +110,9 @@ This is the Spread Factor parameter of the ChirpChat signal. This is the log2 of
 
 The LoRa standard specifies 0 (no DE) or 2 (DE active). The ChirpChat DE range is extended to all values between 0 and 4 bits.
 
-This is the log2 of the number of FFT bins used for one symbol. Extending the number of FFT bins per symbol decreases the probability to detect the wrong symbol as an adjacent bin. It can also overcome frequency drift on long messages.
+The LoRa standard also specifies that the LowDataRateOptimizatio flag (thus DE=2 vs DE=0 here) should be set when the symbol time defined as BW / 2^SF exceeds 16 ms (See section 4.1.1.6 of the SX127x datasheet). In practice this happens for SF=11 and SF=12 and large enough bandwidths (you can do the maths).
+
+Here this value is the log2 of the number of FFT bins used for one symbol. Extending the number of FFT bins per symbol decreases the probability to detect the wrong symbol as an adjacent bin. It can also overcome frequency or sampling time drift on long messages particularly for small bandwidths.
 
 In practice it is difficult to make correct decodes if only one FFT bin is used to code one symbol (DE=0) therefore it is recommended to use a DE factor of 2 or more. With medium SNR DE=1 can still achieve good results.
 
@@ -128,6 +131,7 @@ In addition to the LoRa standard plain ASCII and TTY have been added for pure te
   - **LoRa**: LoRa standard (see LoRa documentation)
   - **ASCII**: This is plain 7 bit ASCII coded characters. It needs exactly 7 effective bits per symbols (SF - DE = 7)
   - **TTY**: Baudot (Teletype) 5 bit encoded characters. It needs exactly 5 effective bits per symbols (SF - DE = 5)
+  - **FT**: FT8/4 protocol. The 174 payload bits are packed into chirp symbols with zero padding if necessary
 
 <h4>A.2: Start/Stop decoder</h4>
 
@@ -145,7 +149,7 @@ This is the expected number of symbols in a message. When a header is present in
 
 <h4>A.5: Auto message length</h4>
 
-LoRa mode only. Set message length (A.4) equal to the number of symbols specified in the message just received. When messages are sent repeatedly this helps adjusting in possible message length changes automatically.
+LoRa and DT modes only. Set message length (A.4) equal to the number of symbols specified (or implied for FT) in the message just received. When messages are sent repeatedly this helps adjusting in possible message length changes automatically.
 
 <h4>A.6: Sync word</h4>
 
@@ -163,21 +167,21 @@ When a header is expected this control is disabled because the value used is the
 
 <h4>A.9: Payload CRC presence</h4>
 
-Use this checkbox to tell if you expect a 2 byte CRC at the end of the payload.
+LoRa mode: Use this checkbox to tell if you expect a 2 byte CRC at the end of the payload. FT mode: there is always a CRC.
 
-When a header is expected this control is disabled because the value used is the one found in the header.
+LoRa: When a header is expected this control is disabled because the value used is the one found in the header.
 
 <h4>A.10: Packet length</h4>
 
-This is the expected packet length in bytes without header and CRC.
+This is the expected packet length in bytes without header and CRC. For FT this is the number of symbols.
 
-When a header is expected this control is disabled because the value used is the one found in the header.
+LoRa: When a header is expected this control is disabled because the value used is the one found in the header.
 
 <h4>A.11: Number of symbols and codewords</h4>
 
 This is the number of symbols (left of slash) and codewords (right of slash) used for the payload including header and CRC.
 
-<h4>A.12: Header FEC indicator</h4>
+<h4>A.12: Header FEC indicator (LoRa)</h4>
 
 Header uses a H(4,8) FEC. The color of the indicator gives the status of header parity checks:
 
@@ -186,27 +190,27 @@ Header uses a H(4,8) FEC. The color of the indicator gives the status of header 
   - **Blue**: recovered error
   - **Green**: no errors
 
-<h4>A.13: Header CRC indicator</h4>
+<h4>A.13: Header CRC indicator (LoRa)</h4>
 
 The header has a one byte CRC. The color of this indicator gives the CRC status:
 
   - **Green**: CRC OK
   - **Red**: CRC error
 
-<h4>A.14: Payload FEC indicator</h4>
+<h4>A.14: Payload FEC indicator (LoRa and FT)</h4>
 
 The color of the indicator gives the status of payload parity checks:
 
   - **Grey**: undefined
-  - **Red**: unrecoverable error. H(4,7) cannot distinguish between recoverable and unrecoverable error. Therefore this is never displayed for H(4,7)
-  - **Blue**: recovered error
+  - **Red**: unrecoverable error. H(4,7) cannot distinguish between recoverable and unrecoverable error. Therefore this is never displayed for H(4,7). For FT it means that LDPC decoding failed.
+  - **Blue**: recovered error (LoRa only)
   - **Green**: no errors
 
-<h4>A.15: Payload CRC indicator</h4>
+<h4>A.15: Payload CRC indicator (LoRa and FT)</h4>
 
 The payload can have a two byte CRC. The color of this indicator gives the CRC status:
 
-  - **Grey**: No CRC
+  - **Grey**: No CRC (LoRa)
   - **Green**: CRC OK
   - **Red**: CRC error
 
@@ -216,7 +220,7 @@ Use this push button to clear the message window (12)
 
 <h3>12: Message window</h3>
 
-This is where the message and status data are displayed. The display varies if the coding scheme is purely text based (TTY, ASCII) or text/binary mixed based (LoRa). The text vs binary consideration concerns the content of the message not the way it is transmitted on air that is by itself binary.
+This is where the message and status data are displayed. The display varies if the coding scheme is purely text based (TTY, ASCII, FT) or text/binary mixed based (LoRa). The text vs binary consideration concerns the content of the message not the way it is transmitted on air that is by itself binary.
 
 <h4>12.a: Text messages</h4>
 

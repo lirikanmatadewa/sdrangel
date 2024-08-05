@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2021-2024 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2021-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -20,7 +20,7 @@
 #include <algorithm>
 #include <QMessageBox>
 #include <QLineEdit>
-#include <QRegExp>
+#include <QRegularExpression>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QGraphicsScene>
@@ -42,12 +42,11 @@
 #include "gui/dmsspinbox.h"
 #include "gui/graphicsviewzoom.h"
 #include "gui/dialogpositioner.h"
-#include "mainwindow.h"
-#include "device/deviceuiset.h"
 #include "util/units.h"
 #include "util/astronomy.h"
 #include "util/interpolation.h"
 #include "util/png.h"
+#include "maincore.h"
 
 #include "ui_startrackergui.h"
 #include "startracker.h"
@@ -220,31 +219,31 @@ bool StarTrackerGUI::handleMessage(const Message& message)
         }
         return true;
     }
-    else if (StarTracker::MsgReportAvailableSatelliteTrackers::match(message))
+    else if (StarTracker::MsgReportAvailableFeatures::match(message))
     {
-        StarTracker::MsgReportAvailableSatelliteTrackers& report = (StarTracker::MsgReportAvailableSatelliteTrackers&) message;
-        updateSatelliteTrackerList(report.getFeatures());
+        StarTracker::MsgReportAvailableFeatures& report = (StarTracker::MsgReportAvailableFeatures&) message;
+        updateFeatureList(report.getFeatures());
         return true;
     }
 
     return false;
 }
 
-void StarTrackerGUI::updateSatelliteTrackerList(const QList<StarTrackerSettings::AvailableFeature>& satelliteTrackers)
+void StarTrackerGUI::updateFeatureList(const AvailableChannelOrFeatureList& features)
 {
-    // Update list of satellite trackers
+    // Update list of plugins we can get target from
     ui->target->blockSignals(true);
 
-    // Remove Satellite Trackers no longer available
+    // Remove targets no longer available
     for (int i = 0; i < ui->target->count(); )
     {
         QString text = ui->target->itemText(i);
         bool found = false;
-        if (text.contains("SatelliteTracker"))
+        if (text.contains("SatelliteTracker") || text.contains("SkyMap"))
         {
-            for (const auto& satelliteTracker : satelliteTrackers)
+            for (const auto& feature : features)
             {
-                if (satelliteTracker.getName() == text)
+                if (feature.getLongId() == text)
                 {
                     found = true;
                     break;
@@ -262,16 +261,16 @@ void StarTrackerGUI::updateSatelliteTrackerList(const QList<StarTrackerSettings:
         }
     }
 
-    // Add new Satellite Trackers
-    for (const auto& satelliteTracker : satelliteTrackers)
+    // Add new targets
+    for (const auto& feature : features)
     {
-        QString name = satelliteTracker.getName();
+        QString name = feature.getLongId();
         if (ui->target->findText(name) == -1) {
             ui->target->addItem(name);
         }
     }
 
-    // Satellite Tracker feature can be created after this plugin, so select it
+    // Features can be created after this plugin, so select it
     // if the chosen tracker appears
     int index = ui->target->findText(m_settings.m_target);
     if (index >= 0) {
@@ -362,7 +361,7 @@ StarTrackerGUI::StarTrackerGUI(PluginAPI* pluginAPI, FeatureUISet *featureUISet,
     ui->galacticLatitude->setText("");
     ui->galacticLongitude->setText("");
 
-    // Intialise chart
+    // Initialise chart
     m_chart.legend()->hide();
     ui->chart->setChart(&m_chart);
     ui->chart->setRenderHint(QPainter::Antialiasing);
@@ -408,6 +407,7 @@ StarTrackerGUI::StarTrackerGUI(PluginAPI* pluginAPI, FeatureUISet *featureUISet,
     applySettings(true);
     disconnect(ui->azimuth, SIGNAL(valueChanged(double)), this, SLOT(on_azimuth_valueChanged(double)));
     makeUIConnections();
+    m_resizer.enableChildMouseTracking();
 
     // Populate subchart menu
     on_chartSelect_currentIndexChanged(0);
@@ -453,6 +453,9 @@ StarTrackerGUI::StarTrackerGUI(PluginAPI* pluginAPI, FeatureUISet *featureUISet,
 
     createGalacticLineOfSightScene();
     plotChart();
+
+    StarTracker::MsgRequestAvailableFeatures *message = StarTracker::MsgRequestAvailableFeatures::create();
+    m_starTracker->getInputMessageQueue()->push(message);
 }
 
 StarTrackerGUI::~StarTrackerGUI()
@@ -1250,8 +1253,8 @@ void StarTrackerGUI::plotGalacticLineOfSight()
     }
 
     // Calculate Galactic longitude we're observing
-    float ra = Astronomy::raToDecimal(m_settings.m_ra);
-    float dec = Astronomy::decToDecimal(m_settings.m_dec);
+    float ra = Units::raToDecimal(m_settings.m_ra);
+    float dec = Units::decToDecimal(m_settings.m_dec);
     double l, b;
     Astronomy::equatorialToGalactic(ra, dec, l, b);
 
@@ -1362,8 +1365,8 @@ void StarTrackerGUI::plotSkyTemperatureChart()
     }
 
     QScatterSeries *series = new QScatterSeries();
-    float ra = Astronomy::raToDecimal(m_settings.m_ra);
-    float dec = Astronomy::decToDecimal(m_settings.m_dec);
+    float ra = Units::raToDecimal(m_settings.m_ra);
+    float dec = Units::decToDecimal(m_settings.m_dec);
 
     double beamWidth = m_settings.m_beamwidth;
     // Ellipse not supported, so draw circle on shorter axis
@@ -1661,8 +1664,8 @@ void StarTrackerGUI::plotElevationLineChart()
         }
         else
         {
-            rd.ra = Astronomy::raToDecimal(m_settings.m_ra);
-            rd.dec = Astronomy::decToDecimal(m_settings.m_dec);
+            rd.ra = Units::raToDecimal(m_settings.m_ra);
+            rd.dec = Units::decToDecimal(m_settings.m_dec);
             aa = Astronomy::raDecToAzAlt(rd, m_settings.m_latitude, m_settings.m_longitude, dt, !m_settings.m_jnow);
         }
 
@@ -1847,8 +1850,8 @@ void StarTrackerGUI::plotElevationPolarChart()
         }
         else
         {
-            rd.ra = Astronomy::raToDecimal(m_settings.m_ra);
-            rd.dec = Astronomy::decToDecimal(m_settings.m_dec);
+            rd.ra = Units::raToDecimal(m_settings.m_ra);
+            rd.dec = Units::decToDecimal(m_settings.m_dec);
             aa = Astronomy::raDecToAzAlt(rd, m_settings.m_latitude, m_settings.m_longitude, dt, !m_settings.m_jnow);
         }
 
@@ -1939,9 +1942,9 @@ void StarTrackerGUI::plotElevationPolarChart()
     {
         int redrawTime = 0;
         // Plot rotator position
-        QString ourSourceName = QString("F0:%1 %2").arg(m_starTracker->getIndexInFeatureSet()).arg(m_starTracker->getIdentifier());  // Only one feature set in practice?
+        QString ourSourceName = QString("F:%1 %2").arg(m_starTracker->getIndexInFeatureSet()).arg(m_starTracker->getIdentifier());
         std::vector<FeatureSet*>& featureSets = MainCore::instance()->getFeatureeSets();
-        for (int featureSetIndex = 0; featureSetIndex < featureSets.size(); featureSetIndex++)
+        for (int featureSetIndex = 0; featureSetIndex < (int)featureSets.size(); featureSetIndex++)
         {
             FeatureSet *featureSet = featureSets[featureSetIndex];
             for (int featureIndex = 0; featureIndex < featureSet->getNumberOfFeatures(); featureIndex++)
@@ -2278,12 +2281,14 @@ bool StarTrackerGUI::readSolarFlux()
             // HHMMSS 245    410     610    1415   2695   4995   8800  15400   Mhz
             // 000000 000019 000027 000037 000056 000073 000116 000202 000514  sfu
             // Occasionally, file will contain ////// in a column, presumably to indicate no data
-            QRegExp re("([0-9]{2})([0-9]{2})([0-9]{2}) ([0-9\\/]+) ([0-9\\/]+) ([0-9\\/]+) ([0-9\\/]+) ([0-9\\/]+) ([0-9\\/]+) ([0-9\\/]+) ([0-9\\/]+)");
+            // Values can be negative
+            QRegularExpression re("([0-9]{2})([0-9]{2})([0-9]{2}) (-?[0-9\\/]+) (-?[0-9\\/]+) (-?[0-9\\/]+) (-?[0-9\\/]+) (-?[0-9\\/]+) (-?[0-9\\/]+) (-?[0-9\\/]+) (-?[0-9\\/]+)");
+            QRegularExpressionMatch match = re.match(string);
 
-            if (re.indexIn(string) != -1)
+            if (match.hasMatch())
             {
                 for (int i = 0; i < 8; i++)
-                    m_solarFluxes[i] = re.capturedTexts()[i+4].toInt();
+                    m_solarFluxes[i] = match.capturedTexts()[i+4].toInt();
                 m_solarFluxesValid = true;
                 displaySolarFlux();
                 plotChart();
@@ -2318,11 +2323,12 @@ void StarTrackerGUI::networkManagerFinished(QNetworkReply *reply)
     else
     {
         QString answer = reply->readAll();
-        QRegExp re("\\<th\\>Observed Flux Density\\<\\/th\\>\\<td\\>([0-9]+(\\.[0-9]+)?)\\<\\/td\\>");
+        QRegularExpression re("\\<th\\>Observed Flux Density\\<\\/th\\>\\<td\\>([0-9]+(\\.[0-9]+)?)\\<\\/td\\>");
+        QRegularExpressionMatch match = re.match(answer);
 
-        if (re.indexIn(answer) != -1)
+        if (match.hasMatch())
         {
-            m_solarFlux = re.capturedTexts()[1].toDouble();
+            m_solarFlux = match.capturedTexts()[1].toDouble();
             displaySolarFlux();
         }
         else

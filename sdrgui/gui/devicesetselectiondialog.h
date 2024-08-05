@@ -1,6 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2022 F4EXB                                                      //
-// written by Edouard Griffiths                                                  //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2019, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2015 John Greb <hexameron@spam.no>                              //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -38,6 +40,7 @@ public:
 
     bool hasChanged() const { return m_hasChanged; }
     int getSelectedIndex() const { return m_selectedDeviceSetIndex; }
+    void selectIndex(int channelDeviceSetIndex);
 
 private:
     Ui::WorkspaceSelectionDialog *ui;
@@ -70,4 +73,4 @@ private slots:
     void accept();
 };
 
-#endif // SDRGUI_GUI_WORKSPACESELECTIONDIALOG_H_
+#endif // SDRGUI_GUI_DEVICESETSELECTIONDIALOG_H_

@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2021-2022 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2021 Edouard Griffiths, F4EXB <f4exb06@gmail.com>               //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -23,9 +24,7 @@
 #include "device/deviceset.h"
 #include "settings/mainsettings.h"
 #include "maincore.h"
-#include "util/messagequeue.h"
 #include "plugin/pluginmanager.h"
-#include "plugin/pluginapi.h"
 
 SatelliteDeviceSettingsGUI::SatelliteDeviceSettingsGUI(SatelliteTrackerSettings::SatelliteDeviceSettings *devSettings,
                                                        QTabWidget *tab, QWidget *parent) :

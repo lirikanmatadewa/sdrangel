@@ -1,6 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2023 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2023 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -37,13 +36,10 @@
 #include "dsp/dspdevicesourceengine.h"
 #include "ui_dscdemodgui.h"
 #include "plugin/pluginapi.h"
-#include "util/simpleserializer.h"
 #include "util/csv.h"
 #include "util/db.h"
 #include "util/mmsi.h"
-#include "util/units.h"
 #include "gui/basicchannelsettingsdialog.h"
-#include "gui/devicestreamselectiondialog.h"
 #include "gui/decimaldelegate.h"
 #include "dsp/dspengine.h"
 #include "dsp/glscopesettings.h"
@@ -56,7 +52,6 @@
 #include "maincore.h"
 
 #include "dscdemod.h"
-#include "dscdemodsink.h"
 
 #include "SWGMapItem.h"
 
@@ -471,8 +466,9 @@ void DSCDemodGUI::filterRow(int row)
     if (m_settings.m_filter != "")
     {
         QTableWidgetItem *item = ui->messages->item(row, m_settings.m_filterColumn);
-        QRegExp re(m_settings.m_filter);
-        if (!re.exactMatch(item->text())) {
+        QRegularExpression re(m_settings.m_filter);
+        QRegularExpressionMatch match = re.match(item->text());
+        if (!match.hasMatch()) {
             hidden = true;
         }
     }
@@ -572,7 +568,7 @@ DSCDemodGUI::DSCDemodGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, Baseban
     ui->deltaFrequency->setValueRange(false, 7, -9999999, 9999999);
     ui->channelPowerMeter->setColorTheme(LevelMeterSignalDB::ColorGreenAndBlue);
 
-    ui->messages->setItemDelegateForColumn(MESSAGE_COL_RSSI, new DecimalDelegate(1));
+    ui->messages->setItemDelegateForColumn(MESSAGE_COL_RSSI, new DecimalDelegate(1, ui->messages));
 
     m_scopeVis = m_dscDemod->getScopeSink();
     m_scopeVis->setGLScope(ui->glScope);
@@ -664,6 +660,7 @@ DSCDemodGUI::DSCDemodGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, Baseban
     displaySettings();
     makeUIConnections();
     applySettings(true);
+    m_resizer.enableChildMouseTracking();
 }
 
 void DSCDemodGUI::createMenuOpenURLAction(QMenu* tableContextMenu, const QString& text, const QString& url, const QString& arg)
@@ -1009,6 +1006,7 @@ void DSCDemodGUI::displaySettings()
     ui->logFilename->setToolTip(QString(".csv log filename: %1").arg(m_settings.m_logFilename));
     ui->logEnable->setChecked(m_settings.m_logEnabled);
 
+    ui->useFileTime->setChecked(m_settings.m_useFileTime);
     ui->feed->setChecked(m_settings.m_feed);
 
     // Order and size columns
@@ -1169,6 +1167,12 @@ void DSCDemodGUI::on_logOpen_clicked()
     }
 }
 
+void DSCDemodGUI::on_useFileTime_toggled(bool checked)
+{
+    m_settings.m_useFileTime = checked;
+    applySettings();
+}
+
 void DSCDemodGUI::makeUIConnections()
 {
     QObject::connect(ui->deltaFrequency, &ValueDialZ::changed, this, &DSCDemodGUI::on_deltaFrequency_changed);
@@ -1183,6 +1187,7 @@ void DSCDemodGUI::makeUIConnections()
     QObject::connect(ui->logFilename, &QToolButton::clicked, this, &DSCDemodGUI::on_logFilename_clicked);
     QObject::connect(ui->logOpen, &QToolButton::clicked, this, &DSCDemodGUI::on_logOpen_clicked);
     QObject::connect(ui->feed, &ButtonSwitch::clicked, this, &DSCDemodGUI::on_feed_clicked);
+    QObject::connect(ui->useFileTime, &ButtonSwitch::toggled, this, &DSCDemodGUI::on_useFileTime_toggled);
 }
 
 void DSCDemodGUI::updateAbsoluteCenterFrequency()

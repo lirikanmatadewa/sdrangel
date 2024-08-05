@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>         //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -24,16 +24,10 @@
 #include "SWGLimeSdrMIMOSettings.h"
 #include "SWGDeviceState.h"
 #include "SWGDeviceReport.h"
-#include "SWGDeviceActions.h"
 #include "SWGLimeSdrMIMOReport.h"
 
 #include "device/deviceapi.h"
 #include "dsp/dspcommands.h"
-#include "dsp/dspengine.h"
-#include "dsp/dspdevicemimoengine.h"
-#include "dsp/devicesamplesource.h"
-#include "dsp/devicesamplesink.h"
-#include "limesdr/devicelimesdrparam.h"
 #include "limesdr/devicelimesdrshared.h"
 
 #include "limesdrmithread.h"
@@ -306,7 +300,6 @@ bool LimeSDRMIMO::startRx()
     m_sourceThread->setLog2Decimation(m_settings.m_log2SoftDecim);
     m_sourceThread->setIQOrder(m_settings.m_iqOrder);
 	m_sourceThread->startWork();
-	mutexLocker.unlock();
 	m_runningRx = true;
 
     return true;
@@ -380,7 +373,6 @@ bool LimeSDRMIMO::startTx()
     m_sinkThread->setFifo(&m_sampleMOFifo);
     m_sinkThread->setLog2Interpolation(m_settings.m_log2SoftInterp);
 	m_sinkThread->startWork();
-	mutexLocker.unlock();
 	m_runningTx = true;
 
     return true;
@@ -1018,7 +1010,7 @@ bool LimeSDRMIMO::applySettings(const LimeSDRMIMOSettings& settings, const QList
         }
     }
 
-    if (settingsKeys.contains("useReverseAPI"))
+    if (settings.m_useReverseAPI)
     {
         bool fullUpdate = (settingsKeys.contains("useReverseAPI") && settings.m_useReverseAPI) ||
             settingsKeys.contains("reverseAPIAddress") ||

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2022 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>               //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -21,11 +21,8 @@
 #include <QBuffer>
 
 #include "SWGFeatureSettings.h"
-#include "SWGFeatureActions.h"
 #include "SWGDeviceState.h"
 
-#include "dsp/dspcommands.h"
-#include "dsp/dspengine.h"
 #include "dsp/dspdevicesourceengine.h"
 #include "dsp/dspdevicesinkengine.h"
 #include "dsp/devicesamplesource.h"
@@ -33,7 +30,6 @@
 #include "device/deviceset.h"
 #include "channel/channelapi.h"
 #include "device/deviceapi.h"
-#include "commands/commandkeyreceiver.h"
 #include "settings/serializable.h"
 #include "maincore.h"
 
@@ -178,7 +174,7 @@ void JogdialController::applySettings(const JogdialControllerSettings& settings,
 {
     qDebug() << "JogdialController::applySettings:" << settings.getDebugString(settingsKeys, force) << " force: " << force;
 
-    if (settingsKeys.contains("useReverseAPI"))
+    if (settings.m_useReverseAPI)
     {
         bool fullUpdate = (settingsKeys.contains("useReverseAPI") && settings.m_useReverseAPI) ||
                 settingsKeys.contains("reverseAPIAddress") ||

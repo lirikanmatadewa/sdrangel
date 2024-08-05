@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2023 Edouard Griffiths, F4EXB.                                  //
+// Copyright (C) 2023 Daniele Forsi <iu5hkx@gmail.com>                           //
+// Copyright (C) 2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>               //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -33,7 +34,7 @@ void MainBench::testFT8(const QString& wavFile, const QString& argsStr)
 #else
 
 #include "ft8/ft8.h"
-#include "ft8/unpack.h"
+#include "ft8/packing.h"
 
 class TestFT8Callback : public FT8::CallbackInterface
 {

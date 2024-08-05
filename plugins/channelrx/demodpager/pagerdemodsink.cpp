@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2021-2022 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2021-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -20,10 +20,8 @@
 
 #include <complex.h>
 
-#include "dsp/dspengine.h"
 #include "dsp/datafifo.h"
 #include "dsp/scopevis.h"
-#include "util/db.h"
 #include "util/popcount.h"
 #include "maincore.h"
 
@@ -158,7 +156,7 @@ quint32 PagerDemodSink::bchEncode(const quint32 cw)
 }
 
 // Use BCH decoding to try to fix any bit errors
-// Returns true if able to be decode/repair successfull
+// Returns true if able to be decode/repair successful
 // See: https://www.eevblog.com/forum/microcontrollers/practical-guides-to-bch-fec/
 bool PagerDemodSink::bchDecode(const quint32 cw, quint32& correctedCW)
 {
@@ -587,7 +585,7 @@ void PagerDemodSink::processOneSample(Complex &ci)
 
     sampleToScope(scopeSample);
 
-    // Send demod signal to Demod Analzyer feature
+    // Send demod signal to Demod Analyzer feature
     m_demodBuffer[m_demodBufferFill++] = fmDemod * std::numeric_limits<int16_t>::max();
 
     if (m_demodBufferFill >= m_demodBuffer.size())

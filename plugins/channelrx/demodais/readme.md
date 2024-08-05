@@ -6,7 +6,7 @@ This plugin can be used to demodulate AIS (Automatic Identification System) mess
 
 AIS is broadcast globally on 25kHz channels at 161.975MHz and 162.025MHz, with other frequencies being used regionally or for special purposes. This demodulator is single channel, so if you wish to decode multiple channels simultaneously, you will need to add one AIS demodulator per frequency. As most AIS messages are on 161.975MHz and 162.025MHz, you can set the center frequency as 162MHz, with a sample rate of 100k+Sa/s, with one AIS demod with an input offset -25kHz and another at +25kHz.
 
-The AIS demodulators can send received messages to the [AIS feature](../../feature/ais/readme.md), which displays a table combining the latest data for vessels amalgamated from multiple demodulators and sends their positions to the [Map Feature](../../feature/map/readme.ais) for display in 2D or 3D.
+The AIS demodulators can send received messages to the [AIS feature](../../feature/ais/readme.md), which displays a table combining the latest data for vessels amalgamated from multiple demodulators and sends their positions to the [Map Feature](../../feature/map/readme.md) for display in 2D or 3D.
 
 AIS uses GMSK/FM modulation at a baud rate of 9,600, with a modulation index of 0.5. The demodulator works at a sample rate of 57,600Sa/s.
 
@@ -56,7 +56,7 @@ Pressing this button clears all messages from the table.
 
 <h3>9: UDP</h3>
 
-When checked, received messages are forwarded to the specified UDP address (12) and port (13).
+When checked, received messages are forwarded to the specified UDP address (10) and port (11).
 
 <h3>10: UDP address</h3>
 
@@ -70,17 +70,22 @@ UDP port number to forward received messages to.
 
 The format the messages are forwarded via UDP in. This can be either binary (which is useful for SDRangel's PERTester feature) or NMEA (which is useful for 3rd party applications such as OpenCPN).
 
-<h3>13: Start/stop Logging Messages to .csv File</h3>
+<h3>13: Use Date and Time from File</h3>
+
+When checked, if the source device is a File Input device, the date and time used for
+packet reception time is taken from the file playback time. Otherwise, the current system clock time is used.
+
+<h3>14: Start/stop Logging Messages to .csv File</h3>
 
 When checked, writes all received AIS messages to a .csv file.
 
-<h3>14: .csv Log Filename</h3>
+<h3>15: .csv Log Filename</h3>
 
 Click to specify the name of the .csv file which received AIS messages are logged to.
 
-<h3>15: Read Data from .csv File</h3>
+<h3>16: Read Data from .csv File</h3>
 
-Click to specify a previously written AIS .csv log file, which is read and used to update the table.
+Click to specify a previously written .csv log file, which is read and used to update the table.
 
 <h3>Slot Map</h3>
 

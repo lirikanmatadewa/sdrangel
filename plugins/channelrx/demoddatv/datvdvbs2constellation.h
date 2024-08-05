@@ -1,4 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2018-2019, 2021 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
 // Copyright (C) 2019 F4HKW                                                      //
 // for F4EXB / SDRAngel                                                          //
 // using LeanSDR Framework (C) 2016 F4DAV                                        //
@@ -23,6 +24,7 @@
 #include <vector>
 
 #include "leansdr/framework.h"
+#include "leansdr/sdr.h"
 #include "gui/tvscreen.h"
 
 namespace leansdr {

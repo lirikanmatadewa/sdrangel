@@ -25,6 +25,8 @@ ChannelReport:
       $ref: "http://swgserver:8081/api/swagger/include/ATVMod.yaml#/ATVModReport"
     BFMDemodReport:
       $ref: "http://swgserver:8081/api/swagger/include/BFMDemod.yaml#/BFMDemodReport"
+    ChannelPowerReport:
+      $ref: "http://swgserver:8081/api/swagger/include/ChannelPower.yaml#/ChannelPowerReport"
     ChirpChatDemodReport:
       $ref: "http://swgserver:8081/api/swagger/include/ChirpChatDemod.yaml#/ChirpChatDemodReport"
     ChirpChatModReport:
@@ -39,6 +41,8 @@ ChannelReport:
       $ref: "http://swgserver:8081/api/swagger/include/DSCDemod.yaml#/DSCDemodReport"
     DSDDemodReport:
       $ref: "http://swgserver:8081/api/swagger/include/DSDDemod.yaml#/DSDDemodReport"
+    EndOfTrainDemodReport:
+      $ref: "http://swgserver:8081/api/swagger/include/EndOfTrainDemod.yaml#/EndOfTrainDemodReport"
     IEEE_802_15_4_ModReport:
       $ref: "http://swgserver:8081/api/swagger/include/IEEE_802_15_4_Mod.yaml#/IEEE_802_15_4_ModReport"
     FileSinkReport:
@@ -105,6 +109,8 @@ ChannelReport:
     #   $ref: "http://swgserver:8081/api/swagger/include/VORDemodMC.yaml#/VORDemodMCReport"
     VORDemodReport:
       $ref: "http://swgserver:8081/api/swagger/include/VORDemod.yaml#/VORDemodReport"
+    WDSPRxReport:
+      $ref: "http://swgserver:8081/api/swagger/include/WDSPRx.yaml#/WDSPRxReport"
     WFMDemodReport:
       $ref: "http://swgserver:8081/api/swagger/include/WFMDemod.yaml#/WFMDemodReport"
     WFMModReport:

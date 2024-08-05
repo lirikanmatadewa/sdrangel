@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Jon Beniston, M7RCE                                        //
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2020-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2020-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -33,6 +33,7 @@ const QMap<QString, QString> WebAPIUtils::m_channelURIToSettingsKey = {
     {"sdrangel.channeltx.moddatv", "DATVModSettings"},
     {"sdrangel.channel.bfm", "BFMDemodSettings"},
     {"sdrangel.channel.chanalyzer", "ChannelAnalyzerSettings"},
+    {"sdrangel.channel.channelpower", "ChannelPowerSettings"},
     {"sdrangel.channel.chanalyzerng", "ChannelAnalyzerSettings"}, // remap
     {"org.f4exb.sdrangelove.channel.chanalyzer", "ChannelAnalyzerSettings"}, // remap
     {"sdrangel.channel.chirpchatdemod", "ChirpChatDemodSettings"},
@@ -43,6 +44,7 @@ const QMap<QString, QString> WebAPIUtils::m_channelURIToSettingsKey = {
     {"sdrangel.channel.doa2", "DOA2Settings"},
     {"sdrangel.channel.dscdemod", "DSCDemodSettings"},
     {"sdrangel.channel.dsddemod", "DSDDemodSettings"},
+    {"sdrangel.channel.endoftraindemod", "EndOfTrainDemodSettings"},
     {"sdrangel.channel.filesink", "FileSinkSettings"},
     {"sdrangel.channeltx.filesource", "FileSourceSettings"},
     {"sdrangel.channel.freedvdemod", "FreeDVDemodSettings"},
@@ -75,6 +77,7 @@ const QMap<QString, QString> WebAPIUtils::m_channelURIToSettingsKey = {
     {"sdrangel.channel.rttymod", "RTTYModSettings"},
     {"sdrangel.channeltx.modssb", "SSBModSettings"},
     {"sdrangel.channel.ssbdemod", "SSBDemodSettings"},
+    {"sdrangel.channel.wdsprx", "WDSPRxSettings"},
     {"sdrangel.channel.ft8demod", "FT8DemodSettings"},
     {"de.maintech.sdrangelove.channel.ssb", "SSBDemodSettings"}, // remap
     {"sdrangel.channel.radioastronomy", "RadioAstronomySettings"},
@@ -159,12 +162,14 @@ const QMap<QString, QString> WebAPIUtils::m_channelTypeToSettingsKey = {
     {"ChannelAnalyzer", "ChannelAnalyzerSettings"},
     {"ChirpChatDemod", "ChirpChatDemodSettings"},
     {"ChirpChatMod", "ChirpChatModSettings"},
+    {"ChannelPower", "ChannelPowerSettings"},
     {"DATVDemod", "DATVDemodSettings"},
     {"DATVMod", "DATVModSettings"},
     {"DABDemod", "DABDemodSettings"},
     {"DOA2", "DOA2Settings"},
     {"DSCDemod", "DSCDemodSettings"},
     {"DSDDemod", "DSDDemodSettings"},
+    {"EndOfTrainDemod", "EndOfTrainDemodSettings"},
     {"FileSink", "FileSinkSettings"},
     {"FileSource", "FileSourceSettings"},
     {"FreeDVDemod", "FreeDVDemodSettings"},
@@ -195,6 +200,7 @@ const QMap<QString, QString> WebAPIUtils::m_channelTypeToSettingsKey = {
     {"RTTYMod", "RTTYModSettings"},
     {"SSBMod", "SSBModSettings"},
     {"SSBDemod", "SSBDemodSettings"},
+    {"WDSPRx", "WDSPRxSettings"},
     {"FT8Demod", "FT8DemodSettings"},
     {"UDPSink", "UDPSinkSettings"},
     {"UDPSource", "UDPSourceSettings"},
@@ -212,6 +218,7 @@ const QMap<QString, QString> WebAPIUtils::m_channelTypeToActionsKey = {
     {"APTDemod", "APTDemodActions"},
     {"FileSink", "FileSinkActions"},
     {"FileSource", "FileSourceActions"},
+    {"FreqScanner", "FreqScannerActions"},
     {"SigMFFileSink", "SigMFFileSinkActions"},
     {"IEEE_802_15_4_Mod", "IEEE_802_15_4_ModActions"},
     {"RadioAstronomy", "RadioAstronomyActions"},
@@ -315,11 +322,14 @@ const QMap<QString, QString> WebAPIUtils::m_featureTypeToSettingsKey = {
     {"GS232Controller", "GS232ControllerSettings"}, // a.k.a Rotator Controller
     {"LimeRFE", "LimeRFESettings"},
     {"Map", "MapSettings"},
+    {"MorseDecoder", "MorseDecoderSettings"},
     {"PERTester", "PERTesterSettings"},
     {"Radiosonde", "RadiosondeSettings"},
     {"RigCtlServer", "RigCtlServerSettings"},
     {"SatelliteTracker", "SatelliteTrackerSettings"},
+    {"SID", "SIDSettings"},
     {"SimplePTT", "SimplePTTSettings"},
+    {"SkyMap", "SkyMapSettings"},
     {"StarTracker", "StarTrackerSettings"},
     {"VORLocalizer", "VORLocalizerSettings"}
 };
@@ -334,8 +344,11 @@ const QMap<QString, QString> WebAPIUtils::m_featureTypeToActionsKey = {
     {"RigCtlServer", "RigCtlServerActions"},
     {"SatelliteTracker", "SatelliteTrackerActions"},
     {"SimplePTT", "SimplePTTActions"},
+    {"SkyMap", "SkyMapActions"},
     {"StarTracker", "StarTrackerActions"},
-    {"VORLocalizer", "VORLocalizerActions"}
+    {"VORLocalizer", "VORLocalizerActions"},
+    {"DemodAnalyzer", "DemodAnalyzerActions"},
+    {"MorseDecoder", "MorseDecoderActions"}
 };
 
 const QMap<QString, QString> WebAPIUtils::m_featureURIToSettingsKey = {
@@ -349,11 +362,13 @@ const QMap<QString, QString> WebAPIUtils::m_featureURIToSettingsKey = {
     {"sdrangel.feature.gs232controller", "GS232ControllerSettings"},
     {"sdrangel.feature.limerfe", "LimeRFESettings"},
     {"sdrangel.feature.map", "MapSettings"},
+    {"sdrangel.feature.morsedecoder", "MorseDecoderSettings"},
     {"sdrangel.feature.pertester", "PERTesterSettings"},
     {"sdrangel.feature.radiosonde", "RadiosondeSettings"},
     {"sdrangel.feature.rigctlserver", "RigCtlServerSettings"},
     {"sdrangel.feature.satellitetracker", "SatelliteTrackerSettings"},
     {"sdrangel.feature.simpleptt", "SimplePTTSettings"},
+    {"sdrangel.feature.skymap", "SkyMapSettings"},
     {"sdrangel.feature.startracker", "StarTrackerSettings"},
     {"sdrangel.feature.vorlocalizer", "VORLocalizerSettings"}
 };
@@ -429,7 +444,7 @@ bool WebAPIUtils::getSubObjectDouble(const QJsonObject &json, const QString &key
     return false;
 }
 
-// Set double value withing nested JSON object
+// Set double value within nested JSON object
 bool WebAPIUtils::setSubObjectDouble(QJsonObject &json, const QString &key, double value)
 {
     for (QJsonObject::iterator  it = json.begin(); it != json.end(); it++)
@@ -474,7 +489,7 @@ bool WebAPIUtils::getSubObjectInt(const QJsonObject &json, const QString &key, i
     return false;
 }
 
-// Set integer value withing nested JSON object
+// Set integer value within nested JSON object
 bool WebAPIUtils::setSubObjectInt(QJsonObject &json, const QString &key, int value)
 {
     for (QJsonObject::iterator  it = json.begin(); it != json.end(); it++)
@@ -519,7 +534,7 @@ bool WebAPIUtils::getSubObjectString(const QJsonObject &json, const QString &key
     return false;
 }
 
-// Set string value withing nested JSON object
+// Set string value within nested JSON object
 bool WebAPIUtils::setSubObjectString(QJsonObject &json, const QString &key, const QString &value)
 {
     for (QJsonObject::iterator  it = json.begin(); it != json.end(); it++)
@@ -568,6 +583,54 @@ bool WebAPIUtils::getSubObjectIntList(const QJsonObject &json, const QString &ke
                     }
                     return true;
                 }
+            }
+        }
+    }
+
+    return false;
+}
+
+bool WebAPIUtils::hasSubObject(const QJsonObject &json, const QString &key)
+{
+    for (QJsonObject::const_iterator  it = json.begin(); it != json.end(); it++)
+    {
+        QJsonValue jsonValue = it.value();
+
+        if (jsonValue.isObject())
+        {
+            QJsonObject subObject = jsonValue.toObject();
+
+            if (subObject.contains(key)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+// Set value within nested JSON object
+bool WebAPIUtils::setSubObject(QJsonObject &json, const QString &key, const QVariant &value)
+{
+    for (QJsonObject::iterator it = json.begin(); it != json.end(); it++)
+    {
+        QJsonValue jsonValue = it.value();
+
+        if (jsonValue.isObject())
+        {
+            QJsonObject subObject = jsonValue.toObject();
+
+            if (subObject.contains(key))
+            {
+                if (subObject[key].isString()) {
+                    subObject[key] = value.toString();
+                } else if (subObject[key].isDouble()) {
+                    subObject[key] = value.toDouble();
+                } else {
+                    qDebug() << "WebAPIUtils::setSubObject: Unsupported type";
+                }
+                it.value() = subObject;
+                return true;
             }
         }
     }

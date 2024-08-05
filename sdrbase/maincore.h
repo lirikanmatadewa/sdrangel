@@ -1,5 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2019 Davide Gerhard <rainbow@irh.it>                            //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -34,6 +38,7 @@
 #include "pipes/messagepipes.h"
 #include "pipes/datapipes.h"
 #include "channel/channelapi.h"
+#include "availablechannelorfeature.h"
 
 class DeviceSet;
 class FeatureSet;
@@ -55,6 +60,7 @@ namespace SWGSDRangel
     class SWGStarTrackerTarget;
     class SWGStarTrackerDisplaySettings;
     class SWGStarTrackerDisplayLoSSettings;
+    class SWGSkyMapTarget;
 }
 
 class SDRBASE_API MainCore : public QObject
@@ -838,7 +844,28 @@ public:
         { }
     };
 
+     class SDRBASE_API MsgSkyMapTarget : public Message {
+        MESSAGE_CLASS_DECLARATION
 
+    public:
+        const QObject *getPipeSource() const { return m_pipeSource; }
+        SWGSDRangel::SWGSkyMapTarget *getSWGSkyMapTarget() const { return m_swgSkyMapTarget; }
+
+        static MsgSkyMapTarget* create(const QObject *pipeSource, SWGSDRangel::SWGSkyMapTarget *swgSkyMapTarget)
+        {
+            return new MsgSkyMapTarget(pipeSource, swgSkyMapTarget);
+        }
+
+    private:
+        const QObject *m_pipeSource;
+        SWGSDRangel::SWGSkyMapTarget *m_swgSkyMapTarget;
+
+        MsgSkyMapTarget(const QObject *pipeSource, SWGSDRangel::SWGSkyMapTarget *swgSkyMapTarget) :
+            Message(),
+            m_pipeSource(pipeSource),
+            m_swgSkyMapTarget(swgSkyMapTarget)
+        { }
+    };
 
 	MainCore();
 	~MainCore();
@@ -853,7 +880,6 @@ public:
     PluginManager *getPluginManager() const { return m_pluginManager; }
     std::vector<DeviceSet*>& getDeviceSets() { return m_deviceSets; }
     std::vector<FeatureSet*>& getFeatureeSets() { return m_featureSets; }
-    std::vector<ChannelAPI*> getChannels(const QString& uri); //!< Get all channels from any device set with the given URI
     void setLoggingOptions();
     DeviceAPI *getDevice(unsigned int deviceSetIndex);
     ChannelAPI *getChannel(unsigned int deviceSetIndex, int channelIndex);
@@ -882,6 +908,23 @@ public:
     DataPipes& getDataPipes() { return m_dataPipes; }
     // Position
     const QGeoPositionInfo& getPosition() const;
+
+    // Lists of available channels and features. List should be ordered by indexes. Plugins should use AvailableChannelOrFeatureHandler to maintain this list
+    AvailableChannelOrFeatureList getAvailableChannels(const QStringList& uris); // Get list of available channels with given URIs or all if empty list.
+    AvailableChannelOrFeatureList getAvailableFeatures(const QStringList& uris); // Get list of available features with given URIs or all if empty list.
+    AvailableChannelOrFeatureList getAvailableChannelsAndFeatures(const QStringList& uris, const QString& kinds); // Get list of available channels and features with given URIs or all if empty list.
+
+    // Ids
+    QChar getDeviceSetTypeId(const DeviceSet* deviceSet); //!< Get Type Id (E.g. 'R', 'T' or 'M') for the given device set
+    QString getDeviceSetId(const DeviceSet* deviceSet); //!< Get Id (E.g. "R2") for the given device set
+    QString getChannelId(const ChannelAPI* channel); //!< Get Id (E.g. "R1:2") for the given channel
+    static bool getDeviceSetTypeFromId(const QString& deviceSetId, QChar &type); //!< "R1" -> 'R'
+    static bool getDeviceSetIndexFromId(const QString& deviceSetId, unsigned int &deviceSetIndex); //!< "R1" -> 1
+    static bool getDeviceAndChannelIndexFromId(const QString& channelId, unsigned int &deviceSetIndex, unsigned int &channelIndex); //!< "R3:4" -> 3, 4
+    static bool getFeatureIndexFromId(const QString& featureId, unsigned int &featureSetIndex, unsigned int &featureIndex); //!< "F0:2" -> 0, 2
+    QStringList getDeviceSetIds(bool rx, bool tx, bool mimo); //!< Get list of all device set Ids. E.g: {"R0", "R1", "T1", "M2"}
+    std::vector<ChannelAPI*> getChannels(const QString& uri); //!< Get all channels from any device set with the given URI
+    QStringList getChannelIds(const QString& uri); //!< Get all Ids for channels from any device set with the given URI. E.g. "sdrangel.channel.xyzdemod" -> {"R2:1", "M0:0.1"}
 
     friend class MainServer;
     friend class MainWindow;

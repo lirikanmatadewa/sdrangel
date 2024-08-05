@@ -1,6 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>               //
+// Copyright (C) 2022 Jiří Pinkava <jiri.pinkava@rossum.ai>                      //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -29,9 +30,9 @@
 #include "SWGTargetAzimuthElevation.h"
 #include "SWGMapItem.h"
 #include "SWGStarTrackerTarget.h"
+#include "SWGSkyMapTarget.h"
 
 #include "webapi/webapiadapterinterface.h"
-#include "webapi/webapiutils.h"
 #include "channel/channelwebapiutils.h"
 
 #include "util/units.h"
@@ -383,7 +384,7 @@ void StarTrackerWorker::updateRaDec(RADec rd, QDateTime dt, bool lbTarget)
     // Send to Stellarium
     writeStellariumTarget(rdJ2000.ra, rdJ2000.dec);
     // Send to GUI
-    if (m_settings.m_target == "Sun" || m_settings.m_target == "Moon" || (m_settings.m_target == "Custom Az/El") || lbTarget || m_settings.m_target.contains("SatelliteTracker"))
+    if (m_settings.m_target == "Sun" || m_settings.m_target == "Moon" || (m_settings.m_target == "Custom Az/El") || lbTarget || m_settings.m_target.contains("SatelliteTracker") || m_settings.m_target.contains("SkyMap"))
     {
         if (getMessageQueueToGUI())
         {
@@ -500,18 +501,35 @@ void StarTrackerWorker::update()
     {
         // Get Az/El from Satellite Tracker
         double azimuth, elevation;
+        unsigned int satelliteTrackerFeatureSetIndex,satelliteTrackerFeatureIndex;
 
-        const QRegExp re("F([0-9]+):([0-9]+)");
-        if (re.indexIn(m_settings.m_target) >= 0)
+        if (MainCore::getFeatureIndexFromId(m_settings.m_target, satelliteTrackerFeatureSetIndex, satelliteTrackerFeatureIndex))
         {
-            int satelliteTrackerFeatureSetIndex = re.capturedTexts()[1].toInt();
-            int satelliteTrackerFeatureIndex = re.capturedTexts()[2].toInt();
-
             if (ChannelWebAPIUtils::getFeatureReportValue(satelliteTrackerFeatureSetIndex, satelliteTrackerFeatureIndex, "targetAzimuth", azimuth)
                 && ChannelWebAPIUtils::getFeatureReportValue(satelliteTrackerFeatureSetIndex, satelliteTrackerFeatureIndex, "targetElevation", elevation))
             {
                 m_settings.m_el = elevation;
                 m_settings.m_az = azimuth;
+            }
+            else
+                qDebug() << "StarTrackerWorker::update - Failed to target from feature " << m_settings.m_target;
+        }
+        else
+            qDebug() << "StarTrackerWorker::update - Failed to parse feature name " << m_settings.m_target;
+    }
+    if (m_settings.m_target.contains("SkyMap"))
+    {
+        // Get RA/Dec from Sky Map
+        double ra, dec;
+        unsigned int featureSetIndex,featureIndex;
+
+        if (MainCore::getFeatureIndexFromId(m_settings.m_target, featureSetIndex, featureIndex))
+        {
+            if (ChannelWebAPIUtils::getFeatureReportValue(featureSetIndex, featureIndex, "ra", ra)
+                && ChannelWebAPIUtils::getFeatureReportValue(featureSetIndex, featureIndex, "dec", dec))
+            {
+                m_settings.m_ra = QString::number(ra, 'f', 10);
+                m_settings.m_dec = QString::number(dec, 'f', 10);
             }
             else
                 qDebug() << "StarTrackerWorker::update - Failed to target from feature " << m_settings.m_target;
@@ -562,8 +580,8 @@ void StarTrackerWorker::update()
     else
     {
         // Convert RA/Dec to Alt/Az
-        rd.ra = Astronomy::raToDecimal(m_settings.m_ra);
-        rd.dec = Astronomy::decToDecimal(m_settings.m_dec);
+        rd.ra = Units::raToDecimal(m_settings.m_ra);
+        rd.dec = Units::decToDecimal(m_settings.m_dec);
         aa = Astronomy::raDecToAzAlt(rd, m_settings.m_latitude, m_settings.m_longitude, dt, !m_settings.m_jnow);
         Astronomy::equatorialToGalactic(rd.ra, rd.dec, l, b);
     }
@@ -654,6 +672,33 @@ void StarTrackerWorker::update()
             swgTarget->setSunVelocityLsr(vLSRK);
             messageQueue->push(MainCore::MsgStarTrackerTarget::create(m_starTracker, swgTarget));
         }
+    }
+
+    // Send RA/Dec, position, beamwidth and date to Sky Map
+    QList<ObjectPipe*> skyMapPipes;
+    MainCore::instance()->getMessagePipes().getMessagePipes(m_starTracker, "skymap.target", skyMapPipes);
+    for (const auto& pipe : skyMapPipes)
+    {
+        MessageQueue *messageQueue = qobject_cast<MessageQueue*>(pipe->m_element);
+        SWGSDRangel::SWGSkyMapTarget *swgTarget = new SWGSDRangel::SWGSkyMapTarget();
+        if (m_settings.m_jnow)
+        {
+            double jd = Astronomy::julianDate(dt);
+            RADec rdJ2000 = Astronomy::precess(rd, jd, Astronomy::jd_j2000());
+            swgTarget->setRa(rdJ2000.ra);
+            swgTarget->setDec(rdJ2000.dec);
+        }
+        else
+        {
+            swgTarget->setRa(rd.ra);
+            swgTarget->setDec(rd.dec);
+        }
+        swgTarget->setLatitude(m_settings.m_latitude);
+        swgTarget->setLongitude(m_settings.m_longitude);
+        swgTarget->setAltitude(m_settings.m_heightAboveSeaLevel);
+        swgTarget->setDateTime(new QString(dt.toString(Qt::ISODateWithMs)));
+        swgTarget->setHpbw(m_settings.m_beamwidth);
+        messageQueue->push(MainCore::MsgSkyMapTarget::create(m_starTracker, swgTarget));
     }
 
     // Send to Map

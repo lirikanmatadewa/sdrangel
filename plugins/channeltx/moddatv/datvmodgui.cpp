@@ -27,12 +27,10 @@
 
 #include "device/deviceuiset.h"
 #include "plugin/pluginapi.h"
-#include "util/simpleserializer.h"
 #include "dsp/dspengine.h"
 #include "dsp/dspcommands.h"
 #include "util/db.h"
 #include "gui/basicchannelsettingsdialog.h"
-#include "gui/devicestreamselectiondialog.h"
 #include "gui/dialogpositioner.h"
 #include "maincore.h"
 
@@ -115,6 +113,7 @@ DATVModGUI::DATVModGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, BasebandS
     displaySettings();
     makeUIConnections();
     applySettings(true);
+    m_resizer.enableChildMouseTracking();
     if (!m_settings.m_tsFileName.isEmpty())
         configureTsFileName();
 }
@@ -626,7 +625,7 @@ void DATVModGUI::tick()
     m_channelPowerDbAvg(powDb);
     ui->channelPower->setText(tr("%1 dB").arg(m_channelPowerDbAvg.asDouble(), 0, 'f', 1));
 
-    // Use m_tickMsgOutstanding to prevent queuing lots of messsages while stopped/paused
+    // Use m_tickMsgOutstanding to prevent queuing lots of messages while stopped/paused
     if (((++m_tickCount & 0xf) == 0) && !m_tickMsgOutstanding)
     {
         if (ui->inputSelect->currentIndex() == (int) DATVModSettings::SourceFile)

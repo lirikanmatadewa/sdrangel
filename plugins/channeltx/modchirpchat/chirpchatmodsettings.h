@@ -1,5 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2021 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -31,7 +34,8 @@ struct ChirpChatModSettings
     {
         CodingLoRa,  //!< Standard LoRa
         CodingASCII, //!< plain ASCII (7 bits)
-        CodingTTY    //!< plain TTY (5 bits)
+        CodingTTY,   //!< plain TTY (5 bits)
+        CodingFT     //!< FT8/4 scheme (payload 174 bits LDPC)
     };
 
     enum MessageType
@@ -52,7 +56,7 @@ struct ChirpChatModSettings
     int m_inputFrequencyOffset;
     int m_bandwidthIndex;
     int m_spreadFactor;
-    int m_deBits;                  //!< Low data rate optmize (DE) bits
+    int m_deBits;                  //!< Low data rate optimize (DE) bits
     unsigned int m_preambleChirps; //!< Number of preamble chirps
     int m_quietMillis;             //!< Number of milliseconds to pause between transmissions
     int m_nbParityBits;            //!< Hamming parity bits (LoRa)

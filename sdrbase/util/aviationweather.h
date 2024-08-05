@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2022 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -49,7 +49,7 @@ public:
         QStringList m_conditions;       // Weather conditions (Rain, snow)
         float m_ceiling;                // Ceiling in feet
         QStringList m_clouds;           // Cloud types and altitudes
-        float m_temperature;            // Air temperature in Celsuis
+        float m_temperature;            // Air temperature in Celsius
         float m_dewpoint;               // Dewpoint in Celsuius
         float m_pressure;               // Air pressure in hPa/mb
         float m_humidity;               // Humidity in %

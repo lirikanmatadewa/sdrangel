@@ -32,11 +32,14 @@
 #include "SWGJogdialControllerSettings.h"
 #include "SWGLimeRFESettings.h"
 #include "SWGMapSettings.h"
+#include "SWGMorseDecoderSettings.h"
 #include "SWGPERTesterSettings.h"
 #include "SWGRadiosondeSettings.h"
 #include "SWGRigCtlServerSettings.h"
+#include "SWGSIDSettings.h"
 #include "SWGSatelliteTrackerSettings.h"
 #include "SWGSimplePTTSettings.h"
+#include "SWGSkyMapSettings.h"
 #include "SWGStarTrackerSettings.h"
 #include "SWGVORLocalizerSettings.h"
 #include <QString>
@@ -98,6 +101,9 @@ public:
     SWGMapSettings* getMapSettings();
     void setMapSettings(SWGMapSettings* map_settings);
 
+    SWGMorseDecoderSettings* getMorseDecoderSettings();
+    void setMorseDecoderSettings(SWGMorseDecoderSettings* morse_decoder_settings);
+
     SWGPERTesterSettings* getPerTesterSettings();
     void setPerTesterSettings(SWGPERTesterSettings* per_tester_settings);
 
@@ -110,11 +116,17 @@ public:
     SWGSatelliteTrackerSettings* getSatelliteTrackerSettings();
     void setSatelliteTrackerSettings(SWGSatelliteTrackerSettings* satellite_tracker_settings);
 
-    SWGStarTrackerSettings* getStarTrackerSettings();
-    void setStarTrackerSettings(SWGStarTrackerSettings* star_tracker_settings);
+    SWGSIDSettings* getSidSettings();
+    void setSidSettings(SWGSIDSettings* sid_settings);
 
     SWGSimplePTTSettings* getSimplePttSettings();
     void setSimplePttSettings(SWGSimplePTTSettings* simple_ptt_settings);
+
+    SWGSkyMapSettings* getSkyMapSettings();
+    void setSkyMapSettings(SWGSkyMapSettings* sky_map_settings);
+
+    SWGStarTrackerSettings* getStarTrackerSettings();
+    void setStarTrackerSettings(SWGStarTrackerSettings* star_tracker_settings);
 
     SWGVORLocalizerSettings* getVorLocalizerSettings();
     void setVorLocalizerSettings(SWGVORLocalizerSettings* vor_localizer_settings);
@@ -162,6 +174,9 @@ private:
     SWGMapSettings* map_settings;
     bool m_map_settings_isSet;
 
+    SWGMorseDecoderSettings* morse_decoder_settings;
+    bool m_morse_decoder_settings_isSet;
+
     SWGPERTesterSettings* per_tester_settings;
     bool m_per_tester_settings_isSet;
 
@@ -174,11 +189,17 @@ private:
     SWGSatelliteTrackerSettings* satellite_tracker_settings;
     bool m_satellite_tracker_settings_isSet;
 
-    SWGStarTrackerSettings* star_tracker_settings;
-    bool m_star_tracker_settings_isSet;
+    SWGSIDSettings* sid_settings;
+    bool m_sid_settings_isSet;
 
     SWGSimplePTTSettings* simple_ptt_settings;
     bool m_simple_ptt_settings_isSet;
+
+    SWGSkyMapSettings* sky_map_settings;
+    bool m_sky_map_settings_isSet;
+
+    SWGStarTrackerSettings* star_tracker_settings;
+    bool m_star_tracker_settings_isSet;
 
     SWGVORLocalizerSettings* vor_localizer_settings;
     bool m_vor_localizer_settings_isSet;

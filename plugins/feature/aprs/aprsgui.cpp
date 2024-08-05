@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2021-2024 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>               //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -34,9 +34,7 @@
 #include "feature/featurewebapiutils.h"
 #include "gui/basicfeaturesettingsdialog.h"
 #include "gui/dialogpositioner.h"
-#include "mainwindow.h"
 #include "maincore.h"
-#include "device/deviceuiset.h"
 
 #include "ui_aprsgui.h"
 #include "aprs.h"
@@ -408,7 +406,7 @@ bool APRSGUI::handleMessage(const Message& message)
             else
             {
                 qDebug() << "APRSGUI::handleMessage: Failed to decode as APRS";
-                qDebug() << ax25.m_from << " " << ax25.m_to << " " << ax25.m_via << " " << ax25.m_type << " " << ax25.m_pid << " "<< ax25.m_dataASCII;
+                qDebug() << "From:" << ax25.m_from << "To:" << ax25.m_to << "Via:" << ax25.m_via << "Type:" << ax25.m_type << "PID:" << ax25.m_pid << "Data:" << QString::fromLatin1(ax25.m_data);
             }
         }
         else
@@ -586,6 +584,7 @@ APRSGUI::APRSGUI(PluginAPI* pluginAPI, FeatureUISet *featureUISet, Feature *feat
     displaySettings();
     applySettings(true);
     makeUIConnections();
+    m_resizer.enableChildMouseTracking();
 }
 
 APRSGUI::~APRSGUI()
@@ -707,7 +706,7 @@ void APRSGUI::updateChannelList()
     ui->sourcePipes->clear();
 
     for (const auto& channel : m_availableChannels) {
-        ui->sourcePipes->addItem(tr("R%1:%2 %3").arg(channel.m_deviceSetIndex).arg(channel.m_channelIndex).arg(channel.m_type));
+        ui->sourcePipes->addItem(channel.getLongId());
     }
 
     ui->sourcePipes->blockSignals(false);
@@ -1148,9 +1147,10 @@ void APRSGUI::filterMessageRow(int row)
     bool hidden = false;
     if (m_settings.m_filterAddressee != "")
     {
-        QRegExp re(m_settings.m_filterAddressee);
+        QRegularExpression re(m_settings.m_filterAddressee);
         QTableWidgetItem *addressee = ui->messagesTable->item(row, MESSAGE_COL_ADDRESSEE);
-        if (!re.exactMatch(addressee->text()))
+        QRegularExpressionMatch match = re.match(addressee->text());
+        if (!match.hasMatch())
             hidden = true;
     }
     ui->messagesTable->setRowHidden(row, hidden);

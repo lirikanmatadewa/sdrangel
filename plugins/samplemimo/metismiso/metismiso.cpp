@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>         //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -29,9 +29,6 @@
 
 #include "device/deviceapi.h"
 #include "dsp/dspcommands.h"
-#include "dsp/dspengine.h"
-#include "dsp/dspdevicemimoengine.h"
-#include "dsp/devicesamplesource.h"
 #include "dsp/samplesourcefifo.h"
 #include "metis/devicemetis.h"
 
@@ -355,7 +352,7 @@ bool MetisMISO::applySettings(const MetisMISOSettings& settings, const QList<QSt
         m_deviceAPI->configureCorrections(settings.m_dcBlock, settings.m_iqCorrection, 1);
     }
 
-    for (int i = 0; i < MetisMISOSettings::m_maxReceivers; i++)
+    for (int i = 0; i < (int) m_settings.m_nbReceivers; i++)
     {
         if (settingsKeys.contains(QString("rx%1CenterFrequency").arg(i+1)) ||
             settingsKeys.contains("sampleRateIndex") ||
@@ -589,6 +586,12 @@ void MetisMISO::webapiUpdateDeviceSettings(
     if (deviceSettingsKeys.contains("spectrumStreamIndex")) {
         settings.m_spectrumStreamIndex = response.getMetisMisoSettings()->getSpectrumStreamIndex();
     }
+    if (deviceSettingsKeys.contains("streamLock")) {
+        settings.m_streamLock = response.getMetisMisoSettings()->getStreamLock() != 0;
+    }
+    if (deviceSettingsKeys.contains("rxLock")) {
+        settings.m_rxLock = response.getMetisMisoSettings()->getRxLock() != 0;
+    }
     if (deviceSettingsKeys.contains("streamIndex")) {
         settings.m_streamIndex = response.getMetisMisoSettings()->getStreamIndex();
     }
@@ -646,6 +649,8 @@ void MetisMISO::webapiFormatDeviceSettings(SWGSDRangel::SWGDeviceSettings& respo
     response.getMetisMisoSettings()->setIqCorrection(settings.m_iqCorrection ? 1 : 0);
     response.getMetisMisoSettings()->setTxDrive(settings.m_txDrive);
     response.getMetisMisoSettings()->setSpectrumStreamIndex(settings.m_spectrumStreamIndex);
+    response.getMetisMisoSettings()->setStreamLock(settings.m_streamLock ? 1 : 0);
+    response.getMetisMisoSettings()->setRxLock(settings.m_rxLock ? 1 : 0);
     response.getMetisMisoSettings()->setStreamIndex(settings.m_streamIndex);
     response.getMetisMisoSettings()->setUseReverseApi(settings.m_useReverseAPI ? 1 : 0);
 
@@ -778,6 +783,12 @@ void MetisMISO::webapiReverseSendSettings(const QList<QString>& deviceSettingsKe
     }
     if (deviceSettingsKeys.contains("streamIndex") || force) {
         swgMetisMISOSettings->setStreamIndex(settings.m_streamIndex);
+    }
+    if (deviceSettingsKeys.contains("streamLock") || force) {
+        swgMetisMISOSettings->setStreamLock(settings.m_streamLock ? 1 : 0);
+    }
+    if (deviceSettingsKeys.contains("rxLock") || force) {
+        swgMetisMISOSettings->setRxLock(settings.m_rxLock ? 1 : 0);
     }
 
     QString channelSettingsURL = QString("http://%1:%2/sdrangel/deviceset/%3/device/settings")

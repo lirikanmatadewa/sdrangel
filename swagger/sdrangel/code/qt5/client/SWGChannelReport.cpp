@@ -46,6 +46,8 @@ SWGChannelReport::SWGChannelReport() {
     m_atv_mod_report_isSet = false;
     bfm_demod_report = nullptr;
     m_bfm_demod_report_isSet = false;
+    channel_power_report = nullptr;
+    m_channel_power_report_isSet = false;
     chirp_chat_demod_report = nullptr;
     m_chirp_chat_demod_report_isSet = false;
     chirp_chat_mod_report = nullptr;
@@ -60,6 +62,8 @@ SWGChannelReport::SWGChannelReport() {
     m_dsc_demod_report_isSet = false;
     dsd_demod_report = nullptr;
     m_dsd_demod_report_isSet = false;
+    end_of_train_demod_report = nullptr;
+    m_end_of_train_demod_report_isSet = false;
     ieee_802_15_4_mod_report = nullptr;
     m_ieee_802_15_4_mod_report_isSet = false;
     file_sink_report = nullptr;
@@ -124,6 +128,8 @@ SWGChannelReport::SWGChannelReport() {
     m_udp_sink_report_isSet = false;
     vor_demod_report = nullptr;
     m_vor_demod_report_isSet = false;
+    wdsp_rx_report = nullptr;
+    m_wdsp_rx_report_isSet = false;
     wfm_demod_report = nullptr;
     m_wfm_demod_report_isSet = false;
     wfm_mod_report = nullptr;
@@ -154,6 +160,8 @@ SWGChannelReport::init() {
     m_atv_mod_report_isSet = false;
     bfm_demod_report = new SWGBFMDemodReport();
     m_bfm_demod_report_isSet = false;
+    channel_power_report = new SWGChannelPowerReport();
+    m_channel_power_report_isSet = false;
     chirp_chat_demod_report = new SWGChirpChatDemodReport();
     m_chirp_chat_demod_report_isSet = false;
     chirp_chat_mod_report = new SWGChirpChatModReport();
@@ -168,6 +176,8 @@ SWGChannelReport::init() {
     m_dsc_demod_report_isSet = false;
     dsd_demod_report = new SWGDSDDemodReport();
     m_dsd_demod_report_isSet = false;
+    end_of_train_demod_report = new SWGEndOfTrainDemodReport();
+    m_end_of_train_demod_report_isSet = false;
     ieee_802_15_4_mod_report = new SWGIEEE_802_15_4_ModReport();
     m_ieee_802_15_4_mod_report_isSet = false;
     file_sink_report = new SWGFileSinkReport();
@@ -232,6 +242,8 @@ SWGChannelReport::init() {
     m_udp_sink_report_isSet = false;
     vor_demod_report = new SWGVORDemodReport();
     m_vor_demod_report_isSet = false;
+    wdsp_rx_report = new SWGWDSPRxReport();
+    m_wdsp_rx_report_isSet = false;
     wfm_demod_report = new SWGWFMDemodReport();
     m_wfm_demod_report_isSet = false;
     wfm_mod_report = new SWGWFMModReport();
@@ -265,6 +277,9 @@ SWGChannelReport::cleanup() {
     if(bfm_demod_report != nullptr) { 
         delete bfm_demod_report;
     }
+    if(channel_power_report != nullptr) { 
+        delete channel_power_report;
+    }
     if(chirp_chat_demod_report != nullptr) { 
         delete chirp_chat_demod_report;
     }
@@ -285,6 +300,9 @@ SWGChannelReport::cleanup() {
     }
     if(dsd_demod_report != nullptr) { 
         delete dsd_demod_report;
+    }
+    if(end_of_train_demod_report != nullptr) { 
+        delete end_of_train_demod_report;
     }
     if(ieee_802_15_4_mod_report != nullptr) { 
         delete ieee_802_15_4_mod_report;
@@ -382,6 +400,9 @@ SWGChannelReport::cleanup() {
     if(vor_demod_report != nullptr) { 
         delete vor_demod_report;
     }
+    if(wdsp_rx_report != nullptr) { 
+        delete wdsp_rx_report;
+    }
     if(wfm_demod_report != nullptr) { 
         delete wfm_demod_report;
     }
@@ -419,6 +440,8 @@ SWGChannelReport::fromJsonObject(QJsonObject &pJson) {
     
     ::SWGSDRangel::setValue(&bfm_demod_report, pJson["BFMDemodReport"], "SWGBFMDemodReport", "SWGBFMDemodReport");
     
+    ::SWGSDRangel::setValue(&channel_power_report, pJson["ChannelPowerReport"], "SWGChannelPowerReport", "SWGChannelPowerReport");
+    
     ::SWGSDRangel::setValue(&chirp_chat_demod_report, pJson["ChirpChatDemodReport"], "SWGChirpChatDemodReport", "SWGChirpChatDemodReport");
     
     ::SWGSDRangel::setValue(&chirp_chat_mod_report, pJson["ChirpChatModReport"], "SWGChirpChatModReport", "SWGChirpChatModReport");
@@ -432,6 +455,8 @@ SWGChannelReport::fromJsonObject(QJsonObject &pJson) {
     ::SWGSDRangel::setValue(&dsc_demod_report, pJson["DSCDemodReport"], "SWGDSCDemodReport", "SWGDSCDemodReport");
     
     ::SWGSDRangel::setValue(&dsd_demod_report, pJson["DSDDemodReport"], "SWGDSDDemodReport", "SWGDSDDemodReport");
+    
+    ::SWGSDRangel::setValue(&end_of_train_demod_report, pJson["EndOfTrainDemodReport"], "SWGEndOfTrainDemodReport", "SWGEndOfTrainDemodReport");
     
     ::SWGSDRangel::setValue(&ieee_802_15_4_mod_report, pJson["IEEE_802_15_4_ModReport"], "SWGIEEE_802_15_4_ModReport", "SWGIEEE_802_15_4_ModReport");
     
@@ -497,6 +522,8 @@ SWGChannelReport::fromJsonObject(QJsonObject &pJson) {
     
     ::SWGSDRangel::setValue(&vor_demod_report, pJson["VORDemodReport"], "SWGVORDemodReport", "SWGVORDemodReport");
     
+    ::SWGSDRangel::setValue(&wdsp_rx_report, pJson["WDSPRxReport"], "SWGWDSPRxReport", "SWGWDSPRxReport");
+    
     ::SWGSDRangel::setValue(&wfm_demod_report, pJson["WFMDemodReport"], "SWGWFMDemodReport", "SWGWFMDemodReport");
     
     ::SWGSDRangel::setValue(&wfm_mod_report, pJson["WFMModReport"], "SWGWFMModReport", "SWGWFMModReport");
@@ -544,6 +571,9 @@ SWGChannelReport::asJsonObject() {
     if((bfm_demod_report != nullptr) && (bfm_demod_report->isSet())){
         toJsonValue(QString("BFMDemodReport"), bfm_demod_report, obj, QString("SWGBFMDemodReport"));
     }
+    if((channel_power_report != nullptr) && (channel_power_report->isSet())){
+        toJsonValue(QString("ChannelPowerReport"), channel_power_report, obj, QString("SWGChannelPowerReport"));
+    }
     if((chirp_chat_demod_report != nullptr) && (chirp_chat_demod_report->isSet())){
         toJsonValue(QString("ChirpChatDemodReport"), chirp_chat_demod_report, obj, QString("SWGChirpChatDemodReport"));
     }
@@ -564,6 +594,9 @@ SWGChannelReport::asJsonObject() {
     }
     if((dsd_demod_report != nullptr) && (dsd_demod_report->isSet())){
         toJsonValue(QString("DSDDemodReport"), dsd_demod_report, obj, QString("SWGDSDDemodReport"));
+    }
+    if((end_of_train_demod_report != nullptr) && (end_of_train_demod_report->isSet())){
+        toJsonValue(QString("EndOfTrainDemodReport"), end_of_train_demod_report, obj, QString("SWGEndOfTrainDemodReport"));
     }
     if((ieee_802_15_4_mod_report != nullptr) && (ieee_802_15_4_mod_report->isSet())){
         toJsonValue(QString("IEEE_802_15_4_ModReport"), ieee_802_15_4_mod_report, obj, QString("SWGIEEE_802_15_4_ModReport"));
@@ -660,6 +693,9 @@ SWGChannelReport::asJsonObject() {
     }
     if((vor_demod_report != nullptr) && (vor_demod_report->isSet())){
         toJsonValue(QString("VORDemodReport"), vor_demod_report, obj, QString("SWGVORDemodReport"));
+    }
+    if((wdsp_rx_report != nullptr) && (wdsp_rx_report->isSet())){
+        toJsonValue(QString("WDSPRxReport"), wdsp_rx_report, obj, QString("SWGWDSPRxReport"));
     }
     if((wfm_demod_report != nullptr) && (wfm_demod_report->isSet())){
         toJsonValue(QString("WFMDemodReport"), wfm_demod_report, obj, QString("SWGWFMDemodReport"));
@@ -761,6 +797,16 @@ SWGChannelReport::setBfmDemodReport(SWGBFMDemodReport* bfm_demod_report) {
     this->m_bfm_demod_report_isSet = true;
 }
 
+SWGChannelPowerReport*
+SWGChannelReport::getChannelPowerReport() {
+    return channel_power_report;
+}
+void
+SWGChannelReport::setChannelPowerReport(SWGChannelPowerReport* channel_power_report) {
+    this->channel_power_report = channel_power_report;
+    this->m_channel_power_report_isSet = true;
+}
+
 SWGChirpChatDemodReport*
 SWGChannelReport::getChirpChatDemodReport() {
     return chirp_chat_demod_report;
@@ -829,6 +875,16 @@ void
 SWGChannelReport::setDsdDemodReport(SWGDSDDemodReport* dsd_demod_report) {
     this->dsd_demod_report = dsd_demod_report;
     this->m_dsd_demod_report_isSet = true;
+}
+
+SWGEndOfTrainDemodReport*
+SWGChannelReport::getEndOfTrainDemodReport() {
+    return end_of_train_demod_report;
+}
+void
+SWGChannelReport::setEndOfTrainDemodReport(SWGEndOfTrainDemodReport* end_of_train_demod_report) {
+    this->end_of_train_demod_report = end_of_train_demod_report;
+    this->m_end_of_train_demod_report_isSet = true;
 }
 
 SWGIEEE_802_15_4_ModReport*
@@ -1151,6 +1207,16 @@ SWGChannelReport::setVorDemodReport(SWGVORDemodReport* vor_demod_report) {
     this->m_vor_demod_report_isSet = true;
 }
 
+SWGWDSPRxReport*
+SWGChannelReport::getWdspRxReport() {
+    return wdsp_rx_report;
+}
+void
+SWGChannelReport::setWdspRxReport(SWGWDSPRxReport* wdsp_rx_report) {
+    this->wdsp_rx_report = wdsp_rx_report;
+    this->m_wdsp_rx_report_isSet = true;
+}
+
 SWGWFMDemodReport*
 SWGChannelReport::getWfmDemodReport() {
     return wfm_demod_report;
@@ -1203,6 +1269,9 @@ SWGChannelReport::isSet(){
         if(bfm_demod_report && bfm_demod_report->isSet()){
             isObjectUpdated = true; break;
         }
+        if(channel_power_report && channel_power_report->isSet()){
+            isObjectUpdated = true; break;
+        }
         if(chirp_chat_demod_report && chirp_chat_demod_report->isSet()){
             isObjectUpdated = true; break;
         }
@@ -1222,6 +1291,9 @@ SWGChannelReport::isSet(){
             isObjectUpdated = true; break;
         }
         if(dsd_demod_report && dsd_demod_report->isSet()){
+            isObjectUpdated = true; break;
+        }
+        if(end_of_train_demod_report && end_of_train_demod_report->isSet()){
             isObjectUpdated = true; break;
         }
         if(ieee_802_15_4_mod_report && ieee_802_15_4_mod_report->isSet()){
@@ -1318,6 +1390,9 @@ SWGChannelReport::isSet(){
             isObjectUpdated = true; break;
         }
         if(vor_demod_report && vor_demod_report->isSet()){
+            isObjectUpdated = true; break;
+        }
+        if(wdsp_rx_report && wdsp_rx_report->isSet()){
             isObjectUpdated = true; break;
         }
         if(wfm_demod_report && wfm_demod_report->isSet()){

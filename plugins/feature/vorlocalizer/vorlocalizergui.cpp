@@ -1,6 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2020 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2020-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>         //
+// Copyright (C) 2023 Daniele Forsi <iu5hkx@gmail.com>                           //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -30,17 +31,12 @@
 #include <QAction>
 
 #include "feature/featureuiset.h"
-#include "dsp/dspengine.h"
 #include "dsp/dspcommands.h"
-#include "dsp/dspengine.h"
 #include "ui_vorlocalizergui.h"
 #include "plugin/pluginapi.h"
-#include "util/simpleserializer.h"
-#include "util/db.h"
 #include "util/morse.h"
 #include "util/units.h"
 #include "gui/basicfeaturesettingsdialog.h"
-#include "gui/crightclickenabler.h"
 #include "gui/dialpopup.h"
 #include "gui/dialogpositioner.h"
 #include "maincore.h"
@@ -788,7 +784,7 @@ bool VORLocalizerGUI::handleMessage(const Message& message)
             // Convert Morse to a string
             QString identString = Morse::toString(ident);
             // Idents should only be two or three characters, so filter anything else
-            // other than TEST which indicates a VOR is under maintainance (may also be TST)
+            // other than TEST which indicates a VOR is under maintenance (may also be TST)
 
             if (((identString.size() >= 2) && (identString.size() <= 3)) || (identString == "TEST"))
             {
@@ -1040,6 +1036,11 @@ void VORLocalizerGUI::applyMapSettings()
     m_azEl.setLocation(stationLatitude, stationLongitude, stationAltitude);
 
     QQuickItem *item = ui->map->rootObject();
+    if (!item)
+    {
+        qCritical("VORLocalizerGUI::applyMapSettings: Map not found. Are all required Qt plugins installed?");
+        return;
+    }
 
     QObject *object = item->findChild<QObject*>("map");
     QGeoCoordinate coords;
@@ -1145,7 +1146,11 @@ VORLocalizerGUI::VORLocalizerGUI(PluginAPI* pluginAPI, FeatureUISet *featureUISe
     ui->map->setAttribute(Qt::WA_AcceptTouchEvents, true);
 
     ui->map->rootContext()->setContextProperty("vorModel", &m_vorModel);
+#if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
     ui->map->setSource(QUrl(QStringLiteral("qrc:/demodvor/map/map.qml")));
+#else
+    ui->map->setSource(QUrl(QStringLiteral("qrc:/demodvor/map/map_6.qml")));
+#endif
 
     m_muteIcon.addPixmap(QPixmap("://sound_off.png"), QIcon::Normal, QIcon::On);
     m_muteIcon.addPixmap(QPixmap("://sound_on.png"), QIcon::Normal, QIcon::Off);
@@ -1217,6 +1222,7 @@ VORLocalizerGUI::VORLocalizerGUI(PluginAPI* pluginAPI, FeatureUISet *featureUISe
     // List already opened channels
     channelsRefresh();
     DialPopup::addPopupsToChildDials(this);
+    m_resizer.enableChildMouseTracking();
 }
 
 VORLocalizerGUI::~VORLocalizerGUI()

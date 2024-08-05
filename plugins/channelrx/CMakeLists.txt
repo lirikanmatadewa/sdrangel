@@ -1,5 +1,13 @@
 project(demod)
 
+if (ENABLE_CHANNELRX_CHANNELPOWER)
+    add_subdirectory(channelpower)
+endif()
+
+if (ENABLE_CHANNELRX_ENDOFTRAIN)
+    add_subdirectory(demodendoftrain)
+endif()
+
 if (ENABLE_CHANNELRX_FREQSCANNER)
     add_subdirectory(freqscanner)
 endif()
@@ -197,6 +205,13 @@ else()
     message(STATUS "Not building demoddsc (ENABLE_CHANNELRX_DEMODDSC=${ENABLE_CHANNELRX_DEMODDSC})")
 endif()
 
+if (ENABLE_CHANNELRX_WDSPRX AND WDSP_SUPPORT)
+    add_subdirectory(wdsprx)
+else()
+    message(STATUS "Not building wdsprx (ENABLE_CHANNELRX_WDSPRX=${ENABLE_CHANNELRX_WDSPRX} WDSP_SUPPORT=${WDSP_SUPPORT})")
+endif()
+
+
 if(NOT SERVER_MODE)
     if (ENABLE_CHANNELRX_HEATMAP)
         add_subdirectory(heatmap)
@@ -226,7 +241,7 @@ if(NOT SERVER_MODE)
       if(WIN32)
         add_subdirectory(demoddatv)
       else()
-        if(((AVUTIL_VERSION VERSION_GREATER "55.27.99") AND (AVCODEC_VERSION VERSION_GREATER "57.48.101")) OR FFMPEG_EXTERNAL OR FFMEG_SKIP_CHECK)
+        if(((AVUTIL_VERSION VERSION_GREATER "55.27.99") AND (AVCODEC_VERSION VERSION_GREATER "57.48.101")) OR FFMPEG_EXTERNAL OR FFMPEG_SKIP_CHECK)
             message(STATUS "Include demoddatv")
             add_subdirectory(demoddatv)
         else()

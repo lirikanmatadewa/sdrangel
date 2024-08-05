@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2023 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2023 Daniele Forsi <iu5hkx@gmail.com>                           //
+// Copyright (C) 2023 Frank Werner <mail@hb9fxq.ch>                              //
+// Copyright (C) 2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>               //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -22,7 +24,6 @@
 #include <QJsonValue>
 
 #include "util/messagequeue.h"
-#include "dsp/dspcommands.h"
 
 #include "aaroniartsainputsettings.h"
 #include "aaroniartsainputworker.h"
@@ -222,7 +223,7 @@ void AaroniaRTSAInputWorker::onReadyRead()
 	qint64 done = mReply->read(mBuffer.data() + bs, n);
 	mBuffer.resize(bs + done);
 
-	// intialize parsing
+	// initialize parsing
 	int	offset = 0;
 	int	avail = mBuffer.size();
 

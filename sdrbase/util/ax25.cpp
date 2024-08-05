@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2021 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -61,6 +61,7 @@ bool AX25Packet::decode(QByteArray packet)
     // List of repeater addresses for via field
     m_via = QString("");
     i = 13;
+    int incomingViaStrIdx = -1;
     while ((packet[i] & 1) == 0)
     {
         i++;
@@ -72,11 +73,17 @@ bool AX25Packet::decode(QByteArray packet)
         ssid = (repeaterSSID >> 1) & 0xf;
         QString repeater = QString(repeaterAddress).trimmed();
         QString ssidString = (ssid != 0) ? QString("%2-%3").arg(repeater).arg(ssid) : QString(repeater);
-        if (m_via == "")
-            m_via = ssidString;
-        else
-            m_via = QString("%1,%2").arg(m_via).arg(ssidString);
+
+        if (!m_via.isEmpty())
+            m_via.append(',');
+        m_via.append(ssidString);
+
+        if (packet[i] & 0x80)
+            incomingViaStrIdx = m_via.length();
     }
+    if (incomingViaStrIdx >= 0)
+        m_via.insert(incomingViaStrIdx, "*");
+
     i++;
     // Control can be 1 or 2 bytes - how to know if 2?
     //  I, U and S frames
@@ -132,7 +139,7 @@ bool AX25Packet::decode(QByteArray packet)
     infoStart = i;
     infoEnd = packet.size()-2-i;
     QByteArray info(packet.mid(infoStart, infoEnd));
-    m_dataASCII = QString::fromLatin1(info);
+    m_data = info;
     m_dataHex = QString(info.toHex());
 
     return true;

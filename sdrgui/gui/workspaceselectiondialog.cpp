@@ -1,6 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2022 F4EXB                                                      //
-// written by Edouard Griffiths                                                  //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2019, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2021-2022 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -21,7 +23,7 @@
 #include "workspaceselectiondialog.h"
 #include "ui_workspaceselectiondialog.h"
 
-WorkspaceSelectionDialog::WorkspaceSelectionDialog(int numberOfWorkspaces, QWidget *parent) :
+WorkspaceSelectionDialog::WorkspaceSelectionDialog(int numberOfWorkspaces, int workspaceIndex, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::WorkspaceSelectionDialog),
     m_numberOfWorkspaces(numberOfWorkspaces),
@@ -32,6 +34,7 @@ WorkspaceSelectionDialog::WorkspaceSelectionDialog(int numberOfWorkspaces, QWidg
     for (int i = 0; i < m_numberOfWorkspaces; i++) {
         ui->workspaceList->addItem(tr("W:%1").arg(i));
     }
+    ui->workspaceList->setCurrentRow(workspaceIndex);
 }
 
 WorkspaceSelectionDialog::~WorkspaceSelectionDialog()

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -21,73 +21,13 @@
 #include <QToolButton>
 #include <QFileDialog>
 
+#include "mapsettingsdialog.h"
+
 #if (QT_VERSION < QT_VERSION_CHECK(6, 6, 0))
 #include <QtGui/private/qzipreader_p.h>
 #else
 #include <QtCore/private/qzipreader_p.h>
 #endif
-
-#include "util/units.h"
-
-#include "mapsettingsdialog.h"
-#include "maplocationdialog.h"
-#include "mapcolordialog.h"
-
-static QString rgbToColor(quint32 rgb)
-{
-    QColor color = QColor::fromRgba(rgb);
-    return QString("%1,%2,%3").arg(color.red()).arg(color.green()).arg(color.blue());
-}
-
-static QString backgroundCSS(quint32 rgb)
-{
-    // Must specify a border, otherwise we end up with a gradient instead of solid background
-    return QString("QToolButton { background-color: rgb(%1); border: none; }").arg(rgbToColor(rgb));
-}
-
-static QString noColorCSS()
-{
-    return "QToolButton { background-color: black; border: none; }";
-}
-
-MapColorGUI::MapColorGUI(QTableWidget *table, int row, int col, bool noColor, quint32 color) :
-    m_noColor(noColor),
-    m_color(color)
-{
-    m_colorButton = new QToolButton(table);
-    m_colorButton->setFixedSize(22, 22);
-    if (!m_noColor)
-    {
-        m_colorButton->setStyleSheet(backgroundCSS(m_color));
-    }
-    else
-    {
-        m_colorButton->setStyleSheet(noColorCSS());
-        m_colorButton->setText("-");
-    }
-    table->setCellWidget(row, col, m_colorButton);
-    connect(m_colorButton, &QToolButton::clicked, this, &MapColorGUI::on_color_clicked);
-}
-
-void MapColorGUI::on_color_clicked()
-{
-    MapColorDialog dialog(QColor::fromRgba(m_color), m_colorButton);
-    if (dialog.exec() == QDialog::Accepted)
-    {
-        m_noColor = dialog.noColorSelected();
-        if (!m_noColor)
-        {
-            m_colorButton->setText("");
-            m_color = dialog.selectedColor().rgba();
-            m_colorButton->setStyleSheet(backgroundCSS(m_color));
-        }
-        else
-        {
-            m_colorButton->setText("-");
-            m_colorButton->setStyleSheet(noColorCSS());
-        }
-    }
-}
 
 MapItemSettingsGUI::MapItemSettingsGUI(QTableWidget *table, int row, MapSettings::MapItemSettings *settings) :
     m_track2D(table, row, MapSettingsDialog::COL_2D_TRACK, !settings->m_display2DTrack, settings->m_2DTrackColor),
@@ -97,16 +37,26 @@ MapItemSettingsGUI::MapItemSettingsGUI(QTableWidget *table, int row, MapSettings
     m_minZoom = new QSpinBox(table);
     m_minZoom->setRange(0, 15);
     m_minZoom->setValue(settings->m_2DMinZoom);
+    m_minZoom->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     m_minPixels = new QSpinBox(table);
     m_minPixels->setRange(0, 200);
     m_minPixels->setValue(settings->m_3DModelMinPixelSize);
+    m_minPixels->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
     m_labelScale = new QDoubleSpinBox(table);
     m_labelScale->setDecimals(2);
     m_labelScale->setRange(0.01, 10.0);
     m_labelScale->setValue(settings->m_3DLabelScale);
+    m_labelScale->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    m_filterDistance = new QSpinBox(table);
+    m_filterDistance->setRange(0, MAX_FILTER_DISTANCE_KM);
+    m_filterDistance->setValue(settings->m_filterDistance / 1000);
+    m_filterDistance->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    m_filterDistance->setSpecialValueText(" ");
+    m_filterDistance->setCorrectionMode(QAbstractSpinBox::CorrectToNearestValue);
     table->setCellWidget(row, MapSettingsDialog::COL_2D_MIN_ZOOM, m_minZoom);
     table->setCellWidget(row, MapSettingsDialog::COL_3D_MIN_PIXELS, m_minPixels);
     table->setCellWidget(row, MapSettingsDialog::COL_3D_LABEL_SCALE, m_labelScale);
+    table->setCellWidget(row, MapSettingsDialog::COL_FILTER_DISTANCE, m_filterDistance);
 }
 
 MapSettingsDialog::MapSettingsDialog(MapSettings *settings, QWidget* parent) :
@@ -120,8 +70,14 @@ MapSettingsDialog::MapSettingsDialog(MapSettings *settings, QWidget* parent) :
 #if (QT_VERSION >= QT_VERSION_CHECK(6, 0, 0))
     ui->mapProvider->clear();
     ui->mapProvider->addItem("OpenStreetMap");
+#else
+#ifdef WIN32
+    ui->mapProvider->removeItem(ui->mapProvider->findText("MapboxGL")); // Not supported on Windows
 #endif
-    ui->mapProvider->setCurrentIndex(MapSettings::m_mapProviders.indexOf(settings->m_mapProvider));
+    ui->mapProvider->removeItem(ui->mapProvider->findText("ESRI")); // Currently broken https://bugreports.qt.io/browse/QTBUG-121228
+#endif
+    const QString mapProviderName = MapSettings::m_mapProviderNames[MapSettings::m_mapProviders.indexOf(settings->m_mapProvider)];
+    ui->mapProvider->setCurrentIndex(ui->mapProvider->findText(mapProviderName));
     ui->thunderforestAPIKey->setText(settings->m_thunderforestAPIKey);
     ui->maptilerAPIKey->setText(settings->m_maptilerAPIKey);
     ui->mapBoxAPIKey->setText(settings->m_mapBoxAPIKey);
@@ -141,7 +97,7 @@ MapSettingsDialog::MapSettingsDialog(MapSettings *settings, QWidget* parent) :
     QList<MapSettings::MapItemSettings *> itemSettings = m_settings->m_itemSettings.values();
     std::sort(itemSettings.begin(), itemSettings.end(),
         [](const MapSettings::MapItemSettings* a, const MapSettings::MapItemSettings* b) -> bool {
-            return a->m_group < b->m_group;
+            return a->m_group.compare(b->m_group, Qt::CaseInsensitive) < 0;
         });
     QListIterator<MapSettings::MapItemSettings *> itr(itemSettings);
     while (itr.hasNext())
@@ -175,11 +131,6 @@ MapSettingsDialog::MapSettingsDialog(MapSettings *settings, QWidget* parent) :
 
         item = new QTableWidgetItem(itemSettings->m_filterName);
         ui->mapItemSettings->setItem(row, COL_FILTER_NAME, item);
-        item = new QTableWidgetItem();
-        if (itemSettings->m_filterDistance > 0) {
-            item->setText(QString::number(itemSettings->m_filterDistance / 1000));
-        }
-        ui->mapItemSettings->setItem(row, COL_FILTER_DISTANCE, item);
 
         MapItemSettingsGUI *gui = new MapItemSettingsGUI(ui->mapItemSettings, row, itemSettings);
         m_mapItemSettingsGUIs.append(gui);
@@ -198,6 +149,7 @@ MapSettingsDialog::MapSettingsDialog(MapSettings *settings, QWidget* parent) :
     connect(&m_ourAirportsDB, &OurAirportsDB::downloadProgress, this, &MapSettingsDialog::downloadProgress);
     connect(&m_ourAirportsDB, &OurAirportsDB::downloadError, this, &MapSettingsDialog::downloadError);
     connect(&m_ourAirportsDB, &OurAirportsDB::downloadAirportInformationFinished, this, &MapSettingsDialog::downloadAirportInformationFinished);
+    connect(&m_waypoints, &Waypoints::downloadWaypointsFinished, this, &MapSettingsDialog::downloadWaypointsFinished);
 
 #ifndef QT_WEBENGINE_FOUND
     ui->map3DSettings->setVisible(false);
@@ -219,7 +171,7 @@ MapSettingsDialog::~MapSettingsDialog()
 
 void MapSettingsDialog::accept()
 {
-    QString mapProvider = MapSettings::m_mapProviders[ui->mapProvider->currentIndex()];
+    QString mapProvider = MapSettings::m_mapProviders[MapSettings::m_mapProviderNames.indexOf(ui->mapProvider->currentText())];
     QString osmURL = ui->osmURL->text();
     QString mapBoxStyles = ui->mapBoxStyles->text();
     QString mapBoxAPIKey = ui->mapBoxAPIKey->text();
@@ -315,13 +267,7 @@ void MapSettingsDialog::accept()
         itemSettings->m_filterName = ui->mapItemSettings->item(row, COL_FILTER_NAME)->text();
         itemSettings->m_filterNameRE.setPattern(itemSettings->m_filterName);
         itemSettings->m_filterNameRE.optimize();
-        bool ok;
-        int filterDistance = ui->mapItemSettings->item(row, COL_FILTER_DISTANCE)->text().toInt(&ok);
-        if (ok && filterDistance > 0) {
-            itemSettings->m_filterDistance = filterDistance * 1000;
-        } else {
-            itemSettings->m_filterDistance = 0;
-        }
+        itemSettings->m_filterDistance = gui->m_filterDistance->value() * 1000;
     }
 
     QDialog::accept();
@@ -515,6 +461,19 @@ void MapSettingsDialog::on_getAirspacesDB_clicked()
     }
 }
 
+void MapSettingsDialog::on_getWaypoints_clicked()
+{
+    // Don't try to download while already in progress
+    if (m_progressDialog == nullptr)
+    {
+        m_progressDialog = new QProgressDialog(this);
+        m_progressDialog->setMaximum(1);
+        m_progressDialog->setCancelButton(nullptr);
+        m_progressDialog->setWindowFlag(Qt::WindowCloseButtonHint, false);
+        m_waypoints.downloadWaypoints();
+    }
+}
+
 void MapSettingsDialog::downloadingURL(const QString& url)
 {
     if (m_progressDialog)
@@ -573,6 +532,20 @@ void MapSettingsDialog::downloadAirportInformationFinished()
         m_progressDialog->setLabelText("Reading airports.");
     }
     emit airportsUpdated();
+    if (m_progressDialog)
+    {
+        m_progressDialog->close();
+        delete m_progressDialog;
+        m_progressDialog = nullptr;
+    }
+}
+
+void MapSettingsDialog::downloadWaypointsFinished()
+{
+    if (m_progressDialog) {
+        m_progressDialog->setLabelText("Reading waypoints.");
+    }
+    emit waypointsUpdated();
     if (m_progressDialog)
     {
         m_progressDialog->close();

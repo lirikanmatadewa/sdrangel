@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2023 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2023 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -16,6 +16,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
 
 #include <QDebug>
+#include <QElapsedTimer>
 
 #include "dsp/vkfftengine.h"
 
@@ -26,7 +27,7 @@ vkFFTEngine::vkFFTEngine() :
     m_reuse(true)
 {
     vkGPU = new VkGPU();
-    memset(vkGPU, sizeof(VkGPU), 0);
+    memset(vkGPU, 0, sizeof(VkGPU));
     vkGPU->device_id = 0; // Could be set in GUI to support multiple GPUs
 }
 
@@ -62,11 +63,11 @@ void vkFFTEngine::configure(int n, bool inverse)
 
     VkFFTResult resFFT;
 
-    // Allocate and intialise plan
+    // Allocate and initialise plan
     m_currentPlan->m_configuration = new VkFFTConfiguration();
-    memset(m_currentPlan->m_configuration, sizeof(VkFFTConfiguration), 0);
+    memset(m_currentPlan->m_configuration, 0, sizeof(VkFFTConfiguration));
     m_currentPlan->m_app = new VkFFTApplication();
-    memset(m_currentPlan->m_app, sizeof(VkFFTApplication), 0);
+    memset(m_currentPlan->m_app, 0, sizeof(VkFFTApplication));
     m_currentPlan->m_configuration->FFTdim = 1;
     m_currentPlan->m_configuration->size[0] = n;
     m_currentPlan->m_configuration->size[1] = 1;

@@ -13,7 +13,7 @@
 /*
  * SWGCapture.h
  *
- * 
+ * Capture (track) information
  */
 
 #ifndef SWGCapture_H_

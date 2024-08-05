@@ -1,5 +1,10 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2015-2018 Edouard Griffiths, F4EXB                              //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2014 John Greb <hexameron>                                      //
+// Copyright (C) 2015-2020, 2022-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com> //
+// Copyright (C) 2018 beta-tester <alpha-beta-release@gmx.net>                   //
+// Copyright (C) 2022 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -169,7 +174,7 @@ void FCDProInput::closeDevice()
 bool FCDProInput::openFCDAudio(const char* cardname)
 {
     AudioDeviceManager *audioDeviceManager = DSPEngine::instance()->getAudioDeviceManager();
-    const QList<AudioDeviceInfo>& audioList = audioDeviceManager->getInputDevices();
+    const QList<AudioDeviceInfo>& audioList = AudioDeviceInfo::availableInputDevices();
 
     for (const auto &itAudio : audioList)
     {
@@ -490,7 +495,7 @@ void FCDProInput::applySettings(const FCDProSettings& settings, const QList<QStr
 		m_deviceAPI->configureCorrections(settings.m_dcBlock, settings.m_iqCorrection);
 	}
 
-    if (settingsKeys.contains("useReverseAPI"))
+    if (settings.m_useReverseAPI)
     {
         bool fullUpdate = (settingsKeys.contains("useReverseAPI") && settings.m_useReverseAPI) ||
             settingsKeys.contains("reverseAPIAddress") ||
@@ -518,7 +523,7 @@ void FCDProInput::set_center_freq(double freq)
 
 	if (fcdAppSetFreq(m_dev, freq) == FCD_MODE_NONE)
 	{
-		qDebug("No FCD HID found for frquency change");
+		qDebug("No FCD HID found for frequency change");
 	}
 
 }

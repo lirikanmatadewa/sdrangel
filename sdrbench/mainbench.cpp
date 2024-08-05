@@ -1,5 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2018 Edouard Griffiths, F4EXB.                                  //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2019, 2021-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com> //
+// Copyright (C) 2023 Daniele Forsi <iu5hkx@gmail.com>                           //
 //                                                                               //
 // Swagger server adapter interface                                              //
 //                                                                               //
@@ -66,6 +69,10 @@ void MainBench::run()
         testGolay2312();
     } else if (m_parser.getTestType() == ParserBench::TestFT8) {
         testFT8(m_parser.getFileName(), m_parser.getArgsStr());
+    } else if (m_parser.getTestType() == ParserBench::TestCallsign) {
+        testCallsign(m_parser.getArgsStr());
+    } else if (m_parser.getTestType() == ParserBench::TestFT8Protocols) {
+        testFT8Protocols(m_parser.getArgsStr());
     } else {
         qDebug() << "MainBench::run: unknown test type: " << m_parser.getTestType();
     }

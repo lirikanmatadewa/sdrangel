@@ -6,6 +6,7 @@ on:
   push:
     branches:
       - master
+      - feature-*
       - mac_ci
     tags:
       - 'v*'
@@ -31,7 +32,7 @@ jobs:
             generators: Ninja
           }
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
           fetch-depth: 0
@@ -56,7 +57,7 @@ jobs:
         env:
           BOOST_ROOT: ${{ matrix.config.boost_dl }}
           BOOST_DEST: ${{ matrix.config.lib_dir }}
-          BOOST_URL: https://boostorg.jfrog.io/artifactory/main/release/1.73.0/source/boost_1_73_0.tar.bz2
+          BOOST_URL: https://archives.boost.io/release/1.73.0/source/boost_1_73_0.tar.bz2
         run: |
           mkdir -p $BOOST_ROOT
           mkdir -p $BOOST_DEST
@@ -102,39 +103,34 @@ jobs:
   build_mac:
     runs-on: macos-13
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
           fetch-depth: 0
       - name: Update brew
         run: brew update
-      - name: Install brew packages
-        run: brew install nasm boost hidapi libusb fftw ffmpeg faad2 zlib airspy airspyhf hackrf rtl-sdr libbladerf soapysdr qt
       - name: Install brew uhd package
         run: |
           rm -f /usr/local/bin/2to3*
-          rm -f /usr/local/bin/idle3
-          rm -f /usr/local/bin/pydoc3
-          rm -f /usr/local/bin/python3
+          rm -f /usr/local/bin/idle3*
+          rm -f /usr/local/bin/pydoc3*
+          rm -f /usr/local/bin/python3*
           rm -f /usr/local/bin/python3-config
           brew install uhd
       - name: Install brew opencv package
         run: |
           rm -f /usr/local/bin/2to3
           brew install opencv
+      - name: Install brew packages
+        run: brew install nasm boost hidapi libusb fftw ffmpeg@5 faad2 zlib airspy airspyhf hackrf rtl-sdr libbladerf soapysdr qt subversion
       - name: Configure SDRangel
         run: |
           mkdir build && cd build
-          cmake .. -DCMAKE_VERBOSE_MAKEFILE=ON -DENABLE_QT6=ON -DCMAKE_BUILD_TYPE=Release -DARCH_OPT=nehalem -DDEBUG_OUTPUT=ON -DENABLE_MIRISDR=OFF -DBUILD_SERVER=OFF -DENABLE_EXTERNAL_LIBRARIES=AUTO -DBUNDLE=ON -DPKG_CONFIG_USE_CMAKE_PREFIX_PATH=TRUE
+          cmake .. -DCMAKE_VERBOSE_MAKEFILE=ON -DENABLE_QT6=ON -DCMAKE_BUILD_TYPE=Release -DARCH_OPT=nehalem -DDEBUG_OUTPUT=ON -DENABLE_CHANNELRX_DEMODDATV=OFF -DENABLE_CHANNELTX_MODDATV=OFF -DENABLE_MIRISDR=OFF -DBUILD_SERVER=OFF -DENABLE_EXTERNAL_LIBRARIES=AUTO -DBUNDLE=ON -DPKG_CONFIG_USE_CMAKE_PREFIX_PATH=TRUE -DCMAKE_PREFIX_PATH="/usr/local/opt/ffmpeg@5/"
       - name: Get filename
         id: get_filename
         run: echo "filename=$(grep CPACK_PACKAGE_FILE_NAME build/CMakeCache.txt | cut -d "=" -f2)" >> $GITHUB_OUTPUT
       - name: Build SDRangel on Mac
         run: |
           cd build
-          make package -j3
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ steps.get_filename.outputs.filename }}.dmg
-          path: ${{ github.workspace }}/build/${{ steps.get_filename.outputs.filename }}.dmg
+          make -j3

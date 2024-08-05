@@ -1,6 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2015-2018 Edouard Griffiths, F4EXB                              //
-// Copyright (C) 2020 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>               //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -31,8 +30,6 @@
 #include "dsp/dspengine.h"
 #include "dsp/samplesourcefifo.h"
 #include "dsp/samplesinkfifo.h"
-#include "dsp/devicesamplesource.h"
-#include "dsp/devicesamplesink.h"
 #include "device/deviceapi.h"
 #include "util/serialutil.h"
 
@@ -47,7 +44,7 @@ MESSAGE_CLASS_DEFINITION(AudioCATSISO::MsgStartStop, Message)
 AudioCATSISO::AudioCATSISO(DeviceAPI *deviceAPI) :
     m_deviceAPI(deviceAPI),
     m_inputFifo(48000),
-    m_outputFifo(48000),
+    m_outputFifo(24000),
 	m_settings(),
     m_inputWorker(nullptr),
     m_outputWorker(nullptr),
@@ -147,14 +144,11 @@ bool AudioCATSISO::startRx()
     m_inputWorker->startWork();
     m_inputWorkerThread->start();
 
-    qDebug("AudioCATSISO::startRx: started");
-    m_rxRunning = true;
-
     qDebug() << "AudioCATSISO::startRx: start CAT";
 
     m_catWorkerThread = new QThread();
     m_catWorker = new AudioCATSISOCATWorker();
-    m_inputWorker->moveToThread(m_catWorkerThread);
+    m_catWorker->moveToThread(m_catWorkerThread);
 
     QObject::connect(m_catWorkerThread, &QThread::started, m_catWorker, &AudioCATSISOCATWorker::startWork);
     QObject::connect(m_catWorkerThread, &QThread::finished, m_catWorker, &QObject::deleteLater);
@@ -162,12 +156,22 @@ bool AudioCATSISO::startRx()
 
     m_catWorker->setMessageQueueToGUI(getMessageQueueToGUI());
     m_catWorker->setMessageQueueToSISO(getInputMessageQueue());
+    m_catWorker->startWork();
     m_catWorkerThread->start();
+
+    qDebug("AudioCATSISO::startRx: started");
+    m_rxRunning = true;
+
+    AudioCATSISOCATWorker::MsgSetRxSampleRate *msgSetRxSampleRate = AudioCATSISOCATWorker::MsgSetRxSampleRate::create(m_rxSampleRate);
+    m_catWorker->getInputMessageQueue()->push(msgSetRxSampleRate);
 
     AudioCATSISOCATWorker::MsgConfigureAudioCATSISOCATWorker *msgToCAT = AudioCATSISOCATWorker::MsgConfigureAudioCATSISOCATWorker::create(
         m_settings, QList<QString>(), true
     );
     m_catWorker->getInputMessageQueue()->push(msgToCAT);
+
+    AudioCATSISOCATWorker::MsgPollTimerConnect *startTimerMsg = AudioCATSISOCATWorker::MsgPollTimerConnect::create();
+    m_catWorker->getInputMessageQueue()->push(startTimerMsg);
 
     qDebug() << "AudioCATSISO::startRx: CAT started";
     m_catRunning = true;
@@ -202,8 +206,6 @@ bool AudioCATSISO::startTx()
     m_outputWorker->connectTimer(m_deviceAPI->getMasterTimer());
     m_outputWorkerThread->start();
     m_txRunning = true;
-
-	mutexLocker.unlock();
 
 	qDebug("AudioCATSISO::startTx: started");
 
@@ -469,6 +471,8 @@ void AudioCATSISO::applySettings(const AudioCATSISOSettings& settings, const QLi
         {
             audioDeviceManager->removeAudioSource(&m_inputFifo);
             audioDeviceManager->addAudioSource(&m_inputFifo, getInputMessageQueue(), m_rxAudioDeviceIndex);
+            AudioCATSISOCATWorker::MsgSetRxSampleRate *msgSetRxSampleRate = AudioCATSISOCATWorker::MsgSetRxSampleRate::create(m_rxSampleRate);
+            m_catWorker->getInputMessageQueue()->push(msgSetRxSampleRate);
         }
     }
 
@@ -560,7 +564,11 @@ void AudioCATSISO::applySettings(const AudioCATSISOSettings& settings, const QLi
         forwardTxChange = true;
     }
 
-    if (settingsKeys.contains("useReverseAPI"))
+    if (settingsKeys.contains("catPollingMs") || force) {
+        forwardToCAT = true;
+    }
+
+    if (settings.m_useReverseAPI)
     {
         bool fullUpdate = (settingsKeys.contains("useReverseAPI") && settings.m_useReverseAPI) ||
             settingsKeys.contains("reverseAPIAddress") ||

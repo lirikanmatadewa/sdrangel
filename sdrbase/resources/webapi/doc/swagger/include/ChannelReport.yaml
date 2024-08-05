@@ -25,6 +25,8 @@ ChannelReport:
       $ref: "/doc/swagger/include/ATVMod.yaml#/ATVModReport"
     BFMDemodReport:
       $ref: "/doc/swagger/include/BFMDemod.yaml#/BFMDemodReport"
+    ChannelPowerReport:
+      $ref: "/doc/swagger/include/ChannelPower.yaml#/ChannelPowerReport"
     ChirpChatDemodReport:
       $ref: "/doc/swagger/include/ChirpChatDemod.yaml#/ChirpChatDemodReport"
     ChirpChatModReport:
@@ -39,6 +41,8 @@ ChannelReport:
       $ref: "/doc/swagger/include/DSCDemod.yaml#/DSCDemodReport"
     DSDDemodReport:
       $ref: "/doc/swagger/include/DSDDemod.yaml#/DSDDemodReport"
+    EndOfTrainDemodReport:
+      $ref: "/doc/swagger/include/EndOfTrainDemod.yaml#/EndOfTrainDemodReport"
     IEEE_802_15_4_ModReport:
       $ref: "/doc/swagger/include/IEEE_802_15_4_Mod.yaml#/IEEE_802_15_4_ModReport"
     FileSinkReport:
@@ -105,6 +109,8 @@ ChannelReport:
     #   $ref: "/doc/swagger/include/VORDemodMC.yaml#/VORDemodMCReport"
     VORDemodReport:
       $ref: "/doc/swagger/include/VORDemod.yaml#/VORDemodReport"
+    WDSPRxReport:
+      $ref: "/doc/swagger/include/WDSPRx.yaml#/WDSPRxReport"
     WFMDemodReport:
       $ref: "/doc/swagger/include/WFMDemod.yaml#/WFMDemodReport"
     WFMModReport:

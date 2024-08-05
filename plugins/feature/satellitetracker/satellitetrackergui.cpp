@@ -1,6 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2021-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2021 DreamNik <dreamnik@mail.ru>                                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -26,8 +27,6 @@
 #include <QtCharts/QDateTimeAxis>
 #include <QtCharts/QValueAxis>
 
-#include "device/deviceapi.h"
-#include "device/deviceset.h"
 #include "channel/channelwebapiutils.h"
 #include "feature/featureset.h"
 #include "feature/featureuiset.h"
@@ -35,10 +34,10 @@
 #include "feature/featurewebapiutils.h"
 #include "gui/basicfeaturesettingsdialog.h"
 #include "gui/dialogpositioner.h"
-#include "mainwindow.h"
-#include "device/deviceuiset.h"
 #include "util/units.h"
-#include "util/astronomy.h"
+#include "device/deviceapi.h"
+#include "device/deviceset.h"
+#include "maincore.h"
 
 #include "ui_satellitetrackergui.h"
 #include "satellitetracker.h"
@@ -198,6 +197,13 @@ bool SatelliteTrackerGUI::handleMessage(const Message& message)
 
         return true;
     }
+    else if (SatelliteTracker::MsgError::match(message))
+    {
+        SatelliteTracker::MsgError& errorMsg = (SatelliteTracker::MsgError&) message;
+        QString error = errorMsg.getError();
+        QMessageBox::critical(this, "Satellite Tracker", error);
+        return true;
+    }
 
     return false;
 }
@@ -299,7 +305,7 @@ SatelliteTrackerGUI::SatelliteTrackerGUI(PluginAPI* pluginAPI, FeatureUISet *fea
 
     connect(&m_redrawTimer, &QTimer::timeout, this, &SatelliteTrackerGUI::plotChart);
 
-    // Intialise charts
+    // Initialise charts
     m_emptyChart.layout()->setContentsMargins(0, 0, 0, 0);
     m_emptyChart.setMargins(QMargins(1, 1, 1, 1));
     ui->passChart->setChart(&m_emptyChart);
@@ -333,6 +339,7 @@ SatelliteTrackerGUI::SatelliteTrackerGUI(PluginAPI* pluginAPI, FeatureUISet *fea
     displaySettings();
     applySettings(true);
     makeUIConnections();
+    m_resizer.enableChildMouseTracking();
 
     // Get initial list of satellites
     on_updateSatData_clicked();
@@ -946,7 +953,7 @@ void SatelliteTrackerGUI::plotPolarChart()
         if (m_settings.m_drawRotators != SatelliteTrackerSettings::NO_ROTATORS)
         {
             // Plot rotator position
-            QString ourSourceName = QString("F0:%1 %2").arg(m_satelliteTracker->getIndexInFeatureSet()).arg(m_satelliteTracker->getIdentifier());  // Only one feature set in practice?
+            QString ourSourceName = QString("F:%1 %2").arg(m_satelliteTracker->getIndexInFeatureSet()).arg(m_satelliteTracker->getIdentifier());
             std::vector<FeatureSet*>& featureSets = MainCore::instance()->getFeatureeSets();
             for (int featureSetIndex = 0; featureSetIndex < (int)featureSets.size(); featureSetIndex++)
             {

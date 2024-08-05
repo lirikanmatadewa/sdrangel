@@ -1,6 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2017 Edouard Griffiths, F4EXB.                                  //
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2019, 2021-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com> //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -27,7 +29,7 @@
 class Serializable;
 
 // Number of columns in the tables
-#define RADIOSONDEDEMOD_FRAME_COLUMNS 26
+#define RADIOSONDEDEMOD_FRAME_COLUMNS 28
 
 struct RadiosondeDemodSettings
 {
@@ -45,6 +47,7 @@ struct RadiosondeDemodSettings
 
     QString m_logFilename;
     bool m_logEnabled;
+    bool m_useFileTime;
 
     quint32 m_rgbColor;
     QString m_title;
@@ -64,7 +67,7 @@ struct RadiosondeDemodSettings
     int m_frameColumnIndexes[RADIOSONDEDEMOD_FRAME_COLUMNS];//!< How the columns are ordered in the table
     int m_frameColumnSizes[RADIOSONDEDEMOD_FRAME_COLUMNS];  //!< Size of the columns in the table
 
-    static const int RADIOSONDEDEMOD_CHANNEL_SAMPLE_RATE = 57600; //!< 12x 4800 baud rate (use even multiple so Gausian filter has odd number of taps)
+    static const int RADIOSONDEDEMOD_CHANNEL_SAMPLE_RATE = 57600; //!< 12x 4800 baud rate (use even multiple so Gaussian filter has odd number of taps)
 
     RadiosondeDemodSettings();
     void resetToDefaults();

@@ -34,23 +34,19 @@
 #include "dsp/dspcommands.h"
 #include "ui_vordemodmcgui.h"
 #include "plugin/pluginapi.h"
-#include "util/simpleserializer.h"
 #include "util/db.h"
 #include "util/morse.h"
 #include "util/units.h"
 #include "gui/basicchannelsettingsdialog.h"
-#include "gui/devicestreamselectiondialog.h"
 #include "dsp/dspengine.h"
 #include "gui/crightclickenabler.h"
 #include "gui/audioselectdialog.h"
 #include "gui/dialpopup.h"
 #include "gui/dialogpositioner.h"
-#include "channel/channelwebapiutils.h"
 #include "maincore.h"
 
 #include "vordemodmc.h"
 #include "vordemodmcreport.h"
-#include "vordemodmcsink.h"
 
 #define VOR_COL_NAME            0
 #define VOR_COL_FREQUENCY       1
@@ -839,7 +835,7 @@ bool VORDemodMCGUI::handleMessage(const Message& message)
         // Convert Morse to a string
         QString identString = Morse::toString(ident);
         // Idents should only be two or three characters, so filter anything else
-        // other than TEST which indicates a VOR is under maintainance (may also be TST)
+        // other than TEST which indicates a VOR is under maintenance (may also be TST)
         if (((identString.size() >= 2) && (identString.size() <= 3)) || (identString == "TEST"))
         {
             vorGUI->m_rxIdentItem->setText(identString);
@@ -1286,6 +1282,7 @@ VORDemodMCGUI::VORDemodMCGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, Bas
     makeUIConnections();
     applySettings(true);
     DialPopup::addPopupsToChildDials(this);
+    m_resizer.enableChildMouseTracking();
 }
 
 VORDemodMCGUI::~VORDemodMCGUI()
@@ -1368,6 +1365,7 @@ void VORDemodMCGUI::audioSelect(const QPoint& p)
     qDebug("VORDemodMCGUI::audioSelect");
     AudioSelectDialog audioSelect(DSPEngine::instance()->getAudioDeviceManager(), m_settings.m_audioDeviceName);
     audioSelect.move(p);
+    new DialogPositioner(&audioSelect, false);
     audioSelect.exec();
 
     if (audioSelect.m_selected)

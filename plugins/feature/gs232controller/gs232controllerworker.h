@@ -1,6 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Jon Beniston, M7RCE                                        //
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2019-2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2020-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2020 Vort <vvort@yandex.ru>                                     //
+// Copyright (C) 2022 Jiří Pinkava <jiri.pinkava@rossum.ai>                      //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -29,6 +31,8 @@
 
 #include "gs232controllersettings.h"
 #include "controllerprotocol.h"
+
+class GS232Controller;
 
 class GS232ControllerWorker : public QObject
 {
@@ -60,7 +64,7 @@ public:
         { }
     };
 
-    GS232ControllerWorker();
+    GS232ControllerWorker(GS232Controller *controller);
     ~GS232ControllerWorker();
     void startWork();
     void stopWork();
@@ -70,6 +74,7 @@ public:
 
 private:
 
+    GS232Controller *m_controller;
     MessageQueue m_inputMessageQueue;  //!< Queue for asynchronous inbound communication
     MessageQueue *m_msgQueueToFeature; //!< Queue to report channel change to main feature object
     GS232ControllerSettings m_settings;
@@ -90,6 +95,7 @@ private:
     QIODevice *openSocket(const GS232ControllerSettings& settings);
     void setAzimuth(float azimuth);
     void setAzimuthElevation(float azimuth, float elevation);
+    void sendToSkyMap(float azimuth, float elevation);
 
 private slots:
     void handleInputMessages();

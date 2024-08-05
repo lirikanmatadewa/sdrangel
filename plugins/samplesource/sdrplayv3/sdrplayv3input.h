@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2016-2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2021, 2023 Jon Beniston, M7RCE <jon@beniston.com>               //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -27,6 +27,7 @@
 
 #include <sdrplay_api.h>
 #include "dsp/devicesamplesource.h"
+#include "dsp/replaybuffer.h"
 #include "sdrplayv3settings.h"
 
 class QNetworkAccessManager;
@@ -79,6 +80,25 @@ public:
         MsgStartStop(bool startStop) :
             Message(),
             m_startStop(startStop)
+        { }
+    };
+
+   class MsgSaveReplay : public Message {
+        MESSAGE_CLASS_DECLARATION
+
+    public:
+        QString getFilename() const { return m_filename; }
+
+        static MsgSaveReplay* create(const QString& filename) {
+            return new MsgSaveReplay(filename);
+        }
+
+    protected:
+        QString m_filename;
+
+        MsgSaveReplay(const QString& filename) :
+            Message(),
+            m_filename(filename)
         { }
     };
 
@@ -149,6 +169,7 @@ private:
     bool m_running;
     QNetworkAccessManager *m_networkManager;
     QNetworkRequest m_networkRequest;
+    ReplayBuffer<qint16> m_replayBuffer;
 
     bool openDevice();
     void closeDevice();
@@ -196,6 +217,7 @@ public:
 private:
     static const int rsp1Attenuation[3][5];
     static const int rsp1AAttenuation[4][11];
+    static const int rsp1BAttenuation[5][11];
     static const int rsp2Attenuation[3][10];
     static const int rspDuoAttenuation[5][11];
     static const int rspDxAttenuation[7][29];

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2019-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -20,20 +20,15 @@
 #include <QTime>
 #include <QDebug>
 
-#include "audio/audiooutputdevice.h"
-#include "dsp/dspengine.h"
-#include "dsp/dspcommands.h"
-#include "dsp/devicesamplemimo.h"
 #include "dsp/spectrumvis.h"
 #include "dsp/datafifo.h"
-#include "device/deviceapi.h"
 #include "util/db.h"
 #include "util/messagequeue.h"
 #include "maincore.h"
 
 #include "ssbdemodsink.h"
 
-const int SSBDemodSink::m_ssbFftLen = 1024;
+const int SSBDemodSink::m_ssbFftLen = 2048;
 const int SSBDemodSink::m_agcTarget = 3276; // 32768/10 -10 dB amplitude => -20 dB power: center of normal signal
 
 SSBDemodSink::SSBDemodSink() :
@@ -69,16 +64,16 @@ SSBDemodSink::SSBDemodSink() :
     m_demodBufferFill = 0;
 
 	m_usb = true;
-	m_magsq = 0.0f;
-	m_magsqSum = 0.0f;
-	m_magsqPeak = 0.0f;
+	m_magsq = 0.0;
+	m_magsqSum = 0.0;
+	m_magsqPeak = 0.0;
 	m_magsqCount = 0;
-
-	m_agc.setClampMax(SDR_RX_SCALED/100.0);
-	m_agc.setClamping(m_agcClamping);
 
 	SSBFilter = new fftfilt(m_LowCutoff / m_audioSampleRate, m_Bandwidth / m_audioSampleRate, m_ssbFftLen);
 	DSBFilter = new fftfilt((2.0f * m_Bandwidth) / m_audioSampleRate, 2 * m_ssbFftLen);
+
+    m_lowpassI.create(101, m_audioSampleRate, m_Bandwidth * 1.2);
+    m_lowpassQ.create(101, m_audioSampleRate, m_Bandwidth * 1.2);
 
     applyChannelSettings(m_channelSampleRate, m_channelFrequencyOffset, true);
 	applySettings(m_settings, true);
@@ -170,10 +165,22 @@ void SSBDemodSink::processOneSample(Complex &ci)
             m_sum.imag(0.0);
         }
 
-        float agcVal = m_agcActive ? m_agc.feedAndGetValue(sideband[i]) : 0.1;
+        float agcVal = m_agcActive ? m_agc.feedAndGetValue(sideband[i]) : 1.0;
         fftfilt::cmplx& delayedSample = m_squelchDelayLine.readBack(m_agc.getStepDownDelay());
         m_audioActive = delayedSample.real() != 0.0;
-        m_squelchDelayLine.write(sideband[i]*agcVal);
+
+        // Prevent overload based on squared magnitude variation
+        // Only if AGC is active
+        if (m_agcActive && m_agcClamping && (agcVal > 100.0 || agcVal == 0.0))
+        {
+            // qDebug("SSBDemodSink::processOneSample: %f", agcVal);
+            m_agc.reset(m_agcTarget*m_agcTarget);
+            m_squelchDelayLine.write(fftfilt::cmplx{0.0, 0.0});
+        }
+        else
+        {
+            m_squelchDelayLine.write(sideband[i]*agcVal);
+        }
 
         if (m_audioMute)
         {
@@ -182,7 +189,9 @@ void SSBDemodSink::processOneSample(Complex &ci)
         }
         else
         {
-            fftfilt::cmplx z = m_agcActive ? delayedSample * m_agc.getStepValue() : delayedSample;
+            fftfilt::cmplx z = (m_agcActive && m_agcClamping) ?
+                fftfilt::cmplx{m_lowpassI.filter(delayedSample.real()), m_lowpassQ.filter(delayedSample.imag())}
+                : delayedSample;
 
             if (m_audioBinaual)
             {
@@ -258,6 +267,11 @@ void SSBDemodSink::processOneSample(Complex &ci)
 	}
 }
 
+void SSBDemodSink::setDNR(bool dnr)
+{
+    SSBFilter->setDNR(dnr);
+}
+
 void SSBDemodSink::applyChannelSettings(int channelSampleRate, int channelFrequencyOffset, bool force)
 {
     qDebug() << "SSBDemodSink::applyChannelSettings:"
@@ -293,6 +307,9 @@ void SSBDemodSink::applyAudioSampleRate(int sampleRate)
 
     SSBFilter->create_filter(m_LowCutoff / (float) sampleRate, m_Bandwidth / (float) sampleRate, m_settings.m_filterBank[m_settings.m_filterIndex].m_fftWindow);
     DSBFilter->create_dsb_filter(m_Bandwidth / (float) sampleRate, m_settings.m_filterBank[m_settings.m_filterIndex].m_fftWindow);
+
+    m_lowpassI.create(101, sampleRate, m_Bandwidth * 1.2);
+    m_lowpassQ.create(101, sampleRate, m_Bandwidth * 1.2);
 
     int agcNbSamples = (sampleRate / 1000) * (1<<m_settings.m_agcTimeLog2);
     int agcThresholdGate = (sampleRate / 1000) * m_settings.m_agcThresholdGate; // ms
@@ -352,6 +369,12 @@ void SSBDemodSink::applySettings(const SSBDemodSettings& settings, bool force)
             << " m_agcTimeLog2: " << settings.m_agcTimeLog2
             << " agcPowerThreshold: " << settings.m_agcPowerThreshold
             << " agcThresholdGate: " << settings.m_agcThresholdGate
+            << " m_dnr: " << settings.m_dnr
+            << " m_dnrScheme: " << settings.m_dnrScheme
+            << " m_dnrAboveAvgFactor: " << settings.m_dnrAboveAvgFactor
+            << " m_dnrSigmaFactor: " << settings.m_dnrSigmaFactor
+            << " m_dnrNbPeaks: " << settings.m_dnrNbPeaks
+            << " m_dnrAlpha: " << settings.m_dnrAlpha
             << " m_audioDeviceName: " << settings.m_audioDeviceName
             << " m_streamIndex: " << settings.m_streamIndex
             << " m_useReverseAPI: " << settings.m_useReverseAPI
@@ -393,6 +416,8 @@ void SSBDemodSink::applySettings(const SSBDemodSettings& settings, bool force)
         m_interpolatorDistance = (Real) m_channelSampleRate / (Real) m_audioSampleRate;
         SSBFilter->create_filter(m_LowCutoff / (float) m_audioSampleRate, m_Bandwidth / (float) m_audioSampleRate, settings.m_filterBank[settings.m_filterIndex].m_fftWindow);
         DSBFilter->create_dsb_filter(m_Bandwidth / (float) m_audioSampleRate, settings.m_filterBank[settings.m_filterIndex].m_fftWindow);
+        m_lowpassI.create(101, m_audioSampleRate, m_Bandwidth * 1.2);
+        m_lowpassQ.create(101, m_audioSampleRate, m_Bandwidth * 1.2);
     }
 
     if ((m_settings.m_volume != settings.m_volume) || force)
@@ -433,7 +458,6 @@ void SSBDemodSink::applySettings(const SSBDemodSettings& settings, bool force)
 
         if (m_agcClamping != agcClamping)
         {
-            m_agc.setClamping(agcClamping);
             m_agcClamping = agcClamping;
         }
 
@@ -444,6 +468,30 @@ void SSBDemodSink::applySettings(const SSBDemodSettings& settings, bool force)
             << " agcClamping: " << agcClamping;
     }
 
+    if ((m_settings.m_dnr != settings.m_dnr) || force) {
+        setDNR(settings.m_dnr);
+    }
+
+    if ((m_settings.m_dnrScheme != settings.m_dnrScheme) || force) {
+        SSBFilter->setDNRScheme((FFTNoiseReduction::Scheme) settings.m_dnrScheme);
+    }
+
+    if ((m_settings.m_dnrAboveAvgFactor != settings.m_dnrAboveAvgFactor) || force) {
+        SSBFilter->setDNRAboveAvgFactor(settings.m_dnrAboveAvgFactor);
+    }
+
+    if ((m_settings.m_dnrSigmaFactor != settings.m_dnrSigmaFactor) || force) {
+        SSBFilter->setDNRSigmaFactor(settings.m_dnrSigmaFactor);
+    }
+
+    if ((m_settings.m_dnrNbPeaks != settings.m_dnrNbPeaks) || force) {
+        SSBFilter->setDNRNbPeaks(settings.m_dnrNbPeaks);
+    }
+
+    if ((m_settings.m_dnrAlpha != settings.m_dnrAlpha) || force) {
+        SSBFilter->setDNRAlpha(settings.m_dnrAlpha);
+    }
+
     m_spanLog2 = settings.m_filterBank[settings.m_filterIndex].m_spanLog2;
     m_audioBinaual = settings.m_audioBinaural;
     m_audioFlipChannels = settings.m_audioFlipChannels;
@@ -452,4 +500,3 @@ void SSBDemodSink::applySettings(const SSBDemodSettings& settings, bool force)
     m_agcActive = settings.m_agc;
     m_settings = settings;
 }
-

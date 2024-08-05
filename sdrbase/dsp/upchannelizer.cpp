@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 F4EXB                                                      //
-// written by Edouard Griffiths                                                  //
+// Copyright (C) 2016-2019, 2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2023 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -22,8 +22,6 @@
 #include <QDebug>
 #include <algorithm>
 
-#include "inthalfbandfilter.h"
-#include "dspcommands.h"
 #include "hbfilterchainconverter.h"
 #include "upchannelizer.h"
 

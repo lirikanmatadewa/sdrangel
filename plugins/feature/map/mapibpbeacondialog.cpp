@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2021 Jon Beniston, M7RCE <jon@beniston.com>                     //
+// Copyright (C) 2023 Daniele Forsi <iu5hkx@gmail.com>                           //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -29,9 +30,9 @@ MapIBPBeaconDialog::MapIBPBeaconDialog(MapGUI *gui, QWidget* parent) :
     ui(new Ui::MapIBPBeaconDialog)
 {
     ui->setupUi(this);
+    setAttribute(Qt::WA_QuitOnClose, false);
     connect(&m_timer, &QTimer::timeout, this, &MapIBPBeaconDialog::updateTime);
     m_timer.setInterval(1000);
-    m_timer.start();
     ui->beacons->setRowCount(IBPBeacon::m_frequencies.size());
     for (int row = 0; row < IBPBeacon::m_frequencies.size(); row++)
     {
@@ -43,7 +44,6 @@ MapIBPBeaconDialog::MapIBPBeaconDialog(MapGUI *gui, QWidget* parent) :
         ui->beacons->setItem(row, IBP_BEACON_COL_DISTANCE, new QTableWidgetItem(""));
     }
     resizeTable();
-    updateTable(QTime::currentTime());
 }
 
 MapIBPBeaconDialog::~MapIBPBeaconDialog()
@@ -70,7 +70,7 @@ void MapIBPBeaconDialog::updateTable(QTime time)
 {
     AzEl azEl = *m_gui->getAzEl();
 
-    // Repeat from begining every 3 minutes
+    // Repeat from beginning every 3 minutes
     int index = ((time.minute() * 60 + time.second()) % 180) / IBPBeacon::m_period;
 
     for (int row = 0; row < IBPBeacon::m_frequencies.size(); row++)
@@ -124,4 +124,18 @@ void MapIBPBeaconDialog::updateTime()
     if ((t.second() % IBPBeacon::m_period) == 0) {
         updateTable(t);
     }
+}
+
+void MapIBPBeaconDialog::showEvent(QShowEvent *event)
+{
+    (void) event;
+    updateTable(QTime::currentTime());
+    updateTime();
+    m_timer.start();
+}
+
+void MapIBPBeaconDialog::hideEvent(QHideEvent *event)
+{
+    (void) event;
+    m_timer.stop();
 }

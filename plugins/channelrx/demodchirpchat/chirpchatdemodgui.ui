@@ -585,6 +585,11 @@
           <string>TTY</string>
          </property>
         </item>
+        <item>
+         <property name="text">
+          <string>FT</string>
+         </property>
+        </item>
        </widget>
       </item>
       <item>
@@ -718,7 +723,7 @@
       <item>
        <widget class="QCheckBox" name="messageLengthAuto">
         <property name="toolTip">
-         <string>Set message length in symbols automatically to provided message length (LoRa only)</string>
+         <string>Set message length in symbols automatically to provided message length (LoRa and FT only)</string>
         </property>
         <property name="text">
          <string>Auto</string>
@@ -949,22 +954,22 @@
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="headerCRCStatus">
-        <property name="toolTip">
-         <string>Header CRC status</string>
-        </property>
-        <property name="text">
-         <string> HC </string>
-        </property>
-       </widget>
-      </item>
-      <item>
        <widget class="QLabel" name="headerHammingStatus">
         <property name="toolTip">
          <string>Header FEC parity status</string>
         </property>
         <property name="text">
          <string> HF </string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="headerCRCStatus">
+        <property name="toolTip">
+         <string>Header CRC status</string>
+        </property>
+        <property name="text">
+         <string> HC </string>
         </property>
        </widget>
       </item>

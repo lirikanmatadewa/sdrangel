@@ -1,5 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2017 Edouard Griffiths, F4EXB.                                  //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2019, 2022-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com> //
+// Copyright (C) 2021 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -17,7 +20,7 @@
 
 #include <QColor>
 
-#include "dsp/dspengine.h"
+#include "audio/audiodevicemanager.h"
 #include "util/simpleserializer.h"
 #include "settings/serializable.h"
 #include "ssbdemodsettings.h"
@@ -52,6 +55,12 @@ void SSBDemodSettings::resetToDefaults()
     m_agcTimeLog2 = 7;
     m_volume = 1.0;
     m_inputFrequencyOffset = 0;
+    m_dnr = false;
+    m_dnrScheme = 0;
+    m_dnrAboveAvgFactor = 40.0f;
+    m_dnrSigmaFactor = 4.0f;
+    m_dnrNbPeaks = 20;
+    m_dnrAlpha = 1.0;
     m_rgbColor = QColor(0, 255, 0).rgb();
     m_title = "SSB Demodulator";
     m_audioDeviceName = AudioDeviceManager::m_defaultDeviceName;
@@ -102,6 +111,12 @@ QByteArray SSBDemodSettings::serialize() const
     s.writeBlob(26, m_geometryBytes);
     s.writeBool(27, m_hidden);
     s.writeU32(29, m_filterIndex);
+    s.writeBool(30, m_dnr);
+    s.writeS32(31, m_dnrScheme);
+    s.writeFloat(32, m_dnrAboveAvgFactor);
+    s.writeFloat(33, m_dnrSigmaFactor);
+    s.writeS32(34, m_dnrNbPeaks);
+    s.writeFloat(35, m_dnrAlpha);
 
     for (unsigned int i = 0; i <  10; i++)
     {
@@ -109,6 +124,12 @@ QByteArray SSBDemodSettings::serialize() const
         s.writeS32(101 + 10*i, m_filterBank[i].m_rfBandwidth / 100.0);
         s.writeS32(102 + 10*i, m_filterBank[i].m_lowCutoff / 100.0);
         s.writeS32(103 + 10*i, (int) m_filterBank[i].m_fftWindow);
+        s.writeBool(104 + 10*i, m_filterBank[i].m_dnr);
+        s.writeS32(105 + 10*i, m_filterBank[i].m_dnrScheme);
+        s.writeFloat(106 + 10*i, m_filterBank[i].m_dnrAboveAvgFactor);
+        s.writeFloat(107 + 10*i, m_filterBank[i].m_dnrSigmaFactor);
+        s.writeS32(108 + 10*i, m_filterBank[i].m_dnrNbPeaks);
+        s.writeFloat(109 + 10*i, m_filterBank[i].m_dnrAlpha);
     }
 
     return s.final();
@@ -179,6 +200,12 @@ bool SSBDemodSettings::deserialize(const QByteArray& data)
         d.readBool(27, &m_hidden, false);
         d.readU32(29, &utmp, 0);
         m_filterIndex = utmp < 10 ? utmp : 0;
+        d.readBool(30, &m_dnr, false);
+        d.readS32(31, &m_dnrScheme, 0);
+        d.readFloat(32, &m_dnrAboveAvgFactor, 40.0f);
+        d.readFloat(33, &m_dnrSigmaFactor, 4.0f);
+        d.readS32(34, &m_dnrNbPeaks, 20);
+        d.readFloat(35, &m_dnrAlpha, 1.0);
 
         for (unsigned int i = 0; (i < 10); i++)
         {
@@ -190,6 +217,12 @@ bool SSBDemodSettings::deserialize(const QByteArray& data)
             d.readS32(103 + 10*i, &tmp, (int) FFTWindow::Blackman);
             m_filterBank[i].m_fftWindow =
                 (FFTWindow::Function) (tmp < 0 ? 0 : tmp > (int) FFTWindow::BlackmanHarris7 ? (int) FFTWindow::BlackmanHarris7 : tmp);
+            d.readBool(104 + 10*i, &m_filterBank[i].m_dnr, false);
+            d.readS32(105 + 10*i, &m_filterBank[i].m_dnrScheme, 0);
+            d.readFloat(106 + 10*i, &m_filterBank[i].m_dnrAboveAvgFactor, 20.0f);
+            d.readFloat(107 + 10*i, &m_filterBank[i].m_dnrSigmaFactor, 4.0f);
+            d.readS32(108 + 10*i, &m_filterBank[i].m_dnrNbPeaks, 10);
+            d.readFloat(109 + 10*i, &m_filterBank[i].m_dnrAlpha, 0.95f);
         }
 
         return true;

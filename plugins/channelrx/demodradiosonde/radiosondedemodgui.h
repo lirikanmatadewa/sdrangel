@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2020-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>         //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -96,7 +96,7 @@ private:
     void blockApplySettings(bool block);
     void applySettings(bool force = false);
     void displaySettings();
-    void frameReceived(const QByteArray& frame, const QDateTime& dateTime, int errorsCorrected, int threshold);
+    void frameReceived(const QByteArray& frame, const QDateTime& dateTime, int errorsCorrected, int threshold, bool loadCSV);
     bool handleMessage(const Message& message);
     void makeUIConnections();
     void updateAbsoluteCenterFrequency();
@@ -133,7 +133,9 @@ private:
         FRAME_COL_GPS_TIME,
         FRAME_COL_GPS_SATS,
         FRAME_COL_ECC,
-        FRAME_COL_CORR
+        FRAME_COL_CORR,
+        FRAME_COL_RANGE,
+        FRAME_COL_FREQUENCY
     };
 
 private slots:
@@ -152,6 +154,7 @@ private slots:
     void on_logEnable_clicked(bool checked=false);
     void on_logFilename_clicked();
     void on_logOpen_clicked();
+    void on_useFileTime_toggled(bool checked=false);
     void filterRow(int row);
     void filter();
     void frames_sectionMoved(int logicalIndex, int oldVisualIndex, int newVisualIndex);

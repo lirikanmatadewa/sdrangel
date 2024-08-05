@@ -20,11 +20,7 @@
 
 #include <QDebug>
 
-#include "util/stepfunctions.h"
 #include "util/db.h"
-#include "dsp/dspengine.h"
-#include "dsp/dspcommands.h"
-#include "device/deviceapi.h"
 
 #include "adsbdemodreport.h"
 #include "adsbdemodsink.h"
@@ -131,7 +127,7 @@ void ADSBDemodSinkWorker::run()
         // (E.g: it's quite possible to receive multiple frames simultaneously, so we don't
         // want a maximum threshold for the zeros, as a weaker signal may transmit 1s in
         // a stronger signals 0 chip position. Similarly a strong signal in an adjacent
-        // channel may casue AGC to reduce gain, reducing the ampltiude of an otherwise
+        // channel may cause AGC to reduce gain, reducing the ampltiude of an otherwise
         // strong signal, as well as the noise floor)
         // The threshold accounts for the different number of zeros and ones in the preamble
         // If the sum of ones is exactly 0, it's probably no signal
@@ -257,7 +253,7 @@ void ADSBDemodSinkWorker::run()
                             crc ^= icao;
                         }
                     }
-                    // For DF11, the last 7 bits may have an address/interogration indentifier (II)
+                    // For DF11, the last 7 bits may have an address/interogration identifier (II)
                     // XORed in, so we ignore those bits
                     if ((parity == crc) || ((df == 11) && ((parity & 0xffff80) == (crc & 0xffff80))))
                     {
@@ -266,7 +262,7 @@ void ADSBDemodSinkWorker::run()
                         if (m_sink->getMessageQueueToGUI() && ((df == 4) || (df == 5) || (df == 20) || (df == 21)))
                         {
                             ADSBDemodReport::MsgReportADSB *msg = ADSBDemodReport::MsgReportADSB::create(
-                                QByteArray((char*)data, sizeof(data)),
+                                QByteArray((char*)data, bytes),
                                 preambleCorrelation * m_correlationScale,
                                 preambleCorrelationOnes / samplesPerChip,
                                 rxDateTime(firstIdx, readBuffer),
@@ -277,7 +273,7 @@ void ADSBDemodSinkWorker::run()
                         if (m_sink->getMessageQueueToWorker())
                         {
                             ADSBDemodReport::MsgReportADSB *msg = ADSBDemodReport::MsgReportADSB::create(
-                                QByteArray((char*)data, sizeof(data)),
+                                QByteArray((char*)data, bytes),
                                 preambleCorrelation * m_correlationScale,
                                 preambleCorrelationOnes / samplesPerChip,
                                 rxDateTime(firstIdx, readBuffer),

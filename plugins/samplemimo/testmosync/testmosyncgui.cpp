@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2015-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2018 beta-tester <alpha-beta-release@gmx.net>                   //
+// Copyright (C) 2020, 2022 Jon Beniston, M7RCE <jon@beniston.com>               //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -21,17 +23,14 @@
 #include <QString>
 #include <QMessageBox>
 
-#include "plugin/pluginapi.h"
 #include "gui/colormapper.h"
 #include "gui/glspectrum.h"
 #include "gui/basicdevicesettingsdialog.h"
 #include "gui/dialogpositioner.h"
-#include "dsp/dspengine.h"
 #include "dsp/dspcommands.h"
 #include "dsp/spectrumvis.h"
 #include "device/deviceapi.h"
 #include "device/deviceuiset.h"
-#include "maincore.h"
 
 #include "testmosync.h"
 #include "ui_testmosyncgui.h"
@@ -88,6 +87,7 @@ TestMOSyncGui::TestMOSyncGui(DeviceUISet *deviceUISet, QWidget* parent) :
     m_deviceUISet->setSpectrumScalingFactor(SDR_TX_SCALEF);
 
     connect(this, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(openDeviceSettingsDialog(const QPoint &)));
+    m_resizer.enableChildMouseTracking();
 }
 
 TestMOSyncGui::~TestMOSyncGui()

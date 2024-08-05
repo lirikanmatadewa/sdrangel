@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2023 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -26,7 +26,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "util/csv.h"
 #include "util/httpdownloadmanager.h"
 #include "export.h"
 

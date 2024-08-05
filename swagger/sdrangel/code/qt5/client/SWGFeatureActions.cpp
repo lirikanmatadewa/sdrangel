@@ -44,6 +44,8 @@ SWGFeatureActions::SWGFeatureActions() {
     m_lime_rfe_actions_isSet = false;
     map_actions = nullptr;
     m_map_actions_isSet = false;
+    morse_decoder_actions = nullptr;
+    m_morse_decoder_actions_isSet = false;
     per_tester_actions = nullptr;
     m_per_tester_actions_isSet = false;
     rig_ctl_server_actions = nullptr;
@@ -52,10 +54,14 @@ SWGFeatureActions::SWGFeatureActions() {
     m_satellite_tracker_actions_isSet = false;
     simple_ptt_actions = nullptr;
     m_simple_ptt_actions_isSet = false;
+    sky_map_actions = nullptr;
+    m_sky_map_actions_isSet = false;
     star_tracker_actions = nullptr;
     m_star_tracker_actions_isSet = false;
     vor_localizer_actions = nullptr;
     m_vor_localizer_actions_isSet = false;
+    demod_analyzer_actions = nullptr;
+    m_demod_analyzer_actions_isSet = false;
 }
 
 SWGFeatureActions::~SWGFeatureActions() {
@@ -80,6 +86,8 @@ SWGFeatureActions::init() {
     m_lime_rfe_actions_isSet = false;
     map_actions = new SWGMapActions();
     m_map_actions_isSet = false;
+    morse_decoder_actions = new SWGMorseDecoderActions();
+    m_morse_decoder_actions_isSet = false;
     per_tester_actions = new SWGPERTesterActions();
     m_per_tester_actions_isSet = false;
     rig_ctl_server_actions = new SWGRigCtlServerActions();
@@ -88,10 +96,14 @@ SWGFeatureActions::init() {
     m_satellite_tracker_actions_isSet = false;
     simple_ptt_actions = new SWGSimplePTTActions();
     m_simple_ptt_actions_isSet = false;
+    sky_map_actions = new SWGSkyMapActions();
+    m_sky_map_actions_isSet = false;
     star_tracker_actions = new SWGStarTrackerActions();
     m_star_tracker_actions_isSet = false;
     vor_localizer_actions = new SWGVORLocalizerActions();
     m_vor_localizer_actions_isSet = false;
+    demod_analyzer_actions = new SWGDemodAnalyzerActions();
+    m_demod_analyzer_actions_isSet = false;
 }
 
 void
@@ -116,6 +128,9 @@ SWGFeatureActions::cleanup() {
     if(map_actions != nullptr) { 
         delete map_actions;
     }
+    if(morse_decoder_actions != nullptr) { 
+        delete morse_decoder_actions;
+    }
     if(per_tester_actions != nullptr) { 
         delete per_tester_actions;
     }
@@ -128,11 +143,17 @@ SWGFeatureActions::cleanup() {
     if(simple_ptt_actions != nullptr) { 
         delete simple_ptt_actions;
     }
+    if(sky_map_actions != nullptr) { 
+        delete sky_map_actions;
+    }
     if(star_tracker_actions != nullptr) { 
         delete star_tracker_actions;
     }
     if(vor_localizer_actions != nullptr) { 
         delete vor_localizer_actions;
+    }
+    if(demod_analyzer_actions != nullptr) { 
+        delete demod_analyzer_actions;
     }
 }
 
@@ -163,6 +184,8 @@ SWGFeatureActions::fromJsonObject(QJsonObject &pJson) {
     
     ::SWGSDRangel::setValue(&map_actions, pJson["MapActions"], "SWGMapActions", "SWGMapActions");
     
+    ::SWGSDRangel::setValue(&morse_decoder_actions, pJson["MorseDecoderActions"], "SWGMorseDecoderActions", "SWGMorseDecoderActions");
+    
     ::SWGSDRangel::setValue(&per_tester_actions, pJson["PERTesterActions"], "SWGPERTesterActions", "SWGPERTesterActions");
     
     ::SWGSDRangel::setValue(&rig_ctl_server_actions, pJson["RigCtlServerActions"], "SWGRigCtlServerActions", "SWGRigCtlServerActions");
@@ -171,9 +194,13 @@ SWGFeatureActions::fromJsonObject(QJsonObject &pJson) {
     
     ::SWGSDRangel::setValue(&simple_ptt_actions, pJson["SimplePTTActions"], "SWGSimplePTTActions", "SWGSimplePTTActions");
     
+    ::SWGSDRangel::setValue(&sky_map_actions, pJson["SkyMapActions"], "SWGSkyMapActions", "SWGSkyMapActions");
+    
     ::SWGSDRangel::setValue(&star_tracker_actions, pJson["StarTrackerActions"], "SWGStarTrackerActions", "SWGStarTrackerActions");
     
     ::SWGSDRangel::setValue(&vor_localizer_actions, pJson["VORLocalizerActions"], "SWGVORLocalizerActions", "SWGVORLocalizerActions");
+    
+    ::SWGSDRangel::setValue(&demod_analyzer_actions, pJson["DemodAnalyzerActions"], "SWGDemodAnalyzerActions", "SWGDemodAnalyzerActions");
     
 }
 
@@ -215,6 +242,9 @@ SWGFeatureActions::asJsonObject() {
     if((map_actions != nullptr) && (map_actions->isSet())){
         toJsonValue(QString("MapActions"), map_actions, obj, QString("SWGMapActions"));
     }
+    if((morse_decoder_actions != nullptr) && (morse_decoder_actions->isSet())){
+        toJsonValue(QString("MorseDecoderActions"), morse_decoder_actions, obj, QString("SWGMorseDecoderActions"));
+    }
     if((per_tester_actions != nullptr) && (per_tester_actions->isSet())){
         toJsonValue(QString("PERTesterActions"), per_tester_actions, obj, QString("SWGPERTesterActions"));
     }
@@ -227,11 +257,17 @@ SWGFeatureActions::asJsonObject() {
     if((simple_ptt_actions != nullptr) && (simple_ptt_actions->isSet())){
         toJsonValue(QString("SimplePTTActions"), simple_ptt_actions, obj, QString("SWGSimplePTTActions"));
     }
+    if((sky_map_actions != nullptr) && (sky_map_actions->isSet())){
+        toJsonValue(QString("SkyMapActions"), sky_map_actions, obj, QString("SWGSkyMapActions"));
+    }
     if((star_tracker_actions != nullptr) && (star_tracker_actions->isSet())){
         toJsonValue(QString("StarTrackerActions"), star_tracker_actions, obj, QString("SWGStarTrackerActions"));
     }
     if((vor_localizer_actions != nullptr) && (vor_localizer_actions->isSet())){
         toJsonValue(QString("VORLocalizerActions"), vor_localizer_actions, obj, QString("SWGVORLocalizerActions"));
+    }
+    if((demod_analyzer_actions != nullptr) && (demod_analyzer_actions->isSet())){
+        toJsonValue(QString("DemodAnalyzerActions"), demod_analyzer_actions, obj, QString("SWGDemodAnalyzerActions"));
     }
 
     return obj;
@@ -317,6 +353,16 @@ SWGFeatureActions::setMapActions(SWGMapActions* map_actions) {
     this->m_map_actions_isSet = true;
 }
 
+SWGMorseDecoderActions*
+SWGFeatureActions::getMorseDecoderActions() {
+    return morse_decoder_actions;
+}
+void
+SWGFeatureActions::setMorseDecoderActions(SWGMorseDecoderActions* morse_decoder_actions) {
+    this->morse_decoder_actions = morse_decoder_actions;
+    this->m_morse_decoder_actions_isSet = true;
+}
+
 SWGPERTesterActions*
 SWGFeatureActions::getPerTesterActions() {
     return per_tester_actions;
@@ -357,6 +403,16 @@ SWGFeatureActions::setSimplePttActions(SWGSimplePTTActions* simple_ptt_actions) 
     this->m_simple_ptt_actions_isSet = true;
 }
 
+SWGSkyMapActions*
+SWGFeatureActions::getSkyMapActions() {
+    return sky_map_actions;
+}
+void
+SWGFeatureActions::setSkyMapActions(SWGSkyMapActions* sky_map_actions) {
+    this->sky_map_actions = sky_map_actions;
+    this->m_sky_map_actions_isSet = true;
+}
+
 SWGStarTrackerActions*
 SWGFeatureActions::getStarTrackerActions() {
     return star_tracker_actions;
@@ -375,6 +431,16 @@ void
 SWGFeatureActions::setVorLocalizerActions(SWGVORLocalizerActions* vor_localizer_actions) {
     this->vor_localizer_actions = vor_localizer_actions;
     this->m_vor_localizer_actions_isSet = true;
+}
+
+SWGDemodAnalyzerActions*
+SWGFeatureActions::getDemodAnalyzerActions() {
+    return demod_analyzer_actions;
+}
+void
+SWGFeatureActions::setDemodAnalyzerActions(SWGDemodAnalyzerActions* demod_analyzer_actions) {
+    this->demod_analyzer_actions = demod_analyzer_actions;
+    this->m_demod_analyzer_actions_isSet = true;
 }
 
 
@@ -406,6 +472,9 @@ SWGFeatureActions::isSet(){
         if(map_actions && map_actions->isSet()){
             isObjectUpdated = true; break;
         }
+        if(morse_decoder_actions && morse_decoder_actions->isSet()){
+            isObjectUpdated = true; break;
+        }
         if(per_tester_actions && per_tester_actions->isSet()){
             isObjectUpdated = true; break;
         }
@@ -418,10 +487,16 @@ SWGFeatureActions::isSet(){
         if(simple_ptt_actions && simple_ptt_actions->isSet()){
             isObjectUpdated = true; break;
         }
+        if(sky_map_actions && sky_map_actions->isSet()){
+            isObjectUpdated = true; break;
+        }
         if(star_tracker_actions && star_tracker_actions->isSet()){
             isObjectUpdated = true; break;
         }
         if(vor_localizer_actions && vor_localizer_actions->isSet()){
+            isObjectUpdated = true; break;
+        }
+        if(demod_analyzer_actions && demod_analyzer_actions->isSet()){
             isObjectUpdated = true; break;
         }
     }while(false);

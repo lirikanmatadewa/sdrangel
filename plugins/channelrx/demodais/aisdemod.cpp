@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2015-2018 Edouard Griffiths, F4EXB.                             //
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2021, 2023 Jon Beniston, M7RCE <jon@beniston.com>               //
+// Copyright (C) 2021-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -30,14 +30,10 @@
 
 #include "SWGChannelSettings.h"
 #include "SWGWorkspaceInfo.h"
-#include "SWGChannelReport.h"
 
-#include "dsp/dspengine.h"
 #include "dsp/dspcommands.h"
 #include "device/deviceapi.h"
-#include "feature/feature.h"
 #include "util/ais.h"
-#include "util/db.h"
 #include "maincore.h"
 
 MESSAGE_CLASS_DEFINITION(AISDemod::MsgConfigureAISDemod, Message)
@@ -215,18 +211,20 @@ bool AISDemod::handleMessage(const Message& cmd)
 
             // Decode the message
             ais = AISMessage::decode(report.getMessage());
+            if (ais)
+            {
+                m_logStream << report.getDateTime().date().toString() << ","
+                    << report.getDateTime().time().toString() << ","
+                    << report.getMessage().toHex() << ","
+                    << QString("%1").arg(ais->m_mmsi, 9, 10, QChar('0')) << ","
+                    << ais->getType() << ","
+                    << "\"" << ais->toString() << "\"" << ","
+                    << "\"" << ais->toNMEA() << "\"" << ","
+                    << report.getSlot() << ","
+                    << report.getSlots() << "\n";
 
-            m_logStream << report.getDateTime().date().toString() << ","
-                << report.getDateTime().time().toString() << ","
-                << report.getMessage().toHex() << ","
-                << QString("%1").arg(ais->m_mmsi, 9, 10, QChar('0')) << ","
-                << ais->getType() << ","
-                << "\"" << ais->toString() << "\"" << ","
-                << "\"" << ais->toNMEA() << "\"" << ","
-                << report.getSlot() << ","
-                << report.getSlots() << "\n";
-
-            delete ais;
+                delete ais;
+            }
         }
 
         return true;
@@ -310,6 +308,9 @@ void AISDemod::applySettings(const AISDemodSettings& settings, bool force)
     if ((settings.m_logEnabled != m_settings.m_logEnabled) || force) {
         reverseAPIKeys.append("logEnabled");
     }
+    if ((settings.m_useFileTime != m_settings.m_useFileTime) || force) {
+        reverseAPIKeys.append("useFileTime");
+    }
     if (m_settings.m_streamIndex != settings.m_streamIndex)
     {
         if (m_deviceAPI->getSampleMIMO()) // change of stream is possible for MIMO devices only
@@ -318,6 +319,8 @@ void AISDemod::applySettings(const AISDemodSettings& settings, bool force)
             m_deviceAPI->removeChannelSink(this, m_settings.m_streamIndex);
             m_deviceAPI->addChannelSink(this, settings.m_streamIndex);
             m_deviceAPI->addChannelSinkAPI(this);
+            m_settings.m_streamIndex = settings.m_streamIndex; // make sure ChannelAPI::getStreamIndex() is consistent
+            emit streamIndexChanged(settings.m_streamIndex);
         }
 
         reverseAPIKeys.append("streamIndex");
@@ -493,6 +496,9 @@ void AISDemod::webapiUpdateChannelSettings(
     if (channelSettingsKeys.contains("logEnabled")) {
         settings.m_logEnabled = response.getAisDemodSettings()->getLogEnabled();
     }
+    if (channelSettingsKeys.contains("useFileTime")) {
+        settings.m_useFileTime = response.getAisDemodSettings()->getUseFileTime();
+    }
     if (channelSettingsKeys.contains("rgbColor")) {
         settings.m_rgbColor = response.getAisDemodSettings()->getRgbColor();
     }
@@ -541,6 +547,7 @@ void AISDemod::webapiFormatChannelSettings(SWGSDRangel::SWGChannelSettings& resp
     response.getAisDemodSettings()->setUdpFormat((int)settings.m_udpFormat);
     response.getAisDemodSettings()->setLogFilename(new QString(settings.m_logFilename));
     response.getAisDemodSettings()->setLogEnabled(settings.m_logEnabled);
+    response.getAisDemodSettings()->setUseFileTime(settings.m_useFileTime);
 
     response.getAisDemodSettings()->setRgbColor(settings.m_rgbColor);
     if (response.getAisDemodSettings()->getTitle()) {
@@ -678,6 +685,9 @@ void AISDemod::webapiFormatChannelSettings(
     }
     if (channelSettingsKeys.contains("logEnabled") || force) {
         swgAISDemodSettings->setLogEnabled(settings.m_logEnabled);
+    }
+    if (channelSettingsKeys.contains("useFileTime") || force) {
+        swgAISDemodSettings->setUseFileTime(settings.m_useFileTime);
     }
     if (channelSettingsKeys.contains("rgbColor") || force) {
         swgAISDemodSettings->setRgbColor(settings.m_rgbColor);

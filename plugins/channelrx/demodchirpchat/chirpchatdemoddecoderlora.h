@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2020 Edouard Griffiths, F4EXB <f4exb06@gmail.com>               //
 //                                                                               //
 // Inspired by: https://github.com/myriadrf/LoRa-SDR                             //
 //                                                                               //
@@ -26,14 +26,6 @@
 class ChirpChatDemodDecoderLoRa
 {
 public:
-    enum ParityStatus
-    {
-        ParityUndefined,
-        ParityError,
-        ParityCorrected,
-        ParityOK
-    };
-
     static void decodeBytes(
         QByteArray& bytes,
         const std::vector<unsigned short>& inSymbols,

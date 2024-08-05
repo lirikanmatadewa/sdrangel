@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2021-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2021-2022 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -20,11 +20,10 @@
 
 #include <complex.h>
 
-#include "dsp/dspengine.h"
 #include "dsp/datafifo.h"
 #include "dsp/scopevis.h"
-#include "util/db.h"
-#include "util/stepfunctions.h"
+#include "device/deviceapi.h"
+#include "channel/channelwebapiutils.h"
 #include "util/reedsolomon.h"
 #include "maincore.h"
 
@@ -275,7 +274,7 @@ void RadiosondeDemodSink::processOneSample(Complex &ci)
                     }
                     if (sampleIdx >= 16 * 8 * m_samplesPerSymbol)
                     {
-                        // Too many bits without receving header
+                        // Too many bits without receiving header
                         break;
                     }
                 }
@@ -360,7 +359,7 @@ void RadiosondeDemodSink::processOneSample(Complex &ci)
     }
     sampleToScope(scopeSample);
 
-    // Send demod signal to Demod Analzyer feature
+    // Send demod signal to Demod Analyzer feature
     m_demodBuffer[m_demodBufferFill++] = fmDemod * std::numeric_limits<int16_t>::max();
 
     if (m_demodBufferFill >= m_demodBuffer.size())
@@ -415,8 +414,23 @@ bool RadiosondeDemodSink::processFrame(int length, float corr, int sampleIdx)
         {
             if (getMessageQueueToChannel())
             {
+                QDateTime dateTime = QDateTime::currentDateTime();
+                if (m_settings.m_useFileTime)
+                {
+                    QString hardwareId = m_radiosondeDemod->getDeviceAPI()->getHardwareId();
+
+                    if ((hardwareId == "FileInput") || (hardwareId == "SigMFFileInput"))
+                    {
+                        QString dateTimeStr;
+                        int deviceIdx = m_radiosondeDemod->getDeviceSetIndex();
+
+                        if (ChannelWebAPIUtils::getDeviceReportValue(deviceIdx, "absoluteTime", dateTimeStr)) {
+                            dateTime = QDateTime::fromString(dateTimeStr, Qt::ISODateWithMs);
+                        }
+                    }
+                }
                 QByteArray rxPacket((char *)m_bytes, length);
-                RadiosondeDemod::MsgMessage *msg = RadiosondeDemod::MsgMessage::create(rxPacket, errorsCorrected, corr);
+                RadiosondeDemod::MsgMessage *msg = RadiosondeDemod::MsgMessage::create(rxPacket, dateTime, errorsCorrected, corr);
                 getMessageQueueToChannel()->push(msg);
             }
 
@@ -536,7 +550,7 @@ void RadiosondeDemodSink::applySettings(const RadiosondeDemodSettings& settings,
         // What value to use for BT? RFIC is Si4032 - its datasheet only appears to support 0.5
         m_pulseShape.create(0.5, 3, m_samplesPerSymbol);
 
-        // Recieve buffer, long enough for one max length message
+        // Receive buffer, long enough for one max length message
         delete[] m_rxBuf;
         m_rxBufLength = RADIOSONDEDEMOD_MAX_BYTES*8*m_samplesPerSymbol;
         m_rxBuf = new Real[m_rxBufLength];

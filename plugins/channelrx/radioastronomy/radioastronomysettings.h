@@ -23,8 +23,6 @@
 #include <QString>
 #include <QDateTime>
 
-#include "dsp/dsptypes.h"
-
 class Serializable;
 
 // Number of columns in the tables
@@ -35,20 +33,6 @@ class Serializable;
 
 struct RadioAstronomySettings
 {
-    struct AvailableFeature
-    {
-        int m_featureSetIndex;
-        int m_featureIndex;
-        QString m_type;
-
-        AvailableFeature() = default;
-        AvailableFeature(const AvailableFeature&) = default;
-        AvailableFeature& operator=(const AvailableFeature&) = default;
-        bool operator==(const AvailableFeature& a) const {
-            return (m_featureSetIndex == a.m_featureSetIndex) && (m_featureIndex == a.m_featureIndex) && (m_type == a.m_type);
-        }
-    };
-
     int m_inputFrequencyOffset;
     int m_sampleRate;
     int m_rfBandwidth;
@@ -244,9 +228,6 @@ struct RadioAstronomySettings
     void setRollupState(Serializable *rollupState) { m_rollupState = rollupState; }
     QByteArray serialize() const;
     bool deserialize(const QByteArray& data);
-
-    static const QStringList m_pipeTypes;
-    static const QStringList m_pipeURIs;
 };
 
 #endif /* INCLUDE_RADIOASTRONOMYSETTINGS_H */

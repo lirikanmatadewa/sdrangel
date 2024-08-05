@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -82,6 +82,36 @@ bool FeatureWebAPIUtils::mapSetDateTime(const QDateTime& dateTime, int featureSe
     else
     {
         qWarning("FeatureWebAPIUtils::mapSetDateTime: no Map feature");
+        return false;
+    }
+}
+
+// Find the specified target on the sky map
+bool FeatureWebAPIUtils::skyMapFind(const QString& target, int featureSetIndex, int featureIndex)
+{
+    Feature *feature = FeatureWebAPIUtils::getFeature(featureSetIndex, featureIndex, "sdrangel.feature.skymap");
+    if (feature != nullptr)
+    {
+        QString errorMessage;
+        QStringList featureActionKeys = {"find"};
+        SWGSDRangel::SWGFeatureActions query;
+        SWGSDRangel::SWGSkyMapActions *skyMapActions = new SWGSDRangel::SWGSkyMapActions();
+
+        skyMapActions->setFind(new QString(target));
+        query.setSkyMapActions(skyMapActions);
+
+        int httpRC = feature->webapiActionsPost(featureActionKeys, query, errorMessage);
+        if (httpRC/100 != 2)
+        {
+            qWarning() << "FeatureWebAPIUtils::skyMapFind: error " << httpRC << ":" << errorMessage;
+            return false;
+        }
+
+        return true;
+    }
+    else
+    {
+        qWarning("FeatureWebAPIUtils::skyMapFind: no Sky Map feature");
         return false;
     }
 }
@@ -179,4 +209,57 @@ bool FeatureWebAPIUtils::satelliteLOS(const QString name)
     (void) name;
     // Not currently required by any features
     return true;
+}
+
+// Open a Sky Map feature and find the specified target
+bool FeatureWebAPIUtils::openSkyMapAndFind(const QString& target)
+{
+    return SkyMapOpener::open(target);
+}
+
+bool SkyMapOpener::open(const QString& target)
+{
+    // Create a SkyMap feature
+    MainCore *mainCore = MainCore::instance();
+    PluginAPI::FeatureRegistrations *featureRegistrations = mainCore->getPluginManager()->getFeatureRegistrations();
+    int nbRegistrations = featureRegistrations->size();
+    int index = 0;
+
+    for (; index < nbRegistrations; index++)
+    {
+        if (featureRegistrations->at(index).m_featureId == "SkyMap") {
+            break;
+        }
+    }
+
+    if (index < nbRegistrations)
+    {
+        new SkyMapOpener(target);
+
+        MainCore::MsgAddFeature *msg = MainCore::MsgAddFeature::create(0, index);
+        mainCore->getMainMessageQueue()->push(msg);
+
+        return true;
+    }
+    else
+    {
+        qWarning() << "Sky Map feature not available";
+        return false;
+    }
+}
+
+SkyMapOpener::SkyMapOpener(const QString& target) :
+    m_target(target)
+{
+    connect(MainCore::instance(), &MainCore::featureAdded, this, &SkyMapOpener::onSkyMapAdded);
+}
+
+void SkyMapOpener::onSkyMapAdded(int featureSetIndex, Feature *feature)
+{
+    if (feature->getURI() == "sdrangel.feature.skymap")
+    {
+        disconnect(MainCore::instance(), &MainCore::featureAdded, this, &SkyMapOpener::onSkyMapAdded);
+        FeatureWebAPIUtils::skyMapFind(m_target, featureSetIndex, feature->getIndexInFeatureSet());
+        deleteLater();
+    }
 }

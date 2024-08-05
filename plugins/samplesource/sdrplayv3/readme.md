@@ -6,7 +6,7 @@ This plugin supports input from SDRplay RSP devices using V3 of SDRplay's API, i
 
 <h2>Driver Prerequisites</h2>
 
-This plugin requires the SDRplay API V3.07 to have been installed and for the service to be running. It can be downloaded for Windows, Linux and Mac from: https://www.sdrplay.com/softwarehome/
+This plugin requires the SDRplay API V3.14 to have been installed and for the service to be running. It can be downloaded for Windows, Linux and Mac from: https://www.sdrplay.com/softwarehome/
 
 <h2>Interface</h2>
 
@@ -123,7 +123,7 @@ This selects the IF frequency between these values:
 
 <h3>17: Sample rate</h3>
 
-Sets the ADC IQ sample rats from 2M to 10.66M Hz.
+Sets the ADC IQ sample rates from 2M to 10.66M Hz.
 
 <h3>18: Decimation</h3>
 

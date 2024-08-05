@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2018-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -19,11 +20,9 @@
 
 #include "device/deviceuiset.h"
 #include "gui/basicchannelsettingsdialog.h"
-#include "gui/devicestreamselectiondialog.h"
 #include "gui/dialogpositioner.h"
 #include "dsp/hbfilterchainconverter.h"
 #include "dsp/dspcommands.h"
-#include "mainwindow.h"
 
 #include "localsourcegui.h"
 #include "localsource.h"
@@ -131,6 +130,7 @@ LocalSourceGUI::LocalSourceGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, B
     displaySettings();
     makeUIConnections();
     applySettings(true);
+    m_resizer.enableChildMouseTracking();
 }
 
 LocalSourceGUI::~LocalSourceGUI()

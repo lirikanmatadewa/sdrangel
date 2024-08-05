@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2015 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2020 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2020, 2022-2023 Jon Beniston, M7RCE <jon@beniston.com>          //
+// Copyright (C) 2020, 2022-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -20,12 +20,10 @@
 #include <QFileDialog>
 
 #include "ui_audioinputgui.h"
-#include "gui/colormapper.h"
 #include "gui/glspectrum.h"
 #include "gui/basicdevicesettingsdialog.h"
 #include "gui/dialpopup.h"
 #include "gui/dialogpositioner.h"
-#include "dsp/dspengine.h"
 #include "dsp/dspcommands.h"
 #include "audioinputgui.h"
 
@@ -60,6 +58,7 @@ AudioInputGui::AudioInputGui(DeviceUISet *deviceUISet, QWidget* parent) :
     connect(&m_inputMessageQueue, SIGNAL(messageEnqueued()), this, SLOT(handleInputMessages()), Qt::QueuedConnection);
     m_sampleSource->setMessageQueueToGUI(&m_inputMessageQueue);
     DialPopup::addPopupsToChildDials(this);
+    m_resizer.enableChildMouseTracking();
 }
 
 AudioInputGui::~AudioInputGui()
@@ -183,8 +182,7 @@ void AudioInputGui::updateSampleRateAndFrequency()
 void AudioInputGui::refreshDeviceList()
 {
     ui->device->blockSignals(true);
-    AudioDeviceManager *audioDeviceManager = DSPEngine::instance()->getAudioDeviceManager();
-    const QList<AudioDeviceInfo>& audioList = audioDeviceManager->getInputDevices();
+    const QList<AudioDeviceInfo>& audioList = AudioDeviceInfo::availableInputDevices();
 
     ui->device->clear();
     for (const auto &itAudio : audioList)

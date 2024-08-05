@@ -1,5 +1,10 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2017-2020 Edouard Griffiths, F4EXB.                             //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2019 Davide Gerhard <rainbow@irh.it>                            //
+// Copyright (C) 2022 Jon Beniston, M7RCE <jon@beniston.com>                     //
+// Copyright (C) 2023 Daniele Forsi <iu5hkx@gmail.com>                           //
 //                                                                               //
 // Swagger server adapter interface                                              //
 //                                                                               //
@@ -42,7 +47,6 @@
 #include "plugin/pluginmanager.h"
 #include "channel/channelapi.h"
 #include "webapi/webapiadapterbase.h"
-#include "util/serialutil.h"
 
 #include "SWGInstanceSummaryResponse.h"
 #include "SWGInstanceConfigResponse.h"
@@ -75,8 +79,6 @@
 #include "SWGSuccessResponse.h"
 #include "SWGErrorResponse.h"
 #include "SWGDeviceState.h"
-#include "SWGLimeRFEDevices.h"
-#include "SWGLimeRFESettings.h"
 #include "SWGFeaturePresets.h"
 #include "SWGFeaturePresetGroup.h"
 #include "SWGFeaturePresetItem.h"
@@ -449,8 +451,8 @@ int WebAPIAdapter::instanceAudioGet(
 {
     (void) error;
     DSPEngine *dspEngine = DSPEngine::instance();
-    const QList<AudioDeviceInfo>& audioInputDevices = dspEngine->getAudioDeviceManager()->getInputDevices();
-    const QList<AudioDeviceInfo>& audioOutputDevices = dspEngine->getAudioDeviceManager()->getOutputDevices();
+    const QList<AudioDeviceInfo>& audioInputDevices = AudioDeviceInfo::availableInputDevices();
+    const QList<AudioDeviceInfo>& audioOutputDevices = AudioDeviceInfo::availableOutputDevices();
     int nbInputDevices = audioInputDevices.size();
     int nbOutputDevices = audioOutputDevices.size();
 

@@ -1,3 +1,20 @@
+///////////////////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2021 Edouard Griffiths, F4EXB <f4exb06@gmail.com>                   //
+// Copyright (C) 2022 Jon Beniston, M7RCE <jon@beniston.com>                         //
+//                                                                                   //
+// This program is free software; you can redistribute it and/or modify              //
+// it under the terms of the GNU General Public License as published by              //
+// the Free Software Foundation as version 3 of the License, or                      //
+// (at your option) any later version.                                               //
+//                                                                                   //
+// This program is distributed in the hope that it will be useful,                   //
+// but WITHOUT ANY WARRANTY; without even the implied warranty of                    //
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                      //
+// GNU General Public License V3 for more details.                                   //
+//                                                                                   //
+// You should have received a copy of the GNU General Public License                 //
+// along with this program. If not, see <http://www.gnu.org/licenses/>.              //
+///////////////////////////////////////////////////////////////////////////////////////
 /*
 LDPC testbench
 Copyright 2018 Ahmet Inan <xdsopl@gmail.com>
@@ -107,16 +124,18 @@ int main(int argc, char **argv)
 
 	// DVB-S2 MODCOD definitions
 	static const char *mc_tabnames[2][32] = { // [shortframes][modcod]
-											 {// Normal frames
-											  0, "B1", "B2", "B3", "B4", "B5", "B6", "B7",
-											  "B8", "B9", "B10", "B11", "B5", "B6", "B7", "B9",
-											  "B10", "B11", "B6", "B7", "B8", "B9", "B10", "B11",
-											  "B7", "B8", "B8", "B10", "B11", 0, 0, 0},
-											 {// Short frames
-											  0, "C1", "C2", "C3", "C4", "C5", "C6", "C7",
-											  "C8", "C9", "C10", 0, "C5", "C6", "C7", "C9",
-											  "C10", 0, "C6", "C7", "C8", "C9", "C10", 0,
-											  "C7", "C8", "C8", "C10", 0, 0, 0, 0}};
+        {// Normal frames
+            nullptr, "B1", "B2", "B3", "B4", "B5", "B6", "B7",
+            "B8", "B9", "B10", "B11", "B5", "B6", "B7", "B9",
+            "B10", "B11", "B6", "B7", "B8", "B9", "B10", "B11",
+            "B7", "B8", "B8", "B10", "B11", nullptr, nullptr, nullptr
+        },
+        {// Short frames
+            nullptr, "C1", "C2", "C3", "C4", "C5", "C6", "C7",
+            "C8", "C9", "C10", nullptr, "C5", "C6", "C7", "C9",
+            "C10", nullptr, "C6", "C7", "C8", "C9", "C10", nullptr,
+            "C7", "C8", "C8", "C10", nullptr, nullptr, nullptr, nullptr
+    }};
 
 	const char *tabname = mc_tabnames[shortframes][modcod];
 	if (!tabname)
@@ -171,8 +190,16 @@ int main(int argc, char **argv)
 			int blocks = j + ldpctool::SIMD_WIDTH > BLOCKS ? BLOCKS - j : ldpctool::SIMD_WIDTH;
 
 			for (int n = 0; n < blocks; ++n)
+            {
 				for (int i = 0; i < CODE_LEN; ++i)
+                {
+                    if (((j + n) * CODE_LEN + i) >= BLOCKS * CODE_LEN) {
+                        break;
+                    }
+
 					reinterpret_cast<ldpctool::code_type *>(simd + i)[n] = code[(j + n) * CODE_LEN + i];
+                }
+            }
 
 			int count = decode(simd, simd + DATA_LEN, max_trials, blocks);
 			num_decodes++;

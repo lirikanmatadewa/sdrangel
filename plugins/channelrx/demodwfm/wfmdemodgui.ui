@@ -200,7 +200,7 @@
          </font>
         </property>
         <property name="toolTip">
-         <string>channelPowerMeterUnits</string>
+         <string>Level meter (dB) top trace: average, bottom trace: instantaneous peak, tip: peak hold</string>
         </property>
        </widget>
       </item>
@@ -233,7 +233,6 @@
          <font>
           <family>Liberation Mono</family>
           <pointsize>12</pointsize>
-          <weight>50</weight>
           <bold>false</bold>
          </font>
         </property>

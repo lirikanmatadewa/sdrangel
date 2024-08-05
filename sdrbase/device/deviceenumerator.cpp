@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016-2019 Edouard Griffiths, F4EXB                              //
+// Copyright (C) 2017, 2019-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2022-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -16,6 +17,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
 
 #include <QGlobalStatic>
+#include <functional>
 
 #include "deviceenumerator.h"
 
@@ -240,95 +242,86 @@ bool DeviceEnumerator::isMIMOEnumerated(const QString& deviceHwId, int deviceSeq
     return false;
 }
 
-void DeviceEnumerator::enumerateDevices(PluginAPI::SamplingDeviceRegistrations& deviceRegistrations, DevicesEnumeration& enumeration, PluginInterface::SamplingDevice::StreamType type)
+void DeviceEnumerator::enumerateDevices(std::initializer_list<PluginAPI::SamplingDeviceRegistrations*> deviceRegistrationsList, std::initializer_list<DevicesEnumeration*> enumerations)
 {
-    DevicesEnumeration tempEnumeration;
+    auto enumerationsArray = enumerations.begin();
     PluginInterface::OriginDevices originDevices;
     QStringList originDevicesHwIds;
 
-    for (int i = 0; i < deviceRegistrations.count(); i++)
-    {
-        qDebug("DeviceEnumerator::enumerateDevices: %s", qPrintable(deviceRegistrations[i].m_deviceId));
-        emit enumeratingDevices(deviceRegistrations[i].m_deviceId);
-        deviceRegistrations[i].m_plugin->enumOriginDevices(originDevicesHwIds, originDevices);
-        PluginInterface::SamplingDevices samplingDevices;
-        if (type == PluginInterface::SamplingDevice::StreamSingleRx) {
-            samplingDevices = deviceRegistrations[i].m_plugin->enumSampleSources(originDevices);
-        } else if (type == PluginInterface::SamplingDevice::StreamSingleTx) {
-            samplingDevices = deviceRegistrations[i].m_plugin->enumSampleSinks(originDevices);
-        } else {
-            samplingDevices = deviceRegistrations[i].m_plugin->enumSampleMIMO(originDevices);
-        }
-
-        for (int j = 0; j < samplingDevices.count(); j++)
-        {
-            tempEnumeration.push_back(
-                DeviceEnumeration(
-                    samplingDevices[j],
-                    deviceRegistrations[i].m_plugin,
-                    0   // Index will be set when adding to enumeration below
-                )
-            );
-        }
-    }
-
     // We don't remove devices that are no-longer found from the enumeration list, in case their
     // index is referenced in some other object (E.g. DeviceGUI)
-    // Instead we mark as removed. If later re-added, then we re-use the same index
-    for (DevicesEnumeration::iterator it = enumeration.begin(); it != enumeration.end(); ++it)
+    // Instead we mark as removed. If later re-added, then we reuse the same index
+    for(size_t i = 0; i < 3; i++) 
     {
-        bool found = false;
-        for (DevicesEnumeration::iterator it2 = tempEnumeration.begin(); it2 != tempEnumeration.end(); ++it2)
-        {
-            if (it->m_samplingDevice == it2->m_samplingDevice)
+        if (enumerationsArray[i] != nullptr) {
+            for(auto &device : *enumerationsArray[i]) 
             {
-                found = true;
-                break;
+                device.m_samplingDevice.removed = true;
             }
-        }
-        if (!found) {
-            it->m_samplingDevice.removed = true;
         }
     }
-
-    // Add new entries and update existing (in case re-added or sequence number has changed)
-    int index = enumeration.size();
-    for (DevicesEnumeration::iterator it = tempEnumeration.begin(); it != tempEnumeration.end(); ++it)
+    for (auto const &deviceRegistrations : deviceRegistrationsList)
     {
-
-        bool found = false;
-        for (DevicesEnumeration::iterator it2 = enumeration.begin(); it2 != enumeration.end(); ++it2)
+        for (auto &deviceRegistration : *deviceRegistrations) 
         {
-            if (it->m_samplingDevice == it2->m_samplingDevice)
+            qDebug("DeviceEnumerator::enumerateDevices: %s", qPrintable(deviceRegistration.m_deviceId));
+            emit enumeratingDevices(deviceRegistration.m_deviceId);
+            deviceRegistration.m_plugin->enumOriginDevices(originDevicesHwIds, originDevices);
+            auto func = [&](const PluginInterface::SamplingDevices &devices, DevicesEnumeration& enumeration) 
             {
-                it2->m_samplingDevice.removed = false;
-                it2->m_samplingDevice.displayedName = it->m_samplingDevice.displayedName;
-                found = true;
-                break;
+                for (auto &newDevice : devices) 
+                {
+                    auto found = std::find_if(enumeration.begin(), enumeration.end(), [&](const DeviceEnumeration &device) 
+                    {
+                        return device.m_samplingDevice == newDevice;
+                    });
+                    if (found == enumeration.end()) 
+                    {
+                        enumeration.emplace_back(newDevice, deviceRegistration.m_plugin, enumeration.size());
+                    }
+                    else
+                    {
+                        found->m_samplingDevice.removed = false;
+                    }
+                }
+            };
+            if (enumerationsArray[PluginInterface::SamplingDevice::StreamType::StreamSingleRx]) 
+            {
+                func(deviceRegistration.m_plugin->enumSampleSources(originDevices), *enumerationsArray[PluginInterface::SamplingDevice::StreamType::StreamSingleRx]);
             }
-
-        }
-        if (!found)
-        {
-            it->m_index = index++;
-            enumeration.push_back(*it);
+            if (enumerationsArray[PluginInterface::SamplingDevice::StreamType::StreamSingleTx]) 
+            {
+                func(deviceRegistration.m_plugin->enumSampleSinks(originDevices), *enumerationsArray[PluginInterface::SamplingDevice::StreamType::StreamSingleTx]);
+            }
+            if (enumerationsArray[PluginInterface::SamplingDevice::StreamType::StreamMIMO]) 
+            {
+                func(deviceRegistration.m_plugin->enumSampleMIMO(originDevices), *enumerationsArray[PluginInterface::SamplingDevice::StreamType::StreamMIMO]);
+            }
         }
     }
 }
 
 void DeviceEnumerator::enumerateRxDevices(PluginManager *pluginManager)
 {
-    enumerateDevices(pluginManager->getSourceDeviceRegistrations(), m_rxEnumeration, PluginInterface::SamplingDevice::StreamSingleRx);
+    enumerateDevices({&pluginManager->getSourceDeviceRegistrations()}, { &m_rxEnumeration, nullptr, nullptr });
 }
 
 void DeviceEnumerator::enumerateTxDevices(PluginManager *pluginManager)
 {
-    enumerateDevices(pluginManager->getSinkDeviceRegistrations(), m_txEnumeration, PluginInterface::SamplingDevice::StreamSingleTx);
+    enumerateDevices({&pluginManager->getSinkDeviceRegistrations()}, { nullptr, &m_txEnumeration, nullptr });
 }
 
 void DeviceEnumerator::enumerateMIMODevices(PluginManager *pluginManager)
 {
-    enumerateDevices(pluginManager->getMIMODeviceRegistrations(), m_mimoEnumeration, PluginInterface::SamplingDevice::StreamMIMO);
+    enumerateDevices({&pluginManager->getMIMODeviceRegistrations()}, { nullptr, nullptr, &m_mimoEnumeration });
+}
+
+void DeviceEnumerator::enumerateAllDevices(PluginManager *pluginManager)
+{
+    enumerateDevices(
+        {&pluginManager->getSourceDeviceRegistrations(), &pluginManager->getSinkDeviceRegistrations(), &pluginManager->getMIMODeviceRegistrations()},
+        { &m_rxEnumeration, &m_txEnumeration, &m_mimoEnumeration }
+        );
 }
 
 void DeviceEnumerator::listRxDeviceNames(QList<QString>& list, std::vector<int>& indexes) const
@@ -432,6 +425,20 @@ void DeviceEnumerator::removeMIMOSelection(int tabIndex)
     {
         if (it->m_samplingDevice.claimed == tabIndex) {
             it->m_samplingDevice.claimed = -1;
+        }
+    }
+}
+
+void DeviceEnumerator::renumeratetabIndex(int skippedTabIndex)
+{
+    std::reference_wrapper<DevicesEnumeration> denums[] = {m_rxEnumeration, m_txEnumeration, m_mimoEnumeration};
+    for (DevicesEnumeration &denum : denums)
+    {
+        for (DevicesEnumeration::iterator it = denum.begin(); it != denum.end(); ++it)
+        {
+            if (it->m_samplingDevice.claimed > skippedTabIndex) {
+                it->m_samplingDevice.claimed--;
+            }
         }
     }
 }

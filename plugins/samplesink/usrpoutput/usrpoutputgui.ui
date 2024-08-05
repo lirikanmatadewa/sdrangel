@@ -574,7 +574,7 @@
         <cursorShape>PointingHandCursor</cursorShape>
        </property>
        <property name="toolTip">
-        <string>Analog lowpass filer bandwidth (kHz)</string>
+        <string>Analog lowpass filter bandwidth (kHz)</string>
        </property>
       </widget>
      </item>
@@ -745,39 +745,6 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../../../sdrgui/resources/res.qrc"/>
-  <include location="../../../sdrgui/resources/res.qrc"/>
-  <include location="../../../sdrgui/resources/res.qrc"/>
-  <include location="../../../sdrgui/resources/res.qrc"/>
-  <include location="../../../sdrgui/resources/res.qrc"/>
-  <include location="../../../sdrgui/resources/res.qrc"/>
-  <include location="../../../sdrgui/resources/res.qrc"/>
-  <include location="../../../sdrgui/resources/res.qrc"/>
-  <include location="../../../sdrgui/resources/res.qrc"/>
-  <include location="../../../sdrgui/resources/res.qrc"/>
-  <include location="../../../sdrgui/resources/res.qrc"/>
-  <include location="../../../sdrgui/resources/res.qrc"/>
-  <include location="../../../sdrgui/resources/res.qrc"/>
-  <include location="../../../sdrgui/resources/res.qrc"/>
-  <include location="../../../sdrgui/resources/res.qrc"/>
-  <include location="../../../sdrgui/resources/res.qrc"/>
-  <include location="../../../sdrgui/resources/res.qrc"/>
-  <include location="../../../sdrgui/resources/res.qrc"/>
-  <include location="../../../sdrgui/resources/res.qrc"/>
-  <include location="../../../sdrgui/resources/res.qrc"/>
-  <include location="../../../sdrgui/resources/res.qrc"/>
-  <include location="../../../sdrgui/resources/res.qrc"/>
-  <include location="../../../sdrgui/resources/res.qrc"/>
-  <include location="../../../sdrgui/resources/res.qrc"/>
-  <include location="../../../sdrgui/resources/res.qrc"/>
-  <include location="../../../sdrgui/resources/res.qrc"/>
-  <include location="../../../sdrgui/resources/res.qrc"/>
-  <include location="../../../sdrgui/resources/res.qrc"/>
-  <include location="../../../sdrgui/resources/res.qrc"/>
-  <include location="../../../sdrgui/resources/res.qrc"/>
-  <include location="../../../sdrgui/resources/res.qrc"/>
-  <include location="../../../sdrgui/resources/res.qrc"/>
-  <include location="../../../sdrgui/resources/res.qrc"/>
   <include location="../../../sdrgui/resources/res.qrc"/>
  </resources>
  <connections/>

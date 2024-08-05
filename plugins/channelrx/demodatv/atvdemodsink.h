@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2019-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2020 Vort <vvort@yandex.ru>                                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -24,9 +25,7 @@
 
 #include "dsp/channelsamplesink.h"
 #include "dsp/nco.h"
-#include "dsp/interpolator.h"
 #include "dsp/fftfilt.h"
-#include "dsp/agc.h"
 #include "dsp/phaselock.h"
 #include "dsp/recursivefilters.h"
 #include "dsp/phasediscri.h"
@@ -101,7 +100,7 @@ private:
 
     int m_channelSampleRate;
 	int m_channelFrequencyOffset;
-    int m_samplesPerLine;       //!< number of samples per complete line (includes sync signals) - adusted value
+    int m_samplesPerLine;       //!< number of samples per complete line (includes sync signals) - adjusted value
 	float m_samplesPerLineFrac; //!< number of samples per complete line (includes sync signals), fractional part
 	ATVDemodSettings m_settings;
     int m_videoTabIndex;

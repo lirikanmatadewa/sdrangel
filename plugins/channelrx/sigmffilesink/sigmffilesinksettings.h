@@ -1,5 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Edouard Griffiths, F4EXB.                                  //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2021 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -36,6 +39,7 @@ struct SigMFFileSinkSettings
     int m_preRecordTime;
     int m_squelchPostRecordTime;
     bool m_squelchRecordingEnable;
+    uint32_t m_log2RecordSampleSize;
     int m_streamIndex; //!< MIMO channel. Not relevant when connected to SI (single Rx).
     bool m_useReverseAPI;
     QString m_reverseAPIAddress;

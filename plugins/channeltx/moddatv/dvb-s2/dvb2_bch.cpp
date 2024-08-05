@@ -1,3 +1,19 @@
+///////////////////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2021 Jon Beniston, M7RCE <jon@beniston.com>                         //
+//                                                                                   //
+// This program is free software; you can redistribute it and/or modify              //
+// it under the terms of the GNU General Public License as published by              //
+// the Free Software Foundation as version 3 of the License, or                      //
+// (at your option) any later version.                                               //
+//                                                                                   //
+// This program is distributed in the hope that it will be useful,                   //
+// but WITHOUT ANY WARRANTY; without even the implied warranty of                    //
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                      //
+// GNU General Public License V3 for more details.                                   //
+//                                                                                   //
+// You should have received a copy of the GNU General Public License                 //
+// along with this program. If not, see <http://www.gnu.org/licenses/>.              //
+///////////////////////////////////////////////////////////////////////////////////////
 // polymult.cpp : Defines the entry point for the console application.
 //
 #include "stdio.h"
@@ -403,6 +419,6 @@ void DVB2::bch_poly_build_tables( void )
     }
 
 //  display_poly( polyout[0], len );//12
-//  display_poly_pack( m_poly_s_12, 168 );// Wont work because of shift register length
+//  display_poly_pack( m_poly_s_12, 168 );// Won't work because of shift register length
 */
 }

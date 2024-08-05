@@ -1,4 +1,19 @@
-#include "memory.h"
+///////////////////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2021 Jon Beniston, M7RCE <jon@beniston.com>                         //
+//                                                                                   //
+// This program is free software; you can redistribute it and/or modify              //
+// it under the terms of the GNU General Public License as published by              //
+// the Free Software Foundation as version 3 of the License, or                      //
+// (at your option) any later version.                                               //
+//                                                                                   //
+// This program is distributed in the hope that it will be useful,                   //
+// but WITHOUT ANY WARRANTY; without even the implied warranty of                    //
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                      //
+// GNU General Public License V3 for more details.                                   //
+//                                                                                   //
+// You should have received a copy of the GNU General Public License                 //
+// along with this program. If not, see <http://www.gnu.org/licenses/>.              //
+///////////////////////////////////////////////////////////////////////////////////////
 #include "DVB2.h"
 
 
@@ -29,7 +44,7 @@ int DVB2::set_configure( DVB2FrameFormat *f )
 
     if( f->broadcasting )
     {
-        // Set standard parametrs for broadcasting
+        // Set standard parameters for broadcasting
         f->frame_type        = FRAME_NORMAL;
         f->bb_header.ts_gs   = TS_GS_TRANSPORT;
         f->bb_header.sis_mis = SIS_MIS_SINGLE;
@@ -185,7 +200,7 @@ int DVB2::set_configure( DVB2FrameFormat *f )
         f->kldpc = f->kbch + bch_bits;
         // Number of padding bits required (not used)
         f->padding_bits = 0;
-        // Number of useable data bits (not used)
+        // Number of usable data bits (not used)
         f->useable_data_bits = f->kbch - 80;
         // Save the configuration, will be updated on next frame
         m_format[1] = *f;
@@ -250,7 +265,7 @@ int DVB2::next_ts_frame_base( u8 *ts )
             }
         }
     }
-    // Need to send a new transport packet 
+    // Need to send a new transport packet
     res = add_ts_frame_base( ts );
     if( res ) m_dnp = 0;// Clear the DNP counter
     // return whether it is time to transmit a new frame
@@ -263,7 +278,7 @@ DVB2::DVB2(void)
     init_bb_randomiser();
     bch_poly_build_tables();
     build_crc8_table();
-    m_dnp   = 0;// No delted null packets
+    m_dnp   = 0;// No deleted null packets
     m_frame_offset_bits = 0;
     m_params_changed = 1;
 }

@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2021-2022 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2022 Peter Beckman <beckman@angryox.com>                        //
+// Copyright (C) 2023 Daniele Forsi <iu5hkx@gmail.com>                           //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -15,7 +17,6 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.          //
 ///////////////////////////////////////////////////////////////////////////////////
 
-#include <QRegExp>
 #include <QRegularExpression>
 #include <QStringList>
 #include <QDateTime>
@@ -42,7 +43,7 @@ inline int charToIntAscii(QString&s, int idx)
 bool APRSPacket::decode(AX25Packet packet)
 {
     // Check type, PID and length of packet
-    if ((packet.m_type == "UI") && (packet.m_pid == "f0") && (packet.m_dataASCII.length() >= 1))
+    if ((packet.m_type == "UI") && (packet.m_pid == "f0") && (packet.m_data.length() >= 1))
     {
         // Check destination address
         QRegularExpression re("^(AIR.*|ALL.*|AP.*|BEACON|CQ.*|GPS.*|DF.*|DGPS.*|DRILL.*|DX.*|ID.*|JAVA.*|MAIL.*|MICE.*|QST.*|QTH.*|RTCM.*|SKY.*|SPACE.*|SPC.*|SYM.*|TEL.*|TEST.*|TLM.*|WX.*|ZIP.*)");
@@ -52,7 +53,10 @@ bool APRSPacket::decode(AX25Packet packet)
             m_from = packet.m_from;
             m_to = packet.m_to;
             m_via = packet.m_via;
-            m_data = packet.m_dataASCII;
+            m_data = packet.m_data;
+
+            // UTF-8 is supported: http://aprs.org/aprs12/utf-8.txt
+            QString data = QString::fromUtf8(packet.m_data);
 
             if (packet.m_to.startsWith("GPS") || packet.m_to.startsWith("SPC") || packet.m_to.startsWith("SYM"))
             {
@@ -62,20 +66,20 @@ bool APRSPacket::decode(AX25Packet packet)
             // Source address SSID can be used to specify a symbol
 
             // First byte of information field is data type ID
-            char dataType = packet.m_dataASCII[0].toLatin1();
+            char dataType = data[0].toLatin1();
             int idx = 1;
             switch (dataType)
             {
             case '!': // Position without timestamp or  Ultimeter 2000 WX Station
-                parsePosition(packet.m_dataASCII, idx);
+                parsePosition(data, idx);
                 if (m_symbolCode == '_')
-                    parseWeather(packet.m_dataASCII, idx, false);
+                    parseWeather(data, idx, false);
                 else if (m_symbolCode == '@')
-                    parseStorm(packet.m_dataASCII, idx);
+                    parseStorm(data, idx);
                 else
                 {
-                    parseDataExension(packet.m_dataASCII, idx);
-                    parseComment(packet.m_dataASCII, idx);
+                    parseDataExension(data, idx);
+                    parseComment(data, idx);
                 }
                 break;
             case '#': // Peet Bros U-II Weather Station
@@ -83,85 +87,85 @@ bool APRSPacket::decode(AX25Packet packet)
             case '%': // Agrelo DFJr / MicroFinder
                 break;
             case ')': // Item
-                parseItem(packet.m_dataASCII, idx);
-                parsePosition(packet.m_dataASCII, idx);
-                parseDataExension(packet.m_dataASCII, idx);
-                parseComment(packet.m_dataASCII, idx);
+                parseItem(data, idx);
+                parsePosition(data, idx);
+                parseDataExension(data, idx);
+                parseComment(data, idx);
                 break;
             case '*': // Peet Bros U-II Weather Station
                 break;
             case '/': // Position with timestamp (no APRS messaging)
-                parseTime(packet.m_dataASCII, idx);
-                parsePosition(packet.m_dataASCII, idx);
+                parseTime(data, idx);
+                parsePosition(data, idx);
                 if (m_symbolCode == '_')
-                    parseWeather(packet.m_dataASCII, idx, false);
+                    parseWeather(data, idx, false);
                 else if (m_symbolCode == '@')
-                    parseStorm(packet.m_dataASCII, idx);
+                    parseStorm(data, idx);
                 else
                 {
-                    parseDataExension(packet.m_dataASCII, idx);
-                    parseComment(packet.m_dataASCII, idx);
+                    parseDataExension(data, idx);
+                    parseComment(data, idx);
                 }
                 break;
             case ':': // Message
-                parseMessage(packet.m_dataASCII, idx);
+                parseMessage(data, idx);
                 break;
             case ';': // Object
-                parseObject(packet.m_dataASCII, idx);
-                parseTime(packet.m_dataASCII, idx);
-                parsePosition(packet.m_dataASCII, idx);
+                parseObject(data, idx);
+                parseTime(data, idx);
+                parsePosition(data, idx);
                 if (m_symbolCode == '_')
-                    parseWeather(packet.m_dataASCII, idx, false);
+                    parseWeather(data, idx, false);
                 else if (m_symbolCode == '@')
-                    parseStorm(packet.m_dataASCII, idx);
+                    parseStorm(data, idx);
                 else
                 {
-                    parseDataExension(packet.m_dataASCII, idx);
-                    parseComment(packet.m_dataASCII, idx);
+                    parseDataExension(data, idx);
+                    parseComment(data, idx);
                 }
                 break;
             case '<': // Station Capabilities
                 break;
             case '=': // Position without timestamp (with APRS messaging)
-                parsePosition(packet.m_dataASCII, idx);
+                parsePosition(data, idx);
                 if (m_symbolCode == '_')
-                    parseWeather(packet.m_dataASCII, idx, false);
+                    parseWeather(data, idx, false);
                 else if (m_symbolCode == '@')
-                    parseStorm(packet.m_dataASCII, idx);
+                    parseStorm(data, idx);
                 else
                 {
-                    parseDataExension(packet.m_dataASCII, idx);
-                    parseComment(packet.m_dataASCII, idx);
+                    parseDataExension(data, idx);
+                    parseComment(data, idx);
                 }
                 break;
             case '>': // Status
-                parseStatus(packet.m_dataASCII, idx);
+                parseStatus(data, idx);
                 break;
             case '?': // Query
                 break;
             case '@': // Position with timestamp (with APRS messaging)
-                parseTime(packet.m_dataASCII, idx);
-                parsePosition(packet.m_dataASCII, idx);
+                parseTime(data, idx);
+                parsePosition(data, idx);
                 if (m_symbolCode == '_')
-                    parseWeather(packet.m_dataASCII, idx, false);
+                    parseWeather(data, idx, false);
                 else if (m_symbolCode == '@')
-                    parseStorm(packet.m_dataASCII, idx);
+                    parseStorm(data, idx);
                 else
                 {
-                    parseDataExension(packet.m_dataASCII, idx);
-                    parseComment(packet.m_dataASCII, idx);
+                    parseDataExension(data, idx);
+                    parseComment(data, idx);
                 }
                 break;
             case 'T': // Telemetry data
-                parseTelemetry(packet.m_dataASCII, idx);
+                parseTelemetry(data, idx);
                 break;
             case '_': // Weather report (without position)
-                parseTimeMDHM(packet.m_dataASCII, idx);
-                parseWeather(packet.m_dataASCII, idx, true);
+                parseTimeMDHM(data, idx);
+                parseWeather(data, idx, true);
                 break;
             case '`': // Mic-E Information Field Data (current)
             case '\'': // Mic-E Information Field Data (old)
-                parseMicE(packet.m_dataASCII, idx, m_to);
+                parseMicE(data, idx, m_to);
                 break;
             case '{': // User-defined APRS packet format
                 break;
@@ -180,9 +184,8 @@ bool APRSPacket::decode(AX25Packet packet)
             qDebug() << "APRSPacket::decode: AX.25 Destination did not match known regexp " << m_to;
         }
     } else {
-        qDebug() << "APRSPacket::decode: Invalid value in type=" << packet.m_type << " pid=" << packet.m_pid << " length of " << packet.m_dataASCII;
+        qDebug() << "APRSPacket::decode: Not APRS: type=" << packet.m_type << " pid=" << packet.m_pid << " length=" << packet.m_data.length();
     }
-
 
     return false;
 }
@@ -403,34 +406,37 @@ bool APRSPacket::parseDataExension(QString& info, int& idx)
     QString s = info.right(remainingLength);
 
     // Course and speed
-    QRegExp courseSpeed("^([0-9]{3})\\/([0-9]{3})");
-    if (courseSpeed.indexIn(s) >= 0)
+    QRegularExpression courseSpeed("^([0-9]{3})\\/([0-9]{3})");
+    QRegularExpressionMatch match;
+    match = courseSpeed.match(s);
+    if (match.hasMatch())
     {
-        m_course = courseSpeed.capturedTexts()[1].toInt();
-        m_speed = courseSpeed.capturedTexts()[2].toInt();
+        m_course = match.capturedTexts()[1].toInt();
+        m_speed = match.capturedTexts()[2].toInt();
         m_hasCourseAndSpeed = true;
         idx += 7;
         return true;
     }
 
     // Station radio details
-    QRegExp phg("^PHG([0-9])([0-9])([0-9])([0-9])");
-    if (phg.indexIn(s) >= 0)
+    QRegularExpression phg("^PHG([0-9])([0-9])([0-9])([0-9])");
+    match = phg.match(s);
+    if (match.hasMatch())
     {
         // Transmitter power
-        int powerCode = phg.capturedTexts()[1].toInt();
+        int powerCode = match.capturedTexts()[1].toInt();
         int powerMap[] = {0, 1, 4, 9, 16, 25, 36, 49, 64, 81};
         m_powerWatts = powerMap[powerCode];
 
         // Antenna height
-        int heightCode = phg.capturedTexts()[2].toInt();
+        int heightCode = match.capturedTexts()[2].toInt();
         m_antennaHeightFt = heightMap[heightCode];
 
         // Antenna gain
-        m_antennaGainDB = phg.capturedTexts()[3].toInt();
+        m_antennaGainDB = match.capturedTexts()[3].toInt();
 
         // Antenna directivity
-        int directivityCode = phg.capturedTexts()[4].toInt();
+        int directivityCode = match.capturedTexts()[4].toInt();
         m_antennaDirectivity = directivityMap[directivityCode];
 
         m_hasStationDetails = true;
@@ -440,31 +446,33 @@ bool APRSPacket::parseDataExension(QString& info, int& idx)
     }
 
     // Radio range
-    QRegExp rng("^RNG([0-9]{4})");
-    if (rng.indexIn(s) >= 0)
+    QRegularExpression rng("^RNG([0-9]{4})");
+    match = rng.match(s);
+    if (match.hasMatch())
     {
-        m_radioRangeMiles = rng.capturedTexts()[1].toInt();
+        m_radioRangeMiles = match.capturedTexts()[1].toInt();
         m_hasRadioRange = true;
         idx += 7;
         return true;
     }
 
     // Omni-DF strength
-    QRegExp dfs("^DFS([0-9])([0-9])([0-9])([0-9])");
-    if (dfs.indexIn(s) >= 0)
+    QRegularExpression dfs("^DFS([0-9])([0-9])([0-9])([0-9])");
+    match = dfs.match(s);
+    if (match.hasMatch())
     {
         // Strength S-points
-        m_dfStrength = dfs.capturedTexts()[1].toInt();
+        m_dfStrength = match.capturedTexts()[1].toInt();
 
         // Antenna height
-        int heightCode = dfs.capturedTexts()[2].toInt();
+        int heightCode = match.capturedTexts()[2].toInt();
         m_dfHeightFt = heightMap[heightCode];
 
         // Antenna gain
-        m_dfGainDB = dfs.capturedTexts()[3].toInt();
+        m_dfGainDB = match.capturedTexts()[3].toInt();
 
         // Antenna directivity
-        int directivityCode = dfs.capturedTexts()[4].toInt();
+        int directivityCode = match.capturedTexts()[4].toInt();
         m_dfAntennaDirectivity = directivityMap[directivityCode];
 
         m_hasDf = true;
@@ -483,14 +491,14 @@ bool APRSPacket::parseComment(QString& info, int& idx)
         m_comment = info.right(commentLength);
 
         // Comment can contain altitude anywhere in it. Of the form /A=001234 in feet
-        QRegExp re("\\/A=([0-9]{6})");
-        int pos = re.indexIn(m_comment);
-        if (pos >= 0)
+        QRegularExpression re("\\/A=([0-9]{6})");
+        QRegularExpressionMatch match = re.match(m_comment);
+        if (match.hasMatch())
         {
-            m_altitudeFt = re.capturedTexts()[1].toInt();
+            m_altitudeFt = match.capturedTexts()[1].toInt();
             m_hasAltitude = true;
             // Strip it out of comment if at start of string
-            if (pos == 0)
+            if (match.capturedStart(0) == 0)
                 m_comment = m_comment.mid(9);
         }
     }
@@ -751,18 +759,20 @@ bool APRSPacket::parseStatus(QString& info, int& idx)
 {
     QString remaining = info.mid(idx);
 
-    QRegExp timestampRE("^([0-9]{6})z");                         // DHM timestamp
-    QRegExp maidenheadRE("^([A-Z]{2}[0-9]{2}[A-Z]{0,2})[/\\\\]."); // Maidenhead grid locator and symbol
+    QRegularExpression timestampRE("^([0-9]{6})z");                         // DHM timestamp
+    QRegularExpression maidenheadRE("^([A-Z]{2}[0-9]{2}[A-Z]{0,2})[/\\\\]."); // Maidenhead grid locator and symbol
+    QRegularExpressionMatch matchTimestamp = timestampRE.match(remaining);
+    QRegularExpressionMatch matchMaidenhead = maidenheadRE.match(remaining);
 
-    if (timestampRE.indexIn(remaining) >= 0)
+    if (matchTimestamp.hasMatch())
     {
         parseTime(info, idx);
         m_status = info.mid(idx);
         idx += m_status.length();
     }
-    else if (maidenheadRE.indexIn(remaining) >= 0)
+    else if (matchMaidenhead.hasMatch())
     {
-        m_maidenhead = maidenheadRE.capturedTexts()[1];
+        m_maidenhead = matchMaidenhead.capturedTexts()[1];
         idx += m_maidenhead.length();
         m_symbolTable = info[idx++].toLatin1();
         m_symbolCode = info[idx++].toLatin1();
@@ -955,10 +965,11 @@ bool APRSPacket::parseMessage(QString& info, int& idx)
     else
     {
         // Check for message number
-        QRegExp noRE("\\{([0-9]{1,5})$");
-        if (noRE.indexIn(m_message) >= 0)
+        QRegularExpression noRE("\\{([0-9]{1,5})$");
+        QRegularExpressionMatch match = noRE.match(m_message);
+        if (match.hasMatch())
         {
-            m_messageNo = noRE.capturedTexts()[1];
+            m_messageNo = match.capturedTexts()[1];
             m_message = m_message.left(m_message.length() - m_messageNo.length() - 1);
         }
     }
@@ -1110,7 +1121,7 @@ bool APRSPacket::parseMicE(QString& info, int& idx, QString& dest)
     // Mic-E Data is encoded in ASCII Characters
     if (inRange(38, 127, charToIntAscii(info, idx))       // 0: Longitude Degrees, 0-360
         && inRange(38, 97, charToIntAscii(info, idx+1))   // 1: Longitude Minutes, 0-59
-        && inRange(28, 127, charToIntAscii(info, idx+2))  // 2: Longitude Hundreths of a minute, 0-99
+        && inRange(28, 127, charToIntAscii(info, idx+2))  // 2: Longitude Hundredths of a minute, 0-99
         && inRange(28, 127, charToIntAscii(info, idx+3))  // 3: Speed (tens), 0-800
         && inRange(28, 125, charToIntAscii(info, idx+4))  // 4: Speed (ones), 0-9, and Course (hundreds), {0, 100, 200, 300}
         && inRange(28, 127, charToIntAscii(info, idx+5))  // 5: Course, 0-99 degrees

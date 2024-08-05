@@ -1,6 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2015 Edouard Griffiths, F4EXB.                                  //
-// Copyright (C) 2023 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2023 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -18,7 +17,6 @@
 
 #include <QColor>
 
-#include "dsp/dspengine.h"
 #include "util/simpleserializer.h"
 #include "settings/serializable.h"
 #include "heatmapsettings.h"
@@ -52,6 +50,11 @@ void HeatMapSettings::resetToDefaults()
     m_displayPulseAverage = true;
     m_displayPathLoss = true;
     m_displayMins = 2;
+    m_recordAverage = true;
+    m_recordMax = true;
+    m_recordMin = true;
+    m_recordPulseAverage = true;
+    m_recordPathLoss = true;
     m_rgbColor = QColor(102, 40, 220).rgb();
     m_title = "Heat Map";
     m_streamIndex = 0;
@@ -88,6 +91,11 @@ QByteArray HeatMapSettings::serialize() const
     s.writeBool(18, m_displayPulseAverage);
     s.writeBool(19, m_displayPathLoss);
     s.writeS32(20, m_displayMins);
+    s.writeBool(40, m_recordAverage);
+    s.writeBool(41, m_recordMax);
+    s.writeBool(42, m_recordMin);
+    s.writeBool(43, m_recordPulseAverage);
+    s.writeBool(44, m_recordPathLoss);
 
     s.writeU32(21, m_rgbColor);
     s.writeString(22, m_title);
@@ -150,6 +158,11 @@ bool HeatMapSettings::deserialize(const QByteArray& data)
         d.readBool(18, &m_displayPulseAverage, true);
         d.readBool(19, &m_displayPathLoss, true);
         d.readS32(20, &m_displayMins, 2);
+        d.readBool(40, &m_recordAverage, true);
+        d.readBool(41, &m_recordMax, true);
+        d.readBool(42, &m_recordMin, true);
+        d.readBool(43, &m_recordPulseAverage, true);
+        d.readBool(44, &m_recordPathLoss, true);
 
         d.readU32(21, &m_rgbColor, QColor(102, 40, 220).rgb());
         d.readString(22, &m_title, "Heat Map");

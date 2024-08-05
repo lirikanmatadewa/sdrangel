@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2020-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2023 Mohamed <mohamedadlyi@github.com>                          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -69,6 +71,7 @@ MESSAGE_CLASS_DEFINITION(MainCore::MsgTargetAzimuthElevation, Message)
 MESSAGE_CLASS_DEFINITION(MainCore::MsgStarTrackerTarget, Message)
 MESSAGE_CLASS_DEFINITION(MainCore::MsgStarTrackerDisplaySettings, Message)
 MESSAGE_CLASS_DEFINITION(MainCore::MsgStarTrackerDisplayLoSSettings, Message)
+MESSAGE_CLASS_DEFINITION(MainCore::MsgSkyMapTarget, Message)
 
 MainCore::MainCore()
 {
@@ -141,7 +144,7 @@ void MainCore::setLoggingOptions()
                 .arg(QT_POINTER_SIZE*8)
                 .arg(SDR_RX_SAMP_SZ)
                 .arg(SDR_RX_SAMP_SZ)
-                .arg(QCoreApplication::applicationPid());
+                .arg(QCoreApplication::applicationPid()));
  #endif
         m_logger->logToFile(QtInfoMsg, appInfoStr);
     }
@@ -206,6 +209,7 @@ void MainCore::removeLastFeatureSet()
         FeatureSet *featureSet = m_featureSets.back();
         m_featureSetsMap.remove(featureSet);
         m_featureSets.pop_back();
+        delete featureSet;
     }
 }
 
@@ -224,6 +228,7 @@ void MainCore::removeLastDeviceSet()
         DeviceSet *deviceSet = m_deviceSets.back();
         m_deviceSetsMap.remove(deviceSet);
         m_deviceSets.pop_back();
+        delete deviceSet;
     }
 }
 
@@ -357,6 +362,7 @@ void MainCore::initPosition()
     m_positionSource = QGeoPositionInfoSource::createDefaultSource(this);
     if (m_positionSource)
     {
+        qDebug() << "MainCore::initPosition: Using position source" << m_positionSource->sourceName();
         connect(m_positionSource, &QGeoPositionInfoSource::positionUpdated, this, &MainCore::positionUpdated);
 #if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
         connect(m_positionSource, &QGeoPositionInfoSource::updateTimeout, this, &MainCore::positionUpdateTimeout);
@@ -433,6 +439,201 @@ void MainCore::updateWakeLock()
 }
 #endif
 
+AvailableChannelOrFeatureList MainCore::getAvailableChannels(const QStringList& uris)
+{
+    AvailableChannelOrFeatureList list;
+
+    for (const auto deviceSet : m_deviceSets)
+    {
+        for (int chi = 0; chi < deviceSet->getNumberOfChannels(); chi++)
+        {
+            ChannelAPI* channel = deviceSet->getChannelAt(chi);
+
+            if ((uris.size() == 0) || uris.contains(channel->getURI()))
+            {
+                QChar type = getDeviceSetTypeId(deviceSet);
+                int streamIdx = type == 'M' ? channel->getStreamIndex() : -1;
+
+                AvailableChannelOrFeature item {
+                    type,
+                    deviceSet->getIndex(),
+                    chi,
+                    streamIdx,
+                    channel->getIdentifier(),
+                    channel
+                };
+                list.append(item);
+            }
+        }
+    }
+
+    return list;
+}
+
+AvailableChannelOrFeatureList MainCore::getAvailableFeatures(const QStringList& uris)
+{
+    AvailableChannelOrFeatureList list;
+    std::vector<FeatureSet*>& featureSets = MainCore::instance()->getFeatureeSets();
+
+    for (const auto& featureSet : featureSets)
+    {
+        for (int fei = 0; fei < featureSet->getNumberOfFeatures(); fei++)
+        {
+            Feature *feature = featureSet->getFeatureAt(fei);
+
+            if ((uris.size() == 0) || uris.contains(feature->getURI()))
+            {
+                AvailableChannelOrFeature item {
+                    'F',
+                    featureSet->getIndex(),
+                    fei,
+                    -1,
+                    feature->getIdentifier(),
+                    feature
+                };
+                list.append(item);
+            }
+        }
+    }
+
+    return list;
+}
+
+AvailableChannelOrFeatureList MainCore::getAvailableChannelsAndFeatures(const QStringList& uris, const QString& kinds)
+{
+    AvailableChannelOrFeatureList list;
+
+    if (kinds != "F") {
+        list.append(getAvailableChannels(uris));
+    }
+    if (kinds.contains("F")) {
+        list.append(getAvailableFeatures(uris));
+    }
+
+    return list;
+}
+
+QChar MainCore::getDeviceSetTypeId(const DeviceSet* deviceSet)
+{
+    if (deviceSet->m_deviceMIMOEngine) {
+        return 'M';
+    } else if (deviceSet->m_deviceSinkEngine) {
+        return 'T';
+    } else if (deviceSet->m_deviceSourceEngine) {
+        return 'R';
+    } else {
+        return 'X'; // Unknown
+    }
+}
+
+QString MainCore::getDeviceSetId(const DeviceSet* deviceSet)
+{
+    QChar type = getDeviceSetTypeId(deviceSet);
+
+    return QString("%1%2").arg(type).arg(deviceSet->getIndex());
+}
+
+QString MainCore::getChannelId(const ChannelAPI* channel)
+{
+    std::vector<DeviceSet*> deviceSets = getDeviceSets();
+    DeviceSet* deviceSet = deviceSets[channel->getDeviceSetIndex()];
+    QString deviceSetId = getDeviceSetId(deviceSet);
+    int index = channel->getIndexInDeviceSet();
+    if (deviceSet->m_deviceMIMOEngine) {
+        return QString("%1:%2.%3").arg(deviceSetId).arg(index).arg(channel->getStreamIndex());
+    } else {
+        return QString("%1:%2").arg(deviceSetId).arg(index);
+    }
+}
+
+QStringList MainCore::getDeviceSetIds(bool rx, bool tx, bool mimo)
+{
+    QStringList list;
+    std::vector<DeviceSet*> deviceSets = getDeviceSets();
+
+    for (const auto deviceSet : deviceSets)
+    {
+        DSPDeviceSourceEngine *deviceSourceEngine = deviceSet->m_deviceSourceEngine;
+        DSPDeviceSinkEngine *deviceSinkEngine = deviceSet->m_deviceSinkEngine;
+        DSPDeviceMIMOEngine *deviceMIMOEngine = deviceSet->m_deviceMIMOEngine;
+
+        if (((deviceSourceEngine != nullptr) && rx)
+            || ((deviceSinkEngine != nullptr) && tx)
+            || ((deviceMIMOEngine != nullptr) && mimo))
+        {
+            list.append(getDeviceSetId(deviceSet));
+        }
+    }
+    return list;
+}
+
+bool MainCore::getDeviceSetTypeFromId(const QString& deviceSetId, QChar &type)
+{
+    if (!deviceSetId.isEmpty())
+    {
+        type = deviceSetId[0];
+        return (type == 'R') || (type == 'T') || (type == 'M');
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool MainCore::getDeviceSetIndexFromId(const QString& deviceSetId, unsigned int &deviceSetIndex)
+{
+    const QRegularExpression re("[RTM]([0-9]+)");
+    QRegularExpressionMatch match = re.match(deviceSetId);
+
+    if (match.hasMatch())
+    {
+        deviceSetIndex = match.capturedTexts()[1].toInt();
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool MainCore::getDeviceAndChannelIndexFromId(const QString& channelId, unsigned int &deviceSetIndex, unsigned int &channelIndex)
+{
+    const QRegularExpression re("[RTM]([0-9]+):([0-9]+)");
+    QRegularExpressionMatch match = re.match(channelId);
+
+    if (match.hasMatch())
+    {
+        deviceSetIndex = match.capturedTexts()[1].toInt();
+        channelIndex = match.capturedTexts()[2].toInt();
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool MainCore::getFeatureIndexFromId(const QString& featureId, unsigned int &featureSetIndex, unsigned int &featureIndex)
+{
+    const QRegularExpression re("F([0-9]+)?:([0-9]+)");
+    QRegularExpressionMatch match = re.match(featureId);
+
+    if (match.hasMatch())
+    {
+        if (match.capturedTexts()[1].isEmpty()) {
+            featureSetIndex = 0;
+        } else {
+            featureSetIndex = match.capturedTexts()[1].toInt();
+        }
+        featureIndex = match.capturedTexts()[2].toInt();
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 std::vector<ChannelAPI*> MainCore::getChannels(const QString& uri)
 {
     std::vector<ChannelAPI*> channels;
@@ -449,4 +650,16 @@ std::vector<ChannelAPI*> MainCore::getChannels(const QString& uri)
     }
 
     return channels;
+}
+
+QStringList MainCore::getChannelIds(const QString& uri)
+{
+    QStringList list;
+    std::vector<ChannelAPI*> channels = getChannels(uri);
+
+    for (const auto channel : channels) {
+        list.append(getChannelId(channel));
+    }
+
+    return list;
 }

@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>         //
+// Copyright (C) 2022 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -23,7 +24,6 @@
 #include <QMessageBox>
 #include <QFileDialog>
 
-#include "plugin/pluginapi.h"
 #include "device/deviceapi.h"
 #include "device/deviceuiset.h"
 #include "gui/colormapper.h"
@@ -31,14 +31,9 @@
 #include "gui/basicdevicesettingsdialog.h"
 #include "gui/dialpopup.h"
 #include "gui/dialogpositioner.h"
-#include "dsp/dspengine.h"
-#include "dsp/dspdevicemimoengine.h"
 #include "dsp/dspcommands.h"
 #include "dsp/devicesamplestatic.h"
-#include "util/db.h"
 #include "limesdr/devicelimesdrshared.h"
-
-#include "mainwindow.h"
 
 #include "limesdrmimo.h"
 #include "ui_limesdrmimogui.h"
@@ -106,6 +101,7 @@ LimeSDRMIMOGUI::LimeSDRMIMOGUI(DeviceUISet *deviceUISet, QWidget* parent) :
     sendSettings();
     makeUIConnections();
     DialPopup::addPopupsToChildDials(this);
+    m_resizer.enableChildMouseTracking();
 }
 
 LimeSDRMIMOGUI::~LimeSDRMIMOGUI()
@@ -250,6 +246,15 @@ bool LimeSDRMIMOGUI::handleMessage(const Message& message)
         ui->gpioText->setText(tr("%1").arg(report.getGPIOPins(), 2, 16, QChar('0')).toUpper());
         return true;
     }
+    else if (LimeSDRMIMO::MsgStartStop::match(message))
+    {
+        LimeSDRMIMO::MsgStartStop& notif = (LimeSDRMIMO::MsgStartStop&) message;
+        blockApplySettings(true);
+        (notif.getRxElseTx() ? ui->startStopRx : ui->startStopTx)->setChecked(notif.getStartStop());
+        blockApplySettings(false);
+
+        return true;
+    }
     else
     {
         return false;
@@ -290,6 +295,8 @@ void LimeSDRMIMOGUI::displaySettings()
         ui->swDecim->setCurrentIndex(m_settings.m_log2SoftDecim);
 
         updateADCRate();
+
+        ui->gainMode->setEnabled(true);
 
         if (m_streamIndex == 0)
         {
@@ -371,6 +378,13 @@ void LimeSDRMIMOGUI::displaySettings()
         ui->swDecim->setCurrentIndex(m_settings.m_log2SoftInterp);
 
         updateDACRate();
+
+
+        ui->gainMode->setEnabled(false);
+        ui->gain->setEnabled(true);
+        ui->lnaGain->setEnabled(false);
+        ui->tiaGain->setEnabled(false);
+        ui->pgaGain->setEnabled(false);
 
         if (m_streamIndex == 0)
         {

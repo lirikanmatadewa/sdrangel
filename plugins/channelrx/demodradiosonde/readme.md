@@ -1,10 +1,10 @@
-<h1>Radiosonde demodulator plugin</h1>
+<h1>Radiosonde Demodulator Plugin</h1>
 
 <h2>Introduction</h2>
 
 This plugin can be used to demodulate RS41 radiosonde weather balloon signals. Radiosondes typically transmit on 400-406MHz and are in the sky around the world for around 1 hour around 00:00 UTC.
 
-RS41 radiosondes transmit data frames every second, containing position, velocity and PTU (Pressure, Temperature and Humidity) readings. The radios use GFSK modulation, with �2.4kHz deviation at 4,800 baud. Reed Solomon encoding is used for ECC (Error Checking and Correction).
+RS41 radiosondes transmit data frames every second, containing position, velocity and PTU (Pressure, Temperature and Humidity) readings. The radios use GFSK modulation, with &#177;2.4kHz deviation at 4,800 baud. Reed Solomon encoding is used for ECC (Error Checking and Correction).
 
 The Radiosonde demodulator can forward received data to the [Radiosonde feature](../../feature/radiosonde/readme.md), which can plot charts showing how altitude and PTU vary over time, and also plot the position of the radiosonde on the 2D and 3D maps.
 
@@ -56,19 +56,24 @@ UDP port number to forward received frames to.
 
 Entering a regular expression in the Find field displays only frames where the radiosonde serial number matches the given regular expression.
 
-<h3>11: Start/stop Logging Frames to .csv File</h3>
+<h3>11: Use Date and Time from File</h3>
+
+When checked, if the source device is a File Input device, the date and time used for
+frame reception time is taken from the file playback time. Otherwise, the current system clock time is used.
+
+<h3>12: Start/stop Logging Frames to .csv File</h3>
 
 When checked, writes all received frames to a .csv file.
 
-<h3>14: .csv Log Filename</h3>
+<h3>13: .csv Log Filename</h3>
 
 Click to specify the name of the .csv file which received frames are logged to.
 
-<h3>15: Read Data from .csv File</h3>
+<h3>14: Read Data from .csv File</h3>
 
 Click to specify a previously written radiosonde .csv log file, which is read and used to update the table.
 
-<h3>11: Clear Data from table</h3>
+<h3>15: Clear Data from table</h3>
 
 Pressing this button clears all data from the table.
 
@@ -83,18 +88,18 @@ The received frames table displays information about each radiosonde frame recei
 * Serial - The serial number of the radiosonde. Double clicking on this column will search for the radiosonde on https://sondehub.org/
 * Frame - Frame number
 * Phase - Flight phase: On ground, Ascent and Descent.
-* Lat (�) - Latitude in degrees, North positive. Double clicking on this column will search for the radiosonde on the Map.
-* Lon (�) - Longitude in degrees, East positive. Double clicking on this column will search for the radiosonde on the Map.
+* Lat (°) - Latitude in degrees, North positive. Double clicking on this column will search for the radiosonde on the Map.
+* Lon (°) - Longitude in degrees, East positive. Double clicking on this column will search for the radiosonde on the Map.
 * Alt (m) - Altitude in metres.
 * Spd (km/h)  - Speed over ground in kilometres per hour.
 * VR (m/s) - Vertical climb rate in metres per second.
-* Hdg (�) - Heading in degrees.
+* Hdg (°) - Heading in degrees.
 * P (hPA) - Air pressure in hectopascals. Not all RS41s include a pressure sensor. A value ending with 'U' indicates a uncalibrated estimate and may be inaccurate.
-* T (�C) - Air temperature in degrees Celsius.  A value ending with 'U' indicates a uncalibrated estimate and may be inaccurate.
+* T (°C) - Air temperature in degrees Celsius.  A value ending with 'U' indicates a uncalibrated estimate and may be inaccurate.
 * U (%) - Relative humidity in percent.  A value ending with 'U' indicates a uncalibrated estimate and may be inaccurate.
 * Bat (V) - Battery voltage in Volts.
 * Bat - Battery status: OK or low.
-* PCB (�C) - Temperature of PCB.
+* PCB (°C) - Temperature of PCB.
 * PWM (%) - Humidity sensor heater PWM (Pulse Width Modulation) setting, in percent.
 * TX (%) - Transmit power in percent.
 * Max SF - Maximum subframe number.
@@ -104,5 +109,7 @@ The received frames table displays information about each radiosonde frame recei
 * GPS Sats - Number of GPS satellites used in position estimate.
 * ECC - Number of symbol errors corrected by Reed Solomon ECC.
 * Corr - Preamble correlation value calculated for the frame. This can be used to choose a value for TH (6).
+* Range (km) - Distance from My Position to Radiosonde in kilometres.
+* Frequency (MHz) - Demodulator centre frequency when frame received, in MHz.
 
 Right clicking on the table header allows you to select which columns to show. The columns can be reordered by left clicking and dragging the column header. Right clicking on an item in the table allows you to copy the value to the clipboard.

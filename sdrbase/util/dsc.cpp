@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2023 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2023 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -471,7 +471,7 @@ void DSCMessage::decode(const QByteArray& data)
             }
             else if (m_formatSpecifier == GEOGRAPHIC_CALL)
             {
-                // Address definines a geographic rectangle. We have NW coord + 2 angles
+                // Address defines a geographic rectangle. We have NW coord + 2 angles
                 QChar azimuthSector = m_address[0];
                 m_addressLatitude = m_address[1].digitValue() * 10 + m_address[2].digitValue(); // In degrees
                 m_addressLongitude = m_address[3].digitValue() * 100 + m_address[4].digitValue() * 10 + m_address[5].digitValue(); // In degrees

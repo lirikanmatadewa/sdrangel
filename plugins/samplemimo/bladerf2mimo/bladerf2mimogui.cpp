@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2019-2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2022 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -24,20 +25,14 @@
 #include <QMessageBox>
 #include <QFileDialog>
 
-#include "plugin/pluginapi.h"
 #include "device/deviceapi.h"
 #include "device/deviceuiset.h"
 #include "gui/colormapper.h"
 #include "gui/glspectrum.h"
 #include "gui/basicdevicesettingsdialog.h"
 #include "gui/dialogpositioner.h"
-#include "dsp/dspengine.h"
-#include "dsp/dspdevicemimoengine.h"
 #include "dsp/dspcommands.h"
 #include "dsp/devicesamplestatic.h"
-#include "util/db.h"
-
-#include "mainwindow.h"
 
 #include "bladerf2mimo.h"
 #include "ui_bladerf2mimogui.h"
@@ -104,6 +99,7 @@ BladeRF2MIMOGui::BladeRF2MIMOGui(DeviceUISet *deviceUISet, QWidget* parent) :
 
     sendSettings();
     makeUIConnections();
+    m_resizer.enableChildMouseTracking();
 }
 
 BladeRF2MIMOGui::~BladeRF2MIMOGui()
@@ -361,6 +357,15 @@ bool BladeRF2MIMOGui::handleMessage(const Message& message)
         }
 
         displaySettings();
+
+        return true;
+    }
+    else if (BladeRF2MIMO::MsgStartStop::match(message))
+    {
+        BladeRF2MIMO::MsgStartStop& notif = (BladeRF2MIMO::MsgStartStop&) message;
+        blockApplySettings(true);
+        (notif.getRxElseTx() ? ui->startStopRx : ui->startStopTx)->setChecked(notif.getStartStop());
+        blockApplySettings(false);
 
         return true;
     }

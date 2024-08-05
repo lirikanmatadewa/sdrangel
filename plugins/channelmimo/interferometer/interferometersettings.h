@@ -1,5 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2021 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -43,6 +46,9 @@ struct InterferometerSettings
     uint32_t m_log2Decim;
     uint32_t m_filterChainHash;
     int m_phase;
+    int m_gain;
+    int m_localDeviceIndex; //!< Local device set index (-1 if unset)
+    bool m_play;            //!< Play/Stop correlation IQ in local device
     bool m_useReverseAPI;
     QString m_reverseAPIAddress;
     uint16_t m_reverseAPIPort;
@@ -65,6 +71,8 @@ struct InterferometerSettings
     void setScopeGUI(Serializable *scopeGUI) { m_scopeGUI = scopeGUI; }
     QByteArray serialize() const;
     bool deserialize(const QByteArray& data);
+    void applySettings(const QStringList& settingsKeys, const InterferometerSettings& settings);
+    QString getDebugString(const QStringList& settingsKeys, bool force=false) const;
 };
 
 #endif // INCLUDE_INTERFEROMETERSETTINGS_H

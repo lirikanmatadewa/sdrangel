@@ -1,6 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2018 Edouard Griffiths, F4EXB.                                  //
-// Copyright (C) 2022 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2018-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2019 Davide Gerhard <rainbow@irh.it>                            //
+// Copyright (C) 2020 Kacper Michajłow <kasper93@gmail.com>                      //
+// Copyright (C) 2022-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -29,10 +31,7 @@
 #include "util/simpleserializer.h"
 #include "dsp/dspcommands.h"
 #include "dsp/devicesamplemimo.h"
-#include "dsp/dspdevicesourceengine.h"
-#include "dsp/devicesamplesource.h"
 #include "device/deviceapi.h"
-#include "feature/feature.h"
 #include "settings/serializable.h"
 #include "maincore.h"
 
@@ -232,13 +231,15 @@ void RemoteTCPSink::applySettings(const RemoteTCPSinkSettings& settings, const Q
             m_deviceAPI->removeChannelSink(this, m_settings.m_streamIndex);
             m_deviceAPI->addChannelSink(this, settings.m_streamIndex);
             m_deviceAPI->addChannelSinkAPI(this);
+            m_settings.m_streamIndex = settings.m_streamIndex; // make sure ChannelAPI::getStreamIndex() is consistent
+            emit streamIndexChanged(settings.m_streamIndex);
         }
     }
 
     MsgConfigureRemoteTCPSink *msg = MsgConfigureRemoteTCPSink::create(settings, settingsKeys, force, remoteChange);
     m_basebandSink->getInputMessageQueue()->push(msg);
 
-    if (settingsKeys.contains("useReverseAPI"))
+    if (settings.m_useReverseAPI)
     {
         bool fullUpdate = (settingsKeys.contains("useReverseAPI") && settings.m_useReverseAPI) ||
                 settingsKeys.contains("reverseAPIAddress") ||

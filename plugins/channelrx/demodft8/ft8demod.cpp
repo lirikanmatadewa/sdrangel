@@ -1,5 +1,10 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2023 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2014 John Greb <hexameron@spam.no>                              //
+// Copyright (C) 2015-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2020 Kacper Michajłow <kasper93@gmail.com>                      //
+// Copyright (C) 2022 Jiří Pinkava <jiri.pinkava@rossum.ai>                      //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -31,7 +36,6 @@
 #include "SWGChannelReport.h"
 #include "SWGFT8DemodReport.h"
 
-#include "dsp/dspengine.h"
 #include "dsp/dspdevicesourceengine.h"
 #include "dsp/dspdevicemimoengine.h"
 #include "dsp/devicesamplesource.h"
@@ -39,7 +43,6 @@
 #include "dsp/dspcommands.h"
 #include "dsp/devicesamplemimo.h"
 #include "device/deviceapi.h"
-#include "feature/feature.h"
 #include "util/db.h"
 #include "maincore.h"
 
@@ -335,6 +338,8 @@ void FT8Demod::applySettings(const FT8DemodSettings& settings, bool force)
             m_deviceAPI->removeChannelSink(this, m_settings.m_streamIndex);
             m_deviceAPI->addChannelSink(this, settings.m_streamIndex);
             m_deviceAPI->addChannelSinkAPI(this);
+            m_settings.m_streamIndex = settings.m_streamIndex; // make sure ChannelAPI::getStreamIndex() is consistent
+            emit streamIndexChanged(settings.m_streamIndex);
         }
 
         reverseAPIKeys.append("streamIndex");

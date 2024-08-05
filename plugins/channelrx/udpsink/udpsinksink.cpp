@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2019-2020, 2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -21,16 +21,7 @@
 #include <QNetworkReply>
 #include <QBuffer>
 
-#include "SWGChannelSettings.h"
-#include "SWGUDPSinkSettings.h"
-#include "SWGChannelReport.h"
-#include "SWGUDPSinkReport.h"
-
 #include "dsp/basebandsamplesink.h"
-#include "dsp/dspengine.h"
-#include "dsp/dspcommands.h"
-#include "dsp/devicesamplemimo.h"
-#include "device/deviceapi.h"
 #include "util/db.h"
 
 #include "udpsinksink.h"
@@ -90,9 +81,6 @@ UDPSinkSink::UDPSinkSink() :
 	{
 		qWarning("UDPSinkSink::UDPSinkSink: cannot bind audio port");
 	}
-
-    m_agc.setClampMax(SDR_RX_SCALED*SDR_RX_SCALED);
-    m_agc.setClamping(true);
 
 	//DSPEngine::instance()->addAudioSink(&m_audioFifo);
 
@@ -338,7 +326,7 @@ void UDPSinkSink::audioReadyRead()
 						uint res = m_audioFifo.write((const quint8*)&m_audioBuffer[0], m_audioBufferFill);
 
 						if (res != m_audioBufferFill) {
-							qDebug("UDPSinkSink::audioReadyRead: (mono) lost %u samples", m_audioBufferFill - res);
+							qDebug("UDPSinkSink::audioReadyRead: (mono) lost %lu samples", m_audioBufferFill - res);
 						}
 
 						m_audioBufferFill = 0;

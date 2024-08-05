@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2020 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2020-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>         //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -25,17 +25,13 @@
 #include "dsp/dspcommands.h"
 #include "dsp/dspengine.h"
 #include "plugin/pluginapi.h"
-#include "util/simpleserializer.h"
 #include "util/db.h"
 #include "util/morse.h"
-#include "util/units.h"
 #include "gui/basicchannelsettingsdialog.h"
-#include "gui/devicestreamselectiondialog.h"
 #include "gui/crightclickenabler.h"
 #include "gui/audioselectdialog.h"
 #include "gui/dialpopup.h"
 #include "gui/dialogpositioner.h"
-#include "channel/channelwebapiutils.h"
 #include "maincore.h"
 
 #include "ui_vordemodgui.h"
@@ -147,7 +143,7 @@ bool VORDemodGUI::handleMessage(const Message& message)
         ui->morseText->setText(Morse::toSpacedUnicode(ident));
 
         // Idents should only be two or three characters, so filter anything else
-        // other than TEST which indicates a VOR is under maintainance (may also be TST)
+        // other than TEST which indicates a VOR is under maintenance (may also be TST)
         if (((identString.size() >= 2) && (identString.size() <= 3)) || (identString == "TEST"))
         {
             ui->identText->setStyleSheet("QLabel { color: white }");
@@ -343,6 +339,7 @@ VORDemodGUI::VORDemodGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, Baseban
     makeUIConnections();
     applySettings(true);
     DialPopup::addPopupsToChildDials(this);
+    m_resizer.enableChildMouseTracking();
 }
 
 VORDemodGUI::~VORDemodGUI()
@@ -417,6 +414,7 @@ void VORDemodGUI::audioSelect(const QPoint& p)
     qDebug("VORDemodGUI::audioSelect");
     AudioSelectDialog audioSelect(DSPEngine::instance()->getAudioDeviceManager(), m_settings.m_audioDeviceName);
     audioSelect.move(p);
+    new DialogPositioner(&audioSelect, false);
     audioSelect.exec();
 
     if (audioSelect.m_selected)

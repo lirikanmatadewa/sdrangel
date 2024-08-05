@@ -23,6 +23,8 @@ FeatureActions:
       $ref: "/doc/swagger/include/LimeRFE.yaml#/LimeRFEActions"
     MapActions:
       $ref: "/doc/swagger/include/Map.yaml#/MapActions"
+    MorseDecoderActions:
+      $ref: "/doc/swagger/include/MorseDecoder.yaml#/MorseDecoderActions"
     PERTesterActions:
       $ref: "/doc/swagger/include/PERTester.yaml#/PERTesterActions"
     RigCtlServerActions:
@@ -31,7 +33,11 @@ FeatureActions:
       $ref: "/doc/swagger/include/SatelliteTracker.yaml#/SatelliteTrackerActions"
     SimplePTTActions:
       $ref: "/doc/swagger/include/SimplePTT.yaml#/SimplePTTActions"
+    SkyMapActions:
+      $ref: "/doc/swagger/include/SkyMap.yaml#/SkyMapActions"
     StarTrackerActions:
       $ref: "/doc/swagger/include/StarTracker.yaml#/StarTrackerActions"
     VORLocalizerActions:
       $ref: "/doc/swagger/include/VORLocalizer.yaml#/VORLocalizerActions"
+    DemodAnalyzerActions:
+      $ref: "/doc/swagger/include/DemodAnalyzer.yaml#/DemodAnalyzerActions"

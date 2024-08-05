@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2021-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -24,7 +24,7 @@
 #include <QDesktopServices>
 #include <QMessageBox>
 #include <QAction>
-#include <QRegExp>
+#include <QRegularExpression>
 #include <QClipboard>
 #include <QFileDialog>
 #include <QScrollBar>
@@ -37,25 +37,19 @@
 #include "dsp/dspcommands.h"
 #include "ui_aisdemodgui.h"
 #include "plugin/pluginapi.h"
-#include "util/simpleserializer.h"
 #include "util/ais.h"
 #include "util/csv.h"
 #include "util/db.h"
 #include "util/mmsi.h"
 #include "gui/basicchannelsettingsdialog.h"
-#include "gui/devicestreamselectiondialog.h"
 #include "gui/dialpopup.h"
 #include "gui/dialogpositioner.h"
 #include "dsp/dspengine.h"
 #include "dsp/glscopesettings.h"
-#include "gui/crightclickenabler.h"
 #include "gui/tabletapandhold.h"
-#include "channel/channelwebapiutils.h"
 #include "maincore.h"
-#include "feature/featurewebapiutils.h"
 
 #include "aisdemod.h"
-#include "aisdemodsink.h"
 
 void AISDemodGUI::resizeTable()
 {
@@ -428,6 +422,9 @@ void AISDemodGUI::messageReceived(const QByteArray& message, const QDateTime& da
 
     // Decode the message
     ais = AISMessage::decode(message);
+    if (!ais) {
+        return;
+    }
 
     // Is scroll bar at bottom
     QScrollBar *sb = ui->messages->verticalScrollBar();
@@ -642,9 +639,10 @@ void AISDemodGUI::filterRow(int row)
     bool hidden = false;
     if (m_settings.m_filterMMSI != "")
     {
-        QRegExp re(m_settings.m_filterMMSI);
+        QRegularExpression re(QRegularExpression::anchoredPattern(m_settings.m_filterMMSI));
         QTableWidgetItem *fromItem = ui->messages->item(row, MESSAGE_COL_MMSI);
-        if (!re.exactMatch(fromItem->text()))
+        QRegularExpressionMatch match = re.match(fromItem->text());
+        if (!match.hasMatch())
             hidden = true;
     }
     ui->messages->setRowHidden(row, hidden);
@@ -835,6 +833,7 @@ AISDemodGUI::AISDemodGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, Baseban
     makeUIConnections();
     applySettings(true);
     DialPopup::addPopupsToChildDials(this);
+    m_resizer.enableChildMouseTracking();
 }
 
 void AISDemodGUI::customContextMenuRequested(QPoint pos)
@@ -914,6 +913,8 @@ void AISDemodGUI::displaySettings()
 
     ui->showSlotMap->setChecked(m_settings.m_showSlotMap);
     ui->slotMapWidget->setVisible(m_settings.m_showSlotMap);
+
+    ui->useFileTime->setChecked(m_settings.m_useFileTime);
 
     // Order and size columns
     QHeaderView *header = ui->messages->horizontalHeader();
@@ -1087,6 +1088,12 @@ void AISDemodGUI::on_logOpen_clicked()
     }
 }
 
+void AISDemodGUI::on_useFileTime_toggled(bool checked)
+{
+    m_settings.m_useFileTime = checked;
+    applySettings();
+}
+
 void AISDemodGUI::makeUIConnections()
 {
     QObject::connect(ui->deltaFrequency, &ValueDialZ::changed, this, &AISDemodGUI::on_deltaFrequency_changed);
@@ -1104,6 +1111,7 @@ void AISDemodGUI::makeUIConnections()
     QObject::connect(ui->logFilename, &QToolButton::clicked, this, &AISDemodGUI::on_logFilename_clicked);
     QObject::connect(ui->logOpen, &QToolButton::clicked, this, &AISDemodGUI::on_logOpen_clicked);
     QObject::connect(ui->showSlotMap, &ButtonSwitch::clicked, this, &AISDemodGUI::on_showSlotMap_clicked);
+    QObject::connect(ui->useFileTime, &ButtonSwitch::toggled, this, &AISDemodGUI::on_useFileTime_toggled);
 }
 
 void AISDemodGUI::updateAbsoluteCenterFrequency()

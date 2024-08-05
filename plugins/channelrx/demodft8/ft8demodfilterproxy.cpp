@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2023 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>               //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -57,6 +57,13 @@ void FT8DemodFilterProxy::setFilterLoc(const QString& locString)
     invalidateFilter();
 }
 
+void FT8DemodFilterProxy::setFilterCountry(const QString& countryString)
+{
+    m_filterActive = FILTER_COUNTRY;
+    m_country = countryString;
+    invalidateFilter();
+}
+
 void FT8DemodFilterProxy::setFilterInfo(const QString& infoString)
 {
     m_filterActive = FILTER_INFO;
@@ -95,6 +102,12 @@ bool FT8DemodFilterProxy::filterAcceptsRow(int sourceRow, const QModelIndex &sou
     {
         QModelIndex index = sourceModel()->index(sourceRow, FT8DemodSettings::MESSAGE_COL_LOC, sourceParent);
         return sourceModel()->data(index).toString() == m_loc;
+    }
+
+    if (m_filterActive == FILTER_COUNTRY)
+    {
+        QModelIndex index = sourceModel()->index(sourceRow, FT8DemodSettings::MESSAGE_COL_COUNTRY, sourceParent);
+        return sourceModel()->data(index).toString() == m_country;
     }
 
     if (m_filterActive == FILTER_INFO)

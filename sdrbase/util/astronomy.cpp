@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2021, 2023 Jon Beniston, M7RCE <jon@beniston.com>               //
 // Copyright (C) 2004 Rutherford Appleton Laboratory                             //
 // Copyright (C) 2012 Science and Technology Facilities Council.                 //
 // Copyright (C) 2013-2021, NumFOCUS Foundation.                                 //
@@ -20,7 +20,6 @@
 
 #include <cmath>
 
-#include <QRegExp>
 #include <QDateTime>
 #include <QDebug>
 
@@ -74,6 +73,12 @@ double Astronomy::julianDate(QDateTime dt)
 double Astronomy::modifiedJulianDate(QDateTime dt)
 {
     return Astronomy::julianDate(dt) - 2400000.5;
+}
+
+// Convert Julian date to QDateTime
+QDateTime Astronomy::julianDateToDateTime(double jd)
+{
+    return QDateTime::fromSecsSinceEpoch((jd - 2440587.5) * 24.0*60.0*60.0);
 }
 
 // Get Julian date of J2000 Epoch
@@ -483,7 +488,7 @@ void Astronomy::sunPosition(AzAlt& aa, RADec& rd, double latitude, double longit
     double jd = julianDate(dt);
     double n = (jd - jd_j2000()); // Days since J2000 epoch (including fraction)
 
-    double l = 280.461 + 0.9856474 * n; // Mean longitude of the Sun, corrected for the abberation of light
+    double l = 280.461 + 0.9856474 * n; // Mean longitude of the Sun, corrected for the aberration of light
     double g = 357.5291 + 0.98560028 * n; // Mean anomaly of the Sun - how far around orbit from perihlion, in degrees
 
     l = modulo(l, 360.0);
@@ -493,7 +498,7 @@ void Astronomy::sunPosition(AzAlt& aa, RADec& rd, double latitude, double longit
 
     double la = l + 1.9148 * sin(gr) + 0.0200 * sin(2.0*gr) + 0.0003 * sin(3.0*gr); // Ecliptic longitude (Ecliptic latitude b set to 0)
 
-    // Convert la, b=0, which give the position of the Sun in the ecliptic coordinate sytem, to
+    // Convert la, b=0, which give the position of the Sun in the ecliptic coordinate system, to
     // equatorial coordinates
 
     double e = 23.4393 - 3.563E-7 * n; // Obliquity of the ecliptic - tilt of Earth's axis of rotation
@@ -606,7 +611,7 @@ void Astronomy::moonPosition(AzAlt& aa, RADec& rd, double latitude, double longi
     double yg = yh;
     double zg = zh;
 
-    // Convert to equatorial cordinates
+    // Convert to equatorial coordinates
     double xe = xg;
     double ye = yg * cos(ecl) - zg * sin(ecl);
     double ze = yg * sin(ecl) + zg * cos(ecl);
@@ -653,7 +658,7 @@ void Astronomy::moonPosition(AzAlt& aa, RADec& rd, double latitude, double longi
 // See: https://en.wikipedia.org/wiki/Atmospheric_refraction#Calculating_refraction
 // Alt is in degrees. 90 = Zenith gives a factor of 0.
 // Pressure in millibars
-// Temperature in Celsuis
+// Temperature in Celsius
 // We divide by 60.0 to get a value in degrees (as original formula is in arcminutes)
 double Astronomy::refractionSaemundsson(double alt, double pressure, double temperature)
 {
@@ -668,7 +673,7 @@ double Astronomy::refractionSaemundsson(double alt, double pressure, double temp
 // See: https://github.com/Starlink/pal
 // Alt is in degrees. 90 = Zenith gives a factor of 0.
 // Pressure in millibars
-// Temperature in Celsuis
+// Temperature in Celsius
 // Humdity in %
 // Frequency in Hertz
 // Latitude in decimal degrees
@@ -693,40 +698,6 @@ double Astronomy::refractionPAL(double alt, double pressure, double temperature,
     palRefz(zu, refa, refb, &zr);
 
     return z-Units::radiansToDegrees(zr);
-}
-
-double Astronomy::raToDecimal(const QString& value)
-{
-    QRegExp decimal("^([0-9]+(\\.[0-9]+)?)");
-    QRegExp hms("^([0-9]+)[ h]([0-9]+)[ m]([0-9]+(\\.[0-9]+)?)s?");
-
-    if (decimal.exactMatch(value))
-        return decimal.capturedTexts()[0].toDouble();
-    else if (hms.exactMatch(value))
-    {
-        return Units::hoursMinutesSecondsToDecimal(
-                    hms.capturedTexts()[1].toDouble(),
-                    hms.capturedTexts()[2].toDouble(),
-                    hms.capturedTexts()[3].toDouble());
-    }
-    return 0.0;
-}
-
-double Astronomy::decToDecimal(const QString& value)
-{
-    QRegExp decimal("^(-?[0-9]+(\\.[0-9]+)?)");
-    QRegExp dms(QString("^(-?[0-9]+)[ %1d]([0-9]+)[ 'm]([0-9]+(\\.[0-9]+)?)[\"s]?").arg(QChar(0xb0)));
-
-    if (decimal.exactMatch(value))
-        return decimal.capturedTexts()[0].toDouble();
-    else if (dms.exactMatch(value))
-    {
-        return Units::degreesMinutesSecondsToDecimal(
-                    dms.capturedTexts()[1].toDouble(),
-                    dms.capturedTexts()[2].toDouble(),
-                    dms.capturedTexts()[3].toDouble());
-    }
-    return 0.0;
 }
 
 double Astronomy::lstAndRAToLongitude(double lst, double raHours)
@@ -830,7 +801,7 @@ double Astronomy::velocityToDoppler(double v, double f0)
 // Adapted from palRverot
 double Astronomy::earthRotationVelocity(RADec rd, double latitude, double longitude, QDateTime dt)
 {
-    const double earthSpeed = 0.4655; // km/s (Earth's circumference / seconds in one sideral day)
+    const double earthSpeed = 0.4655; // km/s (Earth's circumference / seconds in one sidereal day)
     double latRad = Units::degreesToRadians(latitude);
     double raRad = Units::degreesToRadians(rd.ra * (360.0/24.0));
     double decRad = Units::degreesToRadians(rd.dec);
@@ -901,6 +872,49 @@ double Astronomy::observerVelocityLSRK(RADec rd, double latitude, double longitu
     double vOrbit = Astronomy::earthOrbitVelocityBCRS(rd, dt);
     double vSun = Astronomy::sunVelocityLSRK(rd);
     return vRot + vOrbit + vSun;
+}
+
+// Calculate sunrise and sunset time
+// From: https://en.wikipedia.org/wiki/Sunrise_equation
+// Probably accurate to within a couple of minutes
+void Astronomy::sunrise(QDate date, double latitude, double longitude, QDateTime& rise, QDateTime& set)
+{
+    // Calculate Julian day
+    double n = std::ceil(Astronomy::julianDate(QDateTime(date, QTime(0, 0, 0))) - 2451545.0 + (69.184 / 86400.0));
+
+    // Mean solar time
+    double jStar = n - longitude / 360.0;
+
+    // Solar mean anomaly
+    double m = Astronomy::modulo(357.5291 + 0.98560028 * jStar, 360.0);
+    double mRad = Units::degreesToRadians(m);
+
+    // Equation of the center
+    double c = 1.9148 * sin(mRad) + 0.02 * sin(2.0 * mRad) + 0.0003 * sin(3 * mRad);
+
+    // Ecliptic longitude
+    double lambda = Astronomy::modulo(m + c + 180.0 + 102.9372, 360.0);
+    double lambdaRad = Units::degreesToRadians(lambda);
+
+    // Solar transit
+    double jTransit = 2451545.0 + jStar + 0.0053 * sin(mRad) - 0.0069 * sin(2.0 * lambdaRad);
+
+    // Declination of the Sun
+    const double tilt = 23.4397;
+    const double tiltRad = Units::degreesToRadians(tilt);
+    double sunDecRad = asin(sin(lambdaRad) * sin(tiltRad));
+
+    // Hour angle
+    double latitudeRad = Units::degreesToRadians(latitude);
+    double omega0Rad = acos((sin(Units::degreesToRadians(-0.833)) - sin(latitudeRad) * sin(sunDecRad)) / (cos(latitudeRad) *  cos(sunDecRad)));
+    double omega0 = Units::radiansToDegrees(omega0Rad);
+
+    // Rise and set times
+    double jRise = jTransit - omega0 / 360.0;
+    double jSet = jTransit + omega0 / 360.0;
+
+    rise = Astronomy::julianDateToDateTime(jRise);
+    set =  Astronomy::julianDateToDateTime(jSet);
 }
 
 // Calculate thermal noise power for a given temperature in Kelvin and bandwidth in Hz

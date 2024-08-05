@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2015-2018 Edouard Griffiths, F4EXB.                             //
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2021-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2021 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -32,12 +32,9 @@
 #include "SWGWorkspaceInfo.h"
 #include "SWGPacketDemodSettings.h"
 #include "SWGChannelReport.h"
-#include "SWGMapItem.h"
 
-#include "dsp/dspengine.h"
 #include "dsp/dspcommands.h"
 #include "device/deviceapi.h"
-#include "feature/feature.h"
 #include "settings/serializable.h"
 #include "util/ax25.h"
 #include "util/db.h"
@@ -216,7 +213,7 @@ bool PacketDemod::handleMessage(const Message& cmd)
                     << "\"" << ax25.m_via << "\","
                     << ax25.m_type << ","
                     << ax25.m_pid << ","
-                    << "\"" << ax25.m_dataASCII << "\","
+                    << "\"" << QString::fromUtf8(ax25.m_data) << "\","
                     << "\"" << ax25.m_dataHex << "\"\n";
             }
             else
@@ -297,6 +294,9 @@ void PacketDemod::applySettings(const PacketDemodSettings& settings, bool force)
     if ((settings.m_logEnabled != m_settings.m_logEnabled) || force) {
         reverseAPIKeys.append("logEnabled");
     }
+    if ((settings.m_useFileTime != m_settings.m_useFileTime) || force) {
+        reverseAPIKeys.append("useFileTime");
+    }
     if (m_settings.m_streamIndex != settings.m_streamIndex)
     {
         if (m_deviceAPI->getSampleMIMO()) // change of stream is possible for MIMO devices only
@@ -305,6 +305,8 @@ void PacketDemod::applySettings(const PacketDemodSettings& settings, bool force)
             m_deviceAPI->removeChannelSink(this, m_settings.m_streamIndex);
             m_deviceAPI->addChannelSink(this, settings.m_streamIndex);
             m_deviceAPI->addChannelSinkAPI(this);
+            m_settings.m_streamIndex = settings.m_streamIndex; // make sure ChannelAPI::getStreamIndex() is consistent
+            emit streamIndexChanged(settings.m_streamIndex);
         }
 
         reverseAPIKeys.append("streamIndex");
@@ -343,7 +345,7 @@ void PacketDemod::applySettings(const PacketDemodSettings& settings, bool force)
                 if (newFile)
                 {
                     // Write header
-                    m_logStream << "Date,Time,Data,From,To,Via,Type,PID,Data ASCII,Data Hex\n";
+                    m_logStream << "Date,Time,Data,From,To,Via,Type,PID,Data UTF-8,Data Hex\n";
                 }
             }
             else
@@ -480,10 +482,13 @@ void PacketDemod::webapiUpdateChannelSettings(
         settings.m_udpPort = response.getPacketDemodSettings()->getUdpPort();
     }
     if (channelSettingsKeys.contains("logFilename")) {
-        settings.m_logFilename = *response.getAdsbDemodSettings()->getLogFilename();
+        settings.m_logFilename = *response.getPacketDemodSettings()->getLogFilename();
     }
     if (channelSettingsKeys.contains("logEnabled")) {
-        settings.m_logEnabled = response.getAdsbDemodSettings()->getLogEnabled();
+        settings.m_logEnabled = response.getPacketDemodSettings()->getLogEnabled();
+    }
+    if (channelSettingsKeys.contains("useFileTime")) {
+        settings.m_useFileTime = response.getPacketDemodSettings()->getUseFileTime();
     }
     if (channelSettingsKeys.contains("rgbColor")) {
         settings.m_rgbColor = response.getPacketDemodSettings()->getRgbColor();
@@ -528,6 +533,7 @@ void PacketDemod::webapiFormatChannelSettings(SWGSDRangel::SWGChannelSettings& r
     response.getPacketDemodSettings()->setUdpPort(settings.m_udpPort);
     response.getPacketDemodSettings()->setLogFilename(new QString(settings.m_logFilename));
     response.getPacketDemodSettings()->setLogEnabled(settings.m_logEnabled);
+    response.getPacketDemodSettings()->setUseFileTime(settings.m_useFileTime);
 
     response.getPacketDemodSettings()->setRgbColor(settings.m_rgbColor);
     if (response.getPacketDemodSettings()->getTitle()) {
@@ -655,6 +661,9 @@ void PacketDemod::webapiFormatChannelSettings(
     }
     if (channelSettingsKeys.contains("logEnabled") || force) {
         swgPacketDemodSettings->setLogEnabled(settings.m_logEnabled);
+    }
+    if (channelSettingsKeys.contains("useFilTime") || force) {
+        swgPacketDemodSettings->setUseFileTime(settings.m_useFileTime);
     }
     if (channelSettingsKeys.contains("rgbColor") || force) {
         swgPacketDemodSettings->setRgbColor(settings.m_rgbColor);

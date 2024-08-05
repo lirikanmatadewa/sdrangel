@@ -1,5 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2022-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -65,6 +68,7 @@ public:
     void setIndex(int index);
     int getIndex() const { return m_featureIndex; }
     void setDisplayedame(const QString& name);
+    void setStatusText(const QString& text);
 
 protected:
     void closeEvent(QCloseEvent *event) override;
@@ -82,6 +86,7 @@ protected:
     RollupContents m_rollupContents;
     ContextMenuType m_contextMenuType;
     QString m_displayedName;
+    FramelessWindowResizer m_resizer;
 
 protected slots:
     void shrinkWindow();
@@ -107,7 +112,6 @@ private:
     bool m_drag;
     QPoint m_DragPosition;
     QMap<QWidget*, int> m_heightsMap;
-    FramelessWindowResizer m_resizer;
     bool m_disableResize;
     QMdiArea *m_mdi;                    // Saved pointer to MDI when in full screen mode
 

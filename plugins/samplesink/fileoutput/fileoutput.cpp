@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2016-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2021 Andreas Baulig <free.geronimo@hotmail.de>                  //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -26,7 +27,6 @@
 
 #include "util/simpleserializer.h"
 #include "dsp/dspcommands.h"
-#include "dsp/dspengine.h"
 #include "dsp/filerecord.h"
 
 #include "device/deviceapi.h"
@@ -56,6 +56,7 @@ FileOutput::FileOutput(DeviceAPI *deviceAPI) :
 
 FileOutput::~FileOutput()
 {
+	delete m_networkManager;
 	stop();
 }
 
@@ -316,7 +317,7 @@ void FileOutput::applySettings(const FileOutputSettings& settings, const QList<Q
         forwardChange = true;
     }
 
-    if (settingsKeys.contains("useReverseAPI"))
+    if (settings.m_useReverseAPI)
     {
         bool fullUpdate = (settingsKeys.contains("useReverseAPI") && settings.m_useReverseAPI) ||
             settingsKeys.contains("reverseAPIAddress") ||

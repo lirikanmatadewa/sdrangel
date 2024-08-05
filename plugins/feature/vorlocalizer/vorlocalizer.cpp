@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2020-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2021 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -26,7 +27,6 @@
 #include "SWGDeviceState.h"
 #include "SWGChannelReport.h"
 
-#include "dsp/dspengine.h"
 #include "dsp/dspdevicesourceengine.h"
 #include "dsp/devicesamplesource.h"
 #include "device/deviceset.h"
@@ -347,7 +347,7 @@ void VORLocalizer::applySettings(const VORLocalizerSettings& settings, const QLi
         m_worker->getInputMessageQueue()->push(msg);
     }
 
-    if (settingsKeys.contains("useReverseAPI"))
+    if (settings.m_useReverseAPI)
     {
         bool fullUpdate = (settingsKeys.contains("useReverseAPI") && settings.m_useReverseAPI) ||
                 settingsKeys.contains("reverseAPIAddress") ||

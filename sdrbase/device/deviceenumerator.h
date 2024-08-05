@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2017-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2022-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -40,6 +41,7 @@ public:
     void enumerateRxDevices(PluginManager *pluginManager);
     void enumerateTxDevices(PluginManager *pluginManager);
     void enumerateMIMODevices(PluginManager *pluginManager);
+    void enumerateAllDevices(PluginManager *pluginManager);
     void addNonDiscoverableDevices(PluginManager *pluginManager, const DeviceUserArgs& deviceUserArgs);
     void listRxDeviceNames(QList<QString>& list, std::vector<int>& indexes) const;
     void listTxDeviceNames(QList<QString>& list, std::vector<int>& indexes) const;
@@ -50,6 +52,7 @@ public:
     void removeRxSelection(int tabIndex);
     void removeTxSelection(int tabIndex);
     void removeMIMOSelection(int tabIndex);
+    void renumeratetabIndex(int skippedTabIndex);
     int getNbRxSamplingDevices() const { return m_rxEnumeration.size(); }
     int getNbTxSamplingDevices() const { return m_txEnumeration.size(); }
     int getNbMIMOSamplingDevices() const { return m_mimoEnumeration.size(); }
@@ -92,7 +95,7 @@ private:
     DevicesEnumeration m_txEnumeration;
     DevicesEnumeration m_mimoEnumeration;
 
-    void enumerateDevices(PluginAPI::SamplingDeviceRegistrations& deviceRegistrations, DevicesEnumeration& enumeration, PluginInterface::SamplingDevice::StreamType type);
+    void enumerateDevices(std::initializer_list<PluginAPI::SamplingDeviceRegistrations*>  deviceRegistrations, std::initializer_list<DevicesEnumeration*> enumerations);
     PluginInterface *getRxRegisteredPlugin(PluginManager *pluginManager, const QString& deviceHwId);
     PluginInterface *getTxRegisteredPlugin(PluginManager *pluginManager, const QString& deviceHwId);
     PluginInterface *getMIMORegisteredPlugin(PluginManager *pluginManager, const QString& deviceHwId);

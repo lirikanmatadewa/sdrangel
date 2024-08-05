@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2019-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -20,14 +20,8 @@
 #include <QTime>
 #include <QDebug>
 
-#include "audio/audiooutputdevice.h"
-#include "dsp/dspengine.h"
-#include "dsp/dspcommands.h"
-#include "dsp/devicesamplemimo.h"
 #include "dsp/spectrumvis.h"
 #include "dsp/datafifo.h"
-#include "device/deviceapi.h"
-#include "util/db.h"
 #include "util/messagequeue.h"
 #include "maincore.h"
 
@@ -90,7 +84,6 @@ FT8DemodSink::FT8DemodSink() :
 	m_magsqCount = 0;
 
     m_agc.setThresholdEnable(false); // no squelch
-	m_agc.setClamping(false); // no clamping
 
 	SSBFilter = new fftfilt(m_LowCutoff / FT8DemodSettings::m_ft8SampleRate, m_Bandwidth / FT8DemodSettings::m_ft8SampleRate, m_ssbFftLen);
 

@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Edouard Griffiths, F4EXB.                                  //
+// Copyright (C) 2019-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2020 Kacper Michajłow <kasper93@gmail.com>                      //
+// Copyright (C) 2022 Jiří Pinkava <jiri.pinkava@rossum.ai>                      //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -35,10 +37,8 @@
 #include "dsp/dspdevicesourceengine.h"
 #include "dsp/dspengine.h"
 #include "dsp/devicesamplesource.h"
-#include "dsp/hbfilterchainconverter.h"
 #include "dsp/devicesamplemimo.h"
 #include "device/deviceapi.h"
-#include "feature/feature.h"
 #include "maincore.h"
 
 #include "sigmffilesinkmessages.h"
@@ -326,6 +326,7 @@ void SigMFFileSink::applySettings(const SigMFFileSinkSettings& settings, bool fo
         << "m_inputFrequencyOffset: " << settings.m_inputFrequencyOffset
         << "m_log2Decim: " << settings.m_log2Decim
         << "m_fileRecordName: " << settings.m_fileRecordName
+        << "m_log2RecordSampleSize: " << settings.m_log2RecordSampleSize
         << "force: " << force;
 
     QList<QString> reverseAPIKeys;
@@ -360,6 +361,9 @@ void SigMFFileSink::applySettings(const SigMFFileSinkSettings& settings, bool fo
     if ((settings.m_squelchRecordingEnable != m_settings.m_squelchRecordingEnable) || force) {
         reverseAPIKeys.append("squelchRecordingEnable");
     }
+    if ((settings.m_log2RecordSampleSize != m_settings.m_log2RecordSampleSize) || force) {
+        reverseAPIKeys.append("log2RecordSampleSize");
+    }
 
     if (m_settings.m_streamIndex != settings.m_streamIndex)
     {
@@ -369,6 +373,8 @@ void SigMFFileSink::applySettings(const SigMFFileSinkSettings& settings, bool fo
             m_deviceAPI->removeChannelSink(this, m_settings.m_streamIndex);
             m_deviceAPI->addChannelSink(this, settings.m_streamIndex);
             m_deviceAPI->addChannelSinkAPI(this);
+            m_settings.m_streamIndex = settings.m_streamIndex; // make sure ChannelAPI::getStreamIndex() is consistent
+            emit streamIndexChanged(settings.m_streamIndex);
         }
 
         reverseAPIKeys.append("streamIndex");
@@ -565,6 +571,9 @@ void SigMFFileSink::webapiUpdateChannelSettings(
     if (channelSettingsKeys.contains("squelchRecordingEnable")) {
         settings.m_squelchRecordingEnable = response.getSigMfFileSinkSettings()->getSquelchRecordingEnable() != 0;
     }
+    if (channelSettingsKeys.contains("log2RecordSampleSize")) {
+        settings.m_log2RecordSampleSize = response.getSigMfFileSinkSettings()->getLog2RecordSampleSize();
+    }
     if (channelSettingsKeys.contains("streamIndex")) {
         settings.m_streamIndex = response.getSigMfFileSinkSettings()->getStreamIndex();
     }
@@ -621,6 +630,7 @@ void SigMFFileSink::webapiFormatChannelSettings(SWGSDRangel::SWGChannelSettings&
     response.getSigMfFileSinkSettings()->setPreRecordTime(settings.m_preRecordTime);
     response.getSigMfFileSinkSettings()->setSquelchPostRecordTime(settings.m_squelchPostRecordTime);
     response.getSigMfFileSinkSettings()->setSquelchRecordingEnable(settings.m_squelchRecordingEnable ? 1 : 0);
+    response.getSigMfFileSinkSettings()->setLog2RecordSampleSize(settings.m_log2RecordSampleSize);
     response.getSigMfFileSinkSettings()->setStreamIndex(settings.m_streamIndex);
     response.getSigMfFileSinkSettings()->setUseReverseApi(settings.m_useReverseAPI ? 1 : 0);
 
@@ -788,6 +798,9 @@ void SigMFFileSink::webapiFormatChannelSettings(
     }
     if (channelSettingsKeys.contains("squelchRecordingEnable")) {
         swgSigMFFileSinkSettings->setSquelchRecordingEnable(settings.m_squelchRecordingEnable ? 1 : 0);
+    }
+    if (channelSettingsKeys.contains("log2RecordSampleSize")) {
+        swgSigMFFileSinkSettings->setLog2RecordSampleSize(settings.m_log2RecordSampleSize);
     }
     if (channelSettingsKeys.contains("streamIndex")) {
         swgSigMFFileSinkSettings->setStreamIndex(settings.m_streamIndex);

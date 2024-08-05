@@ -19,13 +19,14 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # configure version
 set(sdrangel_VERSION_MAJOR "7")
-set(sdrangel_VERSION_MINOR "17")
-set(sdrangel_VERSION_PATCH "0")
+set(sdrangel_VERSION_MINOR "21")
+set(sdrangel_VERSION_PATCH "4")
 set(sdrangel_VERSION_SUFFIX "")
 
 # SDRAngel cmake options
 option(DEBUG_OUTPUT "Print debug messages" OFF)
-option(SANITIZE_ADDRESS "Activate memory address sanitization" OFF)
+option(SANITIZE_ADDRESS "Activate detection of uninitialized memory (AddressSanitizer)" OFF)
+option(SANITIZE_MEMORY "Activate detection of leaked memory (LeakSanitizer)" OFF)
 option(RX_SAMPLE_24BIT "Internal 24 bit Rx DSP" ON)
 option(BUILD_SERVER "Build Server" ON)
 option(BUILD_GUI "Build GUI" ON)
@@ -93,6 +94,9 @@ option(ENABLE_CHANNELRX_DEMODILS "Enable channelrx demodils plugin" ON)
 option(ENABLE_CHANNELRX_DEMODDSC "Enable channelrx demoddsc plugin" ON)
 option(ENABLE_CHANNELRX_HEATMAP "Enable channelrx heatmap plugin" ON)
 option(ENABLE_CHANNELRX_FREQSCANNER "Enable channelrx freqscanner plugin" ON)
+option(ENABLE_CHANNELRX_ENDOFTRAIN "Enable channelrx end-of-train plugin" ON)
+option(ENABLE_CHANNELRX_CHANNELPOWER "Enable channelrx channel power plugin" ON)
+option(ENABLE_CHANNELRX_WDSPRX "Enable channelrx WDSP receiver plugin" ON)
 
 # Channel Tx enablers
 option(ENABLE_CHANNELTX "Enable channeltx plugins" ON)
@@ -141,6 +145,9 @@ option(ENABLE_FEATURE_RIGCTLSERVER "Enable feature rigctlserver plugin" ON)
 option(ENABLE_FEATURE_PERTESTER "Enable feature pertester plugin" ON)
 option(ENABLE_FEATURE_GS232CONTROLLER "Enable feature gs232controller plugin" ON)
 option(ENABLE_FEATURE_REMOTECONTROL "Enable feature remote control plugin" ON)
+option(ENABLE_FEATURE_SKYMAP "Enable feature sky map plugin" ON)
+option(ENABLE_FEATURE_SID "Enable feature sid plugin" ON)
+option(ENABLE_FEATURE_MORSEDECODER "Enable feature morsedecoder plugin" ON)
 
 # on windows always build external libraries
 if(WIN32)
@@ -173,6 +180,17 @@ if(GIT_FOUND AND EXISTS "${CMAKE_SOURCE_DIR}/.git/")
         set(sdrangel_VERSION_SUFFIX "${git_commit}")
     endif()
 endif()
+
+find_program(CCACHE "ccache")
+if(CCACHE)
+    message(STATUS "Using ccache ${CCACHE}")
+    set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE})
+    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE})
+    if(APPLE)
+        set(CMAKE_OBJCXX_COMPILER_LAUNCHER ${CCACHE})
+    endif()
+    set(ENV{CCACHE_SLOPPINESS} pch_defines,time_macros)
+endif(CCACHE)
 
 set(sdrangel_VERSION "${sdrangel_VERSION_MAJOR}.${sdrangel_VERSION_MINOR}.${sdrangel_VERSION_PATCH}${sdrangel_VERSION_SUFFIX}" CACHE INTERNAL "")
 message(STATUS "${APPLICATION_NAME} Version: ${sdrangel_VERSION}")
@@ -290,7 +308,7 @@ elseif(APPLE)
 elseif (WIN32)
   # check compiler version
   message(STATUS "MSVC_VERSION is ${MSVC_VERSION}")
-  if(MSVC_VERSION GREATER_EQUAL 1930 AND MSVC_VERSION LESS 1940)
+  if(MSVC_VERSION GREATER_EQUAL 1930)
     set(VS2022 ON)
   elseif(MSVC_VERSION GREATER_EQUAL 1920 AND MSVC_VERSION LESS 1930)
     set(VS2019 ON)
@@ -384,6 +402,10 @@ if(VS2019)
   set(LIBSIGMF_LIBRARIES_DEBUG "${EXTERNAL_LIBRARY_FOLDER}/libsigmf/lib/libsigmfd.lib" DbgHelp CACHE INTERNAL "")
   set(LIBSIGMF_DLL_DIR "${EXTERNAL_LIBRARY_FOLDER}/libsigmf/lib/" CACHE INTERNAL "")
 
+  set(LIBACARS_FOUND ON CACHE INTERNAL "")
+  set(LIBACARS_INCLUDE_DIR "${EXTERNAL_LIBRARY_FOLDER}/libacars/include/libacars-2" CACHE INTERNAL "")
+  set(LIBACARS_LIBRARIES "${EXTERNAL_LIBRARY_FOLDER}/libacars/lib/acars-2.lib" CACHE INTERNAL "")
+
   # used on fixup_bundle phase
   set(WINDOWS_FIXUP_BUNDLE_LIB_DIRS
     "${EXTERNAL_LIBRARY_FOLDER}/fftw-3"
@@ -437,7 +459,7 @@ elseif(ANDROID)
   set(LIBDSDCC_LIBRARIES "${EXTERNAL_LIBRARY_FOLDER}/${ANDROID_ABI}/dsdcc/lib/libdsdcc.so" CACHE INTERNAL "")
 
   set(FFMPEG_FOUND ON CACHE INTERNAL "")
-  set(FFMEG_SKIP_CHECK ON CACHE INTERNAL "")
+  set(FFMPEG_SKIP_CHECK ON CACHE INTERNAL "")
   set(FFMPEG_INCLUDE_DIRS "${EXTERNAL_LIBRARY_FOLDER}/${ANDROID_ABI}/ffmpeg/include" CACHE INTERNAL "")
   set(FFMPEG_LIBRARIES "${EXTERNAL_LIBRARY_FOLDER}/${ANDROID_ABI}/ffmpeg/bin" CACHE INTERNAL "")
   set(AVCODEC_INCLUDE_DIRS "${EXTERNAL_LIBRARY_FOLDER}/${ANDROID_ABI}/ffmpeg/include" CACHE INTERNAL "")
@@ -642,7 +664,8 @@ if (BUILD_GUI)
                             Quick
                             QuickWidgets
                             TextToSpeech
-                            Svg)
+                            Svg
+                            SvgWidgets)
         else()
             find_package(Qt5
                            REQUIRED COMPONENTS
@@ -665,6 +688,8 @@ if (BUILD_GUI)
                             OpenGLWidgets
                             Quick
                             QuickWidgets
+                            Svg
+                            SvgWidgets
                            OPTIONAL_COMPONENTS
                             WebEngineQuick
                             WebEngineCore
@@ -679,6 +704,7 @@ if (BUILD_GUI)
                             QuickWidgets
                             Location
                             TextToSpeech
+                            Svg
                            OPTIONAL_COMPONENTS
                             WebEngine
                             WebEngineCore
@@ -755,6 +781,7 @@ if (NOT ENABLE_EXTERNAL_LIBRARIES OR (ENABLE_EXTERNAL_LIBRARIES STREQUAL "AUTO")
     find_package(LibDAB)
     find_package(HIDAPI)
     find_package(FFmpeg COMPONENTS AVCODEC AVFORMAT AVUTIL SWSCALE)
+    find_package(GGMorse)
 
     # Devices
     if(ENABLE_AIRSPY)
@@ -831,6 +858,12 @@ if (FFTW3F_FOUND)
     add_subdirectory(ft8)
     add_definitions(-DHAS_FT8)
     set(FT8_SUPPORT ON CACHE INTERNAL "")
+endif()
+
+if (FFTW3F_FOUND)
+    add_subdirectory(wdsp)
+    add_definitions(-DHAS_WDSP)
+    set(WDSP_SUPPORT ON CACHE INTERNAL "")
 endif()
 
 add_subdirectory(sdrbench)

@@ -1,5 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2023 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2019 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -26,7 +29,7 @@
 class SDRGUI_API FrequencyDelegate : public QStyledItemDelegate {
 
 public:
-    FrequencyDelegate(const QString& units = "kHz", int precision=1, bool group=true);
+    FrequencyDelegate(const QString& units = "kHz", int precision=1, bool group=true, QObject *parent = nullptr);
     QString displayText(const QVariant &value, const QLocale &locale) const override;
 
 protected:

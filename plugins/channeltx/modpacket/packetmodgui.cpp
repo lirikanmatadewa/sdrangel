@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2020 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2020-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2020-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -27,12 +27,10 @@
 #include "dsp/dspcommands.h"
 #include "device/deviceuiset.h"
 #include "plugin/pluginapi.h"
-#include "util/simpleserializer.h"
 #include "util/db.h"
 #include "gui/glspectrum.h"
 #include "gui/crightclickenabler.h"
 #include "gui/basicchannelsettingsdialog.h"
-#include "gui/devicestreamselectiondialog.h"
 #include "gui/fmpreemphasisdialog.h"
 #include "gui/dialpopup.h"
 #include "gui/dialogpositioner.h"
@@ -237,7 +235,7 @@ void PacketModGUI::on_insertPosition_clicked()
     char latBuf[40];
     char longBuf[40];
 
-    // Convert decimal latitude to degrees, min and hundreths of a minute
+    // Convert decimal latitude to degrees, min and hundredths of a minute
     latNorth = latitude >= 0.0f;
     latitude = abs(latitude);
     latDeg = (int)latitude;
@@ -531,6 +529,7 @@ PacketModGUI::PacketModGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, Baseb
     makeUIConnections();
     applySettings();
     DialPopup::addPopupsToChildDials(this);
+    m_resizer.enableChildMouseTracking();
 }
 
 PacketModGUI::~PacketModGUI()

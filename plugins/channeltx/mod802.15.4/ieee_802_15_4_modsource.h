@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2020 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2020-2021 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2020 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -27,11 +27,9 @@
 
 #include "dsp/channelsamplesource.h"
 #include "dsp/nco.h"
-#include "dsp/ncof.h"
 #include "dsp/interpolator.h"
 #include "dsp/firfilter.h"
 #include "dsp/raisedcosine.h"
-#include "dsp/fmpreemphasis.h"
 #include "util/lfsr.h"
 #include "util/movingaverage.h"
 #include "util/message.h"

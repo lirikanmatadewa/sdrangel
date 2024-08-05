@@ -1,6 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 F4EXB                                                      //
-// written by Edouard Griffiths                                                  //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2014 John Greb <hexameron@spam.no>                              //
+// Copyright (C) 2015-2019 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -861,7 +863,7 @@ protected:
 
 	void doFIR(qint32 *x, qint32 *y)
 	{
-		// Coefficents. This is a sinc function:
+		// Coefficients. This is a sinc function:
 	    // Half of the half of coefficients are stored because:
 	    // - half of the coefficients are 0
 	    // - there is a symmertry around the central 0.5 coefficient (not stored either)

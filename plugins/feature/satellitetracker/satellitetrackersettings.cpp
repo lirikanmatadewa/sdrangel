@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2021-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -24,12 +24,6 @@
 #include "settings/serializable.h"
 
 #include "satellitetrackersettings.h"
-
-#define DEAFULT_TARGET                  "ISS"
-#define DEFAULT_TLES                    {"https://db.satnogs.org/api/tle/", "https://www.amsat.org/tle/current/nasabare.txt", "https://www.celestrak.com/NORAD/elements/goes.txt", "https://celestrak.org/NORAD/elements/gp.php?GROUP=gps-ops&FORMAT=tle"}
-#define DEFAULT_DATE_FORMAT              "yyyy/MM/dd"
-#define DEFAULT_AOS_SPEECH              "${name} is visible for ${duration} minutes. Max elevation, ${elevation} degrees."
-#define DEFAULT_LOS_SPEECH              "${name} is no longer visible."
 
 SatelliteTrackerSettings::SatelliteTrackerSettings() :
     m_rollupState(nullptr)

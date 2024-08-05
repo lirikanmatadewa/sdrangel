@@ -1,4 +1,4 @@
-<h1>Android SDR Driver Input Olugin</h1>
+<h1>Android SDR Driver Input Plugin</h1>
 
 <h2>Introduction</h2>
 
@@ -15,7 +15,7 @@ Device start / stop button.
 
   - Blue triangle icon: device is ready and can be started
   - Green square icon: device is running and can be stopped
-  - Red square icon: an error has occured with the connection to the device. The plugin will continually try to reconnect.
+  - Red square icon: an error has occurred with the connection to the device. The plugin will continually try to reconnect.
 
 <h3>2: Center frequency</h3>
 

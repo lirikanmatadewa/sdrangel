@@ -1,6 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2015 Edouard Griffiths, F4EXB.                                  //
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2021, 2023 Jon Beniston, M7RCE <jon@beniston.com>               //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -18,7 +20,6 @@
 
 #include <QColor>
 
-#include "dsp/dspengine.h"
 #include "util/simpleserializer.h"
 #include "settings/serializable.h"
 #include "aisdemodsettings.h"
@@ -46,6 +47,7 @@ void AISDemodSettings::resetToDefaults()
     m_logFilename = "ais_log.csv";
     m_logEnabled = false;
     m_showSlotMap = false;
+    m_useFileTime = false;
     m_rgbColor = QColor(102, 0, 0).rgb();
     m_title = "AIS Demodulator";
     m_streamIndex = 0;
@@ -103,6 +105,7 @@ QByteArray AISDemodSettings::serialize() const
     s.writeBlob(27, m_geometryBytes);
     s.writeBool(28, m_hidden);
     s.writeBool(29, m_showSlotMap);
+    s.writeBool(30, m_useFileTime);
 
     for (int i = 0; i < AISDEMOD_MESSAGE_COLUMNS; i++)
         s.writeS32(100 + i, m_messageColumnIndexes[i]);
@@ -189,6 +192,7 @@ bool AISDemodSettings::deserialize(const QByteArray& data)
         d.readBlob(27, &m_geometryBytes);
         d.readBool(28, &m_hidden, false);
         d.readBool(29, &m_showSlotMap, false);
+        d.readBool(30, &m_useFileTime, false);
 
         for (int i = 0; i < AISDEMOD_MESSAGE_COLUMNS; i++) {
             d.readS32(100 + i, &m_messageColumnIndexes[i], i);

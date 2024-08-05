@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2022 F4EXB                                                      //
-// written by Edouard Griffiths                                                  //
+// Copyright (C) 2022 Jon Beniston, M7RCE <jon@beniston.com>                     //
+// Copyright (C) 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>               //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -297,11 +297,14 @@ void DeviceSetPresetsDialog::on_presetExport_clicked()
 
 			if (fileName != "")
 			{
+#ifndef ANDROID
+                // Can't change filenames on Android
 				QFileInfo fileInfo(fileName);
 
 				if (fileInfo.suffix() != "prex") {
 					fileName += ".prex";
 				}
+#endif
 
 				QFile exportFile(fileName);
 

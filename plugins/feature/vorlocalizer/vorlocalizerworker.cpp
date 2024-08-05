@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>         //
+// Copyright (C) 2021-2022 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2022 Jiří Pinkava <jiri.pinkava@rossum.ai>                      //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -17,8 +19,6 @@
 
 #include <QDebug>
 
-#include "SWGDeviceState.h"
-#include "SWGDeviceSettings.h"
 #include "SWGChannelSettings.h"
 #include "SWGSuccessResponse.h"
 #include "SWGErrorResponse.h"
@@ -469,7 +469,7 @@ void VorLocalizerWorker::setChannelShift(int deviceIndex, int channelIndex, doub
     SWGSDRangel::SWGErrorResponse errorResponse;
     int httpRC;
 
-    // Get channel settings containg inputFrequencyOffset, so we can patch them
+    // Get channel settings containing inputFrequencyOffset, so we can patch them
     httpRC = m_webAPIAdapterInterface->devicesetChannelSettingsGet(
         deviceIndex,
         channelIndex,
@@ -547,7 +547,7 @@ void VorLocalizerWorker::setAudioMute(int vorNavId, bool audioMute)
     int deviceIndex = m_channelAllocations[vorNavId].m_deviceIndex;
     int channelIndex = m_channelAllocations[vorNavId].m_channelIndex;
 
-    // Get channel settings containg inputFrequencyOffset, so we can patch them
+    // Get channel settings containing inputFrequencyOffset, so we can patch them
     httpRC = m_webAPIAdapterInterface->devicesetChannelSettingsGet(
         deviceIndex,
         channelIndex,

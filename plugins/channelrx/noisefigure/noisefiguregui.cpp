@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2021-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -28,17 +28,13 @@
 #include "dsp/dspcommands.h"
 #include "ui_noisefiguregui.h"
 #include "plugin/pluginapi.h"
-#include "util/simpleserializer.h"
 #include "util/db.h"
 #include "gui/basicchannelsettingsdialog.h"
-#include "gui/devicestreamselectiondialog.h"
-#include "gui/crightclickenabler.h"
 #include "gui/decimaldelegate.h"
 #include "gui/dialogpositioner.h"
 #include "maincore.h"
 
 #include "noisefigure.h"
-#include "noisefiguresink.h"
 #include "noisefigurecontroldialog.h"
 #include "noisefigureenrdialog.h"
 
@@ -661,17 +657,18 @@ NoiseFigureGUI::NoiseFigureGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, B
     ui->results->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->results, SIGNAL(customContextMenuRequested(QPoint)), SLOT(customContextMenuRequested(QPoint)));
 
-    ui->results->setItemDelegateForColumn(RESULTS_COL_NF, new DecimalDelegate(2));
-    ui->results->setItemDelegateForColumn(RESULTS_COL_TEMP, new DecimalDelegate(0));
-    ui->results->setItemDelegateForColumn(RESULTS_COL_Y, new DecimalDelegate(2));
-    ui->results->setItemDelegateForColumn(RESULTS_COL_ENR, new DecimalDelegate(2));
-    ui->results->setItemDelegateForColumn(RESULTS_COL_FLOOR, new DecimalDelegate(1));
+    ui->results->setItemDelegateForColumn(RESULTS_COL_NF, new DecimalDelegate(2, ui->results));
+    ui->results->setItemDelegateForColumn(RESULTS_COL_TEMP, new DecimalDelegate(0, ui->results));
+    ui->results->setItemDelegateForColumn(RESULTS_COL_Y, new DecimalDelegate(2, ui->results));
+    ui->results->setItemDelegateForColumn(RESULTS_COL_ENR, new DecimalDelegate(2, ui->results));
+    ui->results->setItemDelegateForColumn(RESULTS_COL_FLOOR, new DecimalDelegate(1, ui->results));
 
     ui->startStop->setStyleSheet(QString("QToolButton{ background-color: blue; } QToolButton:checked{ background-color: green; }"));
 
     displaySettings();
     makeUIConnections();
     applySettings(true);
+    m_resizer.enableChildMouseTracking();
 }
 
 void NoiseFigureGUI::customContextMenuRequested(QPoint pos)

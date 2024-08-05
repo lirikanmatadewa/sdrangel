@@ -1,6 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 F4EXB                                                      //
-// written by Edouard Griffiths                                                  //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2019, 2021 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2015 John Greb <hexameron@spam.no>                              //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -20,7 +22,6 @@
 #define SDRBASE_GUI_CWKEYERGUI_H_
 
 #include <QWidget>
-#include "dsp/dsptypes.h"
 #include "export.h"
 #include "settings/serializable.h"
 #include "dsp/cwkeyersettings.h"
@@ -88,6 +89,10 @@ private slots:
     void on_keyboardKeyer_toggled(bool checked);
     void commandKeyPressed(Qt::Key key, Qt::KeyboardModifiers keyModifiers, bool release);
     void keyboardKeyPressed(Qt::Key key, Qt::KeyboardModifiers keyModifiers, bool release);
+    void cwKeyerMouseLeftPressed();
+    void cwKeyerMouseLeftReleased();
+    void cwKeyerMouseRightPressed();
+    void cwKeyerMouseRightReleased();
 };
 
 

@@ -28,7 +28,7 @@ Each part is detailed next
 
 <h3>1: Frequency shift from center frequency of reception</h3>
 
-Use the wheels to adjust the frequency shift in Hz from the center frequency of reception. Left click on a digit sets the cursor position at this digit. Right click on a digit sets all digits on the right to zero. This effectively floors value at the digit position. Wheels are moved with the mousewheel while pointing at the wheel or by selecting the wheel with the left mouse click and using the keyboard arrows.Pressing shift simultaneously moves digit by 5 and pressing control moves it by 2.
+Use the wheels to adjust the frequency shift in Hz from the center frequency of reception. Left click on a digit sets the cursor position at this digit. Right click on a digit sets all digits on the right to zero. This effectively floors value at the digit position. Wheels are moved with the mousewheel while pointing at the wheel or by selecting the wheel with the left mouse click and using the keyboard arrows. Pressing shift simultaneously moves digit by 5 and pressing control moves it by 2.
 
 <h3>2: Channel sample rate</h3>
 
@@ -268,7 +268,7 @@ Use this slider to adjust the black level of the video signal on a 0 to 1V scale
 
 <h3>12: Horizontal synchronization pulse length</h3>
 
-This is the length in time units of a horizontal or line synchronization pulse. The value depends on the nominal line length as described above. The pulse length is derived from the 4.7 &mu;s pulse of a 625 lines and 25 FPS standard system with a 64 &mu;s line length. For example with a 625 lines &#times; 12 FPS transmission that has a line length of &#8776;133.33 &mu;s this is (4.7 &divide; 64) &times; 133.33 &#8776; 9.79 &mu;s.
+This is the length in time units of a horizontal or line synchronization pulse. The value depends on the nominal line length as described above. The pulse length is derived from the 4.7 &mu;s pulse of a 625 lines and 25 FPS standard system with a 64 &mu;s line length. For example with a 625 lines &times; 12 FPS transmission that has a line length of &#8776;133.33 &mu;s this is (4.7 &divide; 64) &times; 133.33 &#8776; 9.79 &mu;s.
 
 <h2>C: Image</h2>
 

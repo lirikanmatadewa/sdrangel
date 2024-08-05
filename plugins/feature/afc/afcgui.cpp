@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>         //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -18,12 +19,9 @@
 #include <QMessageBox>
 
 #include "feature/featureuiset.h"
-#include "device/deviceset.h"
-#include "channel/channelapi.h"
 #include "gui/basicfeaturesettingsdialog.h"
 #include "gui/dialpopup.h"
 #include "gui/dialogpositioner.h"
-#include "maincore.h"
 
 #include "ui_afcgui.h"
 #include "afcreport.h"
@@ -105,6 +103,7 @@ bool AFCGUI::handleMessage(const Message& message)
     {
         const AFC::MsgDeviceSetListsReport& report = (AFC::MsgDeviceSetListsReport&) message;
         updateDeviceSetLists(report);
+        return true;
     }
 
 	return false;
@@ -174,6 +173,7 @@ AFCGUI::AFCGUI(PluginAPI* pluginAPI, FeatureUISet *featureUISet, Feature *featur
 	applySettings(true);
     makeUIConnections();
     DialPopup::addPopupsToChildDials(this);
+    m_resizer.enableChildMouseTracking();
 }
 
 AFCGUI::~AFCGUI()

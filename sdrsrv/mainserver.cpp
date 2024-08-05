@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2017 Edouard Griffiths, F4EXB.                                  //
+// Copyright (C) 2017-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2019 Davide Gerhard <rainbow@irh.it>                            //
+// Copyright (C) 2020 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // Swagger server adapter interface                                              //
 //                                                                               //
@@ -65,7 +67,7 @@ MainServer::MainServer(qtwebapp::LoggerWithFile *logger, const MainParser& parse
     connect(&m_inputMessageQueue, SIGNAL(messageEnqueued()), this, SLOT(handleMessages()), Qt::QueuedConnection);
     m_mainCore->m_masterTimer.start(50);
 
-    qDebug() << "MainServer::MainServer: load setings...";
+    qDebug() << "MainServer::MainServer: load settings...";
 	loadSettings();
 
     qDebug() << "MainServer::MainServer: finishing...";
@@ -499,24 +501,11 @@ void MainServer::changeSampleSource(int deviceSetIndex, int selectedDeviceIndex)
         {
             if (*it != deviceSet) // do not add to itself
             {
-                if ((*it)->m_deviceSourceEngine) // it is a source device
+                if ((deviceSet->m_deviceAPI->getHardwareId() == (*it)->m_deviceAPI->getHardwareId()) &&
+                    (deviceSet->m_deviceAPI->getSamplingDeviceSerial() == (*it)->m_deviceAPI->getSamplingDeviceSerial()))
                 {
-                    if ((deviceSet->m_deviceAPI->getHardwareId() == (*it)->m_deviceAPI->getHardwareId()) &&
-                        (deviceSet->m_deviceAPI->getSamplingDeviceSerial() == (*it)->m_deviceAPI->getSamplingDeviceSerial()))
-                    {
-                        (*it)->m_deviceAPI->addSourceBuddy(deviceSet->m_deviceAPI);
-                        nbOfBuddies++;
-                    }
-                }
-
-                if ((*it)->m_deviceSinkEngine) // it is a sink device
-                {
-                    if ((deviceSet->m_deviceAPI->getHardwareId() == (*it)->m_deviceAPI->getHardwareId()) &&
-                        (deviceSet->m_deviceAPI->getSamplingDeviceSerial() == (*it)->m_deviceAPI->getSamplingDeviceSerial()))
-                    {
-                        (*it)->m_deviceAPI->addSourceBuddy(deviceSet->m_deviceAPI);
-                        nbOfBuddies++;
-                    }
+                    (*it)->m_deviceAPI->addBuddy(deviceSet->m_deviceAPI);
+                    nbOfBuddies++;
                 }
             }
         }
@@ -585,24 +574,11 @@ void MainServer::changeSampleSink(int deviceSetIndex, int selectedDeviceIndex)
         {
             if (*it != deviceSet) // do not add to itself
             {
-                if ((*it)->m_deviceSourceEngine) // it is a source device
+                if ((deviceSet->m_deviceAPI->getHardwareId() == (*it)->m_deviceAPI->getHardwareId()) &&
+                    (deviceSet->m_deviceAPI->getSamplingDeviceSerial() == (*it)->m_deviceAPI->getSamplingDeviceSerial()))
                 {
-                    if ((deviceSet->m_deviceAPI->getHardwareId() == (*it)->m_deviceAPI->getHardwareId()) &&
-                        (deviceSet->m_deviceAPI->getSamplingDeviceSerial() == (*it)->m_deviceAPI->getSamplingDeviceSerial()))
-                    {
-                        (*it)->m_deviceAPI->addSinkBuddy(deviceSet->m_deviceAPI);
-                        nbOfBuddies++;
-                    }
-                }
-
-                if ((*it)->m_deviceSinkEngine) // it is a sink device
-                {
-                    if ((deviceSet->m_deviceAPI->getHardwareId() == (*it)->m_deviceAPI->getHardwareId()) &&
-                        (deviceSet->m_deviceAPI->getSamplingDeviceSerial() == (*it)->m_deviceAPI->getSamplingDeviceSerial()))
-                    {
-                        (*it)->m_deviceAPI->addSinkBuddy(deviceSet->m_deviceAPI);
-                        nbOfBuddies++;
-                    }
+                    (*it)->m_deviceAPI->addBuddy(deviceSet->m_deviceAPI);
+                    nbOfBuddies++;
                 }
             }
         }

@@ -1,6 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2017 F4EXB                                                      //
-// written by Edouard Griffiths                                                  //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2017-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2022-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -24,7 +26,6 @@
 #include "glscope.h"
 #include "ui_glscopegui.h"
 #include "gui/dialpopup.h"
-#include "util/simpleserializer.h"
 #include "util/db.h"
 
 GLScopeGUI::GLScopeGUI(QWidget* parent) :
@@ -246,7 +247,7 @@ bool GLScopeGUI::deserialize(const QByteArray& data)
             ScopeVis::MsgScopeVisChangeTrigger *msg = ScopeVis::MsgScopeVisChangeTrigger::create(triggerData, iTrigger);
             m_scopeVis->getInputMessageQueue()->push(msg);
         }
-        else // add new trigers
+        else // add new triggers
         {
             ScopeVis::MsgScopeVisAddTrigger *msg = ScopeVis::MsgScopeVisAddTrigger::create(triggerData);
             m_scopeVis->getInputMessageQueue()->push(msg);
@@ -1313,6 +1314,7 @@ void GLScopeGUI::fillProjectionCombo(QComboBox* comboBox)
     comboBox->addItem("Imag", Projector::ProjectionImag);
     comboBox->addItem("Mag", Projector::ProjectionMagLin);
     comboBox->addItem("MagSq", Projector::ProjectionMagSq);
+    comboBox->addItem("dMagSq", Projector::ProjectionDMagSq);
     comboBox->addItem("MagdB", Projector::ProjectionMagDB);
     comboBox->addItem("Phi", Projector::ProjectionPhase);
     comboBox->addItem("DOAP", Projector::ProjectionDOAP);

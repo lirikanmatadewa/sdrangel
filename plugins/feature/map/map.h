@@ -1,6 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
-// Copyright (C) 2020 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>         //
+// Copyright (C) 2020 Kacper Michajłow <kasper93@gmail.com>                      //
+// Copyright (C) 2021-2024 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2022 Jiří Pinkava <jiri.pinkava@rossum.ai>                      //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -26,6 +28,7 @@
 
 #include "feature/feature.h"
 #include "util/message.h"
+#include "availablechannelorfeaturehandler.h"
 
 #include "mapsettings.h"
 
@@ -108,17 +111,23 @@ public:
         MESSAGE_CLASS_DECLARATION
 
     public:
-        QList<MapSettings::AvailableChannelOrFeature>& getItems() { return m_availableChannelOrFeatures; }
+        AvailableChannelOrFeatureList& getItems() { return m_availableChannelOrFeatures; }
+        const QStringList& getRenameFrom() const { return m_renameFrom; }
+        const QStringList& getRenameTo() const { return m_renameTo; }
 
-        static MsgReportAvailableChannelOrFeatures* create() {
-            return new MsgReportAvailableChannelOrFeatures();
+        static MsgReportAvailableChannelOrFeatures* create(const QStringList& renameFrom, const QStringList& renameTo) {
+            return new MsgReportAvailableChannelOrFeatures(renameFrom, renameTo);
         }
 
     private:
-        QList<MapSettings::AvailableChannelOrFeature> m_availableChannelOrFeatures;
+        AvailableChannelOrFeatureList m_availableChannelOrFeatures;
+        QStringList m_renameFrom;
+        QStringList m_renameTo;
 
-        MsgReportAvailableChannelOrFeatures() :
-            Message()
+        MsgReportAvailableChannelOrFeatures(const QStringList& renameFrom, const QStringList& renameTo) :
+            Message(),
+            m_renameFrom(renameFrom),
+            m_renameTo(renameTo)
         {}
     };
 
@@ -174,7 +183,8 @@ public:
 
 private:
     MapSettings m_settings;
-    QHash<QObject*, MapSettings::AvailableChannelOrFeature> m_availableChannelOrFeatures;
+    AvailableChannelOrFeatureList m_availableChannelOrFeatures;
+    AvailableChannelOrFeatureHandler m_availableChannelOrFeatureHandler;
 
     QNetworkAccessManager *m_networkManager;
     QNetworkRequest m_networkRequest;
@@ -182,8 +192,7 @@ private:
     void applySettings(const MapSettings& settings, const QList<QString>& settingsKeys, bool force = false);
     void webapiFormatFeatureReport(SWGSDRangel::SWGFeatureReport& response);
     void webapiReverseSendSettings(const QList<QString>& featureSettingsKeys, const MapSettings& settings, bool force);
-    void registerPipe(QObject *object);
-    void notifyUpdate();
+    void notifyUpdate(const QStringList& renameFrom, const QStringList& renameTo);
 
     QDateTime m_mapDateTime;
     QDateTime m_systemDateTime;
@@ -192,10 +201,7 @@ private:
 
 private slots:
     void networkManagerFinished(QNetworkReply *reply);
-    void scanAvailableChannelsAndFeatures();
-    void handleFeatureAdded(int featureSetIndex, Feature *feature);
-    void handleChannelAdded(int deviceSetIndex, ChannelAPI *channel);
-    void handleMessagePipeToBeDeleted(int reason, QObject* object);
+    void channelsOrFeaturesChanged(const QStringList& renameFrom, const QStringList& renameTo);
     void handlePipeMessageQueue(MessageQueue* messageQueue);
 };
 

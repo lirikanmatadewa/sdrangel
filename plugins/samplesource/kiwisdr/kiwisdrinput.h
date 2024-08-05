@@ -1,6 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Vort                                                       //
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2014 John Greb <hexameron@spam.no>                              //
+// Copyright (C) 2015-2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2019 Vort <vvort@yandex.ru>                                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -164,6 +167,9 @@ private:
     const QTimer& m_masterTimer;
     QNetworkAccessManager *m_networkManager;
     QNetworkRequest m_networkRequest;
+    float m_latitude;
+    float m_longitude;
+    float m_altitude;
 
     int getStatus() const;
 	bool applySettings(const KiwiSDRSettings& settings, const QList<QString>& settingsKeys, bool force);

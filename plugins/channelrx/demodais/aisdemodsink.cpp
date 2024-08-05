@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2021 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2021, 2023 Jon Beniston, M7RCE <jon@beniston.com>               //
+// Copyright (C) 2021-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -20,11 +20,10 @@
 
 #include <complex.h>
 
-#include "dsp/dspengine.h"
 #include "dsp/datafifo.h"
 #include "dsp/scopevis.h"
-#include "util/db.h"
-#include "util/stepfunctions.h"
+#include "device/deviceapi.h"
+#include "channel/channelwebapiutils.h"
 #include "maincore.h"
 
 #include "aisdemod.h"
@@ -264,6 +263,21 @@ void AISDemodSink::processOneSample(Complex &ci)
                                     // This is unlikely to be accurate in absolute terms, given we don't know latency from SDR or buffering within SDRangel
                                     // But can be used to get an idea of congestion
                                     QDateTime currentTime = QDateTime::currentDateTime();
+                                    if (m_settings.m_useFileTime)
+                                    {
+                                        QString hardwareId = m_aisDemod->getDeviceAPI()->getHardwareId();
+
+                                        if ((hardwareId == "FileInput") || (hardwareId == "SigMFFileInput"))
+                                        {
+                                            QString dateTimeStr;
+                                            int deviceIdx = m_aisDemod->getDeviceSetIndex();
+
+                                            if (ChannelWebAPIUtils::getDeviceReportValue(deviceIdx, "absoluteTime", dateTimeStr)) {
+                                                currentTime = QDateTime::fromString(dateTimeStr, Qt::ISODateWithMs);
+                                            }
+                                        }
+                                    }
+
                                     int txTimeMs = (totalBitCount + 8 + 24 + 8) * (1000.0 / m_settings.m_baud); // Add ramp up, preamble and start-flag
                                     QDateTime startDateTime = currentTime.addMSecs(-txTimeMs);
                                     int ms = startDateTime.time().second() * 1000 + startDateTime.time().msec();
@@ -335,7 +349,7 @@ void AISDemodSink::processOneSample(Complex &ci)
     // Select signals to feed to scope
     sampleToScope(ci / SDR_RX_SCALEF, magsq, fmDemod, filt, m_rxBuf[m_rxBufIdx], corr / 100.0, thresholdMet, dcOffset, scopeCRCValid ? 1.0 : (scopeCRCInvalid ? -1.0 : 0));
 
-    // Send demod signal to Demod Analzyer feature
+    // Send demod signal to Demod Analyzer feature
     m_demodBuffer[m_demodBufferFill++] = fmDemod * std::numeric_limits<int16_t>::max();
 
     if (m_demodBufferFill >= m_demodBuffer.size())
@@ -396,7 +410,6 @@ void AISDemodSink::applySettings(const AISDemodSettings& settings, bool force)
         m_interpolator.create(16, m_channelSampleRate, settings.m_rfBandwidth / 2.2);
         m_interpolatorDistance = (Real) m_channelSampleRate / (Real) AISDemodSettings::AISDEMOD_CHANNEL_SAMPLE_RATE;
         m_interpolatorDistanceRemain = m_interpolatorDistance;
-        m_lowpass.create(301, AISDemodSettings::AISDEMOD_CHANNEL_SAMPLE_RATE, settings.m_rfBandwidth / 2.0f);
     }
     if ((settings.m_fmDeviation != m_settings.m_fmDeviation) || force)
     {
@@ -406,10 +419,10 @@ void AISDemodSink::applySettings(const AISDemodSettings& settings, bool force)
     if ((settings.m_baud != m_settings.m_baud) || force)
     {
         m_samplesPerSymbol = AISDemodSettings::AISDEMOD_CHANNEL_SAMPLE_RATE / settings.m_baud;
-        qDebug() << "ISDemodSink::applySettings: m_samplesPerSymbol: " << m_samplesPerSymbol << " baud " << settings.m_baud;
+        qDebug() << "AISDemodSink::applySettings: m_samplesPerSymbol: " << m_samplesPerSymbol << " baud " << settings.m_baud;
         m_pulseShape.create(0.5, 3, m_samplesPerSymbol);
 
-        // Recieve buffer, long enough for one max length message
+        // Receive buffer, long enough for one max length message
         delete[] m_rxBuf;
         m_rxBufLength = AISDEMOD_MAX_BYTES*8*m_samplesPerSymbol;
         m_rxBuf = new Real[m_rxBufLength];

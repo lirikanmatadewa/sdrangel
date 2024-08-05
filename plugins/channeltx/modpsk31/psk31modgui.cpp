@@ -1,6 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2016 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2023 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2023 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -29,15 +28,12 @@
 #include "device/deviceuiset.h"
 #include "plugin/pluginapi.h"
 #include "plugin/pluginapi.h"
-#include "util/simpleserializer.h"
 #include "util/db.h"
 #include "util/rtty.h"
 #include "util/maidenhead.h"
 #include "gui/glspectrum.h"
 #include "gui/crightclickenabler.h"
 #include "gui/basicchannelsettingsdialog.h"
-#include "gui/devicestreamselectiondialog.h"
-#include "gui/fmpreemphasisdialog.h"
 #include "gui/dialpopup.h"
 #include "gui/dialogpositioner.h"
 #include "maincore.h"
@@ -412,6 +408,7 @@ PSK31GUI::PSK31GUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, BasebandSampl
     makeUIConnections();
     applySettings();
     DialPopup::addPopupsToChildDials(this);
+    m_resizer.enableChildMouseTracking();
 
     m_initialToolTip = ui->txButton->toolTip();
 }

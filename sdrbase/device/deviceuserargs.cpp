@@ -1,5 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2019 Edouard Griffiths, F4EXB                                   //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2019 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2022 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -37,8 +40,8 @@ QByteArray DeviceUserArgs::serialize() const
 {
     SimpleSerializer s(1);
     QByteArray data;
-    QDataStream *stream = new QDataStream(&data, QIODevice::WriteOnly);
-    *stream << m_argsByDevice;
+    QDataStream stream(&data, QIODevice::WriteOnly);
+    stream << m_argsByDevice;
     s.writeBlob(1, data);
     return s.final();
 }

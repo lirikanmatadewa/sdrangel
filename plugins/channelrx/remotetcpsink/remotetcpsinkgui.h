@@ -1,6 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) 2018 Edouard Griffiths, F4EXB                                   //
-// Copyright (C) 2022 Jon Beniston, M7RCE                                        //
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2015 John Greb <hexameron@spam.no>                              //
+// Copyright (C) 2022-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -100,12 +103,9 @@ private:
     void leaveEvent(QEvent*);
     void enterEvent(EnterEventType*);
 
-    void applyDecimation();
-    void applyPosition();
-
 private slots:
     void handleSourceMessages();
-    void on_deltaFrequency_changed(int index);
+    void on_deltaFrequency_changed(qint64 value);
     void on_channelSampleRate_changed(int value);
     void on_gain_valueChanged(int value);
     void on_sampleBits_currentIndexChanged(int index);

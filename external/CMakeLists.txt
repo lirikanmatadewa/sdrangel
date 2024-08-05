@@ -12,7 +12,7 @@ set(CODEC2_TAG "v1.0.3")
 set(CM256CC_TAG c0e92b92aca3d1d36c990b642b937c64d363c559)
 set(MBELIB_TAG fe83b32c6a60cdd7bce8cecf3c7a0b9ec87a7667)
 set(SERIALDV_TAG "v1.1.4")
-set(DSDCC_TAG "v1.9.4")
+set(DSDCC_TAG "v1.9.5")
 set(LIMESUITE_TAG 70e3859a55d8d5353963a5318013c8454594769f)
 set(BLADERF_TAG "2021.02")
 set(LIBIIO_TAG 826563e41b5ce9890b75506f672017de8d76d52d)
@@ -22,7 +22,7 @@ set(MIRISDR_TAG "v2.0.0")
 set(LIBSIGMF_TAG "new-namespaces")
 
 set(PTHREADS4W_TAG "Version-2-11-0-release")
-set(RTLSDR_TAG 1261fbb285297da08f4620b18871b6d6d9ec2a7b)
+set(RTLSDR_TAG "v2.0.1")
 set(RTLSDR_UDEV OFF)
 set(SOAPYSDR_TAG "soapy-sdr-0.7.1")
 set(SOAPYSDR_SDRPLAY_TAG "soapy-sdrplay-0.2.0")
@@ -31,6 +31,15 @@ set(SOAPYSDR_REMOTE_TAG "soapy-remote-0.5.1")
 set(AIRSPY_TAG "37c768ce9997b32e7328eb48972a7fda0a1f8554")
 set(HACKRF_TAG "v2022.09.1")
 set(LIBXML2_TAG "v2.10.4")
+set(UHD_TAG "v4.6.0.0")
+if (APPLE AND (CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL x86_64))
+    # UHD fails to load with 1.80+
+    set(BOOST_TAG "1.78.0")
+    set(BOOST_TAG2 "1_78_0")
+else()
+    set(BOOST_TAG "1.83.0")
+    set(BOOST_TAG2 "1_83_0")
+endif()
 
 # For some external project macros
 include(ExternalProject)
@@ -340,7 +349,7 @@ endif (NOT FFTW3F_FOUND AND NOT USE_PRECOMPILED_LIBS)
 # So instead, we use FetchContent and build Boost at CMake configure time
 include(FetchContent)
 FetchContent_Declare(boost
-    URL https://boostorg.jfrog.io/artifactory/main/release/1.83.0/source/boost_1_83_0.tar.gz
+    URL "https://sourceforge.net/projects/boost/files/boost/${BOOST_TAG}/boost_${BOOST_TAG2}.tar.gz/download"
 )
 
 find_package(Boost QUIET)
@@ -474,7 +483,7 @@ if (NOT FFMPEG_FOUND AND NOT USE_PRECOMPILED_LIBS)
             UPDATE_DISCONNECTED TRUE
             DEPENDS ${MPG123_DEPENDS}
             PREFIX "${EXTERNAL_BUILD_LIBRARIES}/lame"
-            CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_PATH=${MPG123_PKG_CONFIG_DIR} <SOURCE_DIR>/configure --prefix=<INSTALL_DIR> --enable-shared
+            CONFIGURE_COMMAND ${CMAKE_COMMAND} -E env PKG_CONFIG_PATH=${MPG123_PKG_CONFIG_DIR} <SOURCE_DIR>/configure --prefix=<INSTALL_DIR> --enable-shared --disable-frontend
             BUILD_COMMAND ${MAKE}
             TEST_COMMAND ""
             )
@@ -483,7 +492,11 @@ if (NOT FFMPEG_FOUND AND NOT USE_PRECOMPILED_LIBS)
         # ffmpeg doesn't try to use pkg-config for lame, as it doesn't include a .pc file
         #set(LAME_PKG_CONFIG_DIR "${install_dir}/lib/pkgconfig")
         set(LAME_EXTRA_CFLAGS "-I${install_dir}/include")
-        set(LAME_EXTRA_LDFLAGS "-L${install_dir}/lib")
+        if (APPLE AND (CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL arm64))
+            set(LAME_EXTRA_LDFLAGS "-L${install_dir}/lib -Wl,-ld_classic")
+        else()
+            set(LAME_EXTRA_LDFLAGS "-L${install_dir}/lib")
+        endif()
         set_global_cache(LAME_FOUND ON)
         set(LAME_EXTERNAL ON CACHE INTERNAL "")
         if (APPLE)
@@ -764,7 +777,7 @@ if (LINUX AND (NOT LIBSIGMF_FOUND OR LIBSIGMF_EXTERNAL))
             GIT_TAG ${LIBSIGMF_TAG}
             PREFIX "${EXTERNAL_BUILD_LIBRARIES}/libsigmf"
             CMAKE_ARGS ${COMMON_CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
-            BUILD_BYPRODUCTS "${LIBSIGMF_LIBRARIES}"            
+            BUILD_BYPRODUCTS "${LIBSIGMF_LIBRARIES}"
             TEST_COMMAND ""
             )
     ExternalProject_Get_Property(libsigmf install_dir)
@@ -837,6 +850,38 @@ if(ENABLE_FEATURE_SATELLITETRACKER OR ENABLE_CHANNELRX_DEMODAPT)
         set(MACOS_EXTERNAL_LIBS_FIXUP "${MACOS_EXTERNAL_LIBS_FIXUP};${binary_dir}/libsgp4")
     endif ()
 endif ()
+
+# For Morse Decoder feature
+if(ENABLE_FEATURE_MORSEDECODER)
+    if (WIN32)
+        set(GGMORSE_LIBRARIES "${SDRANGEL_BINARY_LIB_DIR}/ggmorse.lib" CACHE INTERNAL "")
+    elseif (LINUX)
+        set(GGMORSE_LIBRARIES "${EXTERNAL_BUILD_LIBRARIES}/lib${LIB_SUFFIX}/libggmorse${CMAKE_SHARED_LIBRARY_SUFFIX}" CACHE INTERNAL "")
+    endif()
+    ExternalProject_Add(ggmorse
+        GIT_REPOSITORY https://github.com/ggerganov/ggmorse.git
+        PREFIX "${EXTERNAL_BUILD_LIBRARIES}/ggmorse"
+        CMAKE_ARGS ${COMMON_CMAKE_ARGS}
+        -DGGMORSE_BUILD_TESTS=OFF
+        -DGGMORSE_BUILD_EXAMPLES=OFF
+        BUILD_BYPRODUCTS "${GGMORSE_LIBRARIES}"
+        INSTALL_COMMAND ""
+        TEST_COMMAND ""
+        )
+    ExternalProject_Get_Property(ggmorse source_dir binary_dir)
+    set(GGMORSE_DEPENDS ggmorse CACHE INTERNAL "")
+    set_global_cache(GGMORSE_FOUND ON)
+    set(GGMORSE_EXTERNAL ON CACHE INTERNAL "")
+    set(GGMORSE_INCLUDE_DIR "${EXTERNAL_BUILD_LIBRARIES}/ggmorse/src/ggmorse/include" CACHE INTERNAL "")
+    if (WIN32)
+        install(FILES "${SDRANGEL_BINARY_BIN_DIR}/ggmorse${CMAKE_SHARED_LIBRARY_SUFFIX}" DESTINATION "${INSTALL_LIB_DIR}")
+    elseif (APPLE)
+        set(GGMORSE_LIBRARIES "${binary_dir}/src/libggmorse${CMAKE_SHARED_LIBRARY_SUFFIX}" CACHE INTERNAL "")
+        install(DIRECTORY "${binary_dir}/src" DESTINATION "${INSTALL_LIB_DIR}"
+                FILES_MATCHING PATTERN "libggmorse*${CMAKE_SHARED_LIBRARY_SUFFIX}")
+        set(MACOS_EXTERNAL_LIBS_FIXUP "${MACOS_EXTERNAL_LIBS_FIXUP};${binary_dir}/src")
+    endif ()
+endif()
 
 # VkFFT (header only library)
 ExternalProject_Add(vkfft
@@ -1179,7 +1224,7 @@ if (WIN32 OR APPLE)
 
     if (ENABLE_SOAPYSDR)
         if (WIN32)
-            set(SOAPYSDR_LIBRARY "${SDRANGEL_BINARY_LIB_DIR}/SoapySDR.lib" CACHE INTERNAL "")
+            set(SOAPYSDR_LINK_LIBRARIES "${SDRANGEL_BINARY_LIB_DIR}/SoapySDR.lib" CACHE INTERNAL "")
         endif ()
         ExternalProject_Add(soapysdr
                 GIT_REPOSITORY https://github.com/pothosware/SoapySDR.git
@@ -1190,7 +1235,7 @@ if (WIN32 OR APPLE)
                 -DENABLE_PYTHON=OFF
                 -DENABLE_PYTHON3=OFF
                 -DENABLE_TESTS=OFF
-                BUILD_BYPRODUCTS "${SOAPYSDR_LIBRARY}"
+                BUILD_BYPRODUCTS "${SOAPYSDR_LINK_LIBRARIES}"
                 BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config $<CONFIG> -- SoapySDR
                 INSTALL_COMMAND ""
                 TEST_COMMAND ""
@@ -1198,12 +1243,12 @@ if (WIN32 OR APPLE)
         ExternalProject_Get_Property(soapysdr source_dir binary_dir)
         set_global_cache(SOAPYSDR_FOUND ON)
         set(SOAPYSDR_EXTERNAL ON CACHE INTERNAL "")
-        set(SOAPYSDR_INCLUDE_DIR "${source_dir}/include" CACHE INTERNAL "")
+        set(SOAPYSDR_INCLUDE_DIRS "${source_dir}/include" CACHE INTERNAL "")
         if (WIN32)
             install(FILES "${SDRANGEL_BINARY_BIN_DIR}/SoapySDR${CMAKE_SHARED_LIBRARY_SUFFIX}" DESTINATION "${INSTALL_LIB_DIR}")
             install(DIRECTORY "${SDRANGEL_BINARY_LIB_DIR}/SoapySDR" DESTINATION "${INSTALL_LIB_DIR}/lib")
         elseif (APPLE)
-            set(SOAPYSDR_LIBRARY "${binary_dir}/lib/libSoapySDR${CMAKE_SHARED_LIBRARY_SUFFIX}" CACHE INTERNAL "")
+            set(SOAPYSDR_LINK_LIBRARIES "${binary_dir}/lib/libSoapySDR${CMAKE_SHARED_LIBRARY_SUFFIX}" CACHE INTERNAL "")
             install(DIRECTORY "${binary_dir}/lib/" DESTINATION "${INSTALL_LIB_DIR}"
                     FILES_MATCHING PATTERN "libSoapySDR*${CMAKE_SHARED_LIBRARY_SUFFIX}")
             set(MACOS_EXTERNAL_LIBS_FIXUP "${MACOS_EXTERNAL_LIBS_FIXUP};${binary_dir}/lib/")
@@ -1491,7 +1536,7 @@ if (WIN32 OR APPLE)
         endif ()
         ExternalProject_Add(uhd
                 GIT_REPOSITORY https://github.com/EttusResearch/uhd.git
-                GIT_TAG v4.5.0.0
+                GIT_TAG ${UHD_TAG}
                 DEPENDS ${LIBUSB_DEPENDS} ${Boost_DEPENDS}
                 PREFIX "${EXTERNAL_BUILD_LIBRARIES}/uhd"
                 SOURCE_SUBDIR "host"

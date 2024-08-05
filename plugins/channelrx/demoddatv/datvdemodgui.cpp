@@ -1,4 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2018-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2020 Kacper Michajłow <kasper93@gmail.com>                      //
+// Copyright (C) 2021-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 // Copyright (C) 2018 F4HKW                                                      //
 // for F4EXB / SDRAngel                                                          //
 // using LeanSDR Framework (C) 2016 F4DAV                                        //
@@ -25,15 +28,13 @@
 #include "dsp/dspengine.h"
 #include "dsp/dspcommands.h"
 #include "plugin/pluginapi.h"
-#include "util/simpleserializer.h"
 #include "util/db.h"
 #include "gui/crightclickenabler.h"
 #include "gui/audioselectdialog.h"
 #include "gui/basicchannelsettingsdialog.h"
-#include "gui/devicestreamselectiondialog.h"
 #include "gui/dialpopup.h"
 #include "gui/dialogpositioner.h"
-#include "mainwindow.h"
+#include "maincore.h"
 
 #include "ui_datvdemodgui.h"
 #include "datvdemodreport.h"
@@ -314,6 +315,7 @@ DATVDemodGUI::DATVDemodGUI(PluginAPI* objPluginAPI, DeviceUISet *deviceUISet, Ba
     resetToDefaults(); // does applySettings()
     makeUIConnections();
     DialPopup::addPopupsToChildDials(this);
+    m_resizer.enableChildMouseTracking();
 }
 
 DATVDemodGUI::~DATVDemodGUI()
@@ -515,6 +517,7 @@ void DATVDemodGUI::audioSelect(const QPoint& p)
     qDebug("DATVDemodGUI::audioSelect");
     AudioSelectDialog audioSelect(DSPEngine::instance()->getAudioDeviceManager(), m_settings.m_audioDeviceName);
     audioSelect.move(p);
+    new DialogPositioner(&audioSelect, false);
     audioSelect.exec();
 
     if (audioSelect.m_selected)

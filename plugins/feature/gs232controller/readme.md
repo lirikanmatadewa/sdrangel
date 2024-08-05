@@ -152,13 +152,13 @@ Pressing the Config... button will display the Input Configuration Dialog:
 
 The Configure buttons allow setting which axis is assigned to target or offset control. To assign an axis, press the corresponding Configure button, then move the controller axis.
 
-<h4>2: Deadzones</h3>
+<h4>2: Deadzones</h4>
 
 Deadzones can be set individually for each for the 4 axes. A deadzone specifies the amount a controller axis can be moved without a response.
 This can be used to prevent very small movements around the center position on a stick from adjusting the target, or eliminate target adjustments
 when a stick is centered, but is reporting a non-zero position on the axis.
 
-<h4>3: Sensitivity</h3>
+<h4>3: Sensitivity</h4>
 
 Specifies the sensitivity of the input in Low and High Sensitivity mode (23). The higher the value, the faster coordinates will change for a given control stick movement.
 
@@ -185,8 +185,8 @@ The controller uses the 'P' and 'p' commands to set and get azimuth and elevatio
 
 Full details of the API can be found in the Swagger documentation. Here is a quick example of how to set the azimuth and elevation from the command line:
 
-    curl -X PATCH "http://127.0.0.1:8091/sdrangel/featureset/0/feature/0/settings" -d '{"featureType": "GS232Controller",  "GS232ControllerSettings": { "azimuth": 180, "elevation": 45 }}'
+    curl -X PATCH "http://127.0.0.1:8091/sdrangel/featureset/feature/0/settings" -d '{"featureType": "GS232Controller",  "GS232ControllerSettings": { "azimuth": 180, "elevation": 45 }}'
 
 To start sending commands to the rotator:
 
-    curl -X POST "http://127.0.0.1:8091/sdrangel/featureset/0/feature/0/run"
+    curl -X POST "http://127.0.0.1:8091/sdrangel/featureset/feature/0/run"
