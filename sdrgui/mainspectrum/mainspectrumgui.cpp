@@ -140,8 +140,8 @@ MainSpectrumGUI::MainSpectrumGUI(GLSpectrum* spectrum, GLSpectrumGUI* spectrumGU
 	m_bottomLayout->addWidget(m_sizeGripBottomRight, 0, Qt::AlignBottom | Qt::AlignRight);
 
 	m_layouts->addLayout(m_topLayout);
-	m_layouts->addLayout(m_spectrumGUILayout);
 	m_layouts->addLayout(m_spectrumLayout);
+	m_layouts->addLayout(m_spectrumGUILayout);
 	m_layouts->addLayout(m_bottomLayout);
 
 	QObjectCleanupHandler().add(layout());
@@ -159,15 +159,10 @@ MainSpectrumGUI::MainSpectrumGUI(GLSpectrum* spectrum, GLSpectrumGUI* spectrumGU
 	connect(spectrumGUI, &GLSpectrumGUI::addChannel, this, &MainSpectrumGUI::onRequestAddChannel);
 	connect(spectrumGUI, &GLSpectrumGUI::addIqReplaySignal, this, &MainSpectrumGUI::onRequestAddIqReplay);
 
-<<<<<<< HEAD
+	connect(spectrum->getSpectrumView(), &GLSpectrumView::timeSelected, this, &MainSpectrumGUI::onTimeSelected);
+
 	m_resizer.enableChildMouseTracking();
 	shrinkWindow();
-=======
-    connect(spectrum->getSpectrumView(), &GLSpectrumView::timeSelected, this, &MainSpectrumGUI::onTimeSelected);
-
-    m_resizer.enableChildMouseTracking();
-    shrinkWindow();
->>>>>>> remotes/origin/master
 }
 
 MainSpectrumGUI::~MainSpectrumGUI()
@@ -253,7 +248,7 @@ void MainSpectrumGUI::showHelp()
 		url = m_helpURL;
 	}
 	else {
-		url = QString("https://github.com/f4exb/sdrangel/blob/master/%1").arg(m_helpURL); // Something like "plugins/channelrx/chanalyzer/readme.md"
+		url = QString("https://bwe-solutions.com/sdr-analyzer/%1").arg(m_helpURL); // Something like "plugins/channelrx/chanalyzer/readme.md"
 	}
 
 	QDesktopServices::openUrl(QUrl(url));
@@ -261,15 +256,9 @@ void MainSpectrumGUI::showHelp()
 
 void MainSpectrumGUI::openMoveToWorkspaceDialog()
 {
-<<<<<<< HEAD
 	int numberOfWorkspaces = MainWindow::getInstance()->getNumberOfWorkspaces();
-	WorkspaceSelectionDialog dialog(numberOfWorkspaces, this);
+	WorkspaceSelectionDialog dialog(numberOfWorkspaces, getWorkspaceIndex(), this);
 	dialog.exec();
-=======
-    int numberOfWorkspaces = MainWindow::getInstance()->getNumberOfWorkspaces();
-    WorkspaceSelectionDialog dialog(numberOfWorkspaces, getWorkspaceIndex(), this);
-    dialog.exec();
->>>>>>> remotes/origin/master
 
 	if (dialog.hasChanged()) {
 		emit moveToWorkspace(dialog.getSelectedIndex());
@@ -393,7 +382,10 @@ void MainSpectrumGUI::onRequestCenterFrequency(qint64 frequency)
 	emit requestCenterFrequency(m_deviceSetIndex, frequency);
 }
 
-<<<<<<< HEAD
+void MainSpectrumGUI::onTimeSelected(float time)
+{
+	emit timeSelected(m_deviceSetIndex, time);
+}
 
 void MainSpectrumGUI::onRequestAddChannel(int channelPluginIndex)
 {
@@ -411,9 +403,3 @@ void MainSpectrumGUI::onRequestAddIqReplay()
 {
 	emit addIqReplaySignal();
 }
-=======
-void MainSpectrumGUI::onTimeSelected(float time)
-{
-    emit timeSelected(m_deviceSetIndex, time);
-}
->>>>>>> remotes/origin/master

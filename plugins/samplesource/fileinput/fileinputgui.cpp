@@ -78,12 +78,8 @@ FileInputGUI::FileInputGUI(DeviceUISet* deviceUISet, QWidget* parent) :
 	connect(&m_inputMessageQueue, SIGNAL(messageEnqueued()), this, SLOT(handleInputMessages()), Qt::QueuedConnection);
 	m_sampleSource->setMessageQueueToGUI(&m_inputMessageQueue);
 
-<<<<<<< HEAD
 	makeUIConnections();
-=======
-    makeUIConnections();
-    m_resizer.enableChildMouseTracking();
->>>>>>> remotes/origin/master
+	m_resizer.enableChildMouseTracking();
 }
 
 FileInputGUI::~FileInputGUI()
@@ -320,12 +316,7 @@ void FileInputGUI::on_showFileDialog_clicked(bool checked)
 {
 	(void)checked;
 	QString fileName = QFileDialog::getOpenFileName(this,
-<<<<<<< HEAD
-		tr("Open I/Q record file"), ".", tr("SDR I/Q Files (*.sdriq *.wav)"), 0);
-=======
-	    tr("Open I/Q record file"), QFileInfo(m_settings.m_fileName).dir().path(), tr("SDR I/Q Files (*.sdriq *.wav)"), 0);
->>>>>>> remotes/origin/master
-
+		tr("Open I/Q record file"), QFileInfo(m_settings.m_fileName).dir().path(), tr("SDR I/Q Files (*.sdriq *.wav)"), 0);
 
 	if (fileName != "")
 	{
