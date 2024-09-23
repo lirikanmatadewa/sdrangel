@@ -66,6 +66,7 @@ public:
     void getDeviceId(QString& id) const;
     int exec();
     bool hasChanged() const { return m_hasChanged; }
+    QMap<int, QString> getDeviceMap();
 
 private:
     Ui::SamplingDeviceDialog* ui;

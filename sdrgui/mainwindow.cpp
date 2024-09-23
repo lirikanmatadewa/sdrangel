@@ -249,7 +249,24 @@ MainWindow::MainWindow(qtwebapp::LoggerWithFile* logger, const MainParser& parse
 
 	if (parser.getScratch())
 	{
-		;
+		splash->showStatusMessage("load current configuration...", Qt::white);
+		loadConfiguration(m_mainCore->m_settings.getWorkingConfiguration());
+
+		if (m_workspaces.size() == 0)
+		{
+			addWorkspace();
+
+			// If no configurations, load some basic examples
+			if (m_mainCore->m_settings.getConfigurations()->size() == 0) {
+				loadDefaultConfigurations();
+			}
+		}
+
+		else
+		{
+			// Only show welcome dialog first time program is run
+			showWelcome = false;
+		}
 	}
 	else
 	{
@@ -265,6 +282,7 @@ MainWindow::MainWindow(qtwebapp::LoggerWithFile* logger, const MainParser& parse
 				loadDefaultConfigurations();
 			}
 		}
+
 		else
 		{
 			// Only show welcome dialog first time program is run
@@ -1603,16 +1621,16 @@ QString MainWindow::openGLVersion()
 
 void MainWindow::createMenuBar(QToolButton* button)
 {
-	QMenu* fileMenu, * viewMenu, * workspacesMenu, * preferencesMenu, * helpMenu;
+	QMenu* fileMenu = nullptr, * viewMenu = nullptr, * workspacesMenu = nullptr, * preferencesMenu = nullptr, * helpMenu = nullptr;
 
 	if (button == nullptr)
 	{
 		QMenuBar* menuBar = this->menuBar();
 		fileMenu = menuBar->addMenu("&File");
 		viewMenu = menuBar->addMenu("&View");
-		workspacesMenu = menuBar->addMenu("&Workspaces");
-		preferencesMenu = menuBar->addMenu("&Preferences");
-		helpMenu = menuBar->addMenu("&Help");
+		// workspacesMenu = menuBar->addMenu("&Workspaces");
+		// preferencesMenu = menuBar->addMenu("&Preferences");
+		// helpMenu = menuBar->addMenu("&Help");
 	}
 	else
 	{
@@ -1622,11 +1640,11 @@ void MainWindow::createMenuBar(QToolButton* button)
 		viewMenu = new QMenu("&View");
 		menu->addMenu(viewMenu);
 		workspacesMenu = new QMenu("&Workspaces");
-		menu->addMenu(workspacesMenu);
+		// menu->addMenu(workspacesMenu);
 		preferencesMenu = new QMenu("&Preferences");
-		menu->addMenu(preferencesMenu);
+		// menu->addMenu(preferencesMenu);
 		helpMenu = new QMenu("&Help");
-		menu->addMenu(helpMenu);
+		// menu->addMenu(helpMenu);
 		button->setMenu(menu);
 	}
 
@@ -1652,60 +1670,66 @@ void MainWindow::createMenuBar(QToolButton* button)
 	QObject::connect(profileAction, &QAction::triggered, this, &MainWindow::on_action_Profile_triggered);
 #endif
 
-	QAction* newWorkspaceAction = workspacesMenu->addAction("&New");
-	newWorkspaceAction->setToolTip("Add a new workspace");
-	QObject::connect(newWorkspaceAction, &QAction::triggered, this, &MainWindow::addWorkspace);
-	QAction* viewAllWorkspacesAction = workspacesMenu->addAction("&View all");
-	viewAllWorkspacesAction->setToolTip("View all workspaces");
-	QObject::connect(viewAllWorkspacesAction, &QAction::triggered, this, &MainWindow::viewAllWorkspaces);
-	QAction* removeEmptyWorkspacesAction = workspacesMenu->addAction("&Remove empty");
-	removeEmptyWorkspacesAction->setToolTip("Remove empty workspaces");
-	QObject::connect(removeEmptyWorkspacesAction, &QAction::triggered, this, &MainWindow::removeEmptyWorkspaces);
+	if (workspacesMenu) {
+		QAction* newWorkspaceAction = workspacesMenu->addAction("&New");
+		newWorkspaceAction->setToolTip("Add a new workspace");
+		QObject::connect(newWorkspaceAction, &QAction::triggered, this, &MainWindow::addWorkspace);
+		QAction* viewAllWorkspacesAction = workspacesMenu->addAction("&View all");
+		viewAllWorkspacesAction->setToolTip("View all workspaces");
+		QObject::connect(viewAllWorkspacesAction, &QAction::triggered, this, &MainWindow::viewAllWorkspaces);
+		QAction* removeEmptyWorkspacesAction = workspacesMenu->addAction("&Remove empty");
+		removeEmptyWorkspacesAction->setToolTip("Remove empty workspaces");
+		QObject::connect(removeEmptyWorkspacesAction, &QAction::triggered, this, &MainWindow::removeEmptyWorkspaces);
+	}
 
-	QAction* configurationsAction = preferencesMenu->addAction("&Configurations...");
-	configurationsAction->setToolTip("Manage configurations");
-	QObject::connect(configurationsAction, &QAction::triggered, this, &MainWindow::on_action_Configurations_triggered);
-	QAction* audioAction = preferencesMenu->addAction("&Audio...");
-	audioAction->setToolTip("Audio preferences");
-	QObject::connect(audioAction, &QAction::triggered, this, &MainWindow::on_action_Audio_triggered);
-	QAction* graphicsAction = preferencesMenu->addAction("&Graphics...");
-	graphicsAction->setToolTip("Graphics preferences");
-	QObject::connect(graphicsAction, &QAction::triggered, this, &MainWindow::on_action_Graphics_triggered);
-	QAction* loggingAction = preferencesMenu->addAction("&Logging...");
-	loggingAction->setToolTip("Logging preferences");
-	QObject::connect(loggingAction, &QAction::triggered, this, &MainWindow::on_action_Logging_triggered);
-	QAction* myPositionAction = preferencesMenu->addAction("My &Position...");
-	myPositionAction->setToolTip("Set station position");
-	QObject::connect(myPositionAction, &QAction::triggered, this, &MainWindow::on_action_My_Position_triggered);
-	QAction* fftAction = preferencesMenu->addAction("&FFT...");
-	fftAction->setToolTip("Set FFT preferences");
-	QObject::connect(fftAction, &QAction::triggered, this, &MainWindow::on_action_FFT_triggered);
-	QAction* fftWisdomAction = preferencesMenu->addAction("&FFTW Wisdom...");
-	fftWisdomAction->setToolTip("Set FFTW cache");
-	QObject::connect(fftWisdomAction, &QAction::triggered, this, &MainWindow::on_action_FFTWisdom_triggered);
-	QMenu* devicesMenu = preferencesMenu->addMenu("&Devices");
-	QAction* userArgumentsAction = devicesMenu->addAction("&User arguments...");
-	userArgumentsAction->setToolTip("Device custom user arguments");
-	QObject::connect(userArgumentsAction, &QAction::triggered, this, &MainWindow::on_action_DeviceUserArguments_triggered);
-	QAction* commandsAction = preferencesMenu->addAction("C&ommands...");
-	commandsAction->setToolTip("External commands dialog");
-	QObject::connect(commandsAction, &QAction::triggered, this, &MainWindow::on_action_commands_triggered);
-	QAction* saveAllAction = preferencesMenu->addAction("&Save all");
-	saveAllAction->setToolTip("Save all current settings");
-	QObject::connect(saveAllAction, &QAction::triggered, this, &MainWindow::on_action_saveAll_triggered);
+	if (preferencesMenu) {
+		QAction* configurationsAction = preferencesMenu->addAction("&Configurations...");
+		configurationsAction->setToolTip("Manage configurations");
+		QObject::connect(configurationsAction, &QAction::triggered, this, &MainWindow::on_action_Configurations_triggered);
+		QAction* audioAction = preferencesMenu->addAction("&Audio...");
+		audioAction->setToolTip("Audio preferences");
+		QObject::connect(audioAction, &QAction::triggered, this, &MainWindow::on_action_Audio_triggered);
+		QAction* graphicsAction = preferencesMenu->addAction("&Graphics...");
+		graphicsAction->setToolTip("Graphics preferences");
+		QObject::connect(graphicsAction, &QAction::triggered, this, &MainWindow::on_action_Graphics_triggered);
+		QAction* loggingAction = preferencesMenu->addAction("&Logging...");
+		loggingAction->setToolTip("Logging preferences");
+		QObject::connect(loggingAction, &QAction::triggered, this, &MainWindow::on_action_Logging_triggered);
+		QAction* myPositionAction = preferencesMenu->addAction("My &Position...");
+		myPositionAction->setToolTip("Set station position");
+		QObject::connect(myPositionAction, &QAction::triggered, this, &MainWindow::on_action_My_Position_triggered);
+		QAction* fftAction = preferencesMenu->addAction("&FFT...");
+		fftAction->setToolTip("Set FFT preferences");
+		QObject::connect(fftAction, &QAction::triggered, this, &MainWindow::on_action_FFT_triggered);
+		QAction* fftWisdomAction = preferencesMenu->addAction("&FFTW Wisdom...");
+		fftWisdomAction->setToolTip("Set FFTW cache");
+		QObject::connect(fftWisdomAction, &QAction::triggered, this, &MainWindow::on_action_FFTWisdom_triggered);
+		QMenu* devicesMenu = preferencesMenu->addMenu("&Devices");
+		QAction* userArgumentsAction = devicesMenu->addAction("&User arguments...");
+		userArgumentsAction->setToolTip("Device custom user arguments");
+		QObject::connect(userArgumentsAction, &QAction::triggered, this, &MainWindow::on_action_DeviceUserArguments_triggered);
+		QAction* commandsAction = preferencesMenu->addAction("C&ommands...");
+		commandsAction->setToolTip("External commands dialog");
+		QObject::connect(commandsAction, &QAction::triggered, this, &MainWindow::on_action_commands_triggered);
+		QAction* saveAllAction = preferencesMenu->addAction("&Save all");
+		saveAllAction->setToolTip("Save all current settings");
+		QObject::connect(saveAllAction, &QAction::triggered, this, &MainWindow::on_action_saveAll_triggered);
+	}
 
-	QAction* quickStartAction = helpMenu->addAction("&Quick start...");
-	quickStartAction->setToolTip("Instructions for quick start");
-	QObject::connect(quickStartAction, &QAction::triggered, this, &MainWindow::on_action_Quick_Start_triggered);
-	QAction* mainWindowAction = helpMenu->addAction("&Main Window...");
-	mainWindowAction->setToolTip("Help on main window details");
-	QObject::connect(mainWindowAction, &QAction::triggered, this, &MainWindow::on_action_Main_Window_triggered);
-	QAction* loadedPluginsAction = helpMenu->addAction("Loaded &Plugins...");
-	loadedPluginsAction->setToolTip("List available plugins");
-	QObject::connect(loadedPluginsAction, &QAction::triggered, this, &MainWindow::on_action_Loaded_Plugins_triggered);
-	QAction* aboutAction = helpMenu->addAction("&About SDR Analyzer...");
-	aboutAction->setToolTip("SDR Analyzer application details");
-	QObject::connect(aboutAction, &QAction::triggered, this, &MainWindow::on_action_About_triggered);
+	if (helpMenu) {
+		QAction* quickStartAction = helpMenu->addAction("&Quick start...");
+		quickStartAction->setToolTip("Instructions for quick start");
+		QObject::connect(quickStartAction, &QAction::triggered, this, &MainWindow::on_action_Quick_Start_triggered);
+		QAction* mainWindowAction = helpMenu->addAction("&Main Window...");
+		mainWindowAction->setToolTip("Help on main window details");
+		QObject::connect(mainWindowAction, &QAction::triggered, this, &MainWindow::on_action_Main_Window_triggered);
+		QAction* loadedPluginsAction = helpMenu->addAction("Loaded &Plugins...");
+		loadedPluginsAction->setToolTip("List available plugins");
+		QObject::connect(loadedPluginsAction, &QAction::triggered, this, &MainWindow::on_action_Loaded_Plugins_triggered);
+		QAction* aboutAction = helpMenu->addAction("&About SDR Analyzer...");
+		aboutAction->setToolTip("SDR Analyzer application details");
+		QObject::connect(aboutAction, &QAction::triggered, this, &MainWindow::on_action_About_triggered);
+	}
 }
 
 void MainWindow::createStatusBar()
