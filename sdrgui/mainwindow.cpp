@@ -250,18 +250,13 @@ MainWindow::MainWindow(qtwebapp::LoggerWithFile* logger, const MainParser& parse
 	if (parser.getScratch())
 	{
 		splash->showStatusMessage("load current configuration...", Qt::white);
-		loadConfiguration(m_mainCore->m_settings.getWorkingConfiguration());
-
 		if (m_workspaces.size() == 0)
 		{
 			addWorkspace();
-
-			// If no configurations, load some basic examples
 			if (m_mainCore->m_settings.getConfigurations()->size() == 0) {
 				loadDefaultConfigurations();
 			}
 		}
-
 		else
 		{
 			// Only show welcome dialog first time program is run

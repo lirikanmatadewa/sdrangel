@@ -151,6 +151,8 @@ QMap<int, QString> SamplingDeviceDialog::getDeviceMap()
 {
 	QMap<int, QString> deviceMap;
 	QList<QString> deviceDisplayNames;
+	
+	on_refreshDevices_clicked();
 
 	m_deviceIndexes.clear();
 	if (m_deviceType == 0) { // Single Rx
