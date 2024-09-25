@@ -72,6 +72,7 @@ void SamplingDeviceDialog::displayDevices()
 
 	ui->deviceSelect->clear();
 	ui->deviceSelect->addItems(deviceDisplayNames);
+	isThreadFinished = 0;
 }
 
 void SamplingDeviceDialog::setSelectedDeviceIndex(int deviceIndex)
@@ -110,6 +111,7 @@ void SamplingDeviceDialog::on_refreshDevices_clicked()
 	connect(worker, &SamplingDeviceDialogWorker::finishedWork, this, &SamplingDeviceDialog::displayDevices);
 	connect(worker, &SamplingDeviceDialogWorker::finishedWork, worker, &SamplingDeviceDialog::deleteLater);
 	connect(thread, &QThread::finished, thread, &QThread::deleteLater);
+	isThreadFinished = 10;
 	thread->start();
 }
 
@@ -132,28 +134,18 @@ void SamplingDeviceDialog::enumeratingDevice(const QString& deviceId)
 	}
 }
 
-void SamplingDeviceDialogWorker::enumerateDevices()
-{
-	PluginManager* pluginManager = MainCore::instance()->getPluginManager();
-	if (m_deviceType == 0) {
-		DeviceEnumerator::instance()->enumerateRxDevices(pluginManager);
-	}
-	else if (m_deviceType == 1) {
-		DeviceEnumerator::instance()->enumerateTxDevices(pluginManager);
-	}
-	else if (m_deviceType == 2) {
-		DeviceEnumerator::instance()->enumerateMIMODevices(pluginManager);
-	}
-	emit finishedWork();
-}
-
 QMap<int, QString> SamplingDeviceDialog::getDeviceMap()
 {
 	QMap<int, QString> deviceMap;
 	QList<QString> deviceDisplayNames;
-	
-	// This is a thread, I am not sure how to check if this is complete
-	// on_refreshDevices_clicked();
+
+	on_refreshDevices_clicked();
+
+	while (isThreadFinished > 0) 
+	{ 
+		QThread::sleep(1);
+		isThreadFinished--;
+	}
 
 	m_deviceIndexes.clear();
 	if (m_deviceType == 0) { // Single Rx
@@ -178,4 +170,19 @@ QMap<int, QString> SamplingDeviceDialog::getDeviceMap()
 		dN++;
 	}
 	return deviceMap;
+}
+
+void SamplingDeviceDialogWorker::enumerateDevices()
+{
+	PluginManager* pluginManager = MainCore::instance()->getPluginManager();
+	if (m_deviceType == 0) {
+		DeviceEnumerator::instance()->enumerateRxDevices(pluginManager);
+	}
+	else if (m_deviceType == 1) {
+		DeviceEnumerator::instance()->enumerateTxDevices(pluginManager);
+	}
+	else if (m_deviceType == 2) {
+		DeviceEnumerator::instance()->enumerateMIMODevices(pluginManager);
+	}
+	emit finishedWork();
 }

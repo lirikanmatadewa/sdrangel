@@ -33,57 +33,57 @@
 #include "export.h"
 
 namespace Ui {
-    class SamplingDeviceDialog;
+	class SamplingDeviceDialog;
 }
 
 class SDRGUI_API SamplingDeviceDialogWorker : public QObject {
-    Q_OBJECT
+	Q_OBJECT
 
 public:
-    SamplingDeviceDialogWorker(int deviceType) :
-        m_deviceType(deviceType)
-    {
-    }
-    void enumerateDevices();
+	SamplingDeviceDialogWorker(int deviceType) :
+		m_deviceType(deviceType)
+	{
+	}
+	void enumerateDevices();
 
 signals:
-    void finishedWork();
+	void finishedWork();
 
 private slots:
 
 private:
-    int m_deviceType;
+	int m_deviceType;
 };
 
 class SDRGUI_API SamplingDeviceDialog : public QDialog {
-    Q_OBJECT
+	Q_OBJECT
 
 public:
-    explicit SamplingDeviceDialog(int deviceType, QWidget* parent = nullptr);
-    ~SamplingDeviceDialog();
-    int getSelectedDeviceIndex() const { return m_selectedDeviceIndex; }
-    void setSelectedDeviceIndex(int deviceIndex);
-    void getDeviceId(QString& id) const;
-    int exec();
-    bool hasChanged() const { return m_hasChanged; }
-    QMap<int, QString> getDeviceMap();
+	explicit SamplingDeviceDialog(int deviceType, QWidget* parent = nullptr);
+	~SamplingDeviceDialog();
+	int getSelectedDeviceIndex() const { return m_selectedDeviceIndex; }
+	void setSelectedDeviceIndex(int deviceIndex);
+	void getDeviceId(QString& id) const;
+	int exec();
+	bool hasChanged() const { return m_hasChanged; }
+	QMap<int, QString> getDeviceMap();
 
 private:
-    Ui::SamplingDeviceDialog* ui;
-    int m_deviceType;
-    int m_selectedDeviceIndex;
-    std::vector<int> m_deviceIndexes;
-    bool m_hasChanged;
-    QProgressDialog *m_progressDialog;
-
-    void displayDevices();
+	Ui::SamplingDeviceDialog* ui;
+	int m_deviceType;
+	int m_selectedDeviceIndex;
+	std::vector<int> m_deviceIndexes;
+	bool m_hasChanged;
+	QProgressDialog* m_progressDialog;
+	std::atomic<int> isThreadFinished = -1;
 
 private slots:
-    void on_deviceSelect_currentIndexChanged(int index);
-    void on_refreshDevices_clicked();
-    void accept();
-    void reject();
-    void enumeratingDevice(const QString &deviceId);
+	void on_deviceSelect_currentIndexChanged(int index);
+	void on_refreshDevices_clicked();
+	void accept();
+	void reject();
+	void enumeratingDevice(const QString& deviceId);
+	void displayDevices();
 };
 
 #endif /* SDRGUI_GUI_SAMPLINGDEVICEDIALOG_H_ */
