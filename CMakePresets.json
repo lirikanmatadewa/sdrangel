@@ -44,7 +44,7 @@
       "name": "default-windows",
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_BUILD_TYPE": "Debug",
         "DEBUG_OUTPUT": "ON",
         "RX_SAMPLE_24BIT": "ON",
         "ARCH_OPT": "SSE4_2",

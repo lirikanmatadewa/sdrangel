@@ -381,7 +381,6 @@ void Workspace::addRxDeviceClicked()
 			matchingKeys.append(it.key());
 		}
 	}
-
 	if (matchingKeys.isEmpty()) {
 		QMessageBox msgBox;
 		msgBox.setIcon(QMessageBox::Information);
@@ -390,7 +389,11 @@ void Workspace::addRxDeviceClicked()
 		msgBox.setDefaultButton(QMessageBox::Ok);
 		msgBox.exec();
 	}
-	else { emit addRxDevice(this, matchingKeys[0]); }
+	else { 
+		dialog.setSelectedDeviceIndex(matchingKeys[0]);
+		emit addRxDevice(this, matchingKeys[0]); }
+
+	/* if (dialog.exec() == QDialog::Accepted) { emit addRxDevice(this, dialog.getSelectedDeviceIndex()); } */
 }
 
 void Workspace::addTxDeviceClicked()
