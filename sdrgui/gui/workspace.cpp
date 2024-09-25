@@ -372,6 +372,7 @@ void Workspace::addRxDeviceClicked()
 {
 	SamplingDeviceDialog dialog(0, this);
 
+	m_addRxDeviceButton->setDisabled(true);
 	QString searchString = "BladeRF2[0:0]";
 	QMap<int, QString> deviceMap = dialog.getDeviceMap();
 	QList<int> matchingKeys;
@@ -391,7 +392,10 @@ void Workspace::addRxDeviceClicked()
 	}
 	else { 
 		dialog.setSelectedDeviceIndex(matchingKeys[0]);
-		emit addRxDevice(this, matchingKeys[0]); }
+		emit addRxDevice(this, matchingKeys[0]);
+	}
+
+	m_addRxDeviceButton->setDisabled(false);
 
 	/* if (dialog.exec() == QDialog::Accepted) { emit addRxDevice(this, dialog.getSelectedDeviceIndex()); } */
 }

@@ -108,11 +108,17 @@ void SamplingDeviceDialog::on_refreshDevices_clicked()
 	connect(worker, &SamplingDeviceDialogWorker::finishedWork, thread, &QThread::quit);
 	connect(worker, &SamplingDeviceDialogWorker::finishedWork, m_progressDialog, &QProgressDialog::close);
 	connect(worker, &SamplingDeviceDialogWorker::finishedWork, m_progressDialog, &QProgressDialog::deleteLater);
-	connect(worker, &SamplingDeviceDialogWorker::finishedWork, this, &SamplingDeviceDialog::displayDevices);
+	connect(worker, &SamplingDeviceDialogWorker::finishedWork, this, &SamplingDeviceDialog::displayDevices, Qt::ConnectionType::DirectConnection);
 	connect(worker, &SamplingDeviceDialogWorker::finishedWork, worker, &SamplingDeviceDialog::deleteLater);
 	connect(thread, &QThread::finished, thread, &QThread::deleteLater);
 	isThreadFinished = 10;
 	thread->start();
+
+	while (isThreadFinished > 0)
+	{
+		QThread::sleep(1);
+		isThreadFinished--;
+	}
 }
 
 void SamplingDeviceDialog::accept()
@@ -140,12 +146,6 @@ QMap<int, QString> SamplingDeviceDialog::getDeviceMap()
 	QList<QString> deviceDisplayNames;
 
 	on_refreshDevices_clicked();
-
-	while (isThreadFinished > 0) 
-	{ 
-		QThread::sleep(1);
-		isThreadFinished--;
-	}
 
 	m_deviceIndexes.clear();
 	if (m_deviceType == 0) { // Single Rx
