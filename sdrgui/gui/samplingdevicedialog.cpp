@@ -152,7 +152,8 @@ QMap<int, QString> SamplingDeviceDialog::getDeviceMap()
 	QMap<int, QString> deviceMap;
 	QList<QString> deviceDisplayNames;
 	
-	on_refreshDevices_clicked();
+	// This is a thread, I am not sure how to check if this is complete
+	// on_refreshDevices_clicked();
 
 	m_deviceIndexes.clear();
 	if (m_deviceType == 0) { // Single Rx

@@ -277,7 +277,6 @@ MainWindow::MainWindow(qtwebapp::LoggerWithFile* logger, const MainParser& parse
 				loadDefaultConfigurations();
 			}
 		}
-
 		else
 		{
 			// Only show welcome dialog first time program is run
