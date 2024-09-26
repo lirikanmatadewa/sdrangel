@@ -129,7 +129,7 @@ GLSpectrumView::GLSpectrumView(QWidget* parent) :
 	m_openGLLogger(nullptr),
 	m_isDeviceSpectrum(false),
 	m_measurements(nullptr),
-	m_measurement(SpectrumSettings::MeasurementPeaks),
+	m_measurement(SpectrumSettings::MeasurementNone),
 	m_measurementCenterFrequencyOffset(0),
 	m_measurementBandwidth(10000),
 	m_measurementChSpacing(10000),

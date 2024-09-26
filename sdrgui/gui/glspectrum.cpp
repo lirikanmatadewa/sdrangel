@@ -151,16 +151,15 @@ void GLSpectrum::setMeasurementParams(SpectrumSettings::Measurement measurement,
 
 void GLSpectrum::hideMeasurementSplitter()
 {
-	m_splitter->setSizes({1, 0});
 	switch (m_position)
 	{
 	case SpectrumSettings::PositionAbove:
 	case SpectrumSettings::PositionLeft:
-		m_splitter->setSizes({ 0, 1 });
+		m_splitter->setSizes({ 1, 0 });
 		break;
 	case SpectrumSettings::PositionBelow:
 	case SpectrumSettings::PositionRight:
-		m_splitter->setSizes({ 1, 0 });
+		m_splitter->setSizes({ 0, 1 });
 		break;
 	}
 }

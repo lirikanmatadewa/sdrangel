@@ -77,9 +77,9 @@ void SpectrumSettings::resetToDefaults()
 	m_measurementChSpacing = 10000;
 	m_measurementAdjChBandwidth = 10000;
 	m_measurementHarmonics = 5;
-	m_measurementPeaks = 5;
+	m_measurementPeaks = 1;
 	m_measurementHighlight = true;
-	m_measurementsPosition = PositionBelow;
+	m_measurementsPosition = PositionAbove;
 	m_measurementPrecision = 1;
 	m_findHistogramPeaks = false;
 #ifdef ANDROID
