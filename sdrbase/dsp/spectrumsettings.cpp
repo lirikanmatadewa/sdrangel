@@ -27,7 +27,7 @@
 
 SpectrumSettings::SpectrumSettings()
 {
-    resetToDefaults();
+	resetToDefaults();
 }
 
 SpectrumSettings::~SpectrumSettings()
@@ -51,41 +51,41 @@ void SpectrumSettings::resetToDefaults()
 	m_displayCurrent = true;
 	m_displayWaterfall = false;
 	m_invertedWaterfall = false;
-    m_display3DSpectrogram = false;
+	m_display3DSpectrogram = false;
 	m_displayMaxHold = false;
 	m_displayHistogram = true;
 	m_displayGrid = false;
-    m_truncateFreqScale = false;
+	m_truncateFreqScale = false;
 	m_averagingMode = AvgModeFixed;
 	m_averagingIndex = 2;
-    m_averagingValue = 1;
+	m_averagingValue = 1;
 	m_linear = false;
-    m_ssb = false;
-    m_usb = true;
+	m_ssb = false;
+	m_usb = true;
 	m_wsSpectrum = false;
-    m_wsSpectrumAddress = "127.0.0.1";
-    m_wsSpectrumPort = 8887;
+	m_wsSpectrumAddress = "127.0.0.1";
+	m_wsSpectrumPort = 8887;
 	m_markersDisplay = MarkersDisplayNone;
 	m_useCalibration = false;
 	m_calibrationInterpMode = CalibInterpLinear;
-    m_3DSpectrogramStyle = Outline;
-    m_colorMap = "Angel";
-    m_spectrumStyle = Line;
-    m_measurement = MeasurementNone;
-    m_measurementCenterFrequencyOffset = 0;
-    m_measurementBandwidth = 10000;
-    m_measurementChSpacing = 10000;
-    m_measurementAdjChBandwidth = 10000;
-    m_measurementHarmonics = 5;
-    m_measurementPeaks = 5;
-    m_measurementHighlight = true;
-    m_measurementsPosition = PositionBelow;
-    m_measurementPrecision = 1;
-    m_findHistogramPeaks = false;
+	m_3DSpectrogramStyle = Outline;
+	m_colorMap = "Angel";
+	m_spectrumStyle = Line;
+	m_measurement = MeasurementPeaks;
+	m_measurementCenterFrequencyOffset = 0;
+	m_measurementBandwidth = 10000;
+	m_measurementChSpacing = 10000;
+	m_measurementAdjChBandwidth = 10000;
+	m_measurementHarmonics = 5;
+	m_measurementPeaks = 5;
+	m_measurementHighlight = true;
+	m_measurementsPosition = PositionBelow;
+	m_measurementPrecision = 1;
+	m_findHistogramPeaks = false;
 #ifdef ANDROID
-    m_showAllControls = false;
+	m_showAllControls = false;
 #else
-    m_showAllControls = true;
+	m_showAllControls = true;
 #endif
 }
 
@@ -95,7 +95,7 @@ QByteArray SpectrumSettings::serialize() const
 
 	s.writeS32(1, m_fftSize);
 	s.writeS32(2, m_fftOverlap);
-	s.writeS32(3, (int) m_fftWindow);
+	s.writeS32(3, (int)m_fftWindow);
 	s.writeReal(4, m_refLevel);
 	s.writeReal(5, m_powerRange);
 	s.writeBool(6, m_displayWaterfall);
@@ -110,50 +110,50 @@ QByteArray SpectrumSettings::serialize() const
 	s.writeBool(16, m_displayCurrent);
 	s.writeS32(17, m_displayTraceIntensity);
 	s.writeReal(18, m_waterfallShare);
-	s.writeS32(19, (int) m_averagingMode);
-	s.writeS32(20, (qint32) getAveragingValue(m_averagingIndex, m_averagingMode));
+	s.writeS32(19, (int)m_averagingMode);
+	s.writeS32(20, (qint32)getAveragingValue(m_averagingIndex, m_averagingMode));
 	s.writeBool(21, m_linear);
-    s.writeString(22, m_wsSpectrumAddress);
-    s.writeU32(23, m_wsSpectrumPort);
-    s.writeBool(24, m_ssb);
-    s.writeBool(25, m_usb);
+	s.writeString(22, m_wsSpectrumAddress);
+	s.writeU32(23, m_wsSpectrumPort);
+	s.writeBool(24, m_ssb);
+	s.writeBool(25, m_usb);
 	s.writeS32(26, m_fpsPeriodMs);
 	s.writeBool(27, m_wsSpectrum);
-	s.writeS32(28, (int) m_markersDisplay);
+	s.writeS32(28, (int)m_markersDisplay);
 	s.writeBool(29, m_useCalibration);
-	s.writeS32(30, (int) m_calibrationInterpMode);
-    s.writeBool(31, m_display3DSpectrogram);
-    s.writeS32(32, (int) m_3DSpectrogramStyle);
-    s.writeString(33, m_colorMap);
-    s.writeS32(34, (int) m_spectrumStyle);
-    s.writeS32(35, (int) m_measurement);
-    s.writeS32(36, m_measurementBandwidth);
-    s.writeS32(37, m_measurementChSpacing);
-    s.writeS32(38, m_measurementAdjChBandwidth);
-    s.writeS32(39, m_measurementHarmonics);
-    // 41, 42 used below
-    s.writeBool(42, m_measurementHighlight);
-    s.writeS32(43, m_measurementPeaks);
-    s.writeS32(44, (int)m_measurementsPosition);
-    s.writeS32(45, m_measurementPrecision);
-    s.writeS32(46, m_measurementCenterFrequencyOffset);
-    s.writeBool(47, m_findHistogramPeaks);
-    s.writeBool(48, m_truncateFreqScale);
-    s.writeBool(49, m_showAllControls);
-    s.writeS32(100, m_histogramMarkers.size());
+	s.writeS32(30, (int)m_calibrationInterpMode);
+	s.writeBool(31, m_display3DSpectrogram);
+	s.writeS32(32, (int)m_3DSpectrogramStyle);
+	s.writeString(33, m_colorMap);
+	s.writeS32(34, (int)m_spectrumStyle);
+	s.writeS32(35, (int)m_measurement);
+	s.writeS32(36, m_measurementBandwidth);
+	s.writeS32(37, m_measurementChSpacing);
+	s.writeS32(38, m_measurementAdjChBandwidth);
+	s.writeS32(39, m_measurementHarmonics);
+	// 41, 42 used below
+	s.writeBool(42, m_measurementHighlight);
+	s.writeS32(43, m_measurementPeaks);
+	s.writeS32(44, (int)m_measurementsPosition);
+	s.writeS32(45, m_measurementPrecision);
+	s.writeS32(46, m_measurementCenterFrequencyOffset);
+	s.writeBool(47, m_findHistogramPeaks);
+	s.writeBool(48, m_truncateFreqScale);
+	s.writeBool(49, m_showAllControls);
+	s.writeS32(100, m_histogramMarkers.size());
 
 	for (int i = 0; i < m_histogramMarkers.size(); i++) {
-		s.writeBlob(101+i, m_histogramMarkers[i].serialize());
+		s.writeBlob(101 + i, m_histogramMarkers[i].serialize());
 	}
 
 	s.writeS32(110, m_waterfallMarkers.size());
 
 	for (int i = 0; i < m_waterfallMarkers.size(); i++) {
-		s.writeBlob(111+i, m_waterfallMarkers[i].serialize());
+		s.writeBlob(111 + i, m_waterfallMarkers[i].serialize());
 	}
 
-    s.writeList(40, m_annoationMarkers);
-    s.writeList(41, m_calibrationPoints);
+	s.writeList(40, m_annoationMarkers);
+	s.writeList(41, m_calibrationPoints);
 
 	return s.final();
 }
@@ -163,7 +163,7 @@ QDataStream& operator<<(QDataStream& out, const SpectrumAnnotationMarker& marker
 	out << marker.m_startFrequency;
 	out << marker.m_bandwidth;
 	out << marker.m_markerColor;
-	out << (int) marker.m_show;
+	out << (int)marker.m_show;
 	out << marker.m_text;
 	return out;
 }
@@ -180,21 +180,21 @@ bool SpectrumSettings::deserialize(const QByteArray& data)
 {
 	SimpleDeserializer d(data);
 
-	if(!d.isValid()) {
+	if (!d.isValid()) {
 		resetToDefaults();
 		return false;
 	}
 
 	int tmp;
-    uint32_t utmp;
+	uint32_t utmp;
 	QByteArray bytetmp;
 
 	if (d.getVersion() == 1)
-    {
+	{
 		d.readS32(1, &m_fftSize, 1024);
 		d.readS32(2, &m_fftOverlap, 0);
-        d.readS32(3, &tmp, (int) FFTWindow::Hanning);
-		m_fftWindow = (FFTWindow::Function) tmp;
+		d.readS32(3, &tmp, (int)FFTWindow::Hanning);
+		m_fftWindow = (FFTWindow::Function)tmp;
 		d.readReal(4, &m_refLevel, 0);
 		d.readReal(5, &m_powerRange, 100);
 		d.readBool(6, &m_displayWaterfall, true);
@@ -210,56 +210,56 @@ bool SpectrumSettings::deserialize(const QByteArray& data)
 		d.readS32(17, &m_displayTraceIntensity, 50);
 		d.readReal(18, &m_waterfallShare, 0.66);
 		d.readS32(19, &tmp, 0);
-		m_averagingMode = tmp < 0 ? AvgModeNone : tmp > 3 ? AvgModeMax : (AveragingMode) tmp;
+		m_averagingMode = tmp < 0 ? AvgModeNone : tmp > 3 ? AvgModeMax : (AveragingMode)tmp;
 		d.readS32(20, &tmp, 0);
 		m_averagingIndex = getAveragingIndex(tmp, m_averagingMode);
-	    m_averagingValue = getAveragingValue(m_averagingIndex, m_averagingMode);
-	    d.readBool(21, &m_linear, false);
-        d.readString(22, &m_wsSpectrumAddress, "127.0.0.1");
-        d.readU32(23, &utmp, 8887);
-        m_wsSpectrumPort = utmp < 1024 ? 1024 : utmp > 65535 ? 65535 : utmp;
-        d.readBool(24, &m_ssb, false);
-        d.readBool(25, &m_usb, true);
+		m_averagingValue = getAveragingValue(m_averagingIndex, m_averagingMode);
+		d.readBool(21, &m_linear, false);
+		d.readString(22, &m_wsSpectrumAddress, "127.0.0.1");
+		d.readU32(23, &utmp, 8887);
+		m_wsSpectrumPort = utmp < 1024 ? 1024 : utmp > 65535 ? 65535 : utmp;
+		d.readBool(24, &m_ssb, false);
+		d.readBool(25, &m_usb, true);
 		d.readS32(26, &tmp, 50);
 		m_fpsPeriodMs = tmp < 5 ? 5 : tmp > 500 ? 500 : tmp;
 		d.readBool(27, &m_wsSpectrum, false);
 		d.readS32(28, &tmp, 0);
-		m_markersDisplay = (MarkersDisplay) tmp;
+		m_markersDisplay = (MarkersDisplay)tmp;
 		d.readBool(29, &m_useCalibration, false);
 		d.readS32(30, &tmp, 0);
-		m_calibrationInterpMode = (CalibrationInterpolationMode) tmp;
-        d.readBool(31, &m_display3DSpectrogram, false);
-        d.readS32(32, (int*)&m_3DSpectrogramStyle, (int)Outline);
-        d.readString(33, &m_colorMap, "Angel");
-        d.readS32(34, (int*)&m_spectrumStyle, (int)Line);
-        d.readS32(35, (int*)&m_measurement, (int)MeasurementNone);
-        d.readS32(36, &m_measurementBandwidth, 10000);
-        d.readS32(37, &m_measurementChSpacing, 10000);
-        d.readS32(38, &m_measurementAdjChBandwidth, 10000);
-        d.readS32(39, &m_measurementHarmonics, 5);
-        d.readBool(42, &m_measurementHighlight, true);
-        d.readS32(43, &m_measurementPeaks, 5);
-        d.readS32(44, (int*)&m_measurementsPosition, (int)PositionBelow);
-        d.readS32(45, &m_measurementPrecision, 1);
-        d.readS32(46, &m_measurementCenterFrequencyOffset, 0);
-        d.readBool(47, &m_findHistogramPeaks, false);
-        d.readBool(48, &m_truncateFreqScale, false);
+		m_calibrationInterpMode = (CalibrationInterpolationMode)tmp;
+		d.readBool(31, &m_display3DSpectrogram, false);
+		d.readS32(32, (int*)&m_3DSpectrogramStyle, (int)Outline);
+		d.readString(33, &m_colorMap, "Angel");
+		d.readS32(34, (int*)&m_spectrumStyle, (int)Line);
+		d.readS32(35, (int*)&m_measurement, (int)MeasurementNone);
+		d.readS32(36, &m_measurementBandwidth, 10000);
+		d.readS32(37, &m_measurementChSpacing, 10000);
+		d.readS32(38, &m_measurementAdjChBandwidth, 10000);
+		d.readS32(39, &m_measurementHarmonics, 5);
+		d.readBool(42, &m_measurementHighlight, true);
+		d.readS32(43, &m_measurementPeaks, 5);
+		d.readS32(44, (int*)&m_measurementsPosition, (int)PositionBelow);
+		d.readS32(45, &m_measurementPrecision, 1);
+		d.readS32(46, &m_measurementCenterFrequencyOffset, 0);
+		d.readBool(47, &m_findHistogramPeaks, false);
+		d.readBool(48, &m_truncateFreqScale, false);
 #ifdef ANDROID
-        d.readBool(49, &m_showAllControls, false);
+		d.readBool(49, &m_showAllControls, false);
 #else
-        d.readBool(49, &m_showAllControls, true);
+		d.readBool(49, &m_showAllControls, true);
 #endif
 
 		int histogramMarkersSize;
 		d.readS32(100, &histogramMarkersSize, 0);
 		histogramMarkersSize = histogramMarkersSize < 0 ? 0 :
 			histogramMarkersSize > SpectrumHistogramMarker::m_maxNbOfMarkers ?
-				SpectrumHistogramMarker::m_maxNbOfMarkers : histogramMarkersSize;
+			SpectrumHistogramMarker::m_maxNbOfMarkers : histogramMarkersSize;
 		m_histogramMarkers.clear();
 
 		for (int i = 0; i < histogramMarkersSize; i++)
 		{
-			d.readBlob(101+i, &bytetmp);
+			d.readBlob(101 + i, &bytetmp);
 			m_histogramMarkers.push_back(SpectrumHistogramMarker());
 			m_histogramMarkers.back().deserialize(bytetmp);
 		}
@@ -269,23 +269,23 @@ bool SpectrumSettings::deserialize(const QByteArray& data)
 		d.readS32(110, &waterfallMarkersSize, 0);
 		waterfallMarkersSize = waterfallMarkersSize < 0 ? 0 :
 			waterfallMarkersSize > SpectrumWaterfallMarker::m_maxNbOfMarkers ?
-				SpectrumWaterfallMarker::m_maxNbOfMarkers : waterfallMarkersSize;
+			SpectrumWaterfallMarker::m_maxNbOfMarkers : waterfallMarkersSize;
 		m_waterfallMarkers.clear();
 
 		for (int i = 0; i < waterfallMarkersSize; i++)
 		{
-			d.readBlob(111+i, &bytetmp);
+			d.readBlob(111 + i, &bytetmp);
 			m_waterfallMarkers.push_back(SpectrumWaterfallMarker());
 			m_waterfallMarkers.back().deserialize(bytetmp);
 		}
 
-        d.readList(40, &m_annoationMarkers);
-        d.readList(41, &m_calibrationPoints);
+		d.readList(40, &m_annoationMarkers);
+		d.readList(41, &m_calibrationPoints);
 
 		return true;
 	}
-    else
-    {
+	else
+	{
 		resetToDefaults();
 		return false;
 	}
@@ -294,73 +294,74 @@ bool SpectrumSettings::deserialize(const QByteArray& data)
 QDataStream& operator>>(QDataStream& in, SpectrumAnnotationMarker& marker)
 {
 	int tmp;
-    in >> marker.m_startFrequency;
-    in >> marker.m_bandwidth;
-    in >> marker.m_markerColor;
-    in >> tmp;
-    in >> marker.m_text;
-	marker.m_show = (SpectrumAnnotationMarker::ShowState) tmp;
-    return in;
+	in >> marker.m_startFrequency;
+	in >> marker.m_bandwidth;
+	in >> marker.m_markerColor;
+	in >> tmp;
+	in >> marker.m_text;
+	marker.m_show = (SpectrumAnnotationMarker::ShowState)tmp;
+	return in;
 }
 
 QDataStream& operator>>(QDataStream& in, SpectrumCalibrationPoint& calibrationPoint)
 {
-    in >> calibrationPoint.m_frequency;
-    in >> calibrationPoint.m_powerRelativeReference;
-    in >> calibrationPoint.m_powerCalibratedReference;
-    return in;
+	in >> calibrationPoint.m_frequency;
+	in >> calibrationPoint.m_powerRelativeReference;
+	in >> calibrationPoint.m_powerCalibratedReference;
+	return in;
 }
 
-void SpectrumSettings::formatTo(SWGSDRangel::SWGObject *swgObject) const
+void SpectrumSettings::formatTo(SWGSDRangel::SWGObject* swgObject) const
 {
-	SWGSDRangel::SWGGLSpectrum *swgSpectrum = static_cast<SWGSDRangel::SWGGLSpectrum *>(swgObject);
+	SWGSDRangel::SWGGLSpectrum* swgSpectrum = static_cast<SWGSDRangel::SWGGLSpectrum*>(swgObject);
 
-	swgSpectrum->setFftWindow((int) m_fftWindow);
-    swgSpectrum->setFftSize(m_fftSize);
-    swgSpectrum->setFftOverlap(m_fftOverlap);
-    swgSpectrum->setAveragingMode((int) m_averagingMode);
-    swgSpectrum->setAveragingValue(SpectrumSettings::getAveragingValue(m_averagingIndex, m_averagingMode));
+	swgSpectrum->setFftWindow((int)m_fftWindow);
+	swgSpectrum->setFftSize(m_fftSize);
+	swgSpectrum->setFftOverlap(m_fftOverlap);
+	swgSpectrum->setAveragingMode((int)m_averagingMode);
+	swgSpectrum->setAveragingValue(SpectrumSettings::getAveragingValue(m_averagingIndex, m_averagingMode));
 	swgSpectrum->setRefLevel(m_refLevel);
 	swgSpectrum->setPowerRange(m_powerRange);
-    swgSpectrum->setFpsPeriodMs(m_fpsPeriodMs);
+	swgSpectrum->setFpsPeriodMs(m_fpsPeriodMs);
 	swgSpectrum->setLinear(m_linear ? 1 : 0);
 	swgSpectrum->setWsSpectrum(m_wsSpectrum ? 1 : 0);
 	swgSpectrum->setWsSpectrumPort(m_wsSpectrumPort);
 
-    if (swgSpectrum->getWsSpectrumAddress()) {
-        *swgSpectrum->getWsSpectrumAddress() = m_wsSpectrumAddress;
-    } else {
-        swgSpectrum->setWsSpectrumAddress(new QString(m_wsSpectrumAddress));
-    }
+	if (swgSpectrum->getWsSpectrumAddress()) {
+		*swgSpectrum->getWsSpectrumAddress() = m_wsSpectrumAddress;
+	}
+	else {
+		swgSpectrum->setWsSpectrumAddress(new QString(m_wsSpectrumAddress));
+	}
 
-    swgSpectrum->setDisplayHistogram(m_displayHistogram ? 1 : 0);
-    swgSpectrum->setDecay(m_decay);
-    swgSpectrum->setDecayDivisor(m_decayDivisor);
+	swgSpectrum->setDisplayHistogram(m_displayHistogram ? 1 : 0);
+	swgSpectrum->setDecay(m_decay);
+	swgSpectrum->setDecayDivisor(m_decayDivisor);
 	swgSpectrum->setHistogramStroke(m_histogramStroke);
-    swgSpectrum->setDisplayMaxHold(m_displayMaxHold ? 1 : 0);
-    swgSpectrum->setDisplayCurrent(m_displayCurrent ? 1 : 0);
-    swgSpectrum->setDisplayTraceIntensity(m_displayTraceIntensity);
+	swgSpectrum->setDisplayMaxHold(m_displayMaxHold ? 1 : 0);
+	swgSpectrum->setDisplayCurrent(m_displayCurrent ? 1 : 0);
+	swgSpectrum->setDisplayTraceIntensity(m_displayTraceIntensity);
 	swgSpectrum->setInvertedWaterfall(m_invertedWaterfall ? 1 : 0);
-    swgSpectrum->setDisplayWaterfall(m_displayWaterfall ? 1 : 0);
-    swgSpectrum->setDisplayGrid(m_displayGrid ? 1 : 0);
-    swgSpectrum->setDisplayGridIntensity(m_displayGridIntensity);
+	swgSpectrum->setDisplayWaterfall(m_displayWaterfall ? 1 : 0);
+	swgSpectrum->setDisplayGrid(m_displayGrid ? 1 : 0);
+	swgSpectrum->setDisplayGridIntensity(m_displayGridIntensity);
 	swgSpectrum->setSsb(m_ssb ? 1 : 0);
 	swgSpectrum->setUsb(m_usb ? 1 : 0);
 	swgSpectrum->setWaterfallShare(m_waterfallShare);
-	swgSpectrum->setMarkersDisplay((int) m_markersDisplay);
+	swgSpectrum->setMarkersDisplay((int)m_markersDisplay);
 	swgSpectrum->setUseCalibration(m_useCalibration ? 1 : 0);
-	swgSpectrum->setCalibrationInterpMode((int) m_calibrationInterpMode);
+	swgSpectrum->setCalibrationInterpMode((int)m_calibrationInterpMode);
 
 	if (m_histogramMarkers.size() > 0)
 	{
-		swgSpectrum->setHistogramMarkers(new QList<SWGSDRangel::SWGSpectrumHistogramMarker *>);
+		swgSpectrum->setHistogramMarkers(new QList<SWGSDRangel::SWGSpectrumHistogramMarker*>);
 
-		for (const auto &marker : m_histogramMarkers)
+		for (const auto& marker : m_histogramMarkers)
 		{
 			swgSpectrum->getHistogramMarkers()->append(new SWGSDRangel::SWGSpectrumHistogramMarker);
 			swgSpectrum->getHistogramMarkers()->back()->setFrequency(marker.m_frequency);
 			swgSpectrum->getHistogramMarkers()->back()->setPower(marker.m_power);
-			swgSpectrum->getHistogramMarkers()->back()->setMarkerType((int) marker.m_markerType);
+			swgSpectrum->getHistogramMarkers()->back()->setMarkerType((int)marker.m_markerType);
 			swgSpectrum->getHistogramMarkers()->back()->setMarkerColor(qColorToInt(marker.m_markerColor));
 			swgSpectrum->getHistogramMarkers()->back()->setShow(marker.m_show ? 1 : 0);
 		}
@@ -368,9 +369,9 @@ void SpectrumSettings::formatTo(SWGSDRangel::SWGObject *swgObject) const
 
 	if (m_waterfallMarkers.size() > 0)
 	{
-		swgSpectrum->setWaterfallMarkers(new QList<SWGSDRangel::SWGSpectrumWaterfallMarker *>);
+		swgSpectrum->setWaterfallMarkers(new QList<SWGSDRangel::SWGSpectrumWaterfallMarker*>);
 
-		for (const auto &marker : m_waterfallMarkers)
+		for (const auto& marker : m_waterfallMarkers)
 		{
 			swgSpectrum->getWaterfallMarkers()->append(new SWGSDRangel::SWGSpectrumWaterfallMarker);
 			swgSpectrum->getWaterfallMarkers()->back()->setFrequency(marker.m_frequency);
@@ -382,23 +383,23 @@ void SpectrumSettings::formatTo(SWGSDRangel::SWGObject *swgObject) const
 
 	if (m_annoationMarkers.size() > 0)
 	{
-		swgSpectrum->setAnnotationMarkers(new QList<SWGSDRangel::SWGSpectrumAnnotationMarker *>);
+		swgSpectrum->setAnnotationMarkers(new QList<SWGSDRangel::SWGSpectrumAnnotationMarker*>);
 
-		for (const auto &marker : m_annoationMarkers)
+		for (const auto& marker : m_annoationMarkers)
 		{
 			swgSpectrum->getAnnotationMarkers()->append(new SWGSDRangel::SWGSpectrumAnnotationMarker);
 			swgSpectrum->getAnnotationMarkers()->back()->setStartFrequency(marker.m_startFrequency);
 			swgSpectrum->getAnnotationMarkers()->back()->setBandwidth(marker.m_bandwidth);
 			swgSpectrum->getAnnotationMarkers()->back()->setMarkerColor(qColorToInt(marker.m_markerColor));
-			swgSpectrum->getAnnotationMarkers()->back()->setShow((int) marker.m_show);
+			swgSpectrum->getAnnotationMarkers()->back()->setShow((int)marker.m_show);
 		}
 	}
 
 	if (m_calibrationPoints.size() > 0)
 	{
-		swgSpectrum->setCalibrationPoints(new QList<SWGSDRangel::SWGSpectrumCalibrationPoint *>);
+		swgSpectrum->setCalibrationPoints(new QList<SWGSDRangel::SWGSpectrumCalibrationPoint*>);
 
-		for (const auto &calibrationPoint : m_calibrationPoints)
+		for (const auto& calibrationPoint : m_calibrationPoints)
 		{
 			swgSpectrum->getCalibrationPoints()->append(new SWGSDRangel::SWGSpectrumCalibrationPoint);
 			swgSpectrum->getCalibrationPoints()->back()->setFrequency(calibrationPoint.m_frequency);
@@ -408,13 +409,13 @@ void SpectrumSettings::formatTo(SWGSDRangel::SWGObject *swgObject) const
 	}
 }
 
-void SpectrumSettings::updateFrom(const QStringList& keys, const SWGSDRangel::SWGObject *swgObject)
+void SpectrumSettings::updateFrom(const QStringList& keys, const SWGSDRangel::SWGObject* swgObject)
 {
-	SWGSDRangel::SWGGLSpectrum *swgSpectrum =
-		static_cast<SWGSDRangel::SWGGLSpectrum *>(const_cast<SWGSDRangel::SWGObject *>(swgObject));
+	SWGSDRangel::SWGGLSpectrum* swgSpectrum =
+		static_cast<SWGSDRangel::SWGGLSpectrum*>(const_cast<SWGSDRangel::SWGObject*>(swgObject));
 
 	if (keys.contains("spectrumConfig.fftWindow")) {
-		m_fftWindow = (FFTWindow::Function) swgSpectrum->getFftWindow();
+		m_fftWindow = (FFTWindow::Function)swgSpectrum->getFftWindow();
 	}
 	if (keys.contains("spectrumConfig.fftSize")) {
 		m_fftSize = swgSpectrum->getFftSize();
@@ -423,7 +424,7 @@ void SpectrumSettings::updateFrom(const QStringList& keys, const SWGSDRangel::SW
 		m_fftOverlap = swgSpectrum->getFftOverlap();
 	}
 	if (keys.contains("spectrumConfig.averagingMode")) {
-		m_averagingMode = (SpectrumSettings::AveragingMode) swgSpectrum->getAveragingMode();
+		m_averagingMode = (SpectrumSettings::AveragingMode)swgSpectrum->getAveragingMode();
 	}
 	if (keys.contains("spectrumConfig.averagingValue"))
 	{
@@ -448,9 +449,9 @@ void SpectrumSettings::updateFrom(const QStringList& keys, const SWGSDRangel::SW
 	if (keys.contains("spectrumConfig.wsSpectrum")) {
 		m_wsSpectrum = swgSpectrum->getWsSpectrum() != 0;
 	}
-    if (keys.contains("spectrumConfig.wsSpectrumAddress")) {
+	if (keys.contains("spectrumConfig.wsSpectrumAddress")) {
 		m_wsSpectrumAddress = *swgSpectrum->getWsSpectrumAddress();
-    }
+	}
 	if (keys.contains("spectrumConfig.wsSpectrumPort")) {
 		m_wsSpectrumPort = swgSpectrum->getWsSpectrumPort();
 	}
@@ -497,27 +498,27 @@ void SpectrumSettings::updateFrom(const QStringList& keys, const SWGSDRangel::SW
 		m_waterfallShare = swgSpectrum->getWaterfallShare();
 	}
 	if (keys.contains("spectrumConfig.markersDisplay")) {
-		m_markersDisplay = (SpectrumSettings::MarkersDisplay) swgSpectrum->getMarkersDisplay();
+		m_markersDisplay = (SpectrumSettings::MarkersDisplay)swgSpectrum->getMarkersDisplay();
 	}
 	if (keys.contains("spectrumConfig.useCalibration")) {
 		m_useCalibration = swgSpectrum->getUseCalibration() != 0;
 	}
 	if (keys.contains("spectrumConfig.calibrationInterpMode")) {
-		m_calibrationInterpMode = (CalibrationInterpolationMode) swgSpectrum->getCalibrationInterpMode();
+		m_calibrationInterpMode = (CalibrationInterpolationMode)swgSpectrum->getCalibrationInterpMode();
 	}
 
 	if (keys.contains("spectrumConfig.histogramMarkers"))
 	{
-        QList<SWGSDRangel::SWGSpectrumHistogramMarker *> *swgHistogramMarkers = swgSpectrum->getHistogramMarkers();
-        m_histogramMarkers.clear();
+		QList<SWGSDRangel::SWGSpectrumHistogramMarker*>* swgHistogramMarkers = swgSpectrum->getHistogramMarkers();
+		m_histogramMarkers.clear();
 		int i = 0;
 
-		for (const auto &swgHistogramMarker : *swgHistogramMarkers)
+		for (const auto& swgHistogramMarker : *swgHistogramMarkers)
 		{
 			m_histogramMarkers.push_back(SpectrumHistogramMarker());
 			m_histogramMarkers.back().m_frequency = swgHistogramMarker->getFrequency();
 			m_histogramMarkers.back().m_power = swgHistogramMarker->getPower();
-			m_histogramMarkers.back().m_markerType = (SpectrumHistogramMarker::SpectrumMarkerType) swgHistogramMarker->getMarkerType();
+			m_histogramMarkers.back().m_markerType = (SpectrumHistogramMarker::SpectrumMarkerType)swgHistogramMarker->getMarkerType();
 			m_histogramMarkers.back().m_markerColor = intToQColor(swgHistogramMarker->getMarkerColor());
 			m_histogramMarkers.back().m_show = swgHistogramMarker->getShow() != 0;
 
@@ -529,11 +530,11 @@ void SpectrumSettings::updateFrom(const QStringList& keys, const SWGSDRangel::SW
 
 	if (keys.contains("spectrumConfig.waterfallMarkers"))
 	{
-        QList<SWGSDRangel::SWGSpectrumWaterfallMarker *> *swgWaterfallMarkers = swgSpectrum->getWaterfallMarkers();
-        m_waterfallMarkers.clear();
+		QList<SWGSDRangel::SWGSpectrumWaterfallMarker*>* swgWaterfallMarkers = swgSpectrum->getWaterfallMarkers();
+		m_waterfallMarkers.clear();
 		int i = 0;
 
-		for (const auto &swgWaterfallMarker : *swgWaterfallMarkers)
+		for (const auto& swgWaterfallMarker : *swgWaterfallMarkers)
 		{
 			m_waterfallMarkers.push_back(SpectrumWaterfallMarker());
 			m_waterfallMarkers.back().m_frequency = swgWaterfallMarker->getFrequency();
@@ -549,25 +550,25 @@ void SpectrumSettings::updateFrom(const QStringList& keys, const SWGSDRangel::SW
 
 	if (keys.contains("spectrumConfig.annotationMarkers"))
 	{
-        QList<SWGSDRangel::SWGSpectrumAnnotationMarker *> *swgAnnotationMarkers = swgSpectrum->getAnnotationMarkers();
-        m_waterfallMarkers.clear();
+		QList<SWGSDRangel::SWGSpectrumAnnotationMarker*>* swgAnnotationMarkers = swgSpectrum->getAnnotationMarkers();
+		m_waterfallMarkers.clear();
 
-		for (const auto &swgAnnotationMarker : *swgAnnotationMarkers)
+		for (const auto& swgAnnotationMarker : *swgAnnotationMarkers)
 		{
 			m_annoationMarkers.push_back(SpectrumAnnotationMarker());
 			m_annoationMarkers.back().m_startFrequency = swgAnnotationMarker->getStartFrequency();
 			m_annoationMarkers.back().m_bandwidth = swgAnnotationMarker->getBandwidth() < 0 ? 0 : swgAnnotationMarker->getBandwidth();
 			m_annoationMarkers.back().m_markerColor = intToQColor(swgAnnotationMarker->getMarkerColor());
-			m_annoationMarkers.back().m_show = (SpectrumAnnotationMarker::ShowState) swgAnnotationMarker->getShow();
+			m_annoationMarkers.back().m_show = (SpectrumAnnotationMarker::ShowState)swgAnnotationMarker->getShow();
 		}
 	}
 
 	if (keys.contains("spectrumConfig.calibrationPoints"))
 	{
-		QList<SWGSDRangel::SWGSpectrumCalibrationPoint *> *swgCalibrationPoints = swgSpectrum->getCalibrationPoints();
+		QList<SWGSDRangel::SWGSpectrumCalibrationPoint*>* swgCalibrationPoints = swgSpectrum->getCalibrationPoints();
 		m_calibrationPoints.clear();
 
-		for (const auto &swgCalibrationPoint : *swgCalibrationPoints)
+		for (const auto& swgCalibrationPoint : *swgCalibrationPoints)
 		{
 			m_calibrationPoints.push_back(SpectrumCalibrationPoint());
 			m_calibrationPoints.back().m_frequency = swgCalibrationPoint->getFrequency();
@@ -579,89 +580,95 @@ void SpectrumSettings::updateFrom(const QStringList& keys, const SWGSDRangel::SW
 
 int SpectrumSettings::getAveragingMaxScale(AveragingMode averagingMode)
 {
-    if (averagingMode == AvgModeMoving) {
-        return 3; // max 10k
-    } else {
-        return 5; // max 1M
-    }
+	if (averagingMode == AvgModeMoving) {
+		return 3; // max 10k
+	}
+	else {
+		return 5; // max 1M
+	}
 }
 
 int SpectrumSettings::getAveragingValue(int averagingIndex, AveragingMode averagingMode)
 {
-    if (averagingIndex <= 0) {
-        return 1;
-    }
+	if (averagingIndex <= 0) {
+		return 1;
+	}
 
-    int v = averagingIndex - 1;
-    int m = pow(10.0, v/3 > getAveragingMaxScale(averagingMode) ? getAveragingMaxScale(averagingMode) : v/3);
-    int x = 1;
+	int v = averagingIndex - 1;
+	int m = pow(10.0, v / 3 > getAveragingMaxScale(averagingMode) ? getAveragingMaxScale(averagingMode) : v / 3);
+	int x = 1;
 
-    if (v % 3 == 0) {
-        x = 2;
-    } else if (v % 3 == 1) {
-        x = 5;
-    } else if (v % 3 == 2) {
-        x = 10;
-    }
+	if (v % 3 == 0) {
+		x = 2;
+	}
+	else if (v % 3 == 1) {
+		x = 5;
+	}
+	else if (v % 3 == 2) {
+		x = 10;
+	}
 
-    return x * m;
+	return x * m;
 }
 
 int SpectrumSettings::getAveragingIndex(int averagingValue, AveragingMode averagingMode)
 {
-    if (averagingValue <= 1) {
-        return 0;
-    }
+	if (averagingValue <= 1) {
+		return 0;
+	}
 
-    int v = averagingValue;
-    int j = 0;
+	int v = averagingValue;
+	int j = 0;
 
-    for (int i = 0; i <= getAveragingMaxScale(averagingMode); i++)
-    {
-        if (v < 20)
-        {
-            if (v < 2) {
-                j = 0;
-            } else if (v < 5) {
-                j = 1;
-            } else if (v < 10) {
-                j = 2;
-            } else {
-                j = 3;
-            }
+	for (int i = 0; i <= getAveragingMaxScale(averagingMode); i++)
+	{
+		if (v < 20)
+		{
+			if (v < 2) {
+				j = 0;
+			}
+			else if (v < 5) {
+				j = 1;
+			}
+			else if (v < 10) {
+				j = 2;
+			}
+			else {
+				j = 3;
+			}
 
-            return 3*i + j;
-        }
+			return 3 * i + j;
+		}
 
-        v /= 10;
-    }
+		v /= 10;
+	}
 
-    return 3*getAveragingMaxScale(averagingMode) + 3;
+	return 3 * getAveragingMaxScale(averagingMode) + 3;
 }
 
 uint64_t SpectrumSettings::getMaxAveragingValue(int fftSize, AveragingMode averagingMode)
 {
 	if (averagingMode == AvgModeMoving)
 	{
-		uint64_t limit = (1UL<<28) / (sizeof(double)*fftSize); // 256 MB max
-		return limit > (1<<14) ? (1<<14) : limit; // limit to 16 kS anyway
+		uint64_t limit = (1UL << 28) / (sizeof(double) * fftSize); // 256 MB max
+		return limit > (1 << 14) ? (1 << 14) : limit; // limit to 16 kS anyway
 	}
 	else
 	{
-		return (1<<20); // fixed 1 MS
+		return (1 << 20); // fixed 1 MS
 	}
 }
 
 int SpectrumSettings::qColorToInt(const QColor& color)
 {
-    return 256*256*color.blue() + 256*color.green() + color.red();
+	return 256 * 256 * color.blue() + 256 * color.green() + color.red();
 }
 
 QColor SpectrumSettings::intToQColor(int intColor)
 {
-    int r = intColor % 256;
-    int bg = intColor / 256;
-    int g = bg % 256;
-    int b = bg / 256;
-    return QColor(r, g, b);
+	int r = intColor % 256;
+	int bg = intColor / 256;
+	int g = bg % 256;
+	int b = bg / 256;
+	return QColor(r, g, b);
 }

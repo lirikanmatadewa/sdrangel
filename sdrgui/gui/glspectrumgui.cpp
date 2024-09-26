@@ -320,6 +320,7 @@ void GLSpectrumGUI::displayControls()
 	ui->wsSpectrum->setVisible(m_settings.m_showAllControls);
 	ui->calibration->setVisible(m_settings.m_showAllControls);
 	ui->markers->setVisible(m_settings.m_showAllControls);
+	ui->measure->setVisible(m_settings.m_showAllControls);
 }
 
 void GLSpectrumGUI::displayGotoMarkers()
@@ -1184,6 +1185,7 @@ void GLSpectrumGUI::updateMeasurements()
 			m_settings.m_measurementHighlight,
 			m_settings.m_measurementPrecision
 		);
+		m_glSpectrum->hideMeasurementSplitter();
 	}
 }
 
