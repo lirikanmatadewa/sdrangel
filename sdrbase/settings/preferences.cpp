@@ -38,7 +38,7 @@ void Preferences::resetToDefaults()
     m_altitude = 0.0f;
     m_autoUpdatePosition = true;
 	m_useLogFile = false;
-	m_logFileName = "sdrangel.log";
+	m_logFileName = "sdranalyzer.log";
 	m_consoleMinLogLevel = QtDebugMsg;
     m_fileMinLogLevel = QtDebugMsg;
     m_multisampling = 0;

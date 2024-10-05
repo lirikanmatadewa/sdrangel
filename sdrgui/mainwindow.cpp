@@ -253,6 +253,7 @@ MainWindow::MainWindow(qtwebapp::LoggerWithFile* logger, const MainParser& parse
 		if (m_workspaces.size() == 0)
 		{
 			addWorkspace();
+
 			if (m_mainCore->m_settings.getConfigurations()->size() == 0) {
 				loadDefaultConfigurations();
 			}
@@ -455,6 +456,43 @@ void MainWindow::sampleSourceAdd(Workspace* deviceWorkspace, Workspace* spectrum
 	spectrumWorkspace->addToMdiArea(m_deviceUIs.back()->m_mainSpectrumGUI);
 	loadDefaultPreset(deviceAPI->getSamplingDeviceId(), m_deviceUIs.back());
 	emit m_mainCore->deviceSetAdded(deviceSetIndex, deviceAPI);
+
+	deviceWorkspace->setAutoStackOption(true);
+
+	if (m_workspaces.size() == 1) {
+		PluginAPI::FeatureRegistrations* featureRegistrations = m_pluginManager->getFeatureRegistrations(); // Available feature plugins
+		PluginAPI::ChannelRegistrations* channelRegistrations = m_pluginManager->getRxChannelRegistrations(); // Available channel plugins
+		QList<QString> findFeatureURI = { "sdrangel.feature.map" };
+		QList<QString> findChannelURI = { "sdrangel.channel.heatmap" };
+		QMap<QString, int> featureMap;
+		QMap<QString, int> channelMap;
+		int index = 0;
+
+		addWorkspace();
+		foreach(auto feature, *featureRegistrations) {
+			foreach(auto uri, findFeatureURI) {
+				if (feature.m_featureIdURI == uri) {
+					featureMap.insert(uri, index);
+					break;
+				}
+			}
+			index++;
+		}
+		foreach(int it, featureMap) { featureAddClicked(m_workspaces.back(), it); }
+		index = 0;
+		foreach(auto channel, *channelRegistrations) {
+			foreach(auto uri, findChannelURI) {
+				if (channel.m_channelIdURI == uri) {
+					channelMap.insert(uri, index);
+					break;
+				}
+			}
+			index++;
+		}
+		foreach(int it, channelMap) { channelAddClicked(m_workspaces.back(), deviceSetIndex, it); }
+		m_workspaces.back()->setAutoStackOption(true);
+		m_workspaces.first()->raise();
+	}
 
 #ifdef ANDROID
 	// Seemingly needed on some versions of Android, otherwise the new windows aren't always displayed??
@@ -1621,25 +1659,40 @@ void MainWindow::createMenuBar(QToolButton* button)
 	{
 		QMenuBar* menuBar = this->menuBar();
 		fileMenu = menuBar->addMenu("&File");
-		viewMenu = menuBar->addMenu("&View");
-		// workspacesMenu = menuBar->addMenu("&Workspaces");
-		// preferencesMenu = menuBar->addMenu("&Preferences");
-		// helpMenu = menuBar->addMenu("&Help");
+		// viewMenu = menuBar->addMenu("&View");
+		workspacesMenu = menuBar->addMenu("&Workspaces");
+		preferencesMenu = menuBar->addMenu("&Preferences");
+		helpMenu = menuBar->addMenu("&Help");
+
+		menuBar->addSeparator();
+		QAction* fullscreenAction = menuBar->addAction("&View Fullscreen");
+		fullscreenAction->setShortcut(QKeySequence(Qt::Key_F11));
+		fullscreenAction->setToolTip("Toggle fullscreen view");
+		fullscreenAction->setCheckable(true);
+		QObject::connect(fullscreenAction, &QAction::triggered, this, &MainWindow::on_action_View_Fullscreen_toggled);
 	}
 	else
 	{
 		QMenu* menu = new QMenu();
 		fileMenu = new QMenu("&File");
 		menu->addMenu(fileMenu);
-		viewMenu = new QMenu("&View");
+		// viewMenu = new QMenu("&View");
 		menu->addMenu(viewMenu);
 		workspacesMenu = new QMenu("&Workspaces");
-		// menu->addMenu(workspacesMenu);
+		menu->addMenu(workspacesMenu);
 		preferencesMenu = new QMenu("&Preferences");
-		// menu->addMenu(preferencesMenu);
+		menu->addMenu(preferencesMenu);
 		helpMenu = new QMenu("&Help");
-		// menu->addMenu(helpMenu);
+		menu->addMenu(helpMenu);
 		button->setMenu(menu);
+
+		// QMenuBar* menuBar = this->menuBar();
+		menu->addSeparator();
+		QAction* fullscreenAction = menu->addAction("&View Fullscreen");
+		fullscreenAction->setShortcut(QKeySequence(Qt::Key_F11));
+		fullscreenAction->setToolTip("Toggle fullscreen view");
+		fullscreenAction->setCheckable(true);
+		QObject::connect(fullscreenAction, &QAction::triggered, this, &MainWindow::on_action_View_Fullscreen_toggled);
 	}
 
 	QAction* exitAction = fileMenu->addAction("E&xit");
@@ -1647,11 +1700,13 @@ void MainWindow::createMenuBar(QToolButton* button)
 	exitAction->setToolTip("Exit");
 	QObject::connect(exitAction, &QAction::triggered, this, &QMainWindow::close);
 
-	QAction* fullscreenAction = viewMenu->addAction("&Fullscreen");
-	fullscreenAction->setShortcut(QKeySequence(Qt::Key_F11));
-	fullscreenAction->setToolTip("Toggle fullscreen view");
-	fullscreenAction->setCheckable(true);
-	QObject::connect(fullscreenAction, &QAction::triggered, this, &MainWindow::on_action_View_Fullscreen_toggled);
+	if (viewMenu) {
+		QAction* fullscreenAction = viewMenu->addAction("&Fullscreen");
+		fullscreenAction->setShortcut(QKeySequence(Qt::Key_F11));
+		fullscreenAction->setToolTip("Toggle fullscreen view");
+		fullscreenAction->setCheckable(true);
+		QObject::connect(fullscreenAction, &QAction::triggered, this, &MainWindow::on_action_View_Fullscreen_toggled);
+	}
 #ifdef ANDROID
 	QAction* keepscreenonAction = viewMenu->addAction("&Keep screen on");
 	keepscreenonAction->setToolTip("Prevent screen from switching off");
@@ -1692,6 +1747,7 @@ void MainWindow::createMenuBar(QToolButton* button)
 		QAction* myPositionAction = preferencesMenu->addAction("My &Position...");
 		myPositionAction->setToolTip("Set station position");
 		QObject::connect(myPositionAction, &QAction::triggered, this, &MainWindow::on_action_My_Position_triggered);
+		/*
 		QAction* fftAction = preferencesMenu->addAction("&FFT...");
 		fftAction->setToolTip("Set FFT preferences");
 		QObject::connect(fftAction, &QAction::triggered, this, &MainWindow::on_action_FFT_triggered);
@@ -1705,6 +1761,7 @@ void MainWindow::createMenuBar(QToolButton* button)
 		QAction* commandsAction = preferencesMenu->addAction("C&ommands...");
 		commandsAction->setToolTip("External commands dialog");
 		QObject::connect(commandsAction, &QAction::triggered, this, &MainWindow::on_action_commands_triggered);
+		*/
 		QAction* saveAllAction = preferencesMenu->addAction("&Save all");
 		saveAllAction->setToolTip("Save all current settings");
 		QObject::connect(saveAllAction, &QAction::triggered, this, &MainWindow::on_action_saveAll_triggered);
@@ -1724,7 +1781,7 @@ void MainWindow::createMenuBar(QToolButton* button)
 		aboutAction->setToolTip("SDR Analyzer application details");
 		QObject::connect(aboutAction, &QAction::triggered, this, &MainWindow::on_action_About_triggered);
 	}
-}
+	}
 
 void MainWindow::createStatusBar()
 {
@@ -2217,7 +2274,7 @@ void MainWindow::removeEmptyWorkspaces()
 	// Need at least one workspace on Android, as no menus without
 	if (m_workspaces.size() == 0) {
 		addWorkspace();
-	}
+}
 #endif
 }
 
