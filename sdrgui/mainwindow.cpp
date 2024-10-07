@@ -1768,6 +1768,7 @@ void MainWindow::createMenuBar(QToolButton* button)
 	}
 
 	if (helpMenu) {
+		/*
 		QAction* quickStartAction = helpMenu->addAction("&Quick start...");
 		quickStartAction->setToolTip("Instructions for quick start");
 		QObject::connect(quickStartAction, &QAction::triggered, this, &MainWindow::on_action_Quick_Start_triggered);
@@ -1777,11 +1778,12 @@ void MainWindow::createMenuBar(QToolButton* button)
 		QAction* loadedPluginsAction = helpMenu->addAction("Loaded &Plugins...");
 		loadedPluginsAction->setToolTip("List available plugins");
 		QObject::connect(loadedPluginsAction, &QAction::triggered, this, &MainWindow::on_action_Loaded_Plugins_triggered);
+		*/
 		QAction* aboutAction = helpMenu->addAction("&About SDR Analyzer...");
 		aboutAction->setToolTip("SDR Analyzer application details");
 		QObject::connect(aboutAction, &QAction::triggered, this, &MainWindow::on_action_About_triggered);
 	}
-	}
+}
 
 void MainWindow::createStatusBar()
 {
@@ -2274,7 +2276,7 @@ void MainWindow::removeEmptyWorkspaces()
 	// Need at least one workspace on Android, as no menus without
 	if (m_workspaces.size() == 0) {
 		addWorkspace();
-}
+	}
 #endif
 }
 

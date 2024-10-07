@@ -43,7 +43,7 @@ void HeatMapSettings::resetToDefaults()
     m_txLatitude = 0.0f;
     m_txLongitude = 0.0f;
     m_txPower = 0.0f;
-    m_displayChart = true;
+    m_displayChart = false;
     m_displayAverage = true;
     m_displayMax = true;
     m_displayMin = true;
