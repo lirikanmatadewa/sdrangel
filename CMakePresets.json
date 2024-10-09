@@ -62,7 +62,7 @@
         "ENABLE_XTRX": "OFF",
         "ENABLE_USRP": "OFF",
         "BUILD_SERVER": "OFF",
-        "CMAKE_PREFIX_PATH": "C:\\Qt\\5.15.2\\msvc2019_64;C:\\local\\boost_1_82_0;C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v12.2"
+        "CMAKE_PREFIX_PATH": "C:/Qt/5.15.2/msvc2019_64;C:/Tools/boost_1_86_0"
       },
       "warnings": {
         "dev": false

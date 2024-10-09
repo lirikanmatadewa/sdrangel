@@ -99,6 +99,10 @@ private slots:
     void updateHardware();
     void updateStatus();
     void openDeviceSettingsDialog(const QPoint& p);
+
+    void on_btnGsm_clicked();
+    void on_btnFddLte_clicked();
+    void on_btnTddLte_clicked();
 };
 
 #endif /* PLUGINS_SAMPLESOURCE_BLADERF2INPUT_BLADERF2INPUTGUI_H_ */
