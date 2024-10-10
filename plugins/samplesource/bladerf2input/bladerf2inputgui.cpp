@@ -577,11 +577,57 @@ void BladeRF2InputGui::openDeviceSettingsDialog(const QPoint& p)
     resetContextMenuType();
 }
 
+void BladeRF2InputGui::on_btnGsm_clicked()
+{
+    qDebug() << "BladeRF2OutputGui::on_btnGsm_clicked()::clicked";
+    m_settings.m_centerFrequency = 19000000 * 1000;
+    m_settingsKeys.append("centerFrequency");
+    sendSettings();
+    ui->centerFrequency->setValue(m_settings.m_centerFrequency / 1000);
+
+    ui->bandwidth->setValue(4000000 / 1000);
+
+    if (m_sampleRateMode)
+    {
+        on_sampleRate_changed(8000000);
+    }
+}
+
+void BladeRF2InputGui::on_btnFddLte_clicked()
+{
+    qDebug() << "BladeRF2OutputGui::on_btnFddLte_clicked()::clicked";
+    m_settings.m_centerFrequency = 29000000 * 1000;
+    m_settingsKeys.append("centerFrequency");
+    sendSettings();
+    ui->centerFrequency->setValue(m_settings.m_centerFrequency / 1000);
+
+    ui->bandwidth->setValue(200000000 / 1000);
+    if (m_sampleRateMode)
+    {
+        on_sampleRate_changed(25000000);
+    }
+}
+
+void BladeRF2InputGui::on_btnTddLte_clicked()
+{
+    qDebug() << "BladeRF2OutputGui::on_btnTddLte_clicked()::clicked";
+    m_settings.m_centerFrequency = 39000000 * 1000;
+    m_settingsKeys.append("centerFrequency");
+    sendSettings();
+    ui->centerFrequency->setValue(m_settings.m_centerFrequency / 1000);
+
+    ui->bandwidth->setValue(20000000 / 1000);
+    if (m_sampleRateMode)
+    {
+        on_sampleRate_changed(25000000);
+    }
+}
+
 float BladeRF2InputGui::getGainDB(int gainValue)
 {
     float gain = gainValue*m_gainStep*m_gainScale;
-    // qDebug("BladeRF2InputGui::getGainDB: gainValue: %d m_gainMin: %d m_gainMax: %d m_gainStep: %d m_gainScale: %f gain: %f",
-    //     gainValue, m_gainMin, m_gainMax, m_gainStep, m_gainScale, gain);
+     //qDebug("BladeRF2InputGui::getGainDB: gainValue: %d m_gainMin: %d m_gainMax: %d m_gainStep: %d m_gainScale: %f gain: %f",
+         //gainValue, m_gainMin, m_gainMax, m_gainStep, m_gainScale, gain);
     return gain;
 }
 
@@ -609,4 +655,8 @@ void BladeRF2InputGui::makeUIConnections()
     QObject::connect(ui->transverter, &TransverterButton::clicked, this, &BladeRF2InputGui::on_transverter_clicked);
     QObject::connect(ui->startStop, &ButtonSwitch::toggled, this, &BladeRF2InputGui::on_startStop_toggled);
     QObject::connect(ui->sampleRateMode, &QToolButton::toggled, this, &BladeRF2InputGui::on_sampleRateMode_toggled);
+
+    QObject::connect(ui->btnGsm, &QToolButton::clicked, this, &BladeRF2InputGui::on_btnGsm_clicked);
+    QObject::connect(ui->btnFddLte, &QToolButton::clicked, this, &BladeRF2InputGui::on_btnFddLte_clicked);
+    QObject::connect(ui->btnTddLte, &QToolButton::clicked, this, &BladeRF2InputGui::on_btnTddLte_clicked);
 }
