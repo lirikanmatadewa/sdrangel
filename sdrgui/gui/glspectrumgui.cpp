@@ -30,6 +30,8 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QScreen>
+#include <QtSql/QSqlDatabase>
+#include <QtSql/QSqlQuery>
 
 #include "gui/glspectrumgui.h"
 #include "dsp/fftwindow.h"
@@ -117,6 +119,39 @@ GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
 
 	displaySettings();
 	setAveragingCombo();
+
+	// Open a connection to the SQLite database
+	QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
+	db.setDatabaseName("database/mobile_channel.db");
+
+	if (!db.open()) {
+		qDebug() << "Error: connection with database failed";
+	}
+	else {
+		qDebug() << "Database: connection ok";
+	}
+
+	QStringList drivers = QSqlDatabase::drivers();
+	qDebug() << "Available drivers:" << drivers;
+
+	// Create a table
+	QSqlQuery query;
+	query.prepare("SELECT frequency FROM gsm900_ul WHERE channel = :channel");
+	query.bindValue(":channel", 100);
+
+	if (!query.exec()) {
+		qDebug() << "Error: query execution failed";
+	}
+	else {
+		if (query.next()) {
+			int frequency = query.value(0).toInt();
+			qDebug() << "Channel = 100 == Frequency" << frequency;
+		}
+		else {
+			qDebug() << "No results found";
+		}
+	}
+	db.close();
 }
 
 GLSpectrumGUI::~GLSpectrumGUI()

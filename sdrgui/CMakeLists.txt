@@ -331,6 +331,7 @@ target_link_libraries(sdrgui
   Qt::OpenGL
   Qt::Multimedia
   Qt::Positioning
+  Qt::Sql
   ${OPENGL_LIBRARIES}
   ${sdrgui_LIMERFE_LIB}
   sdrbase

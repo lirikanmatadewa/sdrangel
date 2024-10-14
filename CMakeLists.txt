@@ -638,7 +638,8 @@ if(ENABLE_QT6)
                      Positioning
                      Charts
                      SerialPort
-                     Core5Compat)
+                     Core5Compat
+                     Sql)
 else()
     find_package(Qt5 5.15
                    REQUIRED COMPONENTS
@@ -649,7 +650,8 @@ else()
                      MultimediaWidgets
                      Positioning
                      Charts
-                     SerialPort)
+                     SerialPort
+                     Sql)
 endif()
 
 # for the server we don't need OpenGL/Qt Quick components
@@ -1043,6 +1045,7 @@ if (BUILD_SERVER)
 endif()
 
 ############ install ##################
+install(FILES ${CMAKE_SOURCE_DIR}/database/mobile_channel.db DESTINATION ${INSTALL_BIN_DIR}/database)
 install(TARGETS sdrangelbench DESTINATION ${INSTALL_BIN_DIR})
 if (BUILD_GUI)
       install(TARGETS ${CMAKE_PROJECT_NAME} DESTINATION ${INSTALL_BIN_DIR})
