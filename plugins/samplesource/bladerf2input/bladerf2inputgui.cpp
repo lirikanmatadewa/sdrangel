@@ -33,6 +33,8 @@
 
 #include "bladerf2inputgui.h"
 
+
+
 BladeRF2InputGui::BladeRF2InputGui(DeviceUISet *deviceUISet, QWidget* parent) :
     DeviceGUI(parent),
     ui(new Ui::Bladerf2InputGui),
@@ -580,11 +582,6 @@ void BladeRF2InputGui::openDeviceSettingsDialog(const QPoint& p)
 void BladeRF2InputGui::on_btnGsm_clicked()
 {
     qDebug() << "BladeRF2OutputGui::on_btnGsm_clicked()::clicked";
-    m_settings.m_centerFrequency = 19000000 * 1000;
-    m_settingsKeys.append("centerFrequency");
-    sendSettings();
-    ui->centerFrequency->setValue(m_settings.m_centerFrequency / 1000);
-
     ui->bandwidth->setValue(4000000 / 1000);
 
     if (m_sampleRateMode)
@@ -596,9 +593,6 @@ void BladeRF2InputGui::on_btnGsm_clicked()
 void BladeRF2InputGui::on_btnFddLte_clicked()
 {
     qDebug() << "BladeRF2OutputGui::on_btnFddLte_clicked()::clicked";
-    m_settings.m_centerFrequency = 29000000 * 1000;
-    m_settingsKeys.append("centerFrequency");
-    sendSettings();
     ui->centerFrequency->setValue(m_settings.m_centerFrequency / 1000);
 
     ui->bandwidth->setValue(200000000 / 1000);
@@ -611,9 +605,6 @@ void BladeRF2InputGui::on_btnFddLte_clicked()
 void BladeRF2InputGui::on_btnTddLte_clicked()
 {
     qDebug() << "BladeRF2OutputGui::on_btnTddLte_clicked()::clicked";
-    m_settings.m_centerFrequency = 39000000 * 1000;
-    m_settingsKeys.append("centerFrequency");
-    sendSettings();
     ui->centerFrequency->setValue(m_settings.m_centerFrequency / 1000);
 
     ui->bandwidth->setValue(20000000 / 1000);
@@ -621,6 +612,20 @@ void BladeRF2InputGui::on_btnTddLte_clicked()
     {
         on_sampleRate_changed(25000000);
     }
+}
+
+void BladeRF2InputGui::on_btnSubmit_clicked()
+{
+    QString data = ui->freqInput->toPlainText();
+    qDebug("Text from QLineEdit: %s", data);
+
+    int value = data.toInt();
+    qDebug() << "The integer value is:" << value;
+    
+    m_settings.m_centerFrequency = 11111111111;
+    m_settingsKeys.append("centerFrequency");
+    sendSettings();
+    ui->centerFrequency->setValue(11111111111);
 }
 
 float BladeRF2InputGui::getGainDB(int gainValue)
@@ -659,4 +664,5 @@ void BladeRF2InputGui::makeUIConnections()
     QObject::connect(ui->btnGsm, &QToolButton::clicked, this, &BladeRF2InputGui::on_btnGsm_clicked);
     QObject::connect(ui->btnFddLte, &QToolButton::clicked, this, &BladeRF2InputGui::on_btnFddLte_clicked);
     QObject::connect(ui->btnTddLte, &QToolButton::clicked, this, &BladeRF2InputGui::on_btnTddLte_clicked);
+    QObject::connect(ui->submitFreq, &QToolButton::clicked, this, &BladeRF2InputGui::on_btnSubmit_clicked);
 }

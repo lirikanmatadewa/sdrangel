@@ -103,6 +103,7 @@ private slots:
     void on_btnGsm_clicked();
     void on_btnFddLte_clicked();
     void on_btnTddLte_clicked();
+    void on_btnSubmit_clicked();
 };
 
 #endif /* PLUGINS_SAMPLESOURCE_BLADERF2INPUT_BLADERF2INPUTGUI_H_ */
