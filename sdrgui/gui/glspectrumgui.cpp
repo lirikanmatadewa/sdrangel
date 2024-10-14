@@ -321,6 +321,20 @@ void GLSpectrumGUI::displayControls()
 	ui->calibration->setVisible(m_settings.m_showAllControls);
 	ui->markers->setVisible(m_settings.m_showAllControls);
 	ui->measure->setVisible(m_settings.m_showAllControls);
+
+	ui->averagingMode->setVisible(m_settings.m_showAllControls);
+	ui->averaging->setVisible(m_settings.m_showAllControls);
+	ui->refLevel->setVisible(m_settings.m_showAllControls);
+	ui->autoscale->setVisible(m_settings.m_showAllControls);
+	ui->levelRange->setVisible(m_settings.m_showAllControls);
+
+	ui->adsb->setVisible(m_settings.m_showAllControls);
+	ui->am->setVisible(m_settings.m_showAllControls);
+	ui->ssb->setVisible(m_settings.m_showAllControls);
+	ui->wfm->setVisible(m_settings.m_showAllControls);
+	ui->iqRecord->setVisible(m_settings.m_showAllControls);
+	ui->iqReplay->setVisible(m_settings.m_showAllControls);
+	ui->frequencyScanner->setVisible(m_settings.m_showAllControls);
 }
 
 void GLSpectrumGUI::displayGotoMarkers()
