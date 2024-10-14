@@ -144,8 +144,7 @@ QMap<int, QString> SamplingDeviceDialog::getDeviceMap()
 {
 	QMap<int, QString> deviceMap;
 	QList<QString> deviceDisplayNames;
-
-	on_refreshDevices_clicked();
+	bool isBladeRF2Found = false;
 
 	m_deviceIndexes.clear();
 	if (m_deviceType == 0) { // Single Rx
@@ -156,6 +155,30 @@ QMap<int, QString> SamplingDeviceDialog::getDeviceMap()
 	}
 	else if (m_deviceType == 2) { // MIMO
 		DeviceEnumerator::instance()->listMIMODeviceNames(deviceDisplayNames, m_deviceIndexes);
+	}
+
+	foreach(QString var, deviceDisplayNames)
+	{
+		if (var.contains("BladeRF2[0:0]")) {
+			isBladeRF2Found = true;
+		}
+	}
+
+	if (!isBladeRF2Found)
+	{
+		on_refreshDevices_clicked();
+		m_deviceIndexes.clear();
+		deviceDisplayNames.clear();
+
+		if (m_deviceType == 0) { // Single Rx
+			DeviceEnumerator::instance()->listRxDeviceNames(deviceDisplayNames, m_deviceIndexes);
+		}
+		else if (m_deviceType == 1) { // Single Tx
+			DeviceEnumerator::instance()->listTxDeviceNames(deviceDisplayNames, m_deviceIndexes);
+		}
+		else if (m_deviceType == 2) { // MIMO
+			DeviceEnumerator::instance()->listMIMODeviceNames(deviceDisplayNames, m_deviceIndexes);
+		}
 	}
 
 	ui->deviceSelect->clear();

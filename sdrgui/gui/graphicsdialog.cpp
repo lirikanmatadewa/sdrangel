@@ -46,7 +46,7 @@ GraphicsDialog::GraphicsDialog(MainSettings& mainSettings, QWidget* parent) :
     ui->mapSmoothing->setChecked(m_mainSettings.getMapSmoothing());
 
     QSettings settings;
-    m_initScaleFactor = settings.value("graphics.ui_scale_factor", "1").toFloat();
+    m_initScaleFactor = settings.value("graphics.ui_scale_factor", "1.5").toFloat();
     ui->uiScaleFactor->setValue((int)(m_initScaleFactor * 100.0f));
 }
 

@@ -1402,6 +1402,7 @@ void MapGUI::createNASAGlobalImageryView()
     m_nasaWidget->setMaximumHeight(m_overviewWidget->sizeHint().height());
 
     m_nasaWidget->show();
+    ui->splitter->setSizes({ 1, 0 });
 }
 
 void MapGUI::displayNASAMetaData()
