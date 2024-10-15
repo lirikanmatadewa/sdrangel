@@ -117,41 +117,44 @@ GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
 	connect(ui->iqReplay, SIGNAL(clicked()), this, SLOT(openIqReplay()));
 	connect(ui->frequencyScanner, SIGNAL(clicked()), this, SLOT(openFrequencyScanner()));
 
+	connect(ui->btnTones, SIGNAL(clicked()), this, SLOT(openTone()));
+	connect(ui->btnOpenSpectrum, SIGNAL(clicked()), this, SLOT(openSpectrum()));
+
 	displaySettings();
 	setAveragingCombo();
 
-	// Open a connection to the SQLite database
-	QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
-	db.setDatabaseName("database/mobile_channel.db");
+	//// Open a connection to the SQLite database
+	//QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
+	//db.setDatabaseName("database/mobile_channel.db");
 
-	if (!db.open()) {
-		qDebug() << "Error: connection with database failed";
-	}
-	else {
-		qDebug() << "Database: connection ok";
-	}
+	//if (!db.open()) {
+	//	qDebug() << "Error: connection with database failed";
+	//}
+	//else {
+	//	qDebug() << "Database: connection ok";
+	//}
 
-	QStringList drivers = QSqlDatabase::drivers();
-	qDebug() << "Available drivers:" << drivers;
+	//QStringList drivers = QSqlDatabase::drivers();
+	//qDebug() << "Available drivers:" << drivers;
 
-	// Create a table
-	QSqlQuery query;
-	query.prepare("SELECT frequency FROM gsm900_ul WHERE channel = :channel");
-	query.bindValue(":channel", 100);
+	//// Create a table
+	//QSqlQuery query;
+	//query.prepare("SELECT frequency FROM gsm900_ul WHERE channel = :channel");
+	//query.bindValue(":channel", 100);
 
-	if (!query.exec()) {
-		qDebug() << "Error: query execution failed";
-	}
-	else {
-		if (query.next()) {
-			int frequency = query.value(0).toInt();
-			qDebug() << "Channel = 100 == Frequency" << frequency;
-		}
-		else {
-			qDebug() << "No results found";
-		}
-	}
-	db.close();
+	//if (!query.exec()) {
+	//	qDebug() << "Error: query execution failed";
+	//}
+	//else {
+	//	if (query.next()) {
+	//		int frequency = query.value(0).toInt();
+	//		qDebug() << "Channel = 100 == Frequency" << frequency;
+	//	}
+	//	else {
+	//		qDebug() << "No results found";
+	//	}
+	//}
+	//db.close();
 }
 
 GLSpectrumGUI::~GLSpectrumGUI()
@@ -1301,6 +1304,23 @@ void GLSpectrumGUI::openFrequencyScanner()
 	catch (...) {
 		;
 	}
+}
+
+void GLSpectrumGUI::openTone()
+{
+	qDebug() << "Click button tone";
+}
+
+void GLSpectrumGUI::openSpectrum()
+{
+	qDebug() << "Click button open spectrum";
+	if (statusSpectrum == 0) {
+		statusSpectrum = 1;
+	}
+	else {
+		statusSpectrum = 0;
+	}
+	m_glSpectrum->openSpectrum(statusSpectrum);
 }
 
 void GLSpectrumGUI::setRxChannel(QMap<QString, int>* rx_channel)
