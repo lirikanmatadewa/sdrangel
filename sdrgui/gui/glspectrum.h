@@ -43,6 +43,8 @@ public:
 	void setMeasurementsPosition(SpectrumSettings::MeasurementsPosition position);
 	void hideMeasurementSplitter();
 
+	void openSpectrum(int status);
+
 	void setCenterFrequency(qint64 frequency) { m_spectrum->setCenterFrequency(frequency); }
 	qint64 getCenterFrequency() const { return m_spectrum->getCenterFrequency(); }
 	float getPowerMax() const { return m_spectrum->getPowerMax(); }

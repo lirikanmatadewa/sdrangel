@@ -1427,6 +1427,32 @@
        </property>
       </widget>
      </item>
+     <item>
+      <widget class="QPushButton" name="btnTones">
+       <property name="maximumSize">
+        <size>
+         <width>40</width>
+         <height>21</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Tone</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnOpenSpectrum">
+       <property name="maximumSize">
+        <size>
+         <width>60</width>
+         <height>21</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Spectrum</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
   </layout>

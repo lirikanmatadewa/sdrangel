@@ -80,6 +80,8 @@ private:
 	static const int m_fpsMs[];
 	SpectrumMarkersDialog* m_markersDialog;
 
+	int statusSpectrum = 0;
+
 	void blockApplySettings(bool block);
 	void applySettings();
 	void applySpectrumSettings();
@@ -98,6 +100,9 @@ private:
 	QMap<QString, int> rx_channel;
 
 private slots:
+	void openTone();
+	void openSpectrum();
+
 	void open_adsb();
 	void open_am();
 	void open_ssb();
