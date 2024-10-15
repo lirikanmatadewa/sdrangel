@@ -19,6 +19,8 @@
 #include <QDebug>
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QtSql/QSqlDatabase>
+#include <QtSql/QSqlQuery>
 
 #include <libbladeRF.h>
 
@@ -616,16 +618,65 @@ void BladeRF2InputGui::on_btnTddLte_clicked()
 
 void BladeRF2InputGui::on_btnSubmit_clicked()
 {
+    // read input
     QString data = ui->freqInput->toPlainText();
-    qDebug("Text from QLineEdit: %s", data);
-
     int value = data.toInt();
     qDebug() << "The integer value is:" << value;
-    
-    m_settings.m_centerFrequency = 11111111111;
-    m_settingsKeys.append("centerFrequency");
-    sendSettings();
-    ui->centerFrequency->setValue(11111111111);
+
+    if (value > 0) {
+        ui->labelFrequency->setText("Input Frequency Index");
+        // Open a connection to the SQLite database
+        QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
+        db.setDatabaseName("database/mobile_channel.db");
+
+        if (!db.open()) {
+            qDebug() << "Error: connection with database failed";
+        }
+        else {
+            qDebug() << "Database: connection ok";
+        }
+
+        QStringList drivers = QSqlDatabase::drivers();
+        qDebug() << "Available drivers:" << drivers;
+
+        // Create a table
+        QSqlQuery query;
+        //query.prepare("SELECT frequency FROM gsm900_ul WHERE channel = :channel");
+        query.prepare(R"(
+            SELECT frequency FROM gsm900_ul WHERE channel = :channel
+            UNION
+            SELECT frequency FROM gsm1800_ul WHERE channel = :channel
+            UNION
+            SELECT frequency FROM lte_fdd_ul WHERE channel = :channel
+            UNION
+            SELECT frequency FROM lte_tdd_2300 WHERE channel = :channel
+            LIMIT 1
+        )");
+        query.bindValue(":channel", value);
+
+        if (!query.exec()) {
+            qDebug() << "Error: query execution failed";
+        }
+        else {
+            if (query.next()) {
+                int frequency = query.value(0).toInt();
+                qDebug() << "Channel = 100 == Frequency" << frequency;
+
+                m_settings.m_centerFrequency = frequency;
+                m_settingsKeys.append("centerFrequency");
+                sendSettings();
+                ui->centerFrequency->setValue(frequency);
+            }
+            else {
+                qDebug() << "No results found";
+                ui->labelFrequency->setText("Input Frequency Index (No results found)");
+            }
+        }
+        db.close();
+    }
+    else {
+        ui->labelFrequency->setText("Input Frequency Index (Enter the index before submitting)");
+    }
 }
 
 float BladeRF2InputGui::getGainDB(int gainValue)

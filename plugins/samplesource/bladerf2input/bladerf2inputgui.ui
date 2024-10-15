@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>360</width>
-    <height>250</height>
+    <height>276</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -19,13 +19,13 @@
   <property name="minimumSize">
    <size>
     <width>360</width>
-    <height>250</height>
+    <height>276</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>380</width>
-    <height>400</height>
+    <height>320</height>
    </size>
   </property>
   <property name="font">
@@ -573,7 +573,21 @@
      <item row="0" column="0">
       <layout class="QVBoxLayout" name="verticalLayout_3">
        <item>
-        <widget class="QPlainTextEdit" name="freqInput"/>
+        <widget class="QLabel" name="labelFrequency">
+         <property name="text">
+          <string>Input Frequency Index</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPlainTextEdit" name="freqInput">
+         <property name="mouseTracking">
+          <bool>false</bool>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">color: rgb(255, 255, 255);</string>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QPushButton" name="submitFreq">
