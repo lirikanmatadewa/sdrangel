@@ -105,6 +105,9 @@ BladeRF2InputGui::BladeRF2InputGui(DeviceUISet *deviceUISet, QWidget* parent) :
     sendSettings();
     makeUIConnections();
     m_resizer.enableChildMouseTracking();
+
+    ui->freqInput->setStyleSheet("QPlainTextEdit { color: #404040; background-color: white;}");
+
 }
 
 BladeRF2InputGui::~BladeRF2InputGui()
@@ -584,8 +587,14 @@ void BladeRF2InputGui::openDeviceSettingsDialog(const QPoint& p)
 void BladeRF2InputGui::on_btnGsm_clicked()
 {
     qDebug() << "BladeRF2OutputGui::on_btnGsm_clicked()::clicked";
-    ui->bandwidth->setValue(4000000 / 1000);
+    
+    // change button color
+    ui->btnGsm->setStyleSheet("QPushButton { background-color: #2bacac; color: white; }");
+    ui->btnFddLte->setStyleSheet("QPushButton { background-color: #565656; color: white; }");
+    ui->btnTddLte->setStyleSheet("QPushButton { background-color: #565656; color: white; }");
 
+    // set Bandwidth and SR
+    ui->bandwidth->setValue(4000000 / 1000);
     if (m_sampleRateMode)
     {
         on_sampleRate_changed(8000000);
@@ -595,8 +604,13 @@ void BladeRF2InputGui::on_btnGsm_clicked()
 void BladeRF2InputGui::on_btnFddLte_clicked()
 {
     qDebug() << "BladeRF2OutputGui::on_btnFddLte_clicked()::clicked";
-    ui->centerFrequency->setValue(m_settings.m_centerFrequency / 1000);
 
+    // change button color
+    ui->btnGsm->setStyleSheet("QPushButton { background-color: #565656; color: white; }");
+    ui->btnFddLte->setStyleSheet("QPushButton { background-color: #2bacac; color: white; }");
+    ui->btnTddLte->setStyleSheet("QPushButton { background-color: #565656; color: white; }");
+
+    // set Bandwidth and SR
     ui->bandwidth->setValue(200000000 / 1000);
     if (m_sampleRateMode)
     {
@@ -607,8 +621,13 @@ void BladeRF2InputGui::on_btnFddLte_clicked()
 void BladeRF2InputGui::on_btnTddLte_clicked()
 {
     qDebug() << "BladeRF2OutputGui::on_btnTddLte_clicked()::clicked";
-    ui->centerFrequency->setValue(m_settings.m_centerFrequency / 1000);
 
+    // change button color
+    ui->btnGsm->setStyleSheet("QPushButton { background-color: #565656; color: white; }");
+    ui->btnFddLte->setStyleSheet("QPushButton { background-color: #565656; color: white; }");
+    ui->btnTddLte->setStyleSheet("QPushButton { background-color: #2bacac; color: white; }");
+
+    // set Bandwidth and SR
     ui->bandwidth->setValue(20000000 / 1000);
     if (m_sampleRateMode)
     {
@@ -624,7 +643,7 @@ void BladeRF2InputGui::on_btnSubmit_clicked()
     qDebug() << "The integer value is:" << value;
 
     if (value > 0) {
-        ui->labelFrequency->setText("Input Frequency Index");
+        ui->labelFrequency->setText("Input Frequency Channel");
         // Open a connection to the SQLite database
         QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
         db.setDatabaseName("database/mobile_channel.db");
@@ -660,22 +679,22 @@ void BladeRF2InputGui::on_btnSubmit_clicked()
         else {
             if (query.next()) {
                 int frequency = query.value(0).toInt();
-                qDebug() << "Channel = 100 == Frequency" << frequency;
+                qDebug() << "Channel = Frequency" << frequency;
 
-                m_settings.m_centerFrequency = frequency;
+                m_settings.m_centerFrequency = frequency * 1000;
                 m_settingsKeys.append("centerFrequency");
                 sendSettings();
                 ui->centerFrequency->setValue(frequency);
             }
             else {
                 qDebug() << "No results found";
-                ui->labelFrequency->setText("Input Frequency Index (No results found)");
+                ui->labelFrequency->setText("Input Frequency Channel (No results found)");
             }
         }
         db.close();
     }
     else {
-        ui->labelFrequency->setText("Input Frequency Index (Enter the index before submitting)");
+        ui->labelFrequency->setText("Input Frequency Channel (Enter the index before submitting)");
     }
 }
 
