@@ -575,12 +575,24 @@
        <item>
         <widget class="QLabel" name="labelFrequency">
          <property name="text">
-          <string>Input Frequency Index</string>
+          <string>Input Frequency Channel</string>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QPlainTextEdit" name="freqInput">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>21</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>21</height>
+          </size>
+         </property>
          <property name="mouseTracking">
           <bool>false</bool>
          </property>
