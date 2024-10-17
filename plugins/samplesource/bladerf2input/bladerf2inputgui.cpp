@@ -681,9 +681,7 @@ void BladeRF2InputGui::on_btnSubmit_clicked()
                 int frequency = query.value(0).toInt();
                 qDebug() << "Channel = Frequency" << frequency;
 
-                m_settings.m_centerFrequency = frequency * 1000;
-                m_settingsKeys.append("centerFrequency");
-                sendSettings();
+                on_centerFrequency_changed(frequency);
                 ui->centerFrequency->setValue(frequency);
             }
             else {
