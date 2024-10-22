@@ -348,6 +348,9 @@
        </widget>
       </item>
       <item>
+       <widget class="QComboBox" name="cbSampleRate"/>
+      </item>
+      <item>
        <widget class="QLabel" name="sampleRateText">
         <property name="minimumSize">
          <size>
@@ -420,6 +423,9 @@
        </widget>
       </item>
       <item>
+       <widget class="QComboBox" name="cbAveragePeriod"/>
+      </item>
+      <item>
        <widget class="QLabel" name="averagePeriodText">
         <property name="minimumSize">
          <size>
@@ -468,6 +474,16 @@
         </property>
         <property name="maximum">
          <number>0</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSpinBox" name="sbPulseTH">
+        <property name="minimum">
+         <number>-1000</number>
+        </property>
+        <property name="maximum">
+         <number>1000</number>
         </property>
        </widget>
       </item>
@@ -1603,6 +1619,9 @@
    </layout>
   </widget>
   <widget class="QWidget" name="scopeContainer" native="true">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="geometry">
     <rect>
      <x>0</x>

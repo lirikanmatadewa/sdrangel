@@ -31,66 +31,68 @@
 #include "heatmapplugin.h"
 
 const PluginDescriptor HeatMapPlugin::m_pluginDescriptor = {
-    HeatMap::m_channelId,
-    QStringLiteral("Heat Map"),
-    QStringLiteral("7.22.0"),
-    QStringLiteral("(c) Jon Beniston, M7RCE"),
-    QStringLiteral("https://github.com/f4exb/sdrangel"),
-    true,
-    QStringLiteral("https://github.com/f4exb/sdrangel")
+	 HeatMap::m_channelId,
+	 QStringLiteral("Heat Map"),
+	 QStringLiteral("7.22.0"),
+	 QStringLiteral("(c) Jon Beniston, M7RCE"),
+	 QStringLiteral("https://github.com/f4exb/sdrangel"),
+	 true,
+	 QStringLiteral("https://github.com/f4exb/sdrangel")
 };
 
 HeatMapPlugin::HeatMapPlugin(QObject* parent) :
-    QObject(parent),
-    m_pluginAPI(0)
+	QObject(parent),
+	m_pluginAPI(0)
 {
 }
 
 const PluginDescriptor& HeatMapPlugin::getPluginDescriptor() const
 {
-    return m_pluginDescriptor;
+	return m_pluginDescriptor;
 }
 
 void HeatMapPlugin::initPlugin(PluginAPI* pluginAPI)
 {
-    m_pluginAPI = pluginAPI;
+	m_pluginAPI = pluginAPI;
 
-    m_pluginAPI->registerRxChannel(HeatMap::m_channelIdURI, HeatMap::m_channelId, this);
+	m_pluginAPI->registerRxChannel(HeatMap::m_channelIdURI, HeatMap::m_channelId, this);
 }
 
-void HeatMapPlugin::createRxChannel(DeviceAPI *deviceAPI, BasebandSampleSink **bs, ChannelAPI **cs) const
+void HeatMapPlugin::createRxChannel(DeviceAPI* deviceAPI, BasebandSampleSink** bs, ChannelAPI** cs) const
 {
-    if (bs || cs)
-    {
-        HeatMap *instance = new HeatMap(deviceAPI);
+	if (bs || cs)
+	{
+		HeatMap* instance = new HeatMap(deviceAPI);
 
-        if (bs) {
-            *bs = instance;
-        }
+		if (bs) {
+			*bs = instance;
+		}
 
-        if (cs) {
-            *cs = instance;
-        }
-    }
+		if (cs) {
+			*cs = instance;
+		}
+	}
 }
 
 #ifdef SERVER_MODE
 ChannelGUI* HeatMapPlugin::createRxChannelGUI(
-        DeviceUISet *deviceUISet,
-        BasebandSampleSink *rxChannel) const
+	DeviceUISet* deviceUISet,
+	BasebandSampleSink* rxChannel) const
 {
-    (void) deviceUISet;
-    (void) rxChannel;
-    return 0;
+	(void)deviceUISet;
+	(void)rxChannel;
+	return 0;
 }
 #else
-ChannelGUI* HeatMapPlugin::createRxChannelGUI(DeviceUISet *deviceUISet, BasebandSampleSink *rxChannel) const
+ChannelGUI* HeatMapPlugin::createRxChannelGUI(DeviceUISet* deviceUISet, BasebandSampleSink* rxChannel) const
 {
-    return HeatMapGUI::create(m_pluginAPI, deviceUISet, rxChannel);
+	auto hmg = HeatMapGUI::create(m_pluginAPI, deviceUISet, rxChannel);
+	hmg->hideScopeContainer();
+	return hmg;
 }
 #endif
 
 ChannelWebAPIAdapter* HeatMapPlugin::createChannelWebAPIAdapter() const
 {
-    return new HeatMapWebAPIAdapter();
+	return new HeatMapWebAPIAdapter();
 }
