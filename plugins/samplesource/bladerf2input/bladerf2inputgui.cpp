@@ -669,9 +669,16 @@ void BladeRF2InputGui::on_btnSubmit_clicked()
             SELECT frequency FROM lte_fdd_ul WHERE channel = :channel
             UNION
             SELECT frequency FROM lte_tdd_2300 WHERE channel = :channel
+            UNION
+            SELECT frequency FROM lte_fdd_900 WHERE channel = :channel
+            UNION
+            SELECT frequency FROM lte_fdd_1800 WHERE channel = :channel
+            UNION
+            SELECT frequency FROM lte_fdd_2100 WHERE channel = :channel
             LIMIT 1
         )");
         query.bindValue(":channel", value);
+
 
         if (!query.exec()) {
             qDebug() << "Error: query execution failed";

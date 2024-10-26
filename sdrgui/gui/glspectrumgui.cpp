@@ -1309,6 +1309,12 @@ void GLSpectrumGUI::openFrequencyScanner()
 void GLSpectrumGUI::openTone()
 {
 	qDebug() << "Click button tone";
+	try {
+		emit addChannel(this->rx_channel["WFMDemod"]);
+	}
+	catch (...) {
+		;
+	}
 }
 
 void GLSpectrumGUI::openSpectrum()

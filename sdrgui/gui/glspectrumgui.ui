@@ -443,6 +443,12 @@
      </item>
      <item>
       <widget class="ButtonSwitch" name="spectrogram">
+       <property name="maximumSize">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
        <property name="toolTip">
         <string>Display 3D spectrogram</string>
        </property>
@@ -1238,14 +1244,14 @@
        </property>
        <property name="minimumSize">
         <size>
-         <width>50</width>
+         <width>0</width>
          <height>0</height>
         </size>
        </property>
        <property name="maximumSize">
         <size>
-         <width>40</width>
-         <height>16777215</height>
+         <width>0</width>
+         <height>0</height>
         </size>
        </property>
        <property name="focusPolicy">
@@ -1306,8 +1312,8 @@
        </property>
        <property name="maximumSize">
         <size>
-         <width>40</width>
-         <height>16777215</height>
+         <width>0</width>
+         <height>0</height>
         </size>
        </property>
        <property name="focusPolicy">
@@ -1356,14 +1362,14 @@
        </property>
        <property name="minimumSize">
         <size>
-         <width>70</width>
+         <width>0</width>
          <height>0</height>
         </size>
        </property>
        <property name="maximumSize">
         <size>
-         <width>60</width>
-         <height>16777215</height>
+         <width>0</width>
+         <height>0</height>
         </size>
        </property>
        <property name="text">
@@ -1381,14 +1387,14 @@
        </property>
        <property name="minimumSize">
         <size>
-         <width>70</width>
+         <width>0</width>
          <height>0</height>
         </size>
        </property>
        <property name="maximumSize">
         <size>
-         <width>60</width>
-         <height>16777215</height>
+         <width>0</width>
+         <height>0</height>
         </size>
        </property>
        <property name="text">
@@ -1406,14 +1412,14 @@
        </property>
        <property name="minimumSize">
         <size>
-         <width>130</width>
+         <width>0</width>
          <height>0</height>
         </size>
        </property>
        <property name="maximumSize">
         <size>
-         <width>60</width>
-         <height>16777215</height>
+         <width>0</width>
+         <height>0</height>
         </size>
        </property>
        <property name="sizeIncrement">

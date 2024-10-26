@@ -82,6 +82,11 @@ void WFMDemodSink::feed(const SampleVector::const_iterator& begin, const SampleV
 		    m_magsqSum += magsq;
 		    m_movingAverage(magsq);
 
+            // power to freq TONE
+            Real m_toneThreshold = 0.0; // Sesuaikan nilai default
+            Real m_toneGain = 1.0;      // Sesuaikan nilai default
+            unsigned int freq = static_cast<unsigned int>((400 * pow(10.0, (magsq - m_toneThreshold) / (m_toneGain * 3.3219))) + 0.5);
+
             if (magsq > m_magsqPeak) {
                 m_magsqPeak = magsq;
             }
@@ -113,7 +118,10 @@ void WFMDemodSink::feed(const SampleVector::const_iterator& begin, const SampleV
 
 			if (m_interpolator.decimate(&m_interpolatorDistanceRemain, e, &ci))
 			{
-				qint16 sample = (qint16)(ci.real() * 3276.8f * m_settings.m_volume);
+                
+
+				//qint16 sample = (qint16)(ci.real() * 3276.8f * m_settings.m_volume);
+                qint16 sample = static_cast<qint16>(m_settings.m_volume * 3276.8f * std::sin(2 * M_PI * freq * i / m_audioSampleRate));
 				m_audioBuffer[m_audioBufferFill].l = sample;
 				m_audioBuffer[m_audioBufferFill].r = sample;
 
