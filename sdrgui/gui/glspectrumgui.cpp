@@ -1309,6 +1309,12 @@ void GLSpectrumGUI::openFrequencyScanner()
 void GLSpectrumGUI::openTone()
 {
 	qDebug() << "Click button tone";
+	try {
+		emit addChannel(this->rx_channel["WFMDemod"]);
+	}
+	catch (...) {
+		;
+	}
 }
 
 void GLSpectrumGUI::openSpectrum()
@@ -1335,3 +1341,14 @@ void GLSpectrumGUI::setRxChannel(QMap<QString, int>* rx_channel)
 		qDebug() << i.key() << " = " << i.value();
 	}
 }
+
+void GLSpectrumGUI::setAveraging(int index) {
+	ui->averaging->setCurrentIndex(index);
+	qDebug() << "MainSpectrumGUI::setAveraging::" << index;
+}
+
+void GLSpectrumGUI::setFPS(int index) {
+	ui->fps->setCurrentIndex(index);
+	qDebug() << "MainSpectrumGUI::setFPS::" << index;
+}
+

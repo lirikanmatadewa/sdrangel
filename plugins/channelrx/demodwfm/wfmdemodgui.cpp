@@ -268,7 +268,8 @@ WFMDemodGUI::WFMDemodGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, Baseban
     m_channelMarker.blockSignals(true);
 	m_channelMarker.setBandwidth(m_settings.m_rfBandwidth);
 	m_channelMarker.setCenterFrequency(0);
-    m_channelMarker.setTitle("WFM Demodulator");
+    //m_channelMarker.setTitle("WFM Demodulator");
+    m_channelMarker.setTitle("Tone");
     m_channelMarker.setColor(m_settings.m_rgbColor);
     m_channelMarker.blockSignals(false);
 	m_channelMarker.setVisible(true); // activate signal on the last setting only

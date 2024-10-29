@@ -34,6 +34,7 @@
 #include "device/deviceuiset.h"
 
 #include "bladerf2inputgui.h"
+#include "gui/glspectrumgui.h"
 
 
 
@@ -108,6 +109,7 @@ BladeRF2InputGui::BladeRF2InputGui(DeviceUISet *deviceUISet, QWidget* parent) :
 
     ui->freqInput->setStyleSheet("QPlainTextEdit { color: #404040; background-color: white;}");
 
+    m_spectrumGUI = new GLSpectrumGUI;
 }
 
 BladeRF2InputGui::~BladeRF2InputGui()
@@ -599,6 +601,8 @@ void BladeRF2InputGui::on_btnGsm_clicked()
     {
         on_sampleRate_changed(8000000);
     }
+    m_spectrumGUI->setAveraging(6);
+    m_spectrumGUI->setFPS(2);
 }
 
 void BladeRF2InputGui::on_btnFddLte_clicked()
@@ -616,6 +620,9 @@ void BladeRF2InputGui::on_btnFddLte_clicked()
     {
         on_sampleRate_changed(25000000);
     }
+    m_spectrumGUI->setAveraging(6);
+    m_spectrumGUI->setFPS(2);
+
 }
 
 void BladeRF2InputGui::on_btnTddLte_clicked()
@@ -633,6 +640,8 @@ void BladeRF2InputGui::on_btnTddLte_clicked()
     {
         on_sampleRate_changed(25000000);
     }
+    m_spectrumGUI->setAveraging(2);
+    m_spectrumGUI->setFPS(6);
 }
 
 void BladeRF2InputGui::on_btnSubmit_clicked()
@@ -669,9 +678,16 @@ void BladeRF2InputGui::on_btnSubmit_clicked()
             SELECT frequency FROM lte_fdd_ul WHERE channel = :channel
             UNION
             SELECT frequency FROM lte_tdd_2300 WHERE channel = :channel
+            UNION
+            SELECT frequency FROM lte_fdd_900 WHERE channel = :channel
+            UNION
+            SELECT frequency FROM lte_fdd_1800 WHERE channel = :channel
+            UNION
+            SELECT frequency FROM lte_fdd_2100 WHERE channel = :channel
             LIMIT 1
         )");
         query.bindValue(":channel", value);
+
 
         if (!query.exec()) {
             qDebug() << "Error: query execution failed";
