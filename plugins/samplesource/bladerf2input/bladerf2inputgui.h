@@ -28,6 +28,7 @@
 #include "bladerf2input.h"
 
 class DeviceUISet;
+class GLSpectrumGUI;
 
 namespace Ui {
     class Bladerf2InputGui;
@@ -45,6 +46,8 @@ public:
     virtual QByteArray serialize() const;
     virtual bool deserialize(const QByteArray& data);
     virtual MessageQueue *getInputMessageQueue() { return &m_inputMessageQueue; }
+
+    GLSpectrumGUI* m_spectrumGUI;
 
 private:
     Ui::Bladerf2InputGui* ui;
