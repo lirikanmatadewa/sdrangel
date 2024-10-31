@@ -163,3 +163,12 @@ void GLSpectrum::hideMeasurementSplitter()
 		break;
 	}
 }
+
+void GLSpectrum::openSpectrum(int status) {
+	if (status == 1) {
+		m_splitter->setSizes({ 1, 1 });
+	}
+	else {
+		m_splitter->setSizes({ 1, 0 });
+	}
+}

@@ -28,6 +28,7 @@
 #include "bladerf2input.h"
 
 class DeviceUISet;
+class GLSpectrumGUI;
 
 namespace Ui {
     class Bladerf2InputGui;
@@ -45,6 +46,8 @@ public:
     virtual QByteArray serialize() const;
     virtual bool deserialize(const QByteArray& data);
     virtual MessageQueue *getInputMessageQueue() { return &m_inputMessageQueue; }
+
+    GLSpectrumGUI* m_spectrumGUI;
 
 private:
     Ui::Bladerf2InputGui* ui;
@@ -99,6 +102,11 @@ private slots:
     void updateHardware();
     void updateStatus();
     void openDeviceSettingsDialog(const QPoint& p);
+
+    void on_btnGsm_clicked();
+    void on_btnFddLte_clicked();
+    void on_btnTddLte_clicked();
+    void on_btnSubmit_clicked();
 };
 
 #endif /* PLUGINS_SAMPLESOURCE_BLADERF2INPUT_BLADERF2INPUTGUI_H_ */

@@ -19,6 +19,8 @@
 #include <QDebug>
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QtSql/QSqlDatabase>
+#include <QtSql/QSqlQuery>
 
 #include <libbladeRF.h>
 
@@ -32,6 +34,9 @@
 #include "device/deviceuiset.h"
 
 #include "bladerf2inputgui.h"
+#include "gui/glspectrumgui.h"
+
+
 
 BladeRF2InputGui::BladeRF2InputGui(DeviceUISet *deviceUISet, QWidget* parent) :
     DeviceGUI(parent),
@@ -101,6 +106,10 @@ BladeRF2InputGui::BladeRF2InputGui(DeviceUISet *deviceUISet, QWidget* parent) :
     sendSettings();
     makeUIConnections();
     m_resizer.enableChildMouseTracking();
+
+    ui->freqInput->setStyleSheet("QPlainTextEdit { color: #404040; background-color: white;}");
+
+    m_spectrumGUI = new GLSpectrumGUI;
 }
 
 BladeRF2InputGui::~BladeRF2InputGui()
@@ -577,11 +586,137 @@ void BladeRF2InputGui::openDeviceSettingsDialog(const QPoint& p)
     resetContextMenuType();
 }
 
+void BladeRF2InputGui::on_btnGsm_clicked()
+{
+    qDebug() << "BladeRF2OutputGui::on_btnGsm_clicked()::clicked";
+    
+    // change button color
+    ui->btnGsm->setStyleSheet("QPushButton { background-color: #2bacac; color: white; }");
+    ui->btnFddLte->setStyleSheet("QPushButton { background-color: #565656; color: white; }");
+    ui->btnTddLte->setStyleSheet("QPushButton { background-color: #565656; color: white; }");
+
+    // set Bandwidth and SR
+    ui->bandwidth->setValue(4000000 / 1000);
+    if (m_sampleRateMode)
+    {
+        on_sampleRate_changed(8000000);
+    }
+    m_spectrumGUI->setAveraging(6);
+    m_spectrumGUI->setFPS(2);
+}
+
+void BladeRF2InputGui::on_btnFddLte_clicked()
+{
+    qDebug() << "BladeRF2OutputGui::on_btnFddLte_clicked()::clicked";
+
+    // change button color
+    ui->btnGsm->setStyleSheet("QPushButton { background-color: #565656; color: white; }");
+    ui->btnFddLte->setStyleSheet("QPushButton { background-color: #2bacac; color: white; }");
+    ui->btnTddLte->setStyleSheet("QPushButton { background-color: #565656; color: white; }");
+
+    // set Bandwidth and SR
+    ui->bandwidth->setValue(200000000 / 1000);
+    if (m_sampleRateMode)
+    {
+        on_sampleRate_changed(25000000);
+    }
+    m_spectrumGUI->setAveraging(6);
+    m_spectrumGUI->setFPS(2);
+
+}
+
+void BladeRF2InputGui::on_btnTddLte_clicked()
+{
+    qDebug() << "BladeRF2OutputGui::on_btnTddLte_clicked()::clicked";
+
+    // change button color
+    ui->btnGsm->setStyleSheet("QPushButton { background-color: #565656; color: white; }");
+    ui->btnFddLte->setStyleSheet("QPushButton { background-color: #565656; color: white; }");
+    ui->btnTddLte->setStyleSheet("QPushButton { background-color: #2bacac; color: white; }");
+
+    // set Bandwidth and SR
+    ui->bandwidth->setValue(20000000 / 1000);
+    if (m_sampleRateMode)
+    {
+        on_sampleRate_changed(25000000);
+    }
+    m_spectrumGUI->setAveraging(2);
+    m_spectrumGUI->setFPS(6);
+}
+
+void BladeRF2InputGui::on_btnSubmit_clicked()
+{
+    // read input
+    QString data = ui->freqInput->toPlainText();
+    int value = data.toInt();
+    qDebug() << "The integer value is:" << value;
+
+    if (value > 0) {
+        ui->labelFrequency->setText("Input Frequency Channel");
+        // Open a connection to the SQLite database
+        QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
+        db.setDatabaseName("database/mobile_channel.db");
+
+        if (!db.open()) {
+            qDebug() << "Error: connection with database failed";
+        }
+        else {
+            qDebug() << "Database: connection ok";
+        }
+
+        QStringList drivers = QSqlDatabase::drivers();
+        qDebug() << "Available drivers:" << drivers;
+
+        // Create a table
+        QSqlQuery query;
+        //query.prepare("SELECT frequency FROM gsm900_ul WHERE channel = :channel");
+        query.prepare(R"(
+            SELECT frequency FROM gsm900_ul WHERE channel = :channel
+            UNION
+            SELECT frequency FROM gsm1800_ul WHERE channel = :channel
+            UNION
+            SELECT frequency FROM lte_fdd_ul WHERE channel = :channel
+            UNION
+            SELECT frequency FROM lte_tdd_2300 WHERE channel = :channel
+            UNION
+            SELECT frequency FROM lte_fdd_900 WHERE channel = :channel
+            UNION
+            SELECT frequency FROM lte_fdd_1800 WHERE channel = :channel
+            UNION
+            SELECT frequency FROM lte_fdd_2100 WHERE channel = :channel
+            LIMIT 1
+        )");
+        query.bindValue(":channel", value);
+
+
+        if (!query.exec()) {
+            qDebug() << "Error: query execution failed";
+        }
+        else {
+            if (query.next()) {
+                int frequency = query.value(0).toInt();
+                qDebug() << "Channel = Frequency" << frequency;
+
+                on_centerFrequency_changed(frequency);
+                ui->centerFrequency->setValue(frequency);
+            }
+            else {
+                qDebug() << "No results found";
+                ui->labelFrequency->setText("Input Frequency Channel (No results found)");
+            }
+        }
+        db.close();
+    }
+    else {
+        ui->labelFrequency->setText("Input Frequency Channel (Enter the index before submitting)");
+    }
+}
+
 float BladeRF2InputGui::getGainDB(int gainValue)
 {
     float gain = gainValue*m_gainStep*m_gainScale;
-    // qDebug("BladeRF2InputGui::getGainDB: gainValue: %d m_gainMin: %d m_gainMax: %d m_gainStep: %d m_gainScale: %f gain: %f",
-    //     gainValue, m_gainMin, m_gainMax, m_gainStep, m_gainScale, gain);
+     //qDebug("BladeRF2InputGui::getGainDB: gainValue: %d m_gainMin: %d m_gainMax: %d m_gainStep: %d m_gainScale: %f gain: %f",
+         //gainValue, m_gainMin, m_gainMax, m_gainStep, m_gainScale, gain);
     return gain;
 }
 
@@ -609,4 +744,9 @@ void BladeRF2InputGui::makeUIConnections()
     QObject::connect(ui->transverter, &TransverterButton::clicked, this, &BladeRF2InputGui::on_transverter_clicked);
     QObject::connect(ui->startStop, &ButtonSwitch::toggled, this, &BladeRF2InputGui::on_startStop_toggled);
     QObject::connect(ui->sampleRateMode, &QToolButton::toggled, this, &BladeRF2InputGui::on_sampleRateMode_toggled);
+
+    QObject::connect(ui->btnGsm, &QToolButton::clicked, this, &BladeRF2InputGui::on_btnGsm_clicked);
+    QObject::connect(ui->btnFddLte, &QToolButton::clicked, this, &BladeRF2InputGui::on_btnFddLte_clicked);
+    QObject::connect(ui->btnTddLte, &QToolButton::clicked, this, &BladeRF2InputGui::on_btnTddLte_clicked);
+    QObject::connect(ui->submitFreq, &QToolButton::clicked, this, &BladeRF2InputGui::on_btnSubmit_clicked);
 }

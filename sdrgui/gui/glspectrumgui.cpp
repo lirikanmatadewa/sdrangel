@@ -117,41 +117,44 @@ GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
 	connect(ui->iqReplay, SIGNAL(clicked()), this, SLOT(openIqReplay()));
 	connect(ui->frequencyScanner, SIGNAL(clicked()), this, SLOT(openFrequencyScanner()));
 
+	connect(ui->btnTones, SIGNAL(clicked()), this, SLOT(openTone()));
+	connect(ui->btnOpenSpectrum, SIGNAL(clicked()), this, SLOT(openSpectrum()));
+
 	displaySettings();
 	setAveragingCombo();
 
-	// Open a connection to the SQLite database
-	QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
-	db.setDatabaseName("database/mobile_channel.db");
+	//// Open a connection to the SQLite database
+	//QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
+	//db.setDatabaseName("database/mobile_channel.db");
 
-	if (!db.open()) {
-		qDebug() << "Error: connection with database failed";
-	}
-	else {
-		qDebug() << "Database: connection ok";
-	}
+	//if (!db.open()) {
+	//	qDebug() << "Error: connection with database failed";
+	//}
+	//else {
+	//	qDebug() << "Database: connection ok";
+	//}
 
-	QStringList drivers = QSqlDatabase::drivers();
-	qDebug() << "Available drivers:" << drivers;
+	//QStringList drivers = QSqlDatabase::drivers();
+	//qDebug() << "Available drivers:" << drivers;
 
-	// Create a table
-	QSqlQuery query;
-	query.prepare("SELECT frequency FROM gsm900_ul WHERE channel = :channel");
-	query.bindValue(":channel", 100);
+	//// Create a table
+	//QSqlQuery query;
+	//query.prepare("SELECT frequency FROM gsm900_ul WHERE channel = :channel");
+	//query.bindValue(":channel", 100);
 
-	if (!query.exec()) {
-		qDebug() << "Error: query execution failed";
-	}
-	else {
-		if (query.next()) {
-			int frequency = query.value(0).toInt();
-			qDebug() << "Channel = 100 == Frequency" << frequency;
-		}
-		else {
-			qDebug() << "No results found";
-		}
-	}
-	db.close();
+	//if (!query.exec()) {
+	//	qDebug() << "Error: query execution failed";
+	//}
+	//else {
+	//	if (query.next()) {
+	//		int frequency = query.value(0).toInt();
+	//		qDebug() << "Channel = 100 == Frequency" << frequency;
+	//	}
+	//	else {
+	//		qDebug() << "No results found";
+	//	}
+	//}
+	//db.close();
 }
 
 GLSpectrumGUI::~GLSpectrumGUI()
@@ -356,6 +359,20 @@ void GLSpectrumGUI::displayControls()
 	ui->calibration->setVisible(m_settings.m_showAllControls);
 	ui->markers->setVisible(m_settings.m_showAllControls);
 	ui->measure->setVisible(m_settings.m_showAllControls);
+
+	ui->averagingMode->setVisible(m_settings.m_showAllControls);
+	ui->averaging->setVisible(m_settings.m_showAllControls);
+	ui->refLevel->setVisible(m_settings.m_showAllControls);
+	ui->autoscale->setVisible(m_settings.m_showAllControls);
+	ui->levelRange->setVisible(m_settings.m_showAllControls);
+
+	ui->adsb->setVisible(m_settings.m_showAllControls);
+	ui->am->setVisible(m_settings.m_showAllControls);
+	ui->ssb->setVisible(m_settings.m_showAllControls);
+	ui->wfm->setVisible(m_settings.m_showAllControls);
+	ui->iqRecord->setVisible(m_settings.m_showAllControls);
+	ui->iqReplay->setVisible(m_settings.m_showAllControls);
+	ui->frequencyScanner->setVisible(m_settings.m_showAllControls);
 }
 
 void GLSpectrumGUI::displayGotoMarkers()
@@ -1289,6 +1306,29 @@ void GLSpectrumGUI::openFrequencyScanner()
 	}
 }
 
+void GLSpectrumGUI::openTone()
+{
+	qDebug() << "Click button tone";
+	try {
+		emit addChannel(this->rx_channel["WFMDemod"]);
+	}
+	catch (...) {
+		;
+	}
+}
+
+void GLSpectrumGUI::openSpectrum()
+{
+	qDebug() << "Click button open spectrum";
+	if (statusSpectrum == 0) {
+		statusSpectrum = 1;
+	}
+	else {
+		statusSpectrum = 0;
+	}
+	m_glSpectrum->openSpectrum(statusSpectrum);
+}
+
 void GLSpectrumGUI::setRxChannel(QMap<QString, int>* rx_channel)
 {
 	qDebug() << "MainSpectrumGUI::setRxChannel";
@@ -1301,3 +1341,14 @@ void GLSpectrumGUI::setRxChannel(QMap<QString, int>* rx_channel)
 		qDebug() << i.key() << " = " << i.value();
 	}
 }
+
+void GLSpectrumGUI::setAveraging(int index) {
+	ui->averaging->setCurrentIndex(index);
+	qDebug() << "MainSpectrumGUI::setAveraging::" << index;
+}
+
+void GLSpectrumGUI::setFPS(int index) {
+	ui->fps->setCurrentIndex(index);
+	qDebug() << "MainSpectrumGUI::setFPS::" << index;
+}
+
