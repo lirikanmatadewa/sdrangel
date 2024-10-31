@@ -52,6 +52,8 @@ WFMDemodSink::WFMDemodSink() :
 
 	applySettings(m_settings, true);
     applyChannelSettings(m_channelSampleRate, m_channelFrequencyOffset, true);
+
+    freq = 0;
 }
 
 WFMDemodSink::~WFMDemodSink()
@@ -75,22 +77,47 @@ void WFMDemodSink::feed(const SampleVector::const_iterator& begin, const SampleV
 
 		rf_out = m_rfFilter->runFilt(c, &rf); // filter RF before demod
 
+        int sum_formula = 0;
+        int total_formula = 0;
+
+        // power to freq TONE
+        Real m_toneThreshold = 0.0; // Sesuaikan nilai default
+        Real m_toneGain = 0.02;      // Sesuaikan nilai default
+        
+        for (int i = 0; i < rf_out; i++)
+        {
+            msq = rf[i].real() * rf[i].real() + rf[i].imag() * rf[i].imag();
+            Real magsq = msq / (SDR_RX_SCALED * SDR_RX_SCALED);
+            
+            //unsigned int formula = static_cast<unsigned int>(round(pow(10.0, (magsq - m_toneThreshold) / (m_toneGain * 3.3219))));
+            unsigned int freqs = static_cast<unsigned int>((100 * pow(10.0, (magsq - m_toneThreshold) / (m_toneGain * 3.3219))) + 0.5);
+            sum_formula = sum_formula + freqs;
+            total_formula = total_formula + 1;
+
+            if (i % 20 == 0) {
+                qDebug() << "---Tone AVG :: " << sum_formula << " / " << total_formula << " Freqs :: " << freqs << " - " << magsq << " - " << pow(10.0, (magsq - m_toneThreshold) / (m_toneGain * 3.3219));
+            }
+        }
+
+        // qDebug() << "--Tone AVG :: " << freq << " = " << sum_formula << " / " << total_formula;
+
+        //unsigned int avg_formula = round(sum_formula / total_formula);
+        if (sum_formula > 0 && total_formula > 0) {
+            int avf_freq = round(sum_formula / total_formula);
+            freq = round(avf_freq / 100.0) * 100;
+            qDebug() << "Tone AVG :: " << freq << " = " << sum_formula << " / " << total_formula;
+        }
+
 		for (int i = 0 ; i < rf_out; i++)
 		{
 		    msq = rf[i].real()*rf[i].real() + rf[i].imag()*rf[i].imag();
 		    Real magsq = msq / (SDR_RX_SCALED*SDR_RX_SCALED);
 		    m_magsqSum += magsq;
 		    m_movingAverage(magsq);
-
-            // power to freq TONE
-            Real m_toneThreshold = 0.0; // Sesuaikan nilai default
-            Real m_toneGain = 0.028;      // Sesuaikan nilai default
-            unsigned int freq = static_cast<unsigned int>((400 * pow(10.0, (magsq - m_toneThreshold) / (m_toneGain * 3.3219))) + 0.5);
-
-            //if(i == (rf_out - 1) || i == 0){
-                qDebug() << "Tone Freq :: " << freq << " :: Power :: " << magsq;
-            //}
-            
+         
+            if (i == 0) {
+                qDebug() << "Tone Freq :: " << freq;
+            }
 
             if (magsq > m_magsqPeak) {
                 m_magsqPeak = magsq;
