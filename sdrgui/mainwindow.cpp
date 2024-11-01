@@ -253,10 +253,8 @@ MainWindow::MainWindow(qtwebapp::LoggerWithFile* logger, const MainParser& parse
 		if (m_workspaces.size() == 0)
 		{
 			addWorkspace();
-
-			if (m_mainCore->m_settings.getConfigurations()->size() == 0) {
-				loadDefaultConfigurations();
-			}
+			loadDefaultConfigurations();
+			m_mainCore->m_settings.setLogFileName("sdranalyzer.log");
 		}
 		else
 		{

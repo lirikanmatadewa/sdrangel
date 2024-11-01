@@ -105,7 +105,7 @@ bool Preferences::deserialize(const QByteArray& data)
 		}
 
 		d.readBool((int)UseLogFile, &m_useLogFile, false);
-		d.readString((int)LogFileName, &m_logFileName, "sdrangel.log");
+		d.readString((int)LogFileName, &m_logFileName, "sdranalyzer.log");
 
 		d.readS32((int)FileMinLogLevel, &tmpInt, (int)QtDebugMsg);
 		d.readString((int)StationName, &m_stationName, "Home");
