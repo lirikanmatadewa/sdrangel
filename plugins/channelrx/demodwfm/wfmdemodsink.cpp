@@ -82,7 +82,7 @@ void WFMDemodSink::feed(const SampleVector::const_iterator& begin, const SampleV
 
         // power to freq TONE
         Real m_toneThreshold = 0.0; // Sesuaikan nilai default
-        Real m_toneGain = 0.02;      // Sesuaikan nilai default
+        Real m_toneGain = 0.09;      // Sesuaikan nilai default
         
         for (int i = 0; i < rf_out; i++)
         {
@@ -90,7 +90,7 @@ void WFMDemodSink::feed(const SampleVector::const_iterator& begin, const SampleV
             Real magsq = msq / (SDR_RX_SCALED * SDR_RX_SCALED);
             
             //unsigned int formula = static_cast<unsigned int>(round(pow(10.0, (magsq - m_toneThreshold) / (m_toneGain * 3.3219))));
-            unsigned int freqs = static_cast<unsigned int>((100 * pow(10.0, (magsq - m_toneThreshold) / (m_toneGain * 3.3219))) + 0.5);
+            unsigned int freqs = static_cast<unsigned int>((400 * pow(10.0, (magsq - m_toneThreshold) / (m_toneGain * 3.3219))) + 0.5);
             sum_formula = sum_formula + freqs;
             total_formula = total_formula + 1;
 
@@ -116,7 +116,7 @@ void WFMDemodSink::feed(const SampleVector::const_iterator& begin, const SampleV
 		    m_movingAverage(magsq);
          
             if (i == 0) {
-                qDebug() << "Tone Freq :: " << freq;
+                qDebug() << "Tone Freq :: " << freq << " - Power :: " << magsq;
             }
 
             if (magsq > m_magsqPeak) {
