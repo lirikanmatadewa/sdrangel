@@ -82,7 +82,7 @@ void WFMDemodSink::feed(const SampleVector::const_iterator& begin, const SampleV
 
         // power to freq TONE
         Real m_toneThreshold = 0.0; // Sesuaikan nilai default
-        Real m_toneGain = 0.09;      // Sesuaikan nilai default
+        Real m_toneGain = 0.005;      // Sesuaikan nilai default
         
         for (int i = 0; i < rf_out; i++)
         {
@@ -90,7 +90,7 @@ void WFMDemodSink::feed(const SampleVector::const_iterator& begin, const SampleV
             Real magsq = msq / (SDR_RX_SCALED * SDR_RX_SCALED);
             
             //unsigned int formula = static_cast<unsigned int>(round(pow(10.0, (magsq - m_toneThreshold) / (m_toneGain * 3.3219))));
-            unsigned int freqs = static_cast<unsigned int>((400 * pow(10.0, (magsq - m_toneThreshold) / (m_toneGain * 3.3219))) + 0.5);
+            unsigned int freqs = static_cast<unsigned int>((200 * pow(10.0, (magsq - m_toneThreshold) / (m_toneGain * 3.3219))) + 0.5);
             sum_formula = sum_formula + freqs;
             total_formula = total_formula + 1;
 
@@ -103,8 +103,12 @@ void WFMDemodSink::feed(const SampleVector::const_iterator& begin, const SampleV
 
         //unsigned int avg_formula = round(sum_formula / total_formula);
         if (sum_formula > 0 && total_formula > 0) {
-            int avf_freq = round(sum_formula / total_formula);
-            freq = round(avf_freq / 100.0) * 100;
+            freq = round(sum_formula / total_formula);
+            if (freq > 15000) {
+                freq = 15000;
+            }
+            //int avf_freq = round(sum_formula / total_formula);
+            //freq = round(avf_freq / 100.0) * 100;
             qDebug() << "Tone AVG :: " << freq << " = " << sum_formula << " / " << total_formula;
         }
 
@@ -153,8 +157,8 @@ void WFMDemodSink::feed(const SampleVector::const_iterator& begin, const SampleV
                 
 
 				//qint16 sample = (qint16)(ci.real() * 3276.8f * m_settings.m_volume);
-                //qint16 sample = static_cast<qint16>(m_settings.m_volume * 3276.8f * std::sin(2 * M_PI * freq * i / m_audioSampleRate));
-                qint16 sample = static_cast<qint16>(32767 * 0.5 * std::sin(2 * M_PI * freq * i / m_audioSampleRate));
+                qint16 sample = static_cast<qint16>(m_settings.m_volume * 3276.8f * std::sin(2 * M_PI * freq * i / m_audioSampleRate));
+                //qint16 sample = static_cast<qint16>(32767 * 0.5 * std::sin(2 * M_PI * freq * i / m_audioSampleRate));
 				m_audioBuffer[m_audioBufferFill].l = sample;
 				m_audioBuffer[m_audioBufferFill].r = sample;
 

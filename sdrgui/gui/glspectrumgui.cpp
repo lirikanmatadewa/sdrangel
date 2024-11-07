@@ -681,6 +681,7 @@ void GLSpectrumGUI::on_levelRange_valueChanged(int value)
 
 void GLSpectrumGUI::on_fps_currentIndexChanged(int index)
 {
+	qDebug() << "Change fps by code :: " << m_fpsMs[index] << " - " << index;
 	m_settings.m_fpsPeriodMs = m_fpsMs[index];
 	applySettings();
 }
@@ -1343,12 +1344,16 @@ void GLSpectrumGUI::setRxChannel(QMap<QString, int>* rx_channel)
 }
 
 void GLSpectrumGUI::setAveraging(int index) {
-	ui->averaging->setCurrentIndex(index);
+	ui->averaging->blockSignals(true);
+	on_averaging_currentIndexChanged(index);
 	qDebug() << "MainSpectrumGUI::setAveraging::" << index;
+	ui->averaging->blockSignals(false);
 }
 
 void GLSpectrumGUI::setFPS(int index) {
-	ui->fps->setCurrentIndex(index);
+	ui->averaging->blockSignals(true);
+	on_fps_currentIndexChanged(index);
 	qDebug() << "MainSpectrumGUI::setFPS::" << index;
+	ui->averaging->blockSignals(false);
 }
 
