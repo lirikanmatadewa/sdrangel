@@ -32,6 +32,7 @@
 #include <QScreen>
 #include <QtSql/QSqlDatabase>
 #include <QtSql/QSqlQuery>
+#include <QThread>
 
 #include "gui/glspectrumgui.h"
 #include "dsp/fftwindow.h"
@@ -53,6 +54,8 @@
 #include "mainwindow.h"
 
 const int GLSpectrumGUI::m_fpsMs[] = { 500, 200, 100, 50, 20, 10, 5, 2 };
+
+int sts = 0;
 
 GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
 	QWidget(parent),
@@ -155,6 +158,8 @@ GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
 	//	}
 	//}
 	//db.close();
+
+	//toneStatus = 0;
 }
 
 GLSpectrumGUI::~GLSpectrumGUI()
@@ -1274,6 +1279,8 @@ void GLSpectrumGUI::open_ssb()
 
 void GLSpectrumGUI::open_wfm()
 {
+	sts = 0;
+
 	try {
 		emit addChannel(this->rx_channel["WFMDemod"]);
 	}
@@ -1309,7 +1316,9 @@ void GLSpectrumGUI::openFrequencyScanner()
 
 void GLSpectrumGUI::openTone()
 {
-	qDebug() << "Click button tone";
+	sts = 1;
+
+	qDebug() << "Click button tone :: " << toneStatus;
 	try {
 		emit addChannel(this->rx_channel["WFMDemod"]);
 	}
@@ -1344,16 +1353,41 @@ void GLSpectrumGUI::setRxChannel(QMap<QString, int>* rx_channel)
 }
 
 void GLSpectrumGUI::setAveraging(int index) {
-	ui->averaging->blockSignals(true);
+	/*ui->averaging->blockSignals(true);
 	on_averaging_currentIndexChanged(index);
 	qDebug() << "MainSpectrumGUI::setAveraging::" << index;
-	ui->averaging->blockSignals(false);
+	ui->averaging->blockSignals(false);*/
 }
 
-void GLSpectrumGUI::setFPS(int index) {
-	ui->averaging->blockSignals(true);
-	on_fps_currentIndexChanged(index);
-	qDebug() << "MainSpectrumGUI::setFPS::" << index;
-	ui->averaging->blockSignals(false);
+void GLSpectrumGUI::setFPS(int indexs) {
+	blockApplySettings(true);
+	
+	int index = 5;
+	ui->fps->setCurrentIndex(index);
+	emit ui->fps->currentIndexChanged(index);
+
+	//on_fps_currentIndexChanged(index);
+	
+	
+
+	//applySpectrumSettings();
+
+	m_settings.m_fpsPeriodMs = 100;
+	applySettings();
+
+	qDebug() << "MainSpectrumGUI::setFPS::" << index << " :: Global :: " << m_settings.m_fpsPeriodMs;
+
+	//m_glSpectrum->setFPSPeriodMs(m_settings.m_fpsPeriodMs);
+	blockApplySettings(false);
+}
+
+int GLSpectrumGUI::getTone(int status) {
+	if (status > 0) {
+		sts = status;
+	}
+	
+	qDebug() << "Get value Tone :: " << sts;
+
+	return sts;
 }
 

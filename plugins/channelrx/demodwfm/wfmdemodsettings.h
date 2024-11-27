@@ -47,6 +47,7 @@ struct WFMDemodSettings
     int m_workspaceIndex;
     QByteArray m_geometryBytes;
     bool m_hidden;
+    int m_tone;
 
     Serializable *m_channelMarker;
     Serializable *m_rollupState;

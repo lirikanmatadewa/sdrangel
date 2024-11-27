@@ -32,6 +32,7 @@ class PluginAPI;
 class DeviceUISet;
 class BasebandSampleSink;
 class WFMDemod;
+class GLSpectrumGUI;
 
 namespace Ui {
 	class WFMDemodGUI;
@@ -59,6 +60,10 @@ public:
     virtual ChannelMarker& getChannelMarker() { return m_channelMarker; }
     virtual int getStreamIndex() const { return m_settings.m_streamIndex; }
     virtual void setStreamIndex(int streamIndex) { m_settings.m_streamIndex = streamIndex; }
+
+	virtual int tone() const { return m_settings.m_tone; }
+
+	GLSpectrumGUI* m_spectrumGUI;
 
 public slots:
 	void channelMarkerChangedByCursor();
