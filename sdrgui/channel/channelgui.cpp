@@ -37,7 +37,11 @@
 #include "gui/rollupcontents.h"
 #include "gui/dialogpositioner.h"
 
+#include "gui/glspectrumgui.h"
+
 #include "channelgui.h"
+
+int toneFlags = 0;
 
 ChannelGUI::ChannelGUI(QWidget *parent) :
     QMdiSubWindow(parent),
@@ -201,6 +205,15 @@ ChannelGUI::ChannelGUI(QWidget *parent) :
         this,
         &ChannelGUI::onWidgetRolled
     );
+
+    toneFlags = m_spectrumGUI->getTone(0);
+    if (toneFlags > 0) {
+        m_hideButton->setVisible(false);
+        m_shrinkButton->setVisible(false);
+        m_maximizeButton->setVisible(false);
+        m_duplicateButton->setVisible(false);
+        m_moveToDeviceButton->setVisible(false);
+    }
 }
 
 ChannelGUI::~ChannelGUI()
@@ -348,21 +361,27 @@ void ChannelGUI::sizeToContents()
     // If size policy is fixed, hide widgets that resize the window
     if ((sizePolicy().verticalPolicy() == QSizePolicy::Fixed) && (sizePolicy().horizontalPolicy() == QSizePolicy::Fixed))
     {
-        m_shrinkButton->hide();
-        m_maximizeButton->hide();
-        m_sizeGripBottomRight->hide();
+        if (toneFlags == 0) {
+            m_shrinkButton->hide();
+            m_maximizeButton->hide();
+            m_sizeGripBottomRight->hide();
+        }
     }
     else if ((sizePolicy().verticalPolicy() == QSizePolicy::Fixed) || (sizePolicy().horizontalPolicy() == QSizePolicy::Fixed))
     {
-        m_shrinkButton->show();
-        m_maximizeButton->hide();
-        m_sizeGripBottomRight->show();
+        if (toneFlags == 0) {
+            m_shrinkButton->show();
+            m_maximizeButton->hide();
+            m_sizeGripBottomRight->show();
+        }
     }
     else
     {
-        m_shrinkButton->show();
-        m_maximizeButton->show();
-        m_sizeGripBottomRight->show();
+        if (toneFlags == 0) {
+            m_shrinkButton->show();
+            m_maximizeButton->show();
+            m_sizeGripBottomRight->show();
+        }
     }
 
     // Calculate min/max size for window. This is min/max size of contents, plus

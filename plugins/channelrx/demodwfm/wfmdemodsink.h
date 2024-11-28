@@ -31,6 +31,7 @@
 #include "wfmdemodsettings.h"
 
 class ChannelAPI;
+class GLSpectrumGUI;
 
 class WFMDemodSink : public ChannelSampleSink {
 public:
@@ -69,6 +70,8 @@ public:
     void applyAudioSampleRate(int sampleRate);
     int getAudioSampleRate() const { return m_audioSampleRate; }
     void setChannel(ChannelAPI *channel) { m_channel = channel; }
+
+    GLSpectrumGUI* m_spectrumGUI;
 
 private:
     struct MagSqLevelsStore

@@ -56,6 +56,7 @@ void WFMDemodSettings::resetToDefaults()
     m_reverseAPIChannelIndex = 0;
     m_workspaceIndex = 0;
     m_hidden = false;
+    m_tone = 0;
 }
 
 QByteArray WFMDemodSettings::serialize() const
@@ -88,6 +89,7 @@ QByteArray WFMDemodSettings::serialize() const
     s.writeS32(19, m_workspaceIndex);
     s.writeBlob(20, m_geometryBytes);
     s.writeBool(21, m_hidden);
+    s.writeS32(22, m_tone);
 
     return s.final();
 }
@@ -154,6 +156,8 @@ bool WFMDemodSettings::deserialize(const QByteArray& data)
         d.readS32(19, &m_workspaceIndex, 0);
         d.readBlob(20, &m_geometryBytes);
         d.readBool(21, &m_hidden, false);
+
+        d.readS32(22, &m_tone, 0);
 
         return true;
     }
