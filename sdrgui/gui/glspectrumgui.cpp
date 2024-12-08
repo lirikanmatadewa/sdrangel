@@ -125,41 +125,6 @@ GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
 
 	displaySettings();
 	setAveragingCombo();
-
-	//// Open a connection to the SQLite database
-	//QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
-	//db.setDatabaseName("database/mobile_channel.db");
-
-	//if (!db.open()) {
-	//	qDebug() << "Error: connection with database failed";
-	//}
-	//else {
-	//	qDebug() << "Database: connection ok";
-	//}
-
-	//QStringList drivers = QSqlDatabase::drivers();
-	//qDebug() << "Available drivers:" << drivers;
-
-	//// Create a table
-	//QSqlQuery query;
-	//query.prepare("SELECT frequency FROM gsm900_ul WHERE channel = :channel");
-	//query.bindValue(":channel", 100);
-
-	//if (!query.exec()) {
-	//	qDebug() << "Error: query execution failed";
-	//}
-	//else {
-	//	if (query.next()) {
-	//		int frequency = query.value(0).toInt();
-	//		qDebug() << "Channel = 100 == Frequency" << frequency;
-	//	}
-	//	else {
-	//		qDebug() << "No results found";
-	//	}
-	//}
-	//db.close();
-
-	//toneStatus = 0;
 }
 
 GLSpectrumGUI::~GLSpectrumGUI()
@@ -1279,7 +1244,7 @@ void GLSpectrumGUI::open_ssb()
 
 void GLSpectrumGUI::open_wfm()
 {
-	sts = 0;
+	GLSpectrum::setTone(0); // Increment tone for demonstration
 
 	try {
 		emit addChannel(this->rx_channel["WFMDemod"]);
@@ -1316,9 +1281,9 @@ void GLSpectrumGUI::openFrequencyScanner()
 
 void GLSpectrumGUI::openTone()
 {
-	sts = 1;
+	int currentTone = GLSpectrum::getTone();
+	GLSpectrum::setTone(currentTone + 1);
 
-	qDebug() << "Click button tone :: " << toneStatus;
 	try {
 		emit addChannel(this->rx_channel["WFMDemod"]);
 	}
@@ -1353,10 +1318,10 @@ void GLSpectrumGUI::setRxChannel(QMap<QString, int>* rx_channel)
 }
 
 void GLSpectrumGUI::setAveraging(int index) {
-	/*ui->averaging->blockSignals(true);
+	ui->averaging->blockSignals(true);
 	on_averaging_currentIndexChanged(index);
 	qDebug() << "MainSpectrumGUI::setAveraging::" << index;
-	ui->averaging->blockSignals(false);*/
+	ui->averaging->blockSignals(false);
 }
 
 void GLSpectrumGUI::setFPS(int indexs) {
@@ -1366,18 +1331,11 @@ void GLSpectrumGUI::setFPS(int indexs) {
 	ui->fps->setCurrentIndex(index);
 	emit ui->fps->currentIndexChanged(index);
 
-	//on_fps_currentIndexChanged(index);
-	
-	
-
-	//applySpectrumSettings();
-
 	m_settings.m_fpsPeriodMs = 100;
 	applySettings();
 
 	qDebug() << "MainSpectrumGUI::setFPS::" << index << " :: Global :: " << m_settings.m_fpsPeriodMs;
 
-	//m_glSpectrum->setFPSPeriodMs(m_settings.m_fpsPeriodMs);
 	blockApplySettings(false);
 }
 

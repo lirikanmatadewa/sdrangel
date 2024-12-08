@@ -47,7 +47,6 @@ struct WFMDemodSettings
     int m_workspaceIndex;
     QByteArray m_geometryBytes;
     bool m_hidden;
-    int m_tone;
 
     Serializable *m_channelMarker;
     Serializable *m_rollupState;
@@ -71,6 +70,9 @@ struct WFMDemodSettings
             return (3*rfBW)/2;
         }
     }
+
+    int getTone();
+    void setTone(int tone);
 };
 
 #endif /* PLUGINS_CHANNELRX_DEMODWFM_WFMDEMODSETTINGS_H_ */

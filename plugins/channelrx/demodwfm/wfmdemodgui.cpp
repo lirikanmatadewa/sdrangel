@@ -39,8 +39,6 @@
 
 #include "wfmdemod.h"
 
-#include "gui/glspectrumgui.h"
-
 int toneFlag = 0;
 
 WFMDemodGUI* WFMDemodGUI::create(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, BasebandSampleSink *rxChannel)
@@ -249,8 +247,9 @@ WFMDemodGUI::WFMDemodGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, Baseban
     m_audioSampleRate(-1),
     m_recentAudioFifoError(false)
 {
-    m_spectrumGUI = new GLSpectrumGUI;
-    toneFlag = m_spectrumGUI->getTone(0);
+
+    toneFlag = ChannelGUI::toneCGui;
+    m_settings.setTone(toneFlag);
 
 	setAttribute(Qt::WA_DeleteOnClose, true);
     m_helpURL = "plugins/channelrx/demodwfm/readme.md";
@@ -282,7 +281,7 @@ WFMDemodGUI::WFMDemodGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, Baseban
     m_channelMarker.blockSignals(true);
 	m_channelMarker.setBandwidth(m_settings.m_rfBandwidth);
 	m_channelMarker.setCenterFrequency(0);
-    if (toneFlag > 0 || m_settings.m_tone > 0) {
+    if (toneFlag > 0 || m_settings.getTone() > 0) {
         m_channelMarker.setTitle("Tone");
     } else {
         m_channelMarker.setTitle("WFM Demodulator");
@@ -352,11 +351,10 @@ void WFMDemodGUI::displaySettings()
 
     updateIndexLabel();
 
-    qDebug() << " ------------------- Tone Demodsink :: " << toneFlag << " | m_setting.tone :: " << m_settings.m_tone;
-
-    if (toneFlag > 0 || m_settings.m_tone > 0) {
-        m_settings.m_tone = toneFlag;
-        m_spectrumGUI->getTone(m_settings.m_tone);
+    if (toneFlag > 0 || m_settings.getTone() > 0) {
+        if (toneFlag > 0) {
+            m_settings.setTone(toneFlag);
+        }
 
         m_channelMarker.setTitle("Tone");
         setWindowTitle("Tone");

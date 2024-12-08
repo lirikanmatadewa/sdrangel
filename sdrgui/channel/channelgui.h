@@ -38,7 +38,6 @@ class QHBoxLayout;
 class QSizeGrip;
 class RollupContents;
 class ChannelMarker;
-class GLSpectrumGUI;
 
 class SDRGUI_API ChannelGUI : public QMdiSubWindow, public SerializableInterface
 {
@@ -92,7 +91,7 @@ public:
     void setStatusFrequency(qint64 frequency);
     void setStatusText(const QString& text);
 
-    GLSpectrumGUI* m_spectrumGUI;
+    int toneCGui;
 
 protected:
     void closeEvent(QCloseEvent *event) override;

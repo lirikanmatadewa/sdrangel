@@ -37,7 +37,7 @@
 #include "gui/rollupcontents.h"
 #include "gui/dialogpositioner.h"
 
-#include "gui/glspectrumgui.h"
+#include "gui/glspectrum.h"
 
 #include "channelgui.h"
 
@@ -52,7 +52,8 @@ ChannelGUI::ChannelGUI(QWidget *parent) :
     m_resizer(this),
     m_drag(false),
     m_disableResize(false),
-    m_mdi(nullptr)
+    m_mdi(nullptr),
+    toneCGui(0)
 {
     qDebug("ChannelGUI::ChannelGUI");
     setWindowFlags(windowFlags() | Qt::FramelessWindowHint);
@@ -206,7 +207,9 @@ ChannelGUI::ChannelGUI(QWidget *parent) :
         &ChannelGUI::onWidgetRolled
     );
 
-    toneFlags = m_spectrumGUI->getTone(0);
+    toneFlags = GLSpectrum::getTone();
+    toneCGui = toneFlags;
+
     if (toneFlags > 0) {
         m_hideButton->setVisible(false);
         m_shrinkButton->setVisible(false);

@@ -169,6 +169,7 @@ signals:
 	void requestCenterFrequency(qint64 frequency);
 	void addChannel(int channelPluginIndex);
 	void addIqReplaySignal();
+	void requestSetTone(bool tone); // Signal untuk mengatur tone
 
 public slots:
 	void setAveraging(int index);

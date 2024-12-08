@@ -30,8 +30,6 @@
 #include <QFile>
 #include <QTextStream>
 
-#include "gui/glspectrumgui.h"
-
 const unsigned int WFMDemodSink::m_rfFilterFftLength = 1024;
 
 int tonesFlag = 0;
@@ -49,9 +47,6 @@ WFMDemodSink::WFMDemodSink() :
     m_magsqCount(0),
     m_audioFifo(250000)
 {
-
-    tonesFlag = m_spectrumGUI->getTone(0);
-
 	m_rfFilter = new fftfilt(-50000.0 / 384000.0, 50000.0 / 384000.0, m_rfFilterFftLength);
 	m_phaseDiscri.setFMScaling(384000/75000);
 
@@ -64,6 +59,7 @@ WFMDemodSink::WFMDemodSink() :
 	applySettings(m_settings, true);
     applyChannelSettings(m_channelSampleRate, m_channelFrequencyOffset, true);
 
+    tonesFlag = m_settings.getTone();
 }
 
 WFMDemodSink::~WFMDemodSink()

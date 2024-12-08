@@ -30,6 +30,9 @@
 #include "gui/glspectrumview.h"
 #include "gui/spectrummeasurements.h"
 
+// Initialize static member
+int GLSpectrum::tone = 0;
+
 GLSpectrum::GLSpectrum(QWidget* parent) :
 	QWidget(parent)
 {
@@ -171,4 +174,12 @@ void GLSpectrum::openSpectrum(int status) {
 	else {
 		m_splitter->setSizes({ 1, 0 });
 	}
+}
+
+int GLSpectrum::getTone() {
+	return tone;
+}
+
+void GLSpectrum::setTone(int newTone) {
+	tone = newTone;
 }
