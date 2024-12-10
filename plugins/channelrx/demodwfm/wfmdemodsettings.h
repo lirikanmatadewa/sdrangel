@@ -70,6 +70,9 @@ struct WFMDemodSettings
             return (3*rfBW)/2;
         }
     }
+
+    int getTone();
+    void setTone(int tone);
 };
 
 #endif /* PLUGINS_CHANNELRX_DEMODWFM_WFMDEMODSETTINGS_H_ */

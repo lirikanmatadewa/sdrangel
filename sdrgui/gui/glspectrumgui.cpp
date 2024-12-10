@@ -32,6 +32,7 @@
 #include <QScreen>
 #include <QtSql/QSqlDatabase>
 #include <QtSql/QSqlQuery>
+#include <QThread>
 
 #include "gui/glspectrumgui.h"
 #include "dsp/fftwindow.h"
@@ -53,6 +54,8 @@
 #include "mainwindow.h"
 
 const int GLSpectrumGUI::m_fpsMs[] = { 500, 200, 100, 50, 20, 10, 5, 2 };
+
+int sts = 0;
 
 GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
 	QWidget(parent),
@@ -123,38 +126,13 @@ GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
 	displaySettings();
 	setAveragingCombo();
 
-	//// Open a connection to the SQLite database
-	//QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
-	//db.setDatabaseName("database/mobile_channel.db");
-
-	//if (!db.open()) {
-	//	qDebug() << "Error: connection with database failed";
-	//}
-	//else {
-	//	qDebug() << "Database: connection ok";
-	//}
-
-	//QStringList drivers = QSqlDatabase::drivers();
-	//qDebug() << "Available drivers:" << drivers;
-
-	//// Create a table
-	//QSqlQuery query;
-	//query.prepare("SELECT frequency FROM gsm900_ul WHERE channel = :channel");
-	//query.bindValue(":channel", 100);
-
-	//if (!query.exec()) {
-	//	qDebug() << "Error: query execution failed";
-	//}
-	//else {
-	//	if (query.next()) {
-	//		int frequency = query.value(0).toInt();
-	//		qDebug() << "Channel = 100 == Frequency" << frequency;
-	//	}
-	//	else {
-	//		qDebug() << "No results found";
-	//	}
-	//}
-	//db.close();
+	int currentTones = GLSpectrum::getTone();
+	if (currentTones == 0) {
+		ui->btnTones->setStyleSheet("QPushButton { background-color: #2bacac; color: white; }"); // tone on
+	}
+	else {
+		ui->btnTones->setStyleSheet("QPushButton { background-color: rgb(79, 79, 79) color: white; }"); // tone off
+	}
 }
 
 GLSpectrumGUI::~GLSpectrumGUI()
@@ -681,6 +659,7 @@ void GLSpectrumGUI::on_levelRange_valueChanged(int value)
 
 void GLSpectrumGUI::on_fps_currentIndexChanged(int index)
 {
+	qDebug() << "Change fps by code :: " << m_fpsMs[index] << " - " << index;
 	m_settings.m_fpsPeriodMs = m_fpsMs[index];
 	applySettings();
 }
@@ -1273,6 +1252,8 @@ void GLSpectrumGUI::open_ssb()
 
 void GLSpectrumGUI::open_wfm()
 {
+	GLSpectrum::setTone(0); // Increment tone for demonstration
+
 	try {
 		emit addChannel(this->rx_channel["WFMDemod"]);
 	}
@@ -1308,12 +1289,24 @@ void GLSpectrumGUI::openFrequencyScanner()
 
 void GLSpectrumGUI::openTone()
 {
-	qDebug() << "Click button tone";
-	try {
-		emit addChannel(this->rx_channel["WFMDemod"]);
-	}
-	catch (...) {
-		;
+	int currentTone = GLSpectrum::getTone();
+
+	if (currentTone == 0) {
+		ui->btnTones->setStyleSheet("QPushButton { background-color: #2bacac; color: white; }"); // tone on
+
+		GLSpectrum::setTone(currentTone + 1);
+
+		try {
+			emit addChannel(this->rx_channel["WFMDemod"]);
+		}
+		catch (...) {
+			;
+		}
+	} else {
+		ui->btnTones->setStyleSheet("QPushButton { background-color: rgb(79, 79, 79) color: white; }"); // tone off
+
+		GLSpectrum::setTone(0);
+		emit closeTone();
 	}
 }
 
@@ -1343,12 +1336,34 @@ void GLSpectrumGUI::setRxChannel(QMap<QString, int>* rx_channel)
 }
 
 void GLSpectrumGUI::setAveraging(int index) {
-	ui->averaging->setCurrentIndex(index);
+	ui->averaging->blockSignals(true);
+	on_averaging_currentIndexChanged(index);
 	qDebug() << "MainSpectrumGUI::setAveraging::" << index;
+	ui->averaging->blockSignals(false);
 }
 
-void GLSpectrumGUI::setFPS(int index) {
+void GLSpectrumGUI::setFPS(int indexs) {
+	blockApplySettings(true);
+	
+	int index = 5;
 	ui->fps->setCurrentIndex(index);
-	qDebug() << "MainSpectrumGUI::setFPS::" << index;
+	emit ui->fps->currentIndexChanged(index);
+
+	m_settings.m_fpsPeriodMs = 100;
+	applySettings();
+
+	qDebug() << "MainSpectrumGUI::setFPS::" << index << " :: Global :: " << m_settings.m_fpsPeriodMs;
+
+	blockApplySettings(false);
+}
+
+int GLSpectrumGUI::getTone(int status) {
+	if (status > 0) {
+		sts = status;
+	}
+	
+	qDebug() << "Get value Tone :: " << sts;
+
+	return sts;
 }
 

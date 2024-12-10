@@ -91,6 +91,8 @@ public:
     void setStatusFrequency(qint64 frequency);
     void setStatusText(const QString& text);
 
+    int toneCGui;
+
 protected:
     void closeEvent(QCloseEvent *event) override;
     void leaveEvent(QEvent *event) override;
@@ -152,6 +154,9 @@ private slots:
     void onWidgetRolled(QWidget *widget, bool show);
     void duplicateChannel();
     void openMoveToDeviceSetDialog();
+
+public slots:
+    void closeTone();
 
 signals:
     void closing();

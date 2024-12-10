@@ -37,7 +37,11 @@
 #include "gui/rollupcontents.h"
 #include "gui/dialogpositioner.h"
 
+#include "gui/glspectrum.h"
+
 #include "channelgui.h"
+
+int toneFlags = 0;
 
 ChannelGUI::ChannelGUI(QWidget *parent) :
     QMdiSubWindow(parent),
@@ -48,7 +52,8 @@ ChannelGUI::ChannelGUI(QWidget *parent) :
     m_resizer(this),
     m_drag(false),
     m_disableResize(false),
-    m_mdi(nullptr)
+    m_mdi(nullptr),
+    toneCGui(0)
 {
     qDebug("ChannelGUI::ChannelGUI");
     setWindowFlags(windowFlags() | Qt::FramelessWindowHint);
@@ -201,6 +206,17 @@ ChannelGUI::ChannelGUI(QWidget *parent) :
         this,
         &ChannelGUI::onWidgetRolled
     );
+
+    toneFlags = GLSpectrum::getTone();
+    toneCGui = toneFlags;
+
+    if (toneFlags > 0) {
+        m_hideButton->setVisible(false);
+        m_shrinkButton->setVisible(false);
+        m_maximizeButton->setVisible(false);
+        m_duplicateButton->setVisible(false);
+        m_moveToDeviceButton->setVisible(false);
+    }
 }
 
 ChannelGUI::~ChannelGUI()
@@ -225,6 +241,11 @@ ChannelGUI::~ChannelGUI()
     delete m_settingsButton;
     delete m_indexLabel;
     qDebug("ChannelGUI::~ChannelGUI: end");
+}
+
+void ChannelGUI::closeTone() {
+    qDebug("Simulating Close Button Click");
+    m_closeButton->click();
 }
 
 void ChannelGUI::closeEvent(QCloseEvent *event)
@@ -348,21 +369,27 @@ void ChannelGUI::sizeToContents()
     // If size policy is fixed, hide widgets that resize the window
     if ((sizePolicy().verticalPolicy() == QSizePolicy::Fixed) && (sizePolicy().horizontalPolicy() == QSizePolicy::Fixed))
     {
-        m_shrinkButton->hide();
-        m_maximizeButton->hide();
-        m_sizeGripBottomRight->hide();
+        if (toneFlags == 0) {
+            m_shrinkButton->hide();
+            m_maximizeButton->hide();
+            m_sizeGripBottomRight->hide();
+        }
     }
     else if ((sizePolicy().verticalPolicy() == QSizePolicy::Fixed) || (sizePolicy().horizontalPolicy() == QSizePolicy::Fixed))
     {
-        m_shrinkButton->show();
-        m_maximizeButton->hide();
-        m_sizeGripBottomRight->show();
+        if (toneFlags == 0) {
+            m_shrinkButton->show();
+            m_maximizeButton->hide();
+            m_sizeGripBottomRight->show();
+        }
     }
     else
     {
-        m_shrinkButton->show();
-        m_maximizeButton->show();
-        m_sizeGripBottomRight->show();
+        if (toneFlags == 0) {
+            m_shrinkButton->show();
+            m_maximizeButton->show();
+            m_sizeGripBottomRight->show();
+        }
     }
 
     // Calculate min/max size for window. This is min/max size of contents, plus
