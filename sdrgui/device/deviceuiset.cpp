@@ -122,6 +122,10 @@ void DeviceUISet::registerRxChannelInstance(ChannelAPI* channelAPI, ChannelGUI* 
 		[=]() { this->handleChannelGUIClosing(channelGUI); },
 		Qt::QueuedConnection
 	);
+
+	if (channelGUI->getTitle() == "Tone") {
+		QObject::connect(m_spectrumGUI, &GLSpectrumGUI::closeTone, channelGUI, &ChannelGUI::closeTone);
+	}
 }
 
 void DeviceUISet::registerTxChannelInstance(ChannelAPI* channelAPI, ChannelGUI* channelGUI)
@@ -349,6 +353,12 @@ void DeviceUISet::loadRxChannelSettings(const Preset* preset, PluginAPI* pluginA
 						[=]() { this->handleChannelGUIClosing(rxChannelGUI); },
 						Qt::QueuedConnection
 					);
+
+					if (rxChannelGUI->getTitle() == "Tone" || rxChannelGUI->getTitle() == "") {
+						QObject::connect(m_spectrumGUI, &GLSpectrumGUI::closeTone, rxChannelGUI, &ChannelGUI::closeTone);
+						
+						GLSpectrum::setTone(1);
+					}
 					break;
 				}
 			}

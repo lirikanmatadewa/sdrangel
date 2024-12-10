@@ -249,7 +249,21 @@ WFMDemodGUI::WFMDemodGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, Baseban
 {
 
     toneFlag = ChannelGUI::toneCGui;
-    m_settings.setTone(toneFlag);
+
+    if (toneFlag > 0 || m_settings.getTone() > 0) {
+        m_settings.m_title = "Tone";
+        
+        if (m_settings.getTone() > 0) {
+            toneFlag = m_settings.getTone();
+        }
+        else {
+            m_settings.setTone(toneFlag);
+        }
+    }
+    else {
+        m_settings.m_title = m_channelMarker.getTitle();
+        m_settings.setTone(toneFlag);
+    }
 
 	setAttribute(Qt::WA_DeleteOnClose, true);
     m_helpURL = "plugins/channelrx/demodwfm/readme.md";
@@ -284,7 +298,7 @@ WFMDemodGUI::WFMDemodGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, Baseban
     if (toneFlag > 0 || m_settings.getTone() > 0) {
         m_channelMarker.setTitle("Tone");
     } else {
-        m_channelMarker.setTitle("WFM Demodulator");
+        m_settings.m_title = m_channelMarker.getTitle();
     }
     m_channelMarker.setColor(m_settings.m_rgbColor);
     m_channelMarker.blockSignals(false);

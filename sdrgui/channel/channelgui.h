@@ -155,6 +155,9 @@ private slots:
     void duplicateChannel();
     void openMoveToDeviceSetDialog();
 
+public slots:
+    void closeTone();
+
 signals:
     void closing();
     void moveToWorkspace(int workspaceIndex);

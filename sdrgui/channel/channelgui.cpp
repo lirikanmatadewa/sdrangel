@@ -243,6 +243,11 @@ ChannelGUI::~ChannelGUI()
     qDebug("ChannelGUI::~ChannelGUI: end");
 }
 
+void ChannelGUI::closeTone() {
+    qDebug("Simulating Close Button Click");
+    m_closeButton->click();
+}
+
 void ChannelGUI::closeEvent(QCloseEvent *event)
 {
     qDebug("ChannelGUI::closeEvent");

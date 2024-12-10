@@ -125,6 +125,14 @@ GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
 
 	displaySettings();
 	setAveragingCombo();
+
+	int currentTones = GLSpectrum::getTone();
+	if (currentTones == 0) {
+		ui->btnTones->setStyleSheet("QPushButton { background-color: #2bacac; color: white; }"); // tone on
+	}
+	else {
+		ui->btnTones->setStyleSheet("QPushButton { background-color: rgb(79, 79, 79) color: white; }"); // tone off
+	}
 }
 
 GLSpectrumGUI::~GLSpectrumGUI()
@@ -1282,13 +1290,23 @@ void GLSpectrumGUI::openFrequencyScanner()
 void GLSpectrumGUI::openTone()
 {
 	int currentTone = GLSpectrum::getTone();
-	GLSpectrum::setTone(currentTone + 1);
 
-	try {
-		emit addChannel(this->rx_channel["WFMDemod"]);
-	}
-	catch (...) {
-		;
+	if (currentTone == 0) {
+		ui->btnTones->setStyleSheet("QPushButton { background-color: #2bacac; color: white; }"); // tone on
+
+		GLSpectrum::setTone(currentTone + 1);
+
+		try {
+			emit addChannel(this->rx_channel["WFMDemod"]);
+		}
+		catch (...) {
+			;
+		}
+	} else {
+		ui->btnTones->setStyleSheet("QPushButton { background-color: rgb(79, 79, 79) color: white; }"); // tone off
+
+		GLSpectrum::setTone(0);
+		emit closeTone();
 	}
 }
 

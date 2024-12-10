@@ -170,6 +170,8 @@ signals:
 	void addChannel(int channelPluginIndex);
 	void addIqReplaySignal();
 	void requestSetTone(bool tone); // Signal untuk mengatur tone
+	
+	void closeTone();
 
 public slots:
 	void setAveraging(int index);
