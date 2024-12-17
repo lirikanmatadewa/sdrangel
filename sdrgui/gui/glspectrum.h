@@ -114,18 +114,11 @@ public:
 	void setIsDeviceSpectrum(bool isDeviceSpectrum) { m_spectrum->setIsDeviceSpectrum(isDeviceSpectrum); }
 	bool isDeviceSpectrum() const { return m_spectrum->isDeviceSpectrum(); }
 
-	// Getter and Setter for tone
-	static int getTone();
-	static void setTone(int newTone);
-
 private:
 	QSplitter* m_splitter;
 	GLSpectrumView* m_spectrum;
 	SpectrumMeasurements* m_measurements;
 	SpectrumSettings::MeasurementsPosition m_position;
-
-	static int tone; // Variable to hold the tone value
-
 
 };
 

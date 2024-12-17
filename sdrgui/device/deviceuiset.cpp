@@ -353,12 +353,6 @@ void DeviceUISet::loadRxChannelSettings(const Preset* preset, PluginAPI* pluginA
 						[=]() { this->handleChannelGUIClosing(rxChannelGUI); },
 						Qt::QueuedConnection
 					);
-
-					if (rxChannelGUI->getTitle() == "Tone" || rxChannelGUI->getTitle() == "") {
-						QObject::connect(m_spectrumGUI, &GLSpectrumGUI::closeTone, rxChannelGUI, &ChannelGUI::closeTone);
-						
-						GLSpectrum::setTone(1);
-					}
 					break;
 				}
 			}

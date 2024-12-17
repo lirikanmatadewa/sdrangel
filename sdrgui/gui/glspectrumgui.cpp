@@ -32,7 +32,6 @@
 #include <QScreen>
 #include <QtSql/QSqlDatabase>
 #include <QtSql/QSqlQuery>
-#include <QThread>
 
 #include "gui/glspectrumgui.h"
 #include "dsp/fftwindow.h"
@@ -125,14 +124,6 @@ GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
 
 	displaySettings();
 	setAveragingCombo();
-
-	int currentTones = GLSpectrum::getTone();
-	if (currentTones == 0) {
-		ui->btnTones->setStyleSheet("QPushButton { background-color: #2bacac; color: white; }"); // tone on
-	}
-	else {
-		ui->btnTones->setStyleSheet("QPushButton { background-color: rgb(79, 79, 79) color: white; }"); // tone off
-	}
 }
 
 GLSpectrumGUI::~GLSpectrumGUI()
@@ -1252,8 +1243,6 @@ void GLSpectrumGUI::open_ssb()
 
 void GLSpectrumGUI::open_wfm()
 {
-	GLSpectrum::setTone(0); // Increment tone for demonstration
-
 	try {
 		emit addChannel(this->rx_channel["WFMDemod"]);
 	}
@@ -1289,23 +1278,20 @@ void GLSpectrumGUI::openFrequencyScanner()
 
 void GLSpectrumGUI::openTone()
 {
-	int currentTone = GLSpectrum::getTone();
-
+	static int currentTone = 0;
 	if (currentTone == 0) {
+		currentTone = 1;
 		ui->btnTones->setStyleSheet("QPushButton { background-color: #2bacac; color: white; }"); // tone on
 
-		GLSpectrum::setTone(currentTone + 1);
-
 		try {
-			emit addChannel(this->rx_channel["WFMDemod"]);
+			emit addChannel(this->rx_channel["ToneDemod"]);
 		}
 		catch (...) {
 			;
 		}
 	} else {
+		currentTone = 0;
 		ui->btnTones->setStyleSheet("QPushButton { background-color: rgb(79, 79, 79) color: white; }"); // tone off
-
-		GLSpectrum::setTone(0);
 		emit closeTone();
 	}
 }
@@ -1355,15 +1341,5 @@ void GLSpectrumGUI::setFPS(int indexs) {
 	qDebug() << "MainSpectrumGUI::setFPS::" << index << " :: Global :: " << m_settings.m_fpsPeriodMs;
 
 	blockApplySettings(false);
-}
-
-int GLSpectrumGUI::getTone(int status) {
-	if (status > 0) {
-		sts = status;
-	}
-	
-	qDebug() << "Get value Tone :: " << sts;
-
-	return sts;
 }
 

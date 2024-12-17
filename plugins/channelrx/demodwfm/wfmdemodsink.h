@@ -121,8 +121,6 @@ private:
     int m_demodBufferFill;
 
     static const unsigned int m_rfFilterFftLength;
-
-    unsigned int freq;
 };
 
 #endif // INCLUDE_WFMDEMODSINK_H

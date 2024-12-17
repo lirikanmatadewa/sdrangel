@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>WFMDemodGUI</class>
- <widget class="RollupContents" name="WFMDemodGUI">
+ <class>ToneDemodGUI</class>
+ <widget class="RollupContents" name="ToneDemodGUI">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -35,7 +35,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>WFM Demodulator</string>
+   <string>Tone Demodulator</string>
   </property>
   <widget class="QWidget" name="settingsContainer" native="true">
    <property name="geometry">
@@ -144,29 +144,42 @@
         </property>
        </spacer>
       </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="channelPowerLayout">
       <item>
-       <layout class="QHBoxLayout" name="channelPowerLayout">
-        <item>
-         <widget class="QLabel" name="channelPower">
-          <property name="toolTip">
-           <string>Channel power</string>
-          </property>
-          <property name="layoutDirection">
-           <enum>Qt::RightToLeft</enum>
-          </property>
-          <property name="text">
-           <string>0.0</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="channelPowerUnits">
-          <property name="text">
-           <string> dB</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
+       <widget class="QLabel" name="channelPower">
+        <property name="toolTip">
+         <string>Channel power</string>
+        </property>
+        <property name="layoutDirection">
+         <enum>Qt::RightToLeft</enum>
+        </property>
+        <property name="text">
+         <string>0.0</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="channelPowerUnits">
+        <property name="text">
+         <string> dB</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_3">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
       </item>
      </layout>
     </item>
@@ -233,6 +246,7 @@
          <font>
           <family>Liberation Mono</family>
           <pointsize>12</pointsize>
+          <weight>50</weight>
           <bold>false</bold>
          </font>
         </property>
@@ -363,6 +377,24 @@
     <item>
      <layout class="QHBoxLayout" name="squelchLayout">
       <item>
+       <widget class="QToolButton" name="audioMute">
+        <property name="toolTip">
+         <string>Left: audio mute Right: select audio device</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset resource="../../../sdrgui/resources/res.qrc">
+          <normaloff>:/sound_on.png</normaloff>
+          <normalon>:/sound_off.png</normalon>:/sound_on.png</iconset>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QLabel" name="squelchLabel">
         <property name="text">
          <string>Sq</string>
@@ -411,22 +443,17 @@
        </widget>
       </item>
       <item>
-       <widget class="QToolButton" name="audioMute">
-        <property name="toolTip">
-         <string>Left: audio mute Right: select audio device</string>
+       <spacer name="horizontalSpacer_4">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
         </property>
-        <property name="text">
-         <string/>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
         </property>
-        <property name="icon">
-         <iconset resource="../../../sdrgui/resources/res.qrc">
-          <normaloff>:/sound_on.png</normaloff>
-          <normalon>:/sound_off.png</normalon>:/sound_on.png</iconset>
-        </property>
-        <property name="checkable">
-         <bool>true</bool>
-        </property>
-       </widget>
+       </spacer>
       </item>
      </layout>
     </item>

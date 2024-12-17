@@ -18,8 +18,8 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.          //
 ///////////////////////////////////////////////////////////////////////////////////
 
-#ifndef PLUGINS_CHANNELRX_DEMODWFM_WFMDEMODSETTINGS_H_
-#define PLUGINS_CHANNELRX_DEMODWFM_WFMDEMODSETTINGS_H_
+#ifndef PLUGINS_CHANNELRX_DEMODTONE_TONEDEMODSETTINGS_H_
+#define PLUGINS_CHANNELRX_DEMODTONE_TONEDEMODSETTINGS_H_
 
 #include "dsp/dsptypes.h"
 
@@ -27,49 +27,53 @@
 
 class Serializable;
 
-struct WFMDemodSettings
+struct ToneDemodSettings
 {
-    qint64 m_inputFrequencyOffset;
-    Real m_rfBandwidth;
-    Real m_afBandwidth;
-    Real m_volume;
-    Real m_squelch;
-    bool m_audioMute;
-    quint32 m_rgbColor;
-    QString m_title;
-    QString m_audioDeviceName;
-    int m_streamIndex; //!< MIMO channel. Not relevant when connected to SI (single Rx).
-    bool m_useReverseAPI;
-    QString m_reverseAPIAddress;
-    uint16_t m_reverseAPIPort;
-    uint16_t m_reverseAPIDeviceIndex;
-    uint16_t m_reverseAPIChannelIndex;
-    int m_workspaceIndex;
-    QByteArray m_geometryBytes;
-    bool m_hidden;
+	qint64 m_inputFrequencyOffset;
+	Real m_rfBandwidth;
+	Real m_afBandwidth;
+	Real m_volume;
+	Real m_squelch;
+	bool m_audioMute;
+	quint32 m_rgbColor;
+	QString m_title;
+	QString m_audioDeviceName;
+	int m_streamIndex; //!< MIMO channel. Not relevant when connected to SI (single Rx).
+	bool m_useReverseAPI;
+	QString m_reverseAPIAddress;
+	uint16_t m_reverseAPIPort;
+	uint16_t m_reverseAPIDeviceIndex;
+	uint16_t m_reverseAPIChannelIndex;
+	int m_workspaceIndex;
+	QByteArray m_geometryBytes;
+	bool m_hidden;
 
-    Serializable *m_channelMarker;
-    Serializable *m_rollupState;
+	Serializable* m_channelMarker;
+	Serializable* m_rollupState;
 
-    static const int m_rfBWMin;
-    static const int m_rfBWMax;
-    static const int m_rfBWDigits;
+	static const int m_rfBWMin;
+	static const int m_rfBWMax;
+	static const int m_rfBWDigits;
 
-    WFMDemodSettings();
-    void resetToDefaults();
-    void setChannelMarker(Serializable *channelMarker) { m_channelMarker = channelMarker; }
-    void setRollupState(Serializable *rollupState) { m_rollupState = rollupState; }
-    QByteArray serialize() const;
-    bool deserialize(const QByteArray& data);
+	ToneDemodSettings();
+	void resetToDefaults();
+	void setChannelMarker(Serializable* channelMarker) { m_channelMarker = channelMarker; }
+	void setRollupState(Serializable* rollupState) { m_rollupState = rollupState; }
+	QByteArray serialize() const;
+	bool deserialize(const QByteArray& data);
 
-    static int requiredBW(int rfBW)
-    {
-        if (rfBW <= 48000) {
-            return 48000;
-        } else {
-            return (3*rfBW)/2;
-        }
-    }
+	static int requiredBW(int rfBW)
+	{
+		if (rfBW <= 48000) {
+			return 48000;
+		}
+		else {
+			return (3 * rfBW) / 2;
+		}
+	}
+
+	int getTone();
+	void setTone(int tone);
 };
 
-#endif /* PLUGINS_CHANNELRX_DEMODWFM_WFMDEMODSETTINGS_H_ */
+#endif /* PLUGINS_CHANNELRX_DEMODTONE_TONEDEMODSETTINGS_H_ */

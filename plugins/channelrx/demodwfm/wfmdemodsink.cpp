@@ -27,13 +27,7 @@
 
 #include "wfmdemodsink.h"
 
-#include <QFile>
-#include <QTextStream>
-
 const unsigned int WFMDemodSink::m_rfFilterFftLength = 1024;
-
-int tonesFlag = 0;
-unsigned int freq = 0;
 
 WFMDemodSink::WFMDemodSink() :
     m_channelSampleRate(384000),
@@ -58,31 +52,11 @@ WFMDemodSink::WFMDemodSink() :
 
 	applySettings(m_settings, true);
     applyChannelSettings(m_channelSampleRate, m_channelFrequencyOffset, true);
-
-    tonesFlag = m_settings.getTone();
 }
 
 WFMDemodSink::~WFMDemodSink()
 {
     delete m_rfFilter;
-}
-
-void appendToFile(const QString& filePath, float frequency, float power) {
-    QFile file(filePath);
-
-    // freq,power
-    QString content = QString::number(frequency) + "," + QString::number(power);
-
-    // Open the file in append mode
-    if (file.open(QIODevice::Append | QIODevice::Text)) {
-        QTextStream out(&file);
-        out << content << "\n";  // Appends content with a newline
-        file.close();
-        qDebug() << "Content appended successfully :: " << content;
-    }
-    else {
-        qDebug() << "Failed to open file for appending.";
-    }
 }
 
 void WFMDemodSink::feed(const SampleVector::const_iterator& begin, const SampleVector::const_iterator& end)
@@ -101,26 +75,22 @@ void WFMDemodSink::feed(const SampleVector::const_iterator& begin, const SampleV
 
 		rf_out = m_rfFilter->runFilt(c, &rf); // filter RF before demod
 
-        // power to freq TONE
-        Real m_toneThreshold = 0.0;
-        Real m_toneGain = 0.005;
-        
-        for (int i = 0; i < rf_out; i++)
-        {
-            msq = rf[i].real() * rf[i].real() + rf[i].imag() * rf[i].imag();
-            Real magsq = msq / (SDR_RX_SCALED * SDR_RX_SCALED);
-            m_magsqSum += magsq;
-            m_movingAverage(magsq);
+		for (int i = 0 ; i < rf_out; i++)
+		{
+		    msq = rf[i].real()*rf[i].real() + rf[i].imag()*rf[i].imag();
+		    Real magsq = msq / (SDR_RX_SCALED*SDR_RX_SCALED);
+		    m_magsqSum += magsq;
+		    m_movingAverage(magsq);
 
-            if (tonesFlag > 0) {
-                freq = static_cast<unsigned int>((200 * pow(10.0, (magsq - m_toneThreshold) / (m_toneGain * 3.3219))) + 0.5);
-                //if (freq > 15000) {
-                //    freq = 15000;
-                //}
+            // power to freq TONE
+            Real m_toneThreshold = 0.0; // Sesuaikan nilai default
+            Real m_toneGain = 0.028;      // Sesuaikan nilai default
+            unsigned int freq = static_cast<unsigned int>((400 * pow(10.0, (magsq - m_toneThreshold) / (m_toneGain * 3.3219))) + 0.5);
 
-                //QString filePath = "wfmoutput1.txt";
-                //appendToFile(filePath, freq, magsq);
-            }
+            //if(i == (rf_out - 1) || i == 0){
+                qDebug() << "Tone Freq :: " << freq << " :: Power :: " << magsq;
+            //}
+            
 
             if (magsq > m_magsqPeak) {
                 m_magsqPeak = magsq;
@@ -153,19 +123,15 @@ void WFMDemodSink::feed(const SampleVector::const_iterator& begin, const SampleV
 
 			if (m_interpolator.decimate(&m_interpolatorDistanceRemain, e, &ci))
 			{
-                qint16 sample = 0;
+                
 
-                if (tonesFlag > 0) {
-                    sample = static_cast<qint16>(m_settings.m_volume * 3276.8f * std::sin(2 * M_PI * freq * i / m_audioSampleRate));
-                }
-                else {
-                    sample = (qint16)(ci.real() * 3276.8f * m_settings.m_volume);
-                }
+				//qint16 sample = (qint16)(ci.real() * 3276.8f * m_settings.m_volume);
+                //qint16 sample = static_cast<qint16>(m_settings.m_volume * 3276.8f * std::sin(2 * M_PI * freq * i / m_audioSampleRate));
+                qint16 sample = static_cast<qint16>(32767 * 0.5 * std::sin(2 * M_PI * freq * i / m_audioSampleRate));
+				m_audioBuffer[m_audioBufferFill].l = sample;
+				m_audioBuffer[m_audioBufferFill].r = sample;
 
-                m_audioBuffer[m_audioBufferFill].l = sample;
-                m_audioBuffer[m_audioBufferFill].r = sample;
-
-                ++m_audioBufferFill;
+				++m_audioBufferFill;
 
 				if(m_audioBufferFill >= m_audioBuffer.size())
 				{
