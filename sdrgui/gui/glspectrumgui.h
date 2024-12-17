@@ -177,6 +177,9 @@ public slots:
 	void setAveraging(int index);
 	void setFPS(int index);
 	int getTone(int status);
+
+	void changeFPS(int index);
+	void changeAVG(int index);
 };
 
 #endif // INCLUDE_GLSPECTRUMGUI_H

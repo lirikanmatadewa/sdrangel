@@ -107,6 +107,11 @@ private slots:
     void on_btnFddLte_clicked();
     void on_btnTddLte_clicked();
     void on_btnSubmit_clicked();
+
+signals:
+    void changeFPS(int index);
+    void changeAVG(int index);
+
 };
 
 #endif /* PLUGINS_SAMPLESOURCE_BLADERF2INPUT_BLADERF2INPUTGUI_H_ */

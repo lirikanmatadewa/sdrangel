@@ -1335,15 +1335,37 @@ void GLSpectrumGUI::setRxChannel(QMap<QString, int>* rx_channel)
 	}
 }
 
-void GLSpectrumGUI::setAveraging(int index) {
+void GLSpectrumGUI::changeAVG(int index) {
 	ui->averaging->blockSignals(true);
-	on_averaging_currentIndexChanged(index);
+	emit on_averaging_currentIndexChanged(index);
 	qDebug() << "MainSpectrumGUI::setAveraging::" << index;
 	ui->averaging->blockSignals(false);
 }
 
-void GLSpectrumGUI::setFPS(int indexs) {
+void GLSpectrumGUI::changeFPS(int index) {
 	blockApplySettings(true);
+
+	//int index = 5;
+	ui->fps->setCurrentIndex(index);
+	emit ui->fps->currentIndexChanged(index);
+
+	//m_settings.m_fpsPeriodMs = 100;
+	//applySettings();
+
+	qDebug() << "MainSpectrumGUI::setFPS::" << index << " :: Global :: " << m_settings.m_fpsPeriodMs;
+
+	blockApplySettings(false);
+}
+
+void GLSpectrumGUI::setAveraging(int index) {
+	/*ui->averaging->blockSignals(true);
+	on_averaging_currentIndexChanged(index);
+	qDebug() << "MainSpectrumGUI::setAveraging::" << index;
+	ui->averaging->blockSignals(false);*/
+}
+
+void GLSpectrumGUI::setFPS(int indexs) {
+	/*blockApplySettings(true);
 	
 	int index = 5;
 	ui->fps->setCurrentIndex(index);
@@ -1354,7 +1376,7 @@ void GLSpectrumGUI::setFPS(int indexs) {
 
 	qDebug() << "MainSpectrumGUI::setFPS::" << index << " :: Global :: " << m_settings.m_fpsPeriodMs;
 
-	blockApplySettings(false);
+	blockApplySettings(false);*/
 }
 
 int GLSpectrumGUI::getTone(int status) {
