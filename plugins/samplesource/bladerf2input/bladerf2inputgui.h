@@ -109,8 +109,8 @@ private slots:
     void on_btnSubmit_clicked();
 
 signals:
-    void changeFPS(int index);
-    void changeAVG(int index);
+    void fpsChanged(int fps);
+    void averagingChanged(int averaging);
 
 };
 

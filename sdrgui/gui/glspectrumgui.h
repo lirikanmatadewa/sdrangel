@@ -174,8 +174,6 @@ signals:
 	void closeTone();
 
 public slots:
-	void setAveraging(int index);
-	void setFPS(int index);
 	int getTone(int status);
 
 	void changeFPS(int index);
