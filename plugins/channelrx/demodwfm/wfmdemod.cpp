@@ -238,11 +238,6 @@ void WFMDemod::applySettings(const WFMDemodSettings& settings, bool force)
             << " m_reverseAPIChannelIndex: " << settings.m_reverseAPIChannelIndex
             << " force: " << force;
 
-    /*int toneValue = GLSpectrum::getTone();
-    m_settings.setTone(toneValue);
-    qDebug() << "----------->> ToneValue :: " << toneValue;*/
-
-
     QList<QString> reverseAPIKeys;
 
     if((settings.m_inputFrequencyOffset != m_settings.m_inputFrequencyOffset) || force) {
