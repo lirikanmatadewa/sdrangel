@@ -335,6 +335,11 @@ void DeviceUISet::loadRxChannelSettings(const Preset* preset, PluginAPI* pluginA
 
 			// create channel instance
 
+			if ("sdrangel.channel.tonedemod" == channelConfig.m_channelIdURI) {
+				// lmd: always set the tone to close to synch with the button state
+				continue;
+			}
+
 			for (int i = 0; i < channelRegistrations->count(); i++)
 			{
 				//if((*channelRegistrations)[i].m_channelIdURI == channelConfig.m_channelIdURI)
@@ -353,12 +358,6 @@ void DeviceUISet::loadRxChannelSettings(const Preset* preset, PluginAPI* pluginA
 						[=]() { this->handleChannelGUIClosing(rxChannelGUI); },
 						Qt::QueuedConnection
 					);
-
-					if (rxChannelGUI->getTitle() == "Tone" || rxChannelGUI->getTitle() == "") {
-						QObject::connect(m_spectrumGUI, &GLSpectrumGUI::closeTone, rxChannelGUI, &ChannelGUI::closeTone);
-						
-						GLSpectrum::setTone(1);
-					}
 					break;
 				}
 			}

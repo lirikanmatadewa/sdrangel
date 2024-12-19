@@ -19,7 +19,6 @@
 ///////////////////////////////////////////////////////////////////////////////////
 
 #include <QColor>
-#include <QDebug>
 
 #include "audio/audiodevicemanager.h"
 #include "util/simpleserializer.h"
@@ -30,8 +29,6 @@
 const int WFMDemodSettings::m_rfBWMin = 10000;
 const int WFMDemodSettings::m_rfBWMax = 300000;
 const int WFMDemodSettings::m_rfBWDigits = 6;
-
-int m_tone = 0;
 
 WFMDemodSettings::WFMDemodSettings() :
     m_channelMarker(nullptr),
@@ -91,7 +88,6 @@ QByteArray WFMDemodSettings::serialize() const
     s.writeS32(19, m_workspaceIndex);
     s.writeBlob(20, m_geometryBytes);
     s.writeBool(21, m_hidden);
-    s.writeS32(22, m_tone);
 
     return s.final();
 }
@@ -158,7 +154,6 @@ bool WFMDemodSettings::deserialize(const QByteArray& data)
         d.readS32(19, &m_workspaceIndex, 0);
         d.readBlob(20, &m_geometryBytes);
         d.readBool(21, &m_hidden, false);
-        d.readS32(22, &m_tone, 0);
 
         return true;
     }
@@ -167,12 +162,4 @@ bool WFMDemodSettings::deserialize(const QByteArray& data)
         resetToDefaults();
         return false;
     }
-}
-
-int WFMDemodSettings::getTone() {
-    return m_tone;
-}
-
-void WFMDemodSettings::setTone(int tone) {
-    m_tone = tone;
 }

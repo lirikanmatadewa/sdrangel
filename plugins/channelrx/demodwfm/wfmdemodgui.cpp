@@ -39,8 +39,6 @@
 
 #include "wfmdemod.h"
 
-int toneFlag = 0;
-
 WFMDemodGUI* WFMDemodGUI::create(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, BasebandSampleSink *rxChannel)
 {
 	WFMDemodGUI* gui = new WFMDemodGUI(pluginAPI, deviceUISet, rxChannel);
@@ -202,14 +200,8 @@ void WFMDemodGUI::onMenuDialogCalled(const QPoint &p)
         new DialogPositioner(&dialog, false);
         dialog.exec();
 
-        if (toneFlag > 0) {
-            m_settings.m_title = "Tone";
-        }
-        else {
-            m_settings.m_title = m_channelMarker.getTitle();
-        }
-
         m_settings.m_rgbColor = m_channelMarker.getColor().rgb();
+        m_settings.m_title = m_channelMarker.getTitle();
         m_settings.m_useReverseAPI = dialog.useReverseAPI();
         m_settings.m_reverseAPIAddress = dialog.getReverseAPIAddress();
         m_settings.m_reverseAPIPort = dialog.getReverseAPIPort();
@@ -247,24 +239,6 @@ WFMDemodGUI::WFMDemodGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, Baseban
     m_audioSampleRate(-1),
     m_recentAudioFifoError(false)
 {
-
-    toneFlag = ChannelGUI::toneCGui;
-
-    if (toneFlag > 0 || m_settings.getTone() > 0) {
-        m_settings.m_title = "Tone";
-        
-        if (m_settings.getTone() > 0) {
-            toneFlag = m_settings.getTone();
-        }
-        else {
-            m_settings.setTone(toneFlag);
-        }
-    }
-    else {
-        m_settings.m_title = m_channelMarker.getTitle();
-        m_settings.setTone(toneFlag);
-    }
-
 	setAttribute(Qt::WA_DeleteOnClose, true);
     m_helpURL = "plugins/channelrx/demodwfm/readme.md";
     RollupContents *rollupContents = getRollupContents();
@@ -290,16 +264,12 @@ WFMDemodGUI::WFMDemodGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, Baseban
 
     ui->rfBW->setColorMapper(ColorMapper(ColorMapper::GrayYellow));
     ui->rfBW->setValueRange(WFMDemodSettings::m_rfBWDigits, WFMDemodSettings::m_rfBWMin, WFMDemodSettings::m_rfBWMax);
-    //ui->rfBW->setVisible(false);
 
     m_channelMarker.blockSignals(true);
 	m_channelMarker.setBandwidth(m_settings.m_rfBandwidth);
 	m_channelMarker.setCenterFrequency(0);
-    if (toneFlag > 0 || m_settings.getTone() > 0) {
-        m_channelMarker.setTitle("Tone");
-    } else {
-        m_settings.m_title = m_channelMarker.getTitle();
-    }
+    //m_channelMarker.setTitle("WFM Demodulator");
+    m_channelMarker.setTitle("Tone");
     m_channelMarker.setColor(m_settings.m_rgbColor);
     m_channelMarker.blockSignals(false);
 	m_channelMarker.setVisible(true); // activate signal on the last setting only
@@ -343,13 +313,13 @@ void WFMDemodGUI::displaySettings()
     m_channelMarker.blockSignals(true);
     m_channelMarker.setCenterFrequency(m_settings.m_inputFrequencyOffset);
     m_channelMarker.setBandwidth(m_settings.m_rfBandwidth);
-    //m_channelMarker.setTitle(m_settings.m_title);
+    m_channelMarker.setTitle(m_settings.m_title);
     m_channelMarker.blockSignals(false);
     m_channelMarker.setColor(m_settings.m_rgbColor); // activate signal on the last setting only
 
     setTitleColor(m_settings.m_rgbColor);
-    //setWindowTitle(m_channelMarker.getTitle());
-    //setTitle(m_channelMarker.getTitle());
+    setWindowTitle(m_channelMarker.getTitle());
+    setTitle(m_channelMarker.getTitle());
 
     blockApplySettings(true);
 
@@ -364,65 +334,6 @@ void WFMDemodGUI::displaySettings()
     ui->audioMute->setChecked(m_settings.m_audioMute);
 
     updateIndexLabel();
-
-    if (toneFlag > 0 || m_settings.getTone() > 0) {
-        if (toneFlag > 0) {
-            m_settings.setTone(toneFlag);
-        }
-
-        m_channelMarker.setTitle("Tone");
-        setWindowTitle("Tone");
-        setTitle("Tone");
-
-        ui->channelPower->move(110, 150);
-
-        ui->audioMute->setGeometry(0, 0, 10, 20);
-
-        m_settings.m_rfBandwidth = 140000;
-        ui->rfBW->setValue(m_settings.m_rfBandwidth);
-        ui->rfBWLabel->setVisible(false);
-        ui->rfBW->setVisible(false);
-        ui->rfBWUnits->setVisible(false);
-
-        ui->afBWLabel->setVisible(false);
-        ui->afBW->setVisible(false);
-        ui->afBWText->setVisible(false);
-        ui->afBandwidthLayout->setEnabled(false);
-
-        ui->squelchLabel->setVisible(false);
-        ui->squelch->setVisible(false);
-        ui->squelchText->setVisible(false);
-        ui->squelchLayout->setEnabled(false);
-        
-        ui->volumeLabel->setVisible(false);
-        ui->volume->setVisible(false);
-        ui->volumeText->setVisible(false);
-        ui->volumeLayout->setEnabled(false);
-    }
-    else {
-        m_channelMarker.setTitle(m_settings.m_title);
-        setWindowTitle(m_channelMarker.getTitle());
-        setTitle(m_channelMarker.getTitle());
-
-        ui->rfBW->setValue(m_settings.m_rfBandwidth);
-        ui->rfBWLabel->setVisible(true);
-        ui->rfBW->setVisible(true);
-        ui->rfBWUnits->setVisible(true);
-
-        ui->afBWLabel->setVisible(true);
-        ui->afBW->setVisible(true);
-        ui->afBWText->setVisible(true);
-
-        ui->squelchLabel->setVisible(true);
-        ui->squelch->setVisible(true);
-        ui->squelchText->setVisible(true);
-        ui->squelchLayout->setEnabled(true);
-
-        ui->volumeLabel->setVisible(true);
-        ui->volume->setVisible(true);
-        ui->volumeText->setVisible(true);
-        ui->volumeLayout->setEnabled(true);
-    }
 
     getRollupContents()->restoreState(m_rollupState);
     updateAbsoluteCenterFrequency();

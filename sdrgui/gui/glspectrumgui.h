@@ -68,8 +68,6 @@ public:
 	void updateSettings();
 	void setRxChannel(QMap<QString, int>* rx_channel);
 
-	int toneStatus;
-
 private:
 	Ui::GLSpectrumGUI* ui;
 
@@ -170,12 +168,9 @@ signals:
 	void addChannel(int channelPluginIndex);
 	void addIqReplaySignal();
 	void requestSetTone(bool tone); // Signal untuk mengatur tone
-	
 	void closeTone();
 
 public slots:
-	int getTone(int status);
-
 	void changeFPS(int index);
 	void changeAVG(int index);
 };
