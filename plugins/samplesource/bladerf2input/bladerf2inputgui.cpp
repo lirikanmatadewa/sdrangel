@@ -109,7 +109,16 @@ BladeRF2InputGui::BladeRF2InputGui(DeviceUISet *deviceUISet, QWidget* parent) :
 
     ui->freqInput->setStyleSheet("QPlainTextEdit { color: #404040; background-color: white;}");
 
-    m_spectrumGUI = new GLSpectrumGUI;
+    if (deviceUISet && deviceUISet->getGLSpectrumGui()) {
+        qDebug() << "connecting to glspectrum from bladerf2inputgui..";
+
+        GLSpectrumGUI* glspectrumgui = deviceUISet->getGLSpectrumGui();
+
+        connect(this, &BladeRF2InputGui::fpsChanged, glspectrumgui, &GLSpectrumGUI::changeFPS);
+        connect(this, &BladeRF2InputGui::averagingChanged, glspectrumgui, &GLSpectrumGUI::changeAVG);
+    } else {
+        qDebug() << "not connected to glspectrum from bladerf2inputgui..";
+    }
 }
 
 BladeRF2InputGui::~BladeRF2InputGui()
@@ -601,8 +610,9 @@ void BladeRF2InputGui::on_btnGsm_clicked()
     {
         on_sampleRate_changed(8000000);
     }
-    m_spectrumGUI->setAveraging(6);
-    m_spectrumGUI->setFPS(2);
+    
+    emit fpsChanged(2);
+    emit averagingChanged(6);
 }
 
 void BladeRF2InputGui::on_btnFddLte_clicked()
@@ -620,9 +630,9 @@ void BladeRF2InputGui::on_btnFddLte_clicked()
     {
         on_sampleRate_changed(25000000);
     }
-    m_spectrumGUI->setAveraging(6);
-    m_spectrumGUI->setFPS(2);
-
+    
+    emit fpsChanged(2);
+    emit averagingChanged(6);
 }
 
 void BladeRF2InputGui::on_btnTddLte_clicked()
@@ -640,8 +650,9 @@ void BladeRF2InputGui::on_btnTddLte_clicked()
     {
         on_sampleRate_changed(25000000);
     }
-    m_spectrumGUI->setAveraging(2);
-    m_spectrumGUI->setFPS(6);
+    
+    emit fpsChanged(6);
+    emit averagingChanged(2);
 }
 
 void BladeRF2InputGui::on_btnSubmit_clicked()

@@ -79,6 +79,7 @@ public:
     void setIndex(int deviceSetIndex);
     int getIndex() const { return m_deviceSetIndex; }
     GLSpectrum *getSpectrum() { return m_spectrum; }        //!< Direct spectrum getter
+    GLSpectrumGUI* getGLSpectrumGui() const { return m_spectrumGUI; }
     void setSpectrumScalingFactor(float scalef);
     void addChannelMarker(ChannelMarker* channelMarker);    //!< Add channel marker to spectrum
     void removeChannelMarker(ChannelMarker* channelMarker); //!< Remove channel marker from spectrum
