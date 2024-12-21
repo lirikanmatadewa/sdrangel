@@ -171,9 +171,8 @@ signals:
 	void closeTone();
 
 public slots:
-	void setAveraging(int index);
-	void setFPS(int index);
-
+	void changeFPS(int index);
+	void changeAVG(int index);
 };
 
 #endif // INCLUDE_GLSPECTRUMGUI_H
