@@ -22,6 +22,8 @@
 #include <device/devicegui.h>
 #include <QTimer>
 #include <QWidget>
+#include <QEvent>
+#include <QKeyEvent>
 
 #include "util/messagequeue.h"
 
@@ -36,6 +38,10 @@ namespace Ui {
 
 class BladeRF2InputGui : public DeviceGUI {
     Q_OBJECT
+
+
+protected:
+    bool eventFilter(QObject* obj, QEvent* event) override;
 
 public:
     explicit BladeRF2InputGui(DeviceUISet *deviceUISet, QWidget* parent = 0);

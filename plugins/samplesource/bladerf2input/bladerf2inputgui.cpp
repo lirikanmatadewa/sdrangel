@@ -118,6 +118,9 @@ BladeRF2InputGui::BladeRF2InputGui(DeviceUISet *deviceUISet, QWidget* parent) :
     else {
         qDebug() << "not connected to glspectrum from bladerf2inputgui..";
     }
+
+    ui->freqInput->installEventFilter(this);
+
 }
 
 BladeRF2InputGui::~BladeRF2InputGui()
@@ -610,8 +613,8 @@ void BladeRF2InputGui::on_btnGsm_clicked()
         on_sampleRate_changed(8000000);
     }
 
-    emit fpsChanged(2);
-    emit averagingChanged(6);
+    emit fpsChanged(4);
+    emit averagingChanged(10);
 }
 
 void BladeRF2InputGui::on_btnFddLte_clicked()
@@ -656,14 +659,13 @@ void BladeRF2InputGui::on_btnTddLte_clicked()
 
 void BladeRF2InputGui::on_btnSubmit_clicked()
 {
-    // read input
     QString data = ui->freqInput->toPlainText();
     int value = data.toInt();
     qDebug() << "The integer value is:" << value;
 
     if (value > 0) {
         ui->labelFrequency->setText("Input Frequency Channel");
-        // Open a connection to the SQLite database
+        
         QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
         db.setDatabaseName("database/mobile_channel.db");
 
@@ -759,4 +761,21 @@ void BladeRF2InputGui::makeUIConnections()
     QObject::connect(ui->btnFddLte, &QToolButton::clicked, this, &BladeRF2InputGui::on_btnFddLte_clicked);
     QObject::connect(ui->btnTddLte, &QToolButton::clicked, this, &BladeRF2InputGui::on_btnTddLte_clicked);
     QObject::connect(ui->submitFreq, &QToolButton::clicked, this, &BladeRF2InputGui::on_btnSubmit_clicked);
+}
+
+bool BladeRF2InputGui::eventFilter(QObject* obj, QEvent* event)
+{
+    // Pastikan event berasal dari freqInput (QPlainTextEdit)
+    if (obj == ui->freqInput && event->type() == QEvent::KeyPress) {
+        QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
+
+        // Jika Enter ditekan dan widget dalam fokus
+        if ((keyEvent->key() == Qt::Key_Return || keyEvent->key() == Qt::Key_Enter) && ui->freqInput->hasFocus()) {
+            on_btnSubmit_clicked(); // Klik tombol Submit
+            return true; // Hentikan event agar tidak diproses lebih lanjut
+        }
+    }
+
+    // Teruskan event ke parent class jika tidak ditangani
+    return QWidget::eventFilter(obj, event);
 }
