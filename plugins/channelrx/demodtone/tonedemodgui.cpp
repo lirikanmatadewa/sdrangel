@@ -275,7 +275,7 @@ ToneDemodGUI::ToneDemodGUI(PluginAPI* pluginAPI, DeviceUISet* deviceUISet, Baseb
 
 	ui->rfBW->setColorMapper(ColorMapper(ColorMapper::GrayYellow));
 	ui->rfBW->setValueRange(ToneDemodSettings::m_rfBWDigits, ToneDemodSettings::m_rfBWMin, ToneDemodSettings::m_rfBWMax);
-	//ui->rfBW->setVisible(false);
+	ui->rfBW->setVisible(false);
 
 	m_channelMarker.blockSignals(true);
 	m_channelMarker.setBandwidth(m_settings.m_rfBandwidth);
@@ -364,16 +364,16 @@ void ToneDemodGUI::displaySettings()
 
 		ui->audioMute->setGeometry(0, 0, 10, 20);
 
-		m_settings.m_rfBandwidth = 140000;
+		m_settings.m_rfBandwidth = 80000;
 		ui->rfBW->setValue(m_settings.m_rfBandwidth);
-		ui->rfBWLabel->setVisible(false);
-		ui->rfBW->setVisible(false);
-		ui->rfBWUnits->setVisible(false);
+		ui->rfBWLabel->setVisible(true);
+		ui->rfBW->setVisible(true);
+		ui->rfBWUnits->setVisible(true);
 
-		ui->afBWLabel->setVisible(false);
-		ui->afBW->setVisible(false);
-		ui->afBWText->setVisible(false);
-		ui->afBandwidthLayout->setEnabled(false);
+		ui->afBWLabel->setVisible(true);
+		ui->afBW->setVisible(true);
+		ui->afBWText->setVisible(true);
+		ui->afBandwidthLayout->setEnabled(true);
 
 		ui->squelchLabel->setVisible(false);
 		ui->squelch->setVisible(false);

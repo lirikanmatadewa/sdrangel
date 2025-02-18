@@ -607,10 +607,10 @@ void BladeRF2InputGui::on_btnGsm_clicked()
     ui->btnTddLte->setStyleSheet("QPushButton { background-color: #565656; color: white; }");
 
     // set Bandwidth and SR
-    ui->bandwidth->setValue(4000000 / 1000);
+    ui->bandwidth->setValue(500000 / 1000);
     if (m_sampleRateMode)
     {
-        on_sampleRate_changed(8000000);
+        on_sampleRate_changed(2000000);
     }
 
     emit fpsChanged(4);

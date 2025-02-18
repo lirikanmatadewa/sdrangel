@@ -69,6 +69,7 @@ public:
 	void applyAudioSampleRate(int sampleRate);
 	int getAudioSampleRate() const { return m_audioSampleRate; }
 	void setChannel(ChannelAPI* channel) { m_channel = channel; }
+	int mapDbmToFrequency(int dbm);
 
 private:
 	struct MagSqLevelsStore

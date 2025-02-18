@@ -21,6 +21,8 @@
 #include <QTime>
 #include <QDebug>
 
+#include <deque>  
+
 #include "dsp/datafifo.h"
 #include "util/messagequeue.h"
 #include "maincore.h"
@@ -85,6 +87,36 @@ void appendToFile(const QString& filePath, float frequency, float power) {
 	}
 }
 
+int ToneDemodSink::mapDbmToFrequency(int dbm) {
+	//if (dbm <= -40) {
+	//	return 400;
+	//}
+	//else if (dbm >= -39 && dbm <= -30) {
+	//	return 410 + (dbm + 39) * (800 - 410) / (-30 + 39);
+	//}
+	//else if (dbm >= -29 && dbm <= -20) {
+	//	return 810 + (dbm + 29) * (1200 - 810) / (-20 + 29);
+	//}
+	//else if (dbm >= -19 && dbm <= -10) {
+	//	return 1210 + (dbm + 19) * (2000 - 1210) / (-10 + 19);
+	//}
+	//else if (dbm >= -9 && dbm <= 0) {
+	//	return 2100 + (dbm + 9) * (3000 - 2100) / (0 + 9);
+	//}
+	//else {
+	//	return 3000; // Untuk nilai di atas 0 dBm
+	//}
+	if (dbm <= -40) return 400;
+	else if (dbm >= -39 && dbm <= -35) return 700;
+	else if (dbm >= -34 && dbm <= -30) return 1000;
+	else if (dbm >= -29 && dbm <= -25) return 1300;
+	else if (dbm >= -24 && dbm <= -20) return 1600;
+	else if (dbm >= -19 && dbm <= -15) return 1900;
+	else if (dbm >= -14 && dbm <= -10) return 2100;
+	else if (dbm >= -9 && dbm <= -5) return 2400;
+	else if (dbm >= -5 && dbm <= 0) return 3000;
+}
+
 void ToneDemodSink::feed(const SampleVector::const_iterator& begin, const SampleVector::const_iterator& end)
 {
 	Complex ci;
@@ -99,28 +131,85 @@ void ToneDemodSink::feed(const SampleVector::const_iterator& begin, const Sample
 		Complex c(it->real(), it->imag());
 		c *= m_nco.nextIQ();
 
-		rf_out = m_rfFilter->runFilt(c, &rf); // filter RF before demod
+		int rf_out = m_rfFilter->runFilt(c, &rf); // filter RF before demod
 
 		// power to freq TONE
-		Real m_toneThreshold = 0.0;
-		Real m_toneGain = 0.005;
+		Real m_toneThreshold = 10.0;
+		Real m_toneGain = 50;
 
-		for (int i = 0; i < rf_out; i++)
+		//std::deque<int> freqHistory;
+		//const int WINDOW_SIZE = rf_out;
+		//const int THRESHOLD = 50;
+		//int stableFreq = 0, lastFreq = 0;
+
+		//for (int i = 0; i < rf_out; i++) {
+		//	msq = rf[i].real() * rf[i].real() + rf[i].imag() * rf[i].imag();
+		//	Real magsq = msq / (SDR_RX_SCALED * SDR_RX_SCALED);
+		//	m_magsqSum += magsq;
+
+		//	Real powerToRssi = 10.0 * log10(magsq);
+		//	int newFreq = mapDbmToFrequency(powerToRssi);
+
+		//	// Hanya update jika perbedaan signifikan
+		//	if (abs(newFreq - lastFreq) > THRESHOLD) {
+		//		freqHistory.push_back(newFreq);
+		//		lastFreq = newFreq;
+		//	}
+
+		//	if (freqHistory.size() > WINDOW_SIZE) {
+		//		freqHistory.pop_front();
+		//	}
+
+		//	// Hitung Moving Average
+		//	int avgFreq = 0;
+		//	for (int f : freqHistory) {
+		//		avgFreq += f;
+		//	}
+		//	if (!freqHistory.empty()) {
+		//		avgFreq /= freqHistory.size();
+		//	}
+
+		//	stableFreq = avgFreq;
+		//}
+
+
+		for (int i = 0; i < int(rf_out/8); i++)
 		{
 			msq = rf[i].real() * rf[i].real() + rf[i].imag() * rf[i].imag();
 			Real magsq = msq / (SDR_RX_SCALED * SDR_RX_SCALED);
 			m_magsqSum += magsq;
 			m_movingAverage(magsq);
 
-			if (tonesFlag > 0) {
-				freq = static_cast<unsigned int>((200 * pow(10.0, (magsq - m_toneThreshold) / (m_toneGain * 3.3219))) + 0.5);
-				//if (freq > 15000) {
-				//    freq = 15000;
-				//}
+			Real powerToRssiAvg = 10.0 * log10(m_movingAverage);
+			Real powerToRssi = 10.0 * log10(magsq);
+			//freq = static_cast<unsigned int>((200 * pow(10.0, (powerToRssi - m_toneThreshold) / (m_toneGain * 3.3219))) + 0.5);
+		
+			freq = mapDbmToFrequency(powerToRssiAvg);
 
-				//QString filePath = "wfmoutput1.txt";
-				//appendToFile(filePath, freq, magsq);
-			}
+			//freq = stableFreq;
+			
+			//float freqMaps = floor(freqSample / 100.0) * 100.0;
+
+			// Simpan nilai terbaru dalam history
+			//freqHistory.push_back(freqs);
+			//if (freqHistory.size() > WINDOW_SIZE) {
+			//	freqHistory.pop_front(); // Pastikan hanya menyimpan 5 nilai terakhir
+			//}
+
+			//// Hitung rata-rata dari 5 nilai terakhir agar stabil
+			//Real avgFreq = 0;
+			//for (Real f : freqHistory) {
+			//	avgFreq += f;
+			//}
+			//avgFreq /= freqHistory.size(); // Ambil rata-rata
+
+			//freq = avgFreq; // Gunakan rata-rata sebagai freq stabil
+			//lastFreq = freq; // Simpan freq terakhir
+			
+
+			if ((i % 150) == 0)	qDebug() << "magsq :: " << magsq << " | powerToRssi::" << powerToRssi << " | freq::" << freq << " | avg:: " << powerToRssiAvg;
+			//if ((i % 50) == 0)	qDebug() << "powerToRssi::" << powerToRssi << " | norm::" << normMagsq << " | freqMaps::" << freqMaps << " | freq::" << freq;
+
 
 			if (magsq > m_magsqPeak) {
 				m_magsqPeak = magsq;
@@ -141,6 +230,8 @@ void ToneDemodSink::feed(const SampleVector::const_iterator& begin, const Sample
 				}
 			}
 
+			// qDebug() << "sqltate : " << m_squelchState << " | rfbw : " << m_settings.m_rfBandwidth;
+
 			m_squelchOpen = (m_squelchState > (m_settings.m_rfBandwidth / 20));
 
 			if (m_squelchOpen && !m_settings.m_audioMute) { // squelch open and not mute
@@ -156,15 +247,32 @@ void ToneDemodSink::feed(const SampleVector::const_iterator& begin, const Sample
 			{
 				qint16 sample = 0;
 
-				if (tonesFlag > 0) {
-					sample = static_cast<qint16>(m_settings.m_volume * 3276.8f * std::sin(2 * M_PI * freq * i / m_audioSampleRate));
-				}
-				else {
-					sample = (qint16)(ci.real() * 3276.8f * m_settings.m_volume);
-				}
+				//float phaseIncrement = std::sin(2 * M_PI * freq / m_audioSampleRate);
+				//sample[i] = phaseIncrement;
+				//sample = static_cast<qint16>(m_settings.m_volume * 3276.8f * );
+				
+				//sample = static_cast<qint16>(3276.8f * std::sin(2 * M_PI * freq * i / m_audioSampleRate));
+				sample = static_cast<qint16>(m_settings.m_volume * 3276.8f * std::sin(2.0 * M_PI * freq * i / m_audioSampleRate));
+
+				//if ((i % 20) == 0)	 qDebug() << "volume :: " << m_settings.m_volume;
+
+				//// Compute phase increment 
+				//phaseIncrement = 2.0 * M_PI * freq / sampleRate;
+
+				//for (int i = 0; i < numSamples; i++) {
+
+				//	output[i] = sin(phase); // Generate sine wave 
+
+				//	phase += phaseIncrement;
+
+				//	if (phase > 2.0 * M_PI) phase -= 2.0 * M_PI;
+
+				//}
 
 				m_audioBuffer[m_audioBufferFill].l = sample;
 				m_audioBuffer[m_audioBufferFill].r = sample;
+
+				//if ((i % 20) == 0)	qDebug() << "m_audioBuffer L :: " << m_audioBuffer[m_audioBufferFill].l << " | m_audioBuffer R :: " << m_audioBuffer[m_audioBufferFill].r;
 
 				++m_audioBufferFill;
 
