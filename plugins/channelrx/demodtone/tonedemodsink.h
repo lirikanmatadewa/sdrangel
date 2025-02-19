@@ -125,7 +125,7 @@ private:
 	static const unsigned int m_rfFilterFftLength;
 
 	unsigned int freq;
-	int updateFreq;
+	bool updateFreq;
 };
 
 #endif // INCLUDE_TONEMDEMODSINK_H

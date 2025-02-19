@@ -106,6 +106,7 @@ int ToneDemodSink::mapDbmToFrequency(int dbm) {
 	//else {
 	//	return 3000; // Untuk nilai di atas 0 dBm
 	//}
+
 	if (dbm <= -40) return 400;
 	else if (dbm >= -39 && dbm <= -35) return 700;
 	else if (dbm >= -34 && dbm <= -30) return 1000;
@@ -125,6 +126,9 @@ void ToneDemodSink::feed(const SampleVector::const_iterator& begin, const Sample
 	Real demod;
 	double msq;
 	float fmDev;
+	int trigger = 0;
+
+	updateFreq = true;
 
 	for (SampleVector::const_iterator it = begin; it != end; ++it)
 	{
@@ -137,41 +141,7 @@ void ToneDemodSink::feed(const SampleVector::const_iterator& begin, const Sample
 		Real m_toneThreshold = 10.0;
 		Real m_toneGain = 50;
 
-		//std::deque<int> freqHistory;
-		//const int WINDOW_SIZE = rf_out;
-		//const int THRESHOLD = 50;
-		//int stableFreq = 0, lastFreq = 0;
-
-		//for (int i = 0; i < rf_out; i++) {
-		//	msq = rf[i].real() * rf[i].real() + rf[i].imag() * rf[i].imag();
-		//	Real magsq = msq / (SDR_RX_SCALED * SDR_RX_SCALED);
-		//	m_magsqSum += magsq;
-
-		//	Real powerToRssi = 10.0 * log10(magsq);
-		//	int newFreq = mapDbmToFrequency(powerToRssi);
-
-		//	// Hanya update jika perbedaan signifikan
-		//	if (abs(newFreq - lastFreq) > THRESHOLD) {
-		//		freqHistory.push_back(newFreq);
-		//		lastFreq = newFreq;
-		//	}
-
-		//	if (freqHistory.size() > WINDOW_SIZE) {
-		//		freqHistory.pop_front();
-		//	}
-
-		//	// Hitung Moving Average
-		//	int avgFreq = 0;
-		//	for (int f : freqHistory) {
-		//		avgFreq += f;
-		//	}
-		//	if (!freqHistory.empty()) {
-		//		avgFreq /= freqHistory.size();
-		//	}
-
-		//	stableFreq = avgFreq;
-		//}
-
+		trigger++;
 		
 		for (int i = 0; i < rf_out; i++)
 		{
@@ -183,9 +153,15 @@ void ToneDemodSink::feed(const SampleVector::const_iterator& begin, const Sample
 			Real powerToRssiAvg = 10.0 * log10(m_movingAverage);
 			Real powerToRssi = 10.0 * log10(magsq);
 			//freq = static_cast<unsigned int>((200 * pow(10.0, (powerToRssi - m_toneThreshold) / (m_toneGain * 3.3219))) + 0.5);
-		
-			if (i == 0) {
-				freq = mapDbmToFrequency(powerToRssiAvg);
+			
+			if(updateFreq == true) {
+			//if ((trigger % 50) == 0) {
+				if (i == 0) {
+					freq = mapDbmToFrequency(powerToRssiAvg);
+					qDebug() << trigger << " -- " << i << " . magsq :: " << magsq << " | powerToRssi::" << powerToRssi << " | freq::" << freq << " | avg:: " << powerToRssiAvg;
+					
+					updateFreq = false;
+				}
 			}
 
 			//freq = stableFreq;
