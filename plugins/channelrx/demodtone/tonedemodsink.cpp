@@ -108,7 +108,7 @@ int ToneDemodSink::mapDbmToFrequency(int dbm) {
 	//}
 	if (dbm <= -40) return 400;
 	else if (dbm >= -39 && dbm <= -35) return 700;
-	else if (dbm >= -34 && dbm <= -30) return 1000;
+	else if (dbm >= -34 && dbm <= -30) return 800;
 	else if (dbm >= -29 && dbm <= -25) return 1300;
 	else if (dbm >= -24 && dbm <= -20) return 1600;
 	else if (dbm >= -19 && dbm <= -15) return 1900;
@@ -172,8 +172,8 @@ void ToneDemodSink::feed(const SampleVector::const_iterator& begin, const Sample
 		//	stableFreq = avgFreq;
 		//}
 
-
-		for (int i = 0; i < int(rf_out/8); i++)
+		
+		for (int i = 0; i < int(rf_out); i++)
 		{
 			msq = rf[i].real() * rf[i].real() + rf[i].imag() * rf[i].imag();
 			Real magsq = msq / (SDR_RX_SCALED * SDR_RX_SCALED);
@@ -184,7 +184,14 @@ void ToneDemodSink::feed(const SampleVector::const_iterator& begin, const Sample
 			Real powerToRssi = 10.0 * log10(magsq);
 			//freq = static_cast<unsigned int>((200 * pow(10.0, (powerToRssi - m_toneThreshold) / (m_toneGain * 3.3219))) + 0.5);
 		
-			freq = mapDbmToFrequency(powerToRssiAvg);
+			if (i == 1) {
+				updateFreq = mapDbmToFrequency(powerToRssiAvg);
+			}
+			else {
+				if (updateFreq) {
+					freq = updateFreq;
+				}
+			}
 
 			//freq = stableFreq;
 			
@@ -207,7 +214,7 @@ void ToneDemodSink::feed(const SampleVector::const_iterator& begin, const Sample
 			//lastFreq = freq; // Simpan freq terakhir
 			
 
-			if ((i % 150) == 0)	qDebug() << "magsq :: " << magsq << " | powerToRssi::" << powerToRssi << " | freq::" << freq << " | avg:: " << powerToRssiAvg;
+			
 			//if ((i % 50) == 0)	qDebug() << "powerToRssi::" << powerToRssi << " | norm::" << normMagsq << " | freqMaps::" << freqMaps << " | freq::" << freq;
 
 
@@ -252,7 +259,9 @@ void ToneDemodSink::feed(const SampleVector::const_iterator& begin, const Sample
 				//sample = static_cast<qint16>(m_settings.m_volume * 3276.8f * );
 				
 				//sample = static_cast<qint16>(3276.8f * std::sin(2 * M_PI * freq * i / m_audioSampleRate));
-				sample = static_cast<qint16>(m_settings.m_volume * 3276.8f * std::sin(2.0 * M_PI * freq * i / m_audioSampleRate));
+				sample = static_cast<qint16>(5 * 3276.8f * std::sin(2.0 * M_PI * ((freq * i) / rf_out) / m_audioSampleRate));
+
+				if ((i % 128) == 0) qDebug() << "magsq :: " << magsq << " | powerToRssi::" << powerToRssi << " | freq::" << freq << " | avg:: " << powerToRssiAvg;
 
 				//if ((i % 20) == 0)	 qDebug() << "volume :: " << m_settings.m_volume;
 
@@ -272,7 +281,7 @@ void ToneDemodSink::feed(const SampleVector::const_iterator& begin, const Sample
 				m_audioBuffer[m_audioBufferFill].l = sample;
 				m_audioBuffer[m_audioBufferFill].r = sample;
 
-				//if ((i % 20) == 0)	qDebug() << "m_audioBuffer L :: " << m_audioBuffer[m_audioBufferFill].l << " | m_audioBuffer R :: " << m_audioBuffer[m_audioBufferFill].r;
+				if ((i % 128) == 0) qDebug() << "m_audioBuffer L :: " << m_audioBuffer[m_audioBufferFill].l << " | m_audioBuffer R :: " << m_audioBuffer[m_audioBufferFill].r;
 
 				++m_audioBufferFill;
 
