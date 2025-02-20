@@ -126,6 +126,13 @@ private:
 
 	unsigned int freq;
 	bool updateFreq;
+	bool stopUpdateFreq;
+
+	Real lastRssi;
+	int stableFreq = 0;
+	int stableCounter = 0;
+	int prevFreq = 0;
+	const int STABLE_THRESHOLD = 10;
 };
 
 #endif // INCLUDE_TONEMDEMODSINK_H

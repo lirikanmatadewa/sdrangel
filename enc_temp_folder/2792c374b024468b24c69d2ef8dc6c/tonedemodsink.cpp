@@ -253,8 +253,16 @@ void ToneDemodSink::feed(const SampleVector::const_iterator& begin, const Sample
 			{
 				qint16 sample = 0;
 
+				//float phaseIncrement = std::sin(2 * M_PI * freq / m_audioSampleRate);
+				//sample[i] = phaseIncrement;
+				//sample = static_cast<qint16>(m_settings.m_volume * 3276.8f * );
 				
+				//sample = static_cast<qint16>(3276.8f * std::sin(2 * M_PI * freq * i / m_audioSampleRate));
 				sample = static_cast<qint16>(m_settings.m_volume * 3276.8f * std::sin(2.0 * M_PI * freq * i / m_audioSampleRate));
+
+				//qDebug() << i << " . magsq :: " << magsq << " | powerToRssi::" << powerToRssi << " | freq::" << freq << " | avg:: " << powerToRssiAvg;
+
+				//if ((i % 20) == 0)	 qDebug() << "volume :: " << m_settings.m_volume;
 
 				//// Compute phase increment 
 				//phaseIncrement = 2.0 * M_PI * freq / sampleRate;
