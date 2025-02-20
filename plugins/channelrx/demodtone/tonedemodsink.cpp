@@ -152,6 +152,10 @@ void ToneDemodSink::feed(const SampleVector::const_iterator& begin, const Sample
 
 			Real powerToRssiAvg = 10.0 * log10(m_movingAverage);
 			Real powerToRssi = 10.0 * log10(magsq);
+
+			//freq = mapDbmToFrequency(powerToRssiAvg);
+			//qDebug() << trigger << " -- " << i << " . magsq :: " << magsq << " | powerToRssi::" << powerToRssi << " | freq::" << freq << " | avg:: " << powerToRssiAvg;
+
 			//freq = static_cast<unsigned int>((200 * pow(10.0, (powerToRssi - m_toneThreshold) / (m_toneGain * 3.3219))) + 0.5);
 			
 			//if(updateFreq == true) {
@@ -183,39 +187,6 @@ void ToneDemodSink::feed(const SampleVector::const_iterator& begin, const Sample
 					}
 				}
 			}
-
-			//// Jika perubahan RSSI lebih dari 2 dB, aktifkan updateFreq
-			//if (qAbs(freq - lastRssi) > 500) {
-			//	updateFreq = true;
-			//}
-
-			//lastRssi = freq; // Simpan nilai terakhir
-
-
-			//freq = stableFreq;
-			
-			//float freqMaps = floor(freqSample / 100.0) * 100.0;
-
-			// Simpan nilai terbaru dalam history
-			//freqHistory.push_back(freqs);
-			//if (freqHistory.size() > WINDOW_SIZE) {
-			//	freqHistory.pop_front(); // Pastikan hanya menyimpan 5 nilai terakhir
-			//}
-
-			//// Hitung rata-rata dari 5 nilai terakhir agar stabil
-			//Real avgFreq = 0;
-			//for (Real f : freqHistory) {
-			//	avgFreq += f;
-			//}
-			//avgFreq /= freqHistory.size(); // Ambil rata-rata
-
-			//freq = avgFreq; // Gunakan rata-rata sebagai freq stabil
-			//lastFreq = freq; // Simpan freq terakhir
-			
-
-			
-			//if ((i % 50) == 0)	qDebug() << "powerToRssi::" << powerToRssi << " | norm::" << normMagsq << " | freqMaps::" << freqMaps << " | freq::" << freq;
-
 
 			if (magsq > m_magsqPeak) {
 				m_magsqPeak = magsq;
@@ -253,8 +224,13 @@ void ToneDemodSink::feed(const SampleVector::const_iterator& begin, const Sample
 			{
 				qint16 sample = 0;
 
-				
-				sample = static_cast<qint16>(m_settings.m_volume * 3276.8f * std::sin(2.0 * M_PI * freq * i / m_audioSampleRate));
+				//sample = static_cast<qint16>(m_settings.m_volume * 3276.8f * std::sin(2.0 * M_PI * freq * i / m_audioSampleRate));
+
+				float phaseIncrement = 2.0 * M_PI * freq / m_audioSampleRate;
+				float sample_a = static_cast<qint16>(m_settings.m_volume * 3276.8f * std::sin(phaseIncrement));
+				sample = m_settings.m_volume * 3276.8f * sin(phaseIncrement) * i;
+				//phase += phaseIncrement;
+				//if (phase > 2.0 * M_PI) phase -= 2.0 * M_PI;
 
 				//// Compute phase increment 
 				//phaseIncrement = 2.0 * M_PI * freq / sampleRate;
@@ -263,7 +239,7 @@ void ToneDemodSink::feed(const SampleVector::const_iterator& begin, const Sample
 
 				//	output[i] = sin(phase); // Generate sine wave 
 
-				//	phase += phaseIncrement;
+					/*phase += phaseIncrement;*/
 
 				//	if (phase > 2.0 * M_PI) phase -= 2.0 * M_PI;
 

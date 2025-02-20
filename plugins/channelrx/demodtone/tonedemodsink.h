@@ -128,6 +128,9 @@ private:
 	bool updateFreq;
 	bool stopUpdateFreq;
 
+	AudioVector output;
+	float phase;
+
 	Real lastRssi;
 	int stableFreq = 0;
 	int stableCounter = 0;
