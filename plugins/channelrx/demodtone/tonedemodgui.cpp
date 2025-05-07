@@ -366,14 +366,14 @@ void ToneDemodGUI::displaySettings()
 
 		m_settings.m_rfBandwidth = 80000;
 		ui->rfBW->setValue(m_settings.m_rfBandwidth);
-		ui->rfBWLabel->setVisible(true);
-		ui->rfBW->setVisible(true);
-		ui->rfBWUnits->setVisible(true);
+		ui->rfBWLabel->setVisible(false);
+		ui->rfBW->setVisible(false);
+		ui->rfBWUnits->setVisible(false);
 
-		ui->afBWLabel->setVisible(true);
-		ui->afBW->setVisible(true);
-		ui->afBWText->setVisible(true);
-		ui->afBandwidthLayout->setEnabled(true);
+		ui->afBWLabel->setVisible(false);
+		ui->afBW->setVisible(false);
+		ui->afBWText->setVisible(false);
+		ui->afBandwidthLayout->setEnabled(false);
 
 		ui->squelchLabel->setVisible(false);
 		ui->squelch->setVisible(false);

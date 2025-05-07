@@ -169,7 +169,7 @@ void ToneDemodSink::feed(const SampleVector::const_iterator& begin, const Sample
 			if (updateFreq) {
 				if (i == 0) {
 					int newFreq = mapDbmToFrequency(powerToRssiAvg);
-					qDebug() << trigger << " -- " << i << " . magsq :: " << magsq << " | powerToRssi::" << powerToRssi << " | freq::" << freq << " | avg:: " << powerToRssiAvg;
+					// qDebug() << trigger << " -- " << i << " . magsq :: " << magsq << " | powerToRssi::" << powerToRssi << " | freq::" << freq << " | avg:: " << powerToRssiAvg;
 					if (newFreq != stableFreq) {
 						stableFreq = newFreq;
 						stableCounter = 1;
