@@ -101,6 +101,7 @@ private:
 
 private slots:
 	void openTone();
+	void openGsmChannelyzer();
 	void openSpectrum();
 
 	void open_adsb();

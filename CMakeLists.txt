@@ -98,6 +98,7 @@ option(ENABLE_CHANNELRX_ENDOFTRAIN "Enable channelrx end-of-train plugin" ON)
 option(ENABLE_CHANNELRX_CHANNELPOWER "Enable channelrx channel power plugin" ON)
 option(ENABLE_CHANNELRX_WDSPRX "Enable channelrx WDSP receiver plugin" ON)
 option(ENABLE_CHANNELRX_DEMODTONE "Enable channelrx demodtone plugin" ON)
+option(ENABLE_CHANNELRX_GSMCHANNELYZER "Enable channelrx gsmchannelyzer plugin" ON)
 
 # Channel Tx enablers
 option(ENABLE_CHANNELTX "Enable channeltx plugins" OFF)

@@ -12,6 +12,10 @@ if (ENABLE_CHANNELRX_FREQSCANNER)
     add_subdirectory(freqscanner)
 endif()
 
+if (ENABLE_CHANNELRX_GSMCHANNELYZER)
+    add_subdirectory(gsmchannelyzer)
+endif()
+
 if (ENABLE_CHANNELRX_DEMODADSB AND Qt${QT_DEFAULT_MAJOR_VERSION}Quick_FOUND AND Qt${QT_DEFAULT_MAJOR_VERSION}QuickWidgets_FOUND AND Qt${QT_DEFAULT_MAJOR_VERSION}Positioning_FOUND AND Qt${QT_DEFAULT_MAJOR_VERSION}TextToSpeech_FOUND)
     add_subdirectory(demodadsb)
     # add_subdirectory(demodvormc)

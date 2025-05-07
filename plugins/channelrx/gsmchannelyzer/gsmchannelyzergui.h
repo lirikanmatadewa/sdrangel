@@ -1,0 +1,164 @@
+///////////////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2020-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
+// Copyright (C) 2020, 2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>         //
+//                                                                               //
+// This program is free software; you can redistribute it and/or modify          //
+// it under the terms of the GNU General Public License as published by          //
+// the Free Software Foundation as version 3 of the License, or                  //
+// (at your option) any later version.                                           //
+//                                                                               //
+// This program is distributed in the hope that it will be useful,               //
+// but WITHOUT ANY WARRANTY; without even the implied warranty of                //
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                  //
+// GNU General Public License V3 for more details.                               //
+//                                                                               //
+// You should have received a copy of the GNU General Public License             //
+// along with this program. If not, see <http://www.gnu.org/licenses/>.          //
+///////////////////////////////////////////////////////////////////////////////////
+
+#ifndef INCLUDE_GSMCHANNELYZERGUI_H
+#define INCLUDE_GSMCHANNELYZERGUI_H
+
+#include "channel/channelgui.h"
+#include "dsp/channelmarker.h"
+#include "util/messagequeue.h"
+#include "settings/rollupstate.h"
+#include "gsmchannelyzer.h"
+#include "gsmchannelyzersettings.h"
+
+class PluginAPI;
+class DeviceUISet;
+class BasebandSampleSink;
+class GsmChannelyzer;
+class GsmChannelyzerGUI;
+class QMenu;
+class QComboBox;
+
+namespace Ui {
+    class GsmChannelyzerGUI;
+}
+class GsmChannelyzerGUI;
+
+class GsmChannelyzerGUI : public ChannelGUI {
+    Q_OBJECT
+
+public:
+    static GsmChannelyzerGUI* create(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, BasebandSampleSink *rxChannel);
+    virtual void destroy();
+
+    void resetToDefaults();
+    QByteArray serialize() const;
+    bool deserialize(const QByteArray& data);
+    virtual MessageQueue *getInputMessageQueue() { return &m_inputMessageQueue; }
+    virtual void setWorkspaceIndex(int index) { m_settings.m_workspaceIndex = index; };
+    virtual int getWorkspaceIndex() const { return m_settings.m_workspaceIndex; };
+    virtual void setGeometryBytes(const QByteArray& blob) { m_settings.m_geometryBytes = blob; };
+    virtual QByteArray getGeometryBytes() const { return m_settings.m_geometryBytes; };
+    virtual QString getTitle() const { return m_settings.m_title; };
+    virtual QColor getTitleColor() const  { return m_settings.m_rgbColor; };
+    virtual void zetHidden(bool hidden) { m_settings.m_hidden = hidden; }
+    virtual bool getHidden() const { return m_settings.m_hidden; }
+    virtual ChannelMarker& getChannelMarker() { return m_channelMarker; }
+    virtual int getStreamIndex() const { return m_settings.m_streamIndex; }
+    virtual void setStreamIndex(int streamIndex) { m_settings.m_streamIndex = streamIndex; }
+
+public slots:
+    void channelMarkerChangedByCursor();
+    void channelMarkerHighlightedByCursor();
+
+private:
+    Ui::GsmChannelyzerGUI* ui;
+    PluginAPI* m_pluginAPI;
+    DeviceUISet* m_deviceUISet;
+    ChannelMarker m_channelMarker;
+    RollupState m_rollupState;
+    GsmChannelyzerSettings m_settings;
+    QList<QString> m_settingsKeys;
+    qint64 m_deviceCenterFrequency;
+    bool m_doApplySettings;
+
+    GsmChannelyzer* m_freqScanner;
+    int m_basebandSampleRate;
+    MessageQueue m_inputMessageQueue;
+
+    QMenu *m_menu;
+
+    AvailableChannelOrFeatureList m_availableChannels;
+
+    explicit GsmChannelyzerGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, BasebandSampleSink *rxChannel, QWidget* parent = 0);
+    virtual ~GsmChannelyzerGUI();
+
+    void blockApplySettings(bool block);
+    void applySetting(const QString& settingsKey);
+    void applySettings(const QStringList& settingsKeys, bool force = false);
+    void applyAllSettings();
+    void displaySettings();
+    bool handleMessage(const Message& message);
+    void makeUIConnections();
+    void updateAbsoluteCenterFrequency();
+    void addRow(const GsmChannelyzerSettings::FrequencySettings& frequencySettings);
+    void updateAnnotation(int row);
+    void updateAnnotations();
+    void updateChannelsCombo(QComboBox *combo, const AvailableChannelOrFeatureList& channels, const QString& channel, bool empty);
+    void updateChannelsList(const AvailableChannelOrFeatureList& channels, const QStringList& renameFrom, const QStringList& renameTo);
+    void setAllEnabled(bool enable);
+
+    void leaveEvent(QEvent*);
+    void enterEvent(EnterEventType*);
+
+    void resizeTable();
+    QAction* createCheckableItem(QString& text, int idx, bool checked);
+
+    enum Col {
+        COL_FREQUENCY,
+        COL_ANNOTATION,
+        COL_ENABLE,
+        COL_POWER,
+        COL_ACTIVE_COUNT,
+        COL_NOTES,
+        COL_CHANNEL,
+        COL_CHANNEL_BW,
+        COL_TH,
+        COL_SQ
+    };
+
+private slots:
+    void on_channels_currentIndexChanged(int index);
+    void on_deltaFrequency_changed(qint64 value);
+    void on_channelBandwidth_changed(qint64 index);
+    void on_scanTime_valueChanged(int value);
+    void on_retransmitTime_valueChanged(int value);
+    void on_tuneTime_valueChanged(int value);
+    void on_thresh_valueChanged(int value);
+    void on_priority_currentIndexChanged(int index);
+    void on_measurement_currentIndexChanged(int index);
+    void on_mode_currentIndexChanged(int index);
+    void on_table_cellChanged(int row, int column);
+    void on_table_channel_currentIndexChanged(int index);
+    void table_customContextMenuRequested(QPoint pos);
+    void table_sectionMoved(int logicalIndex, int oldVisualIndex, int newVisualIndex);
+    void table_sectionResized(int logicalIndex, int oldSize, int newSize);
+    void columnSelectMenu(QPoint pos);
+    void columnSelectMenuChecked(bool checked = false);
+    void on_startStop_toggled(bool checked = false);
+    void on_addSingle_clicked();
+    void on_addRange_clicked();
+    void on_remove_clicked();
+    void on_removeInactive_clicked();
+    void on_up_clicked();
+    void on_down_clicked();
+    void on_clearActiveCount_clicked();
+    void onWidgetRolled(QWidget* widget, bool rollDown);
+    void onMenuDialogCalled(const QPoint& p);
+    void handleInputMessages();
+	void threshIncClick();
+	void threshDecClick();
+	void tuneTimeIncClick();
+	void tuneTimeDecClick();
+	void scanTimeIncClick();
+	void scanTimeDecClick();
+	void retransmitTimeIncClick();
+	void retransmitTimeDecClick();
+};
+
+#endif // INCLUDE_GSMCHANNELYZERGUI_H

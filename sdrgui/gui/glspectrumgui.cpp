@@ -120,6 +120,7 @@ GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
 	connect(ui->frequencyScanner, SIGNAL(clicked()), this, SLOT(openFrequencyScanner()));
 
 	connect(ui->btnTones, SIGNAL(clicked()), this, SLOT(openTone()));
+	connect(ui->btnGsmChannelyzer, SIGNAL(clicked()), this, SLOT(openGsmChannelyzer()));
 	connect(ui->btnOpenSpectrum, SIGNAL(clicked()), this, SLOT(openSpectrum()));
 
 	displaySettings();
@@ -1294,6 +1295,12 @@ void GLSpectrumGUI::openTone()
 		ui->btnTones->setStyleSheet("QPushButton { background-color: rgb(79, 79, 79) color: white; }"); // tone off
 		emit closeTone();
 	}
+}
+
+void GLSpectrumGUI::openGsmChannelyzer()
+{
+	//emit addChannel(this->rx_channel["FreqScanner"]);
+	emit addChannel(this->rx_channel["GsmChannelyzer"]);
 }
 
 void GLSpectrumGUI::openSpectrum()
