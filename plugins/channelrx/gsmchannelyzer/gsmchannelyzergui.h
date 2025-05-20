@@ -77,6 +77,11 @@ private:
     qint64 m_deviceCenterFrequency;
     bool m_doApplySettings;
 
+    /*static const QList<qint64> hfFreqs;
+    static const QList<qint64> ARFCN;
+    static const QList<qint64> MCC;
+    static const QList<qint64> MNC;*/
+
     GsmChannelyzer* m_freqScanner;
     int m_basebandSampleRate;
     MessageQueue m_inputMessageQueue;
@@ -119,7 +124,10 @@ private:
         COL_CHANNEL,
         COL_CHANNEL_BW,
         COL_TH,
-        COL_SQ
+        COL_SQ,
+        COL_ARFCN,
+        COL_MCC,
+        COL_MNC
     };
 
 private slots:

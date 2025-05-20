@@ -39,6 +39,9 @@ struct GsmChannelyzerSettings
         QString m_channel;
         QString m_channelBandwidth;
         QString m_squelch;
+        qint64 m_arfcn;
+        qint64 m_mcc;
+        qint64 m_mnc;
 
         QByteArray serialize() const;
         bool deserialize(const QByteArray& data);

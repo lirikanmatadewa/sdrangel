@@ -29,7 +29,7 @@
    </font>
   </property>
   <property name="focusPolicy">
-   <enum>Qt::StrongFocus</enum>
+   <enum>Qt::FocusPolicy::StrongFocus</enum>
   </property>
   <property name="windowTitle">
    <string>GSM Channelyzer</string>
@@ -102,7 +102,7 @@
       <item>
        <widget class="Line" name="line_6">
         <property name="orientation">
-         <enum>Qt::Vertical</enum>
+         <enum>Qt::Orientation::Vertical</enum>
         </property>
        </widget>
       </item>
@@ -143,7 +143,7 @@
          <cursorShape>PointingHandCursor</cursorShape>
         </property>
         <property name="focusPolicy">
-         <enum>Qt::StrongFocus</enum>
+         <enum>Qt::FocusPolicy::StrongFocus</enum>
         </property>
         <property name="toolTip">
          <string>Minimum demod shift frequency from center in Hz</string>
@@ -160,14 +160,14 @@
       <item>
        <widget class="Line" name="line">
         <property name="orientation">
-         <enum>Qt::Vertical</enum>
+         <enum>Qt::Orientation::Vertical</enum>
         </property>
        </widget>
       </item>
       <item>
        <spacer name="horizontalSpacer">
         <property name="orientation">
-         <enum>Qt::Horizontal</enum>
+         <enum>Qt::Orientation::Horizontal</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
@@ -191,13 +191,13 @@
            <string>Active frequency power </string>
           </property>
           <property name="layoutDirection">
-           <enum>Qt::RightToLeft</enum>
+           <enum>Qt::LayoutDirection::RightToLeft</enum>
           </property>
           <property name="text">
            <string>-120.0</string>
           </property>
           <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+           <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
           </property>
          </widget>
         </item>
@@ -215,7 +215,7 @@
     <item>
      <widget class="Line" name="line_7">
       <property name="orientation">
-       <enum>Qt::Horizontal</enum>
+       <enum>Qt::Orientation::Horizontal</enum>
       </property>
      </widget>
     </item>
@@ -250,40 +250,40 @@
         </property>
        </widget>
       </item>
-       <item>
-         <layout class="QVBoxLayout" name="threshIncDec" stretch="0,0">
-           <property name="spacing">
-             <number>1</number>
-           </property>
-           <item>
-             <widget class="QPushButton" name="threshInc">
-               <property name="maximumSize">
-                 <size>
-                   <width>20</width>
-                   <height>20</height>
-                 </size>
-               </property>
-               <property name="text">
-                 <string>+</string>
-               </property>
-             </widget>
-           </item>
-           <item>
-             <widget class="QPushButton" name="threshDec">
-               <property name="maximumSize">
-                 <size>
-                   <width>20</width>
-                   <height>20</height>
-                 </size>
-               </property>
-               <property name="text">
-                 <string>-</string>
-               </property>
-             </widget>
-           </item>
-         </layout>
-       </item>
-       <item>
+      <item>
+       <layout class="QVBoxLayout" name="threshIncDec" stretch="0,0">
+        <property name="spacing">
+         <number>1</number>
+        </property>
+        <item>
+         <widget class="QPushButton" name="threshInc">
+          <property name="maximumSize">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>+</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="threshDec">
+          <property name="maximumSize">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>-</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
        <widget class="QLabel" name="threshText">
         <property name="minimumSize">
          <size>
@@ -299,7 +299,7 @@
       <item>
        <spacer name="horizontalSpacer_3">
         <property name="orientation">
-         <enum>Qt::Horizontal</enum>
+         <enum>Qt::Orientation::Horizontal</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
@@ -312,7 +312,7 @@
       <item>
        <widget class="Line" name="line_4">
         <property name="orientation">
-         <enum>Qt::Vertical</enum>
+         <enum>Qt::Orientation::Vertical</enum>
         </property>
        </widget>
       </item>
@@ -345,40 +345,40 @@
         </property>
        </widget>
       </item>
-       <item>
-         <layout class="QVBoxLayout" name="tuneTimeIncDec" stretch="0,0">
-           <property name="spacing">
-             <number>1</number>
-           </property>
-           <item>
-             <widget class="QPushButton" name="tuneTimeInc">
-               <property name="maximumSize">
-                 <size>
-                   <width>20</width>
-                   <height>20</height>
-                 </size>
-               </property>
-               <property name="text">
-                 <string>+</string>
-               </property>
-             </widget>
-           </item>
-           <item>
-             <widget class="QPushButton" name="tuneTimeDec">
-               <property name="maximumSize">
-                 <size>
-                   <width>20</width>
-                   <height>20</height>
-                 </size>
-               </property>
-               <property name="text">
-                 <string>-</string>
-               </property>
-             </widget>
-           </item>
-         </layout>
-       </item>
-       <item>
+      <item>
+       <layout class="QVBoxLayout" name="tuneTimeIncDec" stretch="0,0">
+        <property name="spacing">
+         <number>1</number>
+        </property>
+        <item>
+         <widget class="QPushButton" name="tuneTimeInc">
+          <property name="maximumSize">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>+</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="tuneTimeDec">
+          <property name="maximumSize">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>-</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
        <widget class="QLabel" name="tuneTimeText">
         <property name="minimumSize">
          <size>
@@ -394,7 +394,7 @@
       <item>
        <widget class="Line" name="line_3">
         <property name="orientation">
-         <enum>Qt::Vertical</enum>
+         <enum>Qt::Orientation::Vertical</enum>
         </property>
        </widget>
       </item>
@@ -427,40 +427,40 @@
         </property>
        </widget>
       </item>
-       <item>
-         <layout class="QVBoxLayout" name="scanTimeIncDec" stretch="0,0">
-           <property name="spacing">
-             <number>1</number>
-           </property>
-           <item>
-             <widget class="QPushButton" name="scanTimeInc">
-               <property name="maximumSize">
-                 <size>
-                   <width>20</width>
-                   <height>20</height>
-                 </size>
-               </property>
-               <property name="text">
-                 <string>+</string>
-               </property>
-             </widget>
-           </item>
-           <item>
-             <widget class="QPushButton" name="scanTimeDec">
-               <property name="maximumSize">
-                 <size>
-                   <width>20</width>
-                   <height>20</height>
-                 </size>
-               </property>
-               <property name="text">
-                 <string>-</string>
-               </property>
-             </widget>
-           </item>
-         </layout>
-       </item>
-       <item>
+      <item>
+       <layout class="QVBoxLayout" name="scanTimeIncDec" stretch="0,0">
+        <property name="spacing">
+         <number>1</number>
+        </property>
+        <item>
+         <widget class="QPushButton" name="scanTimeInc">
+          <property name="maximumSize">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>+</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="scanTimeDec">
+          <property name="maximumSize">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>-</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
        <widget class="QLabel" name="scanTimeText">
         <property name="minimumSize">
          <size>
@@ -476,7 +476,7 @@
       <item>
        <widget class="Line" name="line_2">
         <property name="orientation">
-         <enum>Qt::Vertical</enum>
+         <enum>Qt::Orientation::Vertical</enum>
         </property>
        </widget>
       </item>
@@ -509,40 +509,40 @@
         </property>
        </widget>
       </item>
-       <item>
-         <layout class="QVBoxLayout" name="retransmitTimeIncDec" stretch="0,0">
-           <property name="spacing">
-             <number>1</number>
-           </property>
-           <item>
-             <widget class="QPushButton" name="retransmitTimeInc">
-               <property name="maximumSize">
-                 <size>
-                   <width>20</width>
-                   <height>20</height>
-                 </size>
-               </property>
-               <property name="text">
-                 <string>+</string>
-               </property>
-             </widget>
-           </item>
-           <item>
-             <widget class="QPushButton" name="retransmitTimeDec">
-               <property name="maximumSize">
-                 <size>
-                   <width>20</width>
-                   <height>20</height>
-                 </size>
-               </property>
-               <property name="text">
-                 <string>-</string>
-               </property>
-             </widget>
-           </item>
-         </layout>
-       </item>
-       <item>
+      <item>
+       <layout class="QVBoxLayout" name="retransmitTimeIncDec" stretch="0,0">
+        <property name="spacing">
+         <number>1</number>
+        </property>
+        <item>
+         <widget class="QPushButton" name="retransmitTimeInc">
+          <property name="maximumSize">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>+</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="retransmitTimeDec">
+          <property name="maximumSize">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>-</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
        <widget class="QLabel" name="retransmitTimeText">
         <property name="minimumSize">
          <size>
@@ -560,7 +560,7 @@
     <item>
      <widget class="Line" name="line_5">
       <property name="orientation">
-       <enum>Qt::Horizontal</enum>
+       <enum>Qt::Orientation::Horizontal</enum>
       </property>
      </widget>
     </item>
@@ -597,7 +597,7 @@
          <cursorShape>PointingHandCursor</cursorShape>
         </property>
         <property name="focusPolicy">
-         <enum>Qt::StrongFocus</enum>
+         <enum>Qt::FocusPolicy::StrongFocus</enum>
         </property>
         <property name="toolTip">
          <string>Channel bandwidth</string>
@@ -614,7 +614,7 @@
       <item>
        <spacer name="horizontalSpacer_4">
         <property name="orientation">
-         <enum>Qt::Horizontal</enum>
+         <enum>Qt::Orientation::Horizontal</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
@@ -683,7 +683,7 @@
     <item>
      <widget class="Line" name="filterLine">
       <property name="orientation">
-       <enum>Qt::Horizontal</enum>
+       <enum>Qt::Orientation::Horizontal</enum>
       </property>
      </widget>
     </item>
@@ -753,7 +753,7 @@
     <item>
      <widget class="Line" name="line_8">
       <property name="orientation">
-       <enum>Qt::Horizontal</enum>
+       <enum>Qt::Orientation::Horizontal</enum>
       </property>
      </widget>
     </item>
@@ -846,6 +846,21 @@ Leave blank to use common setting</string>
 Leave blank for no adjustment</string>
          </property>
         </column>
+        <column>
+         <property name="text">
+          <string>ARFCN</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>MCC</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>MNC</string>
+         </property>
+        </column>
        </widget>
       </item>
       <item>
@@ -866,7 +881,7 @@ Leave blank for no adjustment</string>
            <string>Add a range of frequencies</string>
           </property>
           <property name="text">
-           <string>Add Range</string>
+           <string>Add GSM Channel</string>
           </property>
          </widget>
         </item>
@@ -886,7 +901,7 @@ Leave blank for no adjustment</string>
            <string>Remove rows with Active Count of 0</string>
           </property>
           <property name="text">
-           <string>Remove Inactive</string>
+           <string>Reset Active Count</string>
           </property>
          </widget>
         </item>
@@ -921,7 +936,7 @@ Leave blank for no adjustment</string>
         <item>
          <spacer name="horizontalSpacer_2">
           <property name="orientation">
-           <enum>Qt::Horizontal</enum>
+           <enum>Qt::Orientation::Horizontal</enum>
           </property>
           <property name="sizeHint" stdset="0">
            <size>

@@ -44,6 +44,41 @@
 #include "gsmchannelyzeraddrangedialog.h"
 #include "gsmchannelyzer.h"
 
+static const QList<qint64> hfFreqs = {
+        951400000, 951600000, 951800000, 952000000, 952200000,
+        952400000, 952600000, 952800000, 953000000, 953200000,
+        953400000, 953600000, 953800000, 954000000, 954200000,
+        954400000, 954600000, 954800000, 955000000, 1805200000,
+        1805400000, 1805600000, 1805800000, 1806000000, 1825200000,
+        1825400000, 1825600000, 1825800000, 1826000000, 1826200000, 1826400000,
+        1826600000, 1826800000, 1827000000, 1827200000, 1827400000, 1827600000,
+        1827800000, 1837000000, 1837200000, 1837400000, 1837600000, 1837800000,
+        1838000000, 1838200000, 1838400000, 1856400000, 1856600000, 1856800000,
+        1857000000, 1857200000, 1857400000, 1857600000, 1857800000, 1858000000,
+        1858200000, 1858400000, 1858600000, 1858800000, 1859000000, 1859200000,
+        1859400000, 1859600000, 1859800000, 1860000000, 1860200000, 1860400000,
+        1860600000, 1860800000
+};
+
+static const QList<qint64> ARFCN = {
+    82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99,
+    100, 512, 513, 514, 515, 516, 612, 613, 614, 615, 616, 617, 618, 619, 620,
+    621, 622, 623, 624, 625, 671, 672, 673, 674, 675, 676, 677, 678, 768, 769,
+    770, 771, 772, 773, 774, 775, 776, 777, 778, 779, 780, 781, 782, 783, 784,
+    785, 786, 787, 788, 789, 790
+};
+static const QList<qint64> MCC = { 21, 21, 21, 21, 21, 21, 21, 11, 11, 11, 11,
+    11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+    11, 11, 11, 11, 11, 11, 11, 11, 21, 21, 21, 21, 21, 21, 21, 21, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+};
+static const QList<qint64> MNC = { 510, 510, 510, 510, 510, 510, 510, 510, 510,
+    510, 510, 510, 510, 510, 510, 510, 510, 510, 510, 510, 510, 510, 510, 510,
+    510, 510, 510, 510, 510, 510, 510, 510, 510, 510, 510, 510, 510, 510, 510,
+    510, 510, 510, 510, 510, 510, 510, 510, 510, 510, 510, 510, 510, 510, 510,
+    510, 510, 510, 510, 510, 510, 510, 510, 510, 510, 510, 510, 510, 510, 510
+};
+
 GsmChannelyzerGUI* GsmChannelyzerGUI::create(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, BasebandSampleSink *rxChannel)
 {
     GsmChannelyzerGUI* gui = new GsmChannelyzerGUI(pluginAPI, deviceUISet, rxChannel);
@@ -84,8 +119,8 @@ bool GsmChannelyzerGUI::deserialize(const QByteArray& data)
 
 bool GsmChannelyzerGUI::handleMessage(const Message& message)
 {
-    // hide menu
 
+    // hide menu
     // row 1
     ui->channelsLabel->hide();
     ui->channels->hide();
@@ -618,6 +653,17 @@ GsmChannelyzerGUI::GsmChannelyzerGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUI
     ui->table->setItemDelegateForColumn(COL_CHANNEL_BW, new Int64Delegate(0, 10000000, ui->table));
     ui->table->setItemDelegateForColumn(COL_TH, new DecimalDelegate(1, -120.0, 0.0, ui->table));
     ui->table->setItemDelegateForColumn(COL_SQ, new DecimalDelegate(1, -120.0, 0.0, ui->table));
+    ui->table->setItemDelegateForColumn(COL_ARFCN, new DecimalDelegate(1, -120.0, 0.0, ui->table));
+    ui->table->setItemDelegateForColumn(COL_MCC, new DecimalDelegate(1, -120.0, 0.0, ui->table));
+    ui->table->setItemDelegateForColumn(COL_MNC, new DecimalDelegate(1, -120.0, 0.0, ui->table));
+
+    ui->table->setColumnHidden(1, true);
+    ui->table->setColumnHidden(2, true);
+    ui->table->setColumnHidden(5, true);
+    ui->table->setColumnHidden(6, true);
+    ui->table->setColumnHidden(7, true);
+    ui->table->setColumnHidden(8, true);
+    ui->table->setColumnHidden(9, true);
 
     connect(m_deviceUISet->m_spectrum->getSpectrumView(), &GLSpectrumView::updateAnnotations, this, &GsmChannelyzerGUI::updateAnnotations);
 }
@@ -672,23 +718,41 @@ void GsmChannelyzerGUI::displaySettings()
         ui->channels->setCurrentIndex(channelIndex);
     }
     ui->deltaFrequency->setValue(m_settings.m_channelFrequencyOffset);
+    
+    // mode default
+    m_settings.m_channelBandwidth = 50000;
     ui->channelBandwidth->setValue(m_settings.m_channelBandwidth);
+
     ui->scanTime->setValue(m_settings.m_scanTime * 10.0);
     ui->scanTimeText->setText(QString("%1 s").arg(m_settings.m_scanTime, 0, 'f', 1));
     ui->retransmitTime->setValue(m_settings.m_retransmitTime * 10.0);
     ui->retransmitTimeText->setText(QString("%1 s").arg(m_settings.m_retransmitTime, 0, 'f', 1));
     ui->tuneTime->setValue(m_settings.m_tuneTime);
     ui->tuneTimeText->setText(QString("%1 ms").arg(m_settings.m_tuneTime));
+    
+    // mode default
     ui->thresh->setValue(m_settings.m_threshold * 10.0);
     ui->threshText->setText(QString("%1 dB").arg(m_settings.m_threshold, 0, 'f', 1));
+    
+    // mode default
+    m_settings.m_priority = static_cast<GsmChannelyzerSettings::Priority>(1);
     ui->priority->setCurrentIndex((int)m_settings.m_priority);
     ui->measurement->setCurrentIndex((int)m_settings.m_measurement);
-    ui->mode->setCurrentIndex((int)m_settings.m_mode);
 
+    // mode by user
+    // ui->mode->setCurrentIndex((int)m_settings.m_mode);
+    // mode default
+    m_settings.m_mode = static_cast<GsmChannelyzerSettings::Mode>(2);
+    ui->mode->setCurrentIndex((int)m_settings.m_mode);
+    
     ui->table->blockSignals(true);
     ui->table->setRowCount(0);
     for (int i = 0; i < m_settings.m_frequencySettings.size(); i++)
     {
+        m_settings.m_frequencySettings[i].m_arfcn = ARFCN[i];
+        m_settings.m_frequencySettings[i].m_mcc = MCC[i];
+        m_settings.m_frequencySettings[i].m_mnc = MNC[i];
+
         addRow(m_settings.m_frequencySettings[i]);
         updateAnnotation(i);
     }
@@ -782,6 +846,13 @@ void GsmChannelyzerGUI::addRow(const GsmChannelyzerSettings::FrequencySettings& 
 
     QTableWidgetItem* squelchItem = new QTableWidgetItem(frequencySettings.m_squelch);
     ui->table->setItem(row, COL_SQ, squelchItem);
+
+    ui->table->setItem(row, COL_ARFCN, new QTableWidgetItem(QString("%1").arg(frequencySettings.m_arfcn)));
+
+    ui->table->setItem(row, COL_MCC, new QTableWidgetItem(QString("%1").arg(frequencySettings.m_mcc)));
+
+    ui->table->setItem(row, COL_MNC, new QTableWidgetItem(QString("%1").arg(frequencySettings.m_mnc)));
+
 }
 
 void GsmChannelyzerGUI::on_table_channel_currentIndexChanged(int index)
@@ -804,7 +875,7 @@ void GsmChannelyzerGUI::on_addSingle_clicked()
 
 void GsmChannelyzerGUI::on_addRange_clicked()
 {
-    GsmChannelyzerAddRangeDialog dialog(m_settings.m_channelBandwidth, this);
+    /*GsmChannelyzerAddRangeDialog dialog(m_settings.m_channelBandwidth, this);
     new DialogPositioner(&dialog, false);
     if (dialog.exec())
     {
@@ -818,7 +889,24 @@ void GsmChannelyzerGUI::on_addRange_clicked()
         }
         blockApplySettings(false);
         applySetting("frequencySettings");
+    }*/
+
+    
+
+    blockApplySettings(true);
+    //for (const auto f : hfFreqs)
+    for (int i = 0; i < hfFreqs.size(); ++i)
+    {
+        GsmChannelyzerSettings::FrequencySettings frequencySettings;
+        frequencySettings.m_frequency = hfFreqs[i];
+        frequencySettings.m_enabled = true;
+        frequencySettings.m_arfcn = ARFCN[i];
+        frequencySettings.m_mcc = MCC[i];
+        frequencySettings.m_mnc = MNC[i];
+        addRow(frequencySettings);
     }
+    blockApplySettings(false);
+    applySetting("frequencySettings");
 }
 
 void GsmChannelyzerGUI::on_remove_clicked()
@@ -918,6 +1006,9 @@ void GsmChannelyzerGUI::on_table_cellChanged(int row, int column)
                 GsmChannelyzerSettings::FrequencySettings frequencySettings;
                 frequencySettings.m_frequency = 0;
                 frequencySettings.m_enabled = true;
+                frequencySettings.m_arfcn = 0;
+                frequencySettings.m_mcc = 0;
+                frequencySettings.m_mnc = 0;
                 m_settings.m_frequencySettings.append(frequencySettings);
             }
             m_settings.m_frequencySettings[row].m_frequency = value;
@@ -947,6 +1038,24 @@ void GsmChannelyzerGUI::on_table_cellChanged(int row, int column)
         else if (column == COL_SQ)
         {
             m_settings.m_frequencySettings[row].m_squelch = item->text();
+            applySetting("frequencySettings");
+        }
+        else if (column == COL_ARFCN)
+        {
+            qint64 value = item->text().toLongLong();
+            m_settings.m_frequencySettings[row].m_arfcn = value;
+            applySetting("frequencySettings");
+        }
+        else if (column == COL_MCC)
+        {
+            qint64 value = item->text().toLongLong();
+            m_settings.m_frequencySettings[row].m_mcc = value;
+            applySetting("frequencySettings");
+        }
+        else if (column == COL_MNC)
+        {
+            qint64 value = item->text().toLongLong();
+            m_settings.m_frequencySettings[row].m_mnc = value;
             applySetting("frequencySettings");
         }
     }
@@ -1181,6 +1290,9 @@ void GsmChannelyzerGUI::resizeTable()
     ui->table->setItem(row, COL_CHANNEL_BW, new QTableWidgetItem("100000000"));
     ui->table->setItem(row, COL_TH, new QTableWidgetItem("-100.0"));
     ui->table->setItem(row, COL_SQ, new QTableWidgetItem("-100.0"));
+    ui->table->setItem(row, COL_ARFCN, new QTableWidgetItem("100000000"));
+    ui->table->setItem(row, COL_MCC, new QTableWidgetItem("100000000"));
+    ui->table->setItem(row, COL_MNC, new QTableWidgetItem("100000000"));
     ui->table->resizeColumnsToContents();
     ui->table->setRowCount(row);
 }
