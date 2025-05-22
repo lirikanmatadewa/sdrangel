@@ -116,6 +116,9 @@ private:
 
     enum Col {
         COL_FREQUENCY,
+        COL_ARFCN,
+        COL_MCC,
+        COL_MNC,
         COL_ANNOTATION,
         COL_ENABLE,
         COL_POWER,
@@ -124,10 +127,7 @@ private:
         COL_CHANNEL,
         COL_CHANNEL_BW,
         COL_TH,
-        COL_SQ,
-        COL_ARFCN,
-        COL_MCC,
-        COL_MNC
+        COL_SQ
     };
 
 private slots:

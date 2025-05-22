@@ -27,7 +27,7 @@ class Serializable;
 class ChannelAPI;
 
 // Number of columns in the table
-#define GSMCHANNELYZER_COLUMNS           10
+#define GSMCHANNELYZER_COLUMNS           13
 
 struct GsmChannelyzerSettings
 {

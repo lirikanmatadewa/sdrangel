@@ -161,14 +161,14 @@ MainWindow::MainWindow(qtwebapp::LoggerWithFile* logger, const MainParser& parse
 	font.setPointSize(9);
 	qApp->setFont(font);
 
-	QPixmap logoPixmap(":/waltech_black.png");
+	QPixmap logoPixmap(":/defentech_black.png");
 	SDRangelSplash* splash = new SDRangelSplash(logoPixmap);
 	splash->setMessageRect(QRect(40, 150, 350, 18));
 	splash->show();
 	splash->showStatusMessage("starting...", Qt::white);
 	splash->showStatusMessage("starting...", Qt::white);
 
-	setWindowIcon(QIcon(":/waltech_icon.png"));
+	setWindowIcon(QIcon(":/defentech_icon.png"));
 #ifndef ANDROID
 	// To save screen space on Android, don't have menu bar. Instead menus are accessed via toolbar button
 	createMenuBar(nullptr);

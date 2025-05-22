@@ -119,50 +119,52 @@ bool GsmChannelyzerGUI::deserialize(const QByteArray& data)
 
 bool GsmChannelyzerGUI::handleMessage(const Message& message)
 {
-
-    // hide menu
-    // row 1
-    ui->channelsLabel->hide();
-    ui->channels->hide();
-    ui->deltaFrequencyLabel->hide();
-    ui->deltaFrequency->hide();
-    ui->deltaUnits->hide();
-    ui->channelPower->hide();
-    ui->channelPowerUnits->hide();
     
-    // row 2
-    ui->threshLabel->hide();
-    ui->thresh->hide();
-    ui->threshDec->hide();
-    ui->threshInc->hide();
-    ui->threshText->hide();
-    ui->threshLabel->hide();
-    ui->tuneTime->hide();
-    ui->tuneTimeDec->hide();
-    ui->tuneTimeInc->hide();
-    ui->tuneTimeLabel->hide();
-    ui->tuneTimeText->hide();
-    ui->retransmitTime->hide();
-    ui->retransmitTimeText->hide();
-    ui->retransmitTimeDec->hide();
-    ui->retransmitTimeInc->hide();
-    ui->retransmitTime->hide();
-    ui->retransmitTimeLabel->hide();
-    ui->scanTimeText->hide();
-    ui->scanTimeLabel->hide();
-    ui->scanTimeDec->hide();
-    ui->scanTimeInc->hide();
-    
-    // row 3
-    ui->rfBWLabel->hide();
-    ui->channelBandwidth->hide();
-    ui->rfBWUnits->hide();
-    ui->priorityLabel->hide();
-    ui->priority->hide();
-    ui->measurementLabel->hide();
-    ui->measurement->hide();
+    ui->hiddenWidget->hide();
 
-    // row 4
+    //// hide menu
+    //// row 1
+    //ui->channelsLabel->hide();
+    //ui->channels->hide();
+    //ui->deltaFrequencyLabel->hide();
+    //ui->deltaFrequency->hide();
+    //ui->deltaUnits->hide();
+    //ui->channelPower->hide();
+    //ui->channelPowerUnits->hide();
+    //
+    //// row 2
+    //ui->threshLabel->hide();
+    //ui->thresh->hide();
+    //ui->threshDec->hide();
+    //ui->threshInc->hide();
+    //ui->threshText->hide();
+    //ui->threshLabel->hide();
+    //ui->tuneTime->hide();
+    //ui->tuneTimeDec->hide();
+    //ui->tuneTimeInc->hide();
+    //ui->tuneTimeLabel->hide();
+    //ui->tuneTimeText->hide();
+    //ui->retransmitTime->hide();
+    //ui->retransmitTimeText->hide();
+    //ui->retransmitTimeDec->hide();
+    //ui->retransmitTimeInc->hide();
+    //ui->retransmitTime->hide();
+    //ui->retransmitTimeLabel->hide();
+    //ui->scanTimeText->hide();
+    //ui->scanTimeLabel->hide();
+    //ui->scanTimeDec->hide();
+    //ui->scanTimeInc->hide();
+    //
+    //// row 3
+    //ui->rfBWLabel->hide();
+    //ui->channelBandwidth->hide();
+    //ui->rfBWUnits->hide();
+    //ui->priorityLabel->hide();
+    //ui->priority->hide();
+    //ui->measurementLabel->hide();
+    //ui->measurement->hide();
+
+    //// row 4
     ui->mode->hide();
 
     // line
@@ -175,10 +177,6 @@ bool GsmChannelyzerGUI::handleMessage(const Message& message)
     ui->line_7->hide();
     ui->line_8->hide();
     ui->filterLine->hide();
-
-    // spacing hide
-    ui->powerLayout->setSpacing(0);
-    ui->powerLayout->setContentsMargins(0, 0, 0, 0);
 
 
     if (GsmChannelyzer::MsgConfigureGsmChannelyzer::match(message))
@@ -657,13 +655,21 @@ GsmChannelyzerGUI::GsmChannelyzerGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUI
     ui->table->setItemDelegateForColumn(COL_MCC, new DecimalDelegate(1, -120.0, 0.0, ui->table));
     ui->table->setItemDelegateForColumn(COL_MNC, new DecimalDelegate(1, -120.0, 0.0, ui->table));
 
-    ui->table->setColumnHidden(1, true);
-    ui->table->setColumnHidden(2, true);
+    //ui->table->setColumnHidden(COL_ANNOTATION, true);
+    //ui->table->setColumnHidden(COL_ENABLE, true);
+    //ui->table->setColumnHidden(COL_NOTES, true);
+    //ui->table->setColumnHidden(COL_CHANNEL, true);
+    /*ui->table->setColumnHidden(COL_CHANNEL_BW, true);*/
+    //ui->table->setColumnHidden(COL_TH, true);
+    //ui->table->setColumnHidden(COL_SQ, true);
+
+    ui->table->setColumnHidden(4, true);
     ui->table->setColumnHidden(5, true);
-    ui->table->setColumnHidden(6, true);
-    ui->table->setColumnHidden(7, true);
     ui->table->setColumnHidden(8, true);
     ui->table->setColumnHidden(9, true);
+    ui->table->setColumnHidden(10, true);
+    ui->table->setColumnHidden(11, true);
+    ui->table->setColumnHidden(12, true);
 
     connect(m_deviceUISet->m_spectrum->getSpectrumView(), &GLSpectrumView::updateAnnotations, this, &GsmChannelyzerGUI::updateAnnotations);
 }
@@ -926,11 +932,8 @@ void GsmChannelyzerGUI::on_removeInactive_clicked()
 {
     for (int i = ui->table->rowCount() - 1; i >= 0; i--)
     {
-        if (ui->table->item(i, COL_ACTIVE_COUNT)->data(Qt::DisplayRole).toInt() == 0)
-        {
-            ui->table->removeRow(i);
-            m_settings.m_frequencySettings.removeAt(i);
-        }
+        QTableWidgetItem* activeCountItem = ui->table->item(i, COL_ACTIVE_COUNT);
+        activeCountItem->setData(Qt::DisplayRole, 0);
     }
     applySetting("frequencySettings");
 }
