@@ -122,48 +122,6 @@ bool GsmChannelyzerGUI::handleMessage(const Message& message)
     
     ui->hiddenWidget->hide();
 
-    //// hide menu
-    //// row 1
-    //ui->channelsLabel->hide();
-    //ui->channels->hide();
-    //ui->deltaFrequencyLabel->hide();
-    //ui->deltaFrequency->hide();
-    //ui->deltaUnits->hide();
-    //ui->channelPower->hide();
-    //ui->channelPowerUnits->hide();
-    //
-    //// row 2
-    //ui->threshLabel->hide();
-    //ui->thresh->hide();
-    //ui->threshDec->hide();
-    //ui->threshInc->hide();
-    //ui->threshText->hide();
-    //ui->threshLabel->hide();
-    //ui->tuneTime->hide();
-    //ui->tuneTimeDec->hide();
-    //ui->tuneTimeInc->hide();
-    //ui->tuneTimeLabel->hide();
-    //ui->tuneTimeText->hide();
-    //ui->retransmitTime->hide();
-    //ui->retransmitTimeText->hide();
-    //ui->retransmitTimeDec->hide();
-    //ui->retransmitTimeInc->hide();
-    //ui->retransmitTime->hide();
-    //ui->retransmitTimeLabel->hide();
-    //ui->scanTimeText->hide();
-    //ui->scanTimeLabel->hide();
-    //ui->scanTimeDec->hide();
-    //ui->scanTimeInc->hide();
-    //
-    //// row 3
-    //ui->rfBWLabel->hide();
-    //ui->channelBandwidth->hide();
-    //ui->rfBWUnits->hide();
-    //ui->priorityLabel->hide();
-    //ui->priority->hide();
-    //ui->measurementLabel->hide();
-    //ui->measurement->hide();
-
     //// row 4
     ui->mode->hide();
 

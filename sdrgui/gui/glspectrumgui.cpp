@@ -1286,6 +1286,7 @@ void GLSpectrumGUI::openTone()
 
 		try {
 			emit addChannel(this->rx_channel["ToneDemod"]);
+			emit hideTone();
 		}
 		catch (...) {
 			;

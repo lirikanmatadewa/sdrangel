@@ -232,6 +232,11 @@ void ChannelGUI::closeTone() {
     m_closeButton->click();
 }
 
+void ChannelGUI::hideTone() {
+    qDebug("Simulating Hide Button Click");
+    m_hideButton->click();
+}
+
 void ChannelGUI::closeEvent(QCloseEvent *event)
 {
     qDebug("ChannelGUI::closeEvent");

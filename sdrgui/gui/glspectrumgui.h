@@ -170,6 +170,7 @@ signals:
 	void addIqReplaySignal();
 	void requestSetTone(bool tone); // Signal untuk mengatur tone
 	void closeTone();
+	void hideTone();
 
 public slots:
 	void changeFPS(int index);

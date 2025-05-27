@@ -88,25 +88,6 @@ void appendToFile(const QString& filePath, float frequency, float power) {
 }
 
 int ToneDemodSink::mapDbmToFrequency(int dbm) {
-	//if (dbm <= -40) {
-	//	return 400;
-	//}
-	//else if (dbm >= -39 && dbm <= -30) {
-	//	return 410 + (dbm + 39) * (800 - 410) / (-30 + 39);
-	//}
-	//else if (dbm >= -29 && dbm <= -20) {
-	//	return 810 + (dbm + 29) * (1200 - 810) / (-20 + 29);
-	//}
-	//else if (dbm >= -19 && dbm <= -10) {
-	//	return 1210 + (dbm + 19) * (2000 - 1210) / (-10 + 19);
-	//}
-	//else if (dbm >= -9 && dbm <= 0) {
-	//	return 2100 + (dbm + 9) * (3000 - 2100) / (0 + 9);
-	//}
-	//else {
-	//	return 3000; // Untuk nilai di atas 0 dBm
-	//}
-
 	if (dbm <= -40) return 400;
 	else if (dbm >= -39 && dbm <= -35) return 700;
 	else if (dbm >= -34 && dbm <= -30) return 1000;
@@ -153,23 +134,10 @@ void ToneDemodSink::feed(const SampleVector::const_iterator& begin, const Sample
 			Real powerToRssiAvg = 10.0 * log10(m_movingAverage);
 			Real powerToRssi = 10.0 * log10(magsq);
 
-			//freq = mapDbmToFrequency(powerToRssiAvg);
-			//qDebug() << trigger << " -- " << i << " . magsq :: " << magsq << " | powerToRssi::" << powerToRssi << " | freq::" << freq << " | avg:: " << powerToRssiAvg;
-
-			//freq = static_cast<unsigned int>((200 * pow(10.0, (powerToRssi - m_toneThreshold) / (m_toneGain * 3.3219))) + 0.5);
-			
-			//if(updateFreq == true) {
-			////if ((trigger % 50) == 0) {
-			//	if (i == 0) {
-			//		freq = mapDbmToFrequency(powerToRssiAvg);
-			//		qDebug() << trigger << " -- " << i << " . magsq :: " << magsq << " | powerToRssi::" << powerToRssi << " | freq::" << freq << " | avg:: " << powerToRssiAvg;
-			//	}
-			//}
-
 			if (updateFreq) {
 				if (i == 0) {
 					int newFreq = mapDbmToFrequency(powerToRssiAvg);
-					qDebug() << trigger << " -- " << i << " . magsq :: " << magsq << " | powerToRssi::" << powerToRssi << " | freq::" << freq << " | avg:: " << powerToRssiAvg;
+					 //qDebug() << trigger << " -- " << i << " . magsq :: " << magsq << " | powerToRssi::" << powerToRssi << " | freq::" << freq << " | avg:: " << powerToRssiAvg;
 					if (newFreq != stableFreq) {
 						stableFreq = newFreq;
 						stableCounter = 1;
@@ -178,7 +146,6 @@ void ToneDemodSink::feed(const SampleVector::const_iterator& begin, const Sample
 						stableCounter++;
 					}
 
-					// Update frekuensi hanya jika stabil selama STABLE_THRESHOLD iterasi
 					if (stableCounter >= STABLE_THRESHOLD && newFreq != prevFreq) {
 						freq = newFreq;
 						prevFreq = newFreq;
@@ -207,8 +174,6 @@ void ToneDemodSink::feed(const SampleVector::const_iterator& begin, const Sample
 				}
 			}
 
-			// qDebug() << "sqltate : " << m_squelchState << " | rfbw : " << m_settings.m_rfBandwidth;
-
 			m_squelchOpen = (m_squelchState > (m_settings.m_rfBandwidth / 20));
 
 			if (m_squelchOpen && !m_settings.m_audioMute) { // squelch open and not mute
@@ -223,40 +188,15 @@ void ToneDemodSink::feed(const SampleVector::const_iterator& begin, const Sample
 			if (m_interpolator.decimate(&m_interpolatorDistanceRemain, e, &ci))
 			{
 				qint16 sample = 0;
-
 				sample = static_cast<qint16>(m_settings.m_volume * 3276.8f * std::sin(2.0 * M_PI * freq * i / m_audioSampleRate));
-
-				/*float phaseIncrement = 2.0 * M_PI * freq / m_audioSampleRate;
-				float sample_a = static_cast<qint16>(m_settings.m_volume * 3276.8f * std::sin(phaseIncrement));
-				sample = m_settings.m_volume * 3276.8f * sin(phaseIncrement) * i;*/
-				//phase += phaseIncrement;
-				//if (phase > 2.0 * M_PI) phase -= 2.0 * M_PI;
-
-				//// Compute phase increment 
-				//phaseIncrement = 2.0 * M_PI * freq / sampleRate;
-
-				//for (int i = 0; i < numSamples; i++) {
-
-				//	output[i] = sin(phase); // Generate sine wave 
-
-					/*phase += phaseIncrement;*/
-
-				//	if (phase > 2.0 * M_PI) phase -= 2.0 * M_PI;
-
-				//}
 
 				m_audioBuffer[m_audioBufferFill].l = sample;
 				m_audioBuffer[m_audioBufferFill].r = sample;
-
-				//qDebug() << "m_audioBuffer L :: " << m_audioBuffer[m_audioBufferFill].l << " | m_audioBuffer R :: " << m_audioBuffer[m_audioBufferFill].r;
 
 				++m_audioBufferFill;
 
 				if (m_audioBufferFill >= m_audioBuffer.size())
 				{
-					//for (int a = 0; a < rf_out; a++) {
-					//	qDebug() << "audioBuffer : " << a << " - " << (quint8*)&m_audioBuffer[a];
-					//}
 					std::size_t res = m_audioFifo.write((const quint8*)&m_audioBuffer[0], std::min(m_audioBufferFill, m_audioBuffer.size()));
 
 					if (res != m_audioBufferFill) {

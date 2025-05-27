@@ -155,6 +155,7 @@ private slots:
 
 public slots:
     void closeTone();
+    void hideTone();
 
 signals:
     void closing();

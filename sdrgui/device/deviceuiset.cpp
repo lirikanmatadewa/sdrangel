@@ -125,6 +125,7 @@ void DeviceUISet::registerRxChannelInstance(ChannelAPI* channelAPI, ChannelGUI* 
 
 	if (channelGUI->getTitle() == "Tone") {
 		QObject::connect(m_spectrumGUI, &GLSpectrumGUI::closeTone, channelGUI, &ChannelGUI::closeTone);
+		QObject::connect(m_spectrumGUI, &GLSpectrumGUI::hideTone, channelGUI, &ChannelGUI::hideTone);
 	}
 }
 
