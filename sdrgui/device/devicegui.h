@@ -143,9 +143,12 @@ private slots:
     void deviceReload();
     void showHelp();
     void openMoveToWorkspaceDialog();
-    void showSpectrumHandler();
+    /*void showSpectrumHandler();*/
     void showAllChannelsHandler();
     void deviceSetPresetsDialog();
+
+public slots:
+    void showSpectrumHandler();
 
 signals:
     void closing();

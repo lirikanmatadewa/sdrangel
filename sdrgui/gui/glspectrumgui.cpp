@@ -1302,6 +1302,7 @@ void GLSpectrumGUI::openGsmChannelyzer()
 {
 	//emit addChannel(this->rx_channel["FreqScanner"]);
 	emit addChannel(this->rx_channel["GsmChannelyzer"]);
+	emit hideSpectrum();
 }
 
 void GLSpectrumGUI::openSpectrum()

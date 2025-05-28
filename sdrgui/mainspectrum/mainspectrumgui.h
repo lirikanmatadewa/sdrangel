@@ -116,6 +116,7 @@ private slots:
 	void onTimeSelected(float time);
 	void onRequestAddChannel(int channelPluginIndex);
 	void onRequestAddIqReplay();
+	void hideSpectrum();
 
 signals:
 	void closing();

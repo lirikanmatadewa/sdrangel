@@ -184,12 +184,12 @@
         </column>
         <column>
          <property name="text">
-          <string>MCC</string>
+          <string>MNC</string>
          </property>
         </column>
         <column>
          <property name="text">
-          <string>MNC</string>
+          <string>MCC</string>
          </property>
         </column>
         <column>

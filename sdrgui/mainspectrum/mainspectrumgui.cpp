@@ -158,6 +158,7 @@ MainSpectrumGUI::MainSpectrumGUI(GLSpectrum* spectrum, GLSpectrumGUI* spectrumGU
 	connect(spectrumGUI, &GLSpectrumGUI::requestCenterFrequency, this, &MainSpectrumGUI::onRequestCenterFrequency);
 	connect(spectrumGUI, &GLSpectrumGUI::addChannel, this, &MainSpectrumGUI::onRequestAddChannel);
 	connect(spectrumGUI, &GLSpectrumGUI::addIqReplaySignal, this, &MainSpectrumGUI::onRequestAddIqReplay);
+	connect(spectrumGUI, &GLSpectrumGUI::hideSpectrum, this, &MainSpectrumGUI::hideSpectrum);
 
 	connect(spectrum->getSpectrumView(), &GLSpectrumView::timeSelected, this, &MainSpectrumGUI::onTimeSelected);
 
@@ -402,4 +403,11 @@ void MainSpectrumGUI::setRxChannel(QMap<QString, int>* rx_channel)
 void MainSpectrumGUI::onRequestAddIqReplay()
 {
 	emit addIqReplaySignal();
+}
+
+
+void MainSpectrumGUI::hideSpectrum()
+{
+	m_hideButton->click();
+	qDebug("Simulating Hide Button Click");
 }

@@ -171,6 +171,7 @@ signals:
 	void requestSetTone(bool tone); // Signal untuk mengatur tone
 	void closeTone();
 	void hideTone();
+	void hideSpectrum();
 
 public slots:
 	void changeFPS(int index);

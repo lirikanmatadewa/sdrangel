@@ -127,6 +127,11 @@ void DeviceUISet::registerRxChannelInstance(ChannelAPI* channelAPI, ChannelGUI* 
 		QObject::connect(m_spectrumGUI, &GLSpectrumGUI::closeTone, channelGUI, &ChannelGUI::closeTone);
 		QObject::connect(m_spectrumGUI, &GLSpectrumGUI::hideTone, channelGUI, &ChannelGUI::hideTone);
 	}
+
+	/*if (channelGUI->getTitle() == "GSM Channelyzer") {
+		qDebug() << "masuk kondisi --------------------";
+		QObject::connect(channelGUI, &ChannelGUI::closing, m_deviceGUI, &DeviceGUI::showSpectrum);
+	}*/
 }
 
 void DeviceUISet::registerTxChannelInstance(ChannelAPI* channelAPI, ChannelGUI* channelGUI)
@@ -753,6 +758,8 @@ void DeviceUISet::handleChannelGUIClosing(ChannelGUI* channelGUI)
 				[this, channelAPI]() { this->handleDeleteChannel(channelAPI); }
 			);
 			m_channelInstanceRegistrations.erase(it);
+
+			m_deviceGUI->showSpectrumHandler();
 			break;
 		}
 	}

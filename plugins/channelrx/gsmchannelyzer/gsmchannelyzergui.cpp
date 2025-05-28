@@ -249,7 +249,13 @@ bool GsmChannelyzerGUI::handleMessage(const Message& message)
                 bool active = results[i].m_power >= threshold;
                 if (active)
                 {
-                    powerItem->setBackground(Qt::darkGreen);
+                    powerItem->setBackground(Qt::red);
+                    QTableWidgetItem* activeCountItem = ui->table->item(row, COL_ACTIVE_COUNT);
+                    activeCountItem->setData(Qt::DisplayRole, activeCountItem->data(Qt::DisplayRole).toInt() + 1);
+
+                }
+                else {
+                    //powerItem->setBackground(Qt::darkGreen);
                     QTableWidgetItem* activeCountItem = ui->table->item(row, COL_ACTIVE_COUNT);
                     activeCountItem->setData(Qt::DisplayRole, activeCountItem->data(Qt::DisplayRole).toInt() + 1);
                 }
@@ -695,9 +701,11 @@ void GsmChannelyzerGUI::displaySettings()
     ui->tuneTimeText->setText(QString("%1 ms").arg(m_settings.m_tuneTime));
     
     // mode default
+    m_settings.m_threshold = -56;
     ui->thresh->setValue(m_settings.m_threshold * 10.0);
     ui->threshText->setText(QString("%1 dB").arg(m_settings.m_threshold, 0, 'f', 1));
-    
+    qDebug() << m_settings.m_threshold << "------------------------------";
+
     // mode default
     m_settings.m_priority = static_cast<GsmChannelyzerSettings::Priority>(1);
     ui->priority->setCurrentIndex((int)m_settings.m_priority);
