@@ -249,15 +249,16 @@ bool GsmChannelyzerGUI::handleMessage(const Message& message)
                 bool active = results[i].m_power >= threshold;
                 if (active)
                 {
-                    powerItem->setBackground(Qt::red);
+                    //powerItem->setBackground(Qt::darkGreen);
+                    powerItem->setBackground(QBrush());  // Reset to default background
                     QTableWidgetItem* activeCountItem = ui->table->item(row, COL_ACTIVE_COUNT);
                     activeCountItem->setData(Qt::DisplayRole, activeCountItem->data(Qt::DisplayRole).toInt() + 1);
 
                 }
                 else {
-                    //powerItem->setBackground(Qt::darkGreen);
-                    QTableWidgetItem* activeCountItem = ui->table->item(row, COL_ACTIVE_COUNT);
-                    activeCountItem->setData(Qt::DisplayRole, activeCountItem->data(Qt::DisplayRole).toInt() + 1);
+                    powerItem->setBackground(Qt::red);
+                    //QTableWidgetItem* activeCountItem = ui->table->item(row, COL_ACTIVE_COUNT);
+                    //activeCountItem->setData(Qt::DisplayRole, activeCountItem->data(Qt::DisplayRole).toInt() + 1);
                 }
             }
         }
