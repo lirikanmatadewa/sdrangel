@@ -36,7 +36,7 @@ set(ARCH_OPT "native" CACHE STRING "Specify instruction set to use. Will be pass
                                    'native' option will figure out host machine compatibilities and set flags accordingly (even with MSVC).")
 option(ENABLE_QT6 "Build with Qt6 rather than Qt5" OFF)
 option(ENABLE_PROFILER "Enable runtime profiler" OFF)
-set(VKFFT_BACKEND 1 CACHE STRING "vkFFT Backend: 0 - Vulkan, 1 - CUDA")
+set(VKFFT_BACKEND 0 CACHE STRING "vkFFT Backend: 0 - Vulkan, 1 - CUDA")
 
 # Sampling devices enablers
 option(ENABLE_AIRSPY "Enable AirSpy support" ON)

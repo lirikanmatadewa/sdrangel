@@ -136,6 +136,10 @@ void GLSpectrumGUI::setBuddies(SpectrumVis* spectrumVis, GLSpectrum* glSpectrum)
 	m_glSpectrum->setMessageQueueToGUI(&m_messageQueue);
 	m_spectrumVis->setMessageQueueToGUI(&m_messageQueue);
 	applySettings();
+
+	//m_glSpectrum->setManualSpan(100000000LL, 90000000, 90000000); // ±30 MHz di sekitar 100 MHz
+	//m_glSpectrum->setCenterFrequency(100000000LL);                // geser center ke 101 MHz
+	//m_glSpectrum->setManualSpan(100000000LL, 90000000, 90000000); // asimetris 10/50 MHz
 }
 
 void GLSpectrumGUI::resetToDefaults()
@@ -1239,7 +1243,22 @@ void GLSpectrumGUI::openIqRecord()
 
 void GLSpectrumGUI::openIqReplay()
 {
-	emit addIqReplaySignal();
+	//emit addIqReplaySignal();
+
+	if (!m_glSpectrum) return;
+
+	//// Contoh: center = 100 MHz, kiri = 70 MHz, kanan = 30 MHz
+	//// Contoh: center 100 MHz, kiri 70 MHz, kanan 70 MHz (lebih lebar dari ±SR/2)
+	//m_glSpectrum->setManualSpan(100000000LL, 70000000, 70000000);
+
+	//// Geser center saja:
+	//m_glSpectrum->setCenterFrequency(101000000LL);
+
+	//// Kembali ke perilaku lama (zoom default):
+	//m_glSpectrum->clearManualSpan();
+
+	m_glSpectrum->enableDualSlices(100'000'000LL, 200'000'000LL);
+	qDebug() << "Geser manual --";
 }
 
 void GLSpectrumGUI::openFrequencyScanner()

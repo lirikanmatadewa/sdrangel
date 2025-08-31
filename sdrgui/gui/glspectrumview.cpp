@@ -297,6 +297,10 @@ void GLSpectrumView::setCenterFrequency(qint64 frequency)
     m_mutex.lock();
     m_centerFrequency = frequency;
 
+    if (m_manualSpanEnabled) {
+        m_manualCenterHz = m_centerFrequency;
+    }
+
     // Handle queued frequency requests
     if (m_frequencyRequested && (frequency == m_requestedFrequency))
     {
@@ -720,6 +724,25 @@ void GLSpectrumView::newSpectrum(const Real *spectrum, int nbBins, int fftSize)
     updateWaterfall(spectrum);
     update3DSpectrogram(spectrum);
     updateHistogram(spectrum);
+
+    // === Tambahan: auto-capture ke slice kiri/kanan kalau dual aktif ===
+    if (m_dualSlicesEnabled) {
+        // toleransi 200 Hz agar “nempel” saat CF persis ke CF target
+        auto nearCF = [](qint64 a, qint64 b) { return llabs(a - b) < 200; };
+
+        if (nearCF(m_centerFrequency, m_leftSlice.centerHz)) {
+            m_leftSlice.sampleRate = m_sampleRate;
+            m_leftSlice.fftSize = fftSize;
+            m_leftSlice.data = QVector<Real>(spectrum, spectrum + nbBins);
+            m_leftSlice.hasData = true;
+        }
+        if (nearCF(m_centerFrequency, m_rightSlice.centerHz)) {
+            m_rightSlice.sampleRate = m_sampleRate;
+            m_rightSlice.fftSize = fftSize;
+            m_rightSlice.data = QVector<Real>(spectrum, spectrum + nbBins);
+            m_rightSlice.hasData = true;
+        }
+    }
 }
 
 void GLSpectrumView::updateWaterfall(const Real *spectrum)
@@ -1418,8 +1441,41 @@ void GLSpectrumView::paintGL()
         }
     }
 
+    // Pilih buffer yang akan digambar
+    const Real* spectrumForDraw = m_currentSpectrum;
+
+    if (m_dualSlicesEnabled && m_leftSlice.hasData && m_rightSlice.hasData)
+    {
+        // helper lokal: f (Hz absolut) -> bin di slice
+        auto mapFreqFromSlice = [](qint64 f, const ExtSlice& s) -> int {
+            if (s.sampleRate <= 0 || s.fftSize <= 0) return -1;
+            double half = s.sampleRate / 2.0;
+            double fmin = s.centerHz - half;
+            double rbw = double(s.sampleRate) / double(s.fftSize);
+            return int((double(f) - fmin) / rbw);
+            };
+
+        // Titik temu (seam) = tengah di antara CF kiri & kanan
+        const qint64 mid = (m_leftSlice.centerHz + m_rightSlice.centerHz) / 2;
+
+        m_dualComposite.resize(m_nbBins);
+        for (int i = 0; i < m_nbBins; ++i) {
+            qint64 fAbs = binToFrequency(i); // konversi bin tampilan -> Hz absolut :contentReference[oaicite:1]{index=1}
+            const ExtSlice& s = (fAbs <= mid) ? m_leftSlice : m_rightSlice;
+
+            int binS = mapFreqFromSlice(fAbs, s);
+            Real v = -std::numeric_limits<float>::max(); // default 'no data'
+            if (binS >= 0 && binS < s.data.size()) {
+                v = s.data[binS];
+            }
+            m_dualComposite[i] = v;
+        }
+        spectrumForDraw = m_dualComposite.data();
+    }
+
+
     // paint current spectrum line on top of histogram
-    if (m_displayCurrent && m_currentSpectrum)
+    if (m_displayCurrent && spectrumForDraw)
     {
         Real bottom = -m_powerRange;
         GLfloat *q3;
@@ -1430,7 +1486,7 @@ void GLSpectrumView::paintGL()
             // Fill under line
             for (int i = 0; i < m_nbBins; i++)
             {
-                Real v = m_currentSpectrum[i] - m_referenceLevel;
+                Real v = spectrumForDraw[i] - m_referenceLevel;
 
                 if (v > 0) {
                     v = 0;
@@ -1459,14 +1515,14 @@ void GLSpectrumView::paintGL()
 
         {
             if (m_histogramFindPeaks) {
-                m_peakFinder.init(m_currentSpectrum[0]);
+                m_peakFinder.init(spectrumForDraw[0]);
             }
 
             // Draw line
             q3 = m_q3FFT.m_array;
             for (int i = 0; i < m_nbBins; i++)
             {
-                Real v = m_currentSpectrum[i] - m_referenceLevel;
+                Real v = spectrumForDraw[i] - m_referenceLevel;
 
                 if (v > 0) {
                     v = 0;
@@ -1478,7 +1534,7 @@ void GLSpectrumView::paintGL()
                 q3[2*i+1] = v;
 
                 if (m_histogramFindPeaks && (i > 0)) {
-                    m_peakFinder.push(m_currentSpectrum[i], i == m_nbBins - 1);
+                    m_peakFinder.push(spectrumForDraw[i], i == m_nbBins - 1);
                 }
             }
             // Replicate Nyquist sample to end of positive side
@@ -1499,7 +1555,7 @@ void GLSpectrumView::paintGL()
         }
     }
 
-    if (m_displayCurrent && m_currentSpectrum && (m_markersDisplay & SpectrumSettings::MarkersDisplaySpectrum))
+    if (m_displayCurrent && spectrumForDraw && (m_markersDisplay & SpectrumSettings::MarkersDisplaySpectrum))
     {
         if (m_histogramFindPeaks) {
             updateHistogramPeaks();
@@ -1792,7 +1848,55 @@ void GLSpectrumView::paintGL()
         m_glShaderInfo.drawSurface(m_glInfoBoxMatrix, tex1, vtx1, 4);
     }
 
-    if (m_currentSpectrum)
+    // ==== OVERLAY "NO DATA" DI LUAR ±SR/2 ====
+    // Hitung jendela data real (span live = sampleRate atau sampleRate/2 utk SSB)
+    int   adjSR = m_ssbSpectrum ? m_sampleRate / 2 : m_sampleRate;
+    qint64 adjCenter = m_centerFrequency + (m_ssbSpectrum ? m_sampleRate / 4 : 0);
+    qint64 dataStart = adjCenter - adjSR / 2;
+    qint64 dataStop = adjCenter + adjSR / 2;
+
+    // Ambil rentang tampilan saat ini dari scale
+    qint64 viewStart = (qint64)m_frequencyScale.getRangeMin();
+    qint64 viewStop = (qint64)(m_frequencyScale.getRangeMin() + m_frequencyScale.getRange());
+
+    // Helper: gambar pita abu-abu di [f1..f2] pakai koordinat ter-normalisasi (0..1)
+    auto drawNoDataBand01 = [&](qint64 f1, qint64 f2, const QVector4D& rgba)
+        {
+            if (f2 <= f1) return;
+            float x1 = (float)((f1 - m_frequencyScale.getRangeMin()) / m_frequencyScale.getRange());
+            float x2 = (float)((f2 - m_frequencyScale.getRangeMin()) / m_frequencyScale.getRange());
+            x1 = std::max(0.0f, std::min(1.0f, x1));
+            x2 = std::max(0.0f, std::min(1.0f, x2));
+            if (x2 <= x1) return;
+
+            // Quad full-tinggi pada histogram box
+            GLfloat q3[] = {
+                x2, 1,
+                x1, 1,
+                x1, 0,
+                x2, 0,
+                x1, 0,
+                x1, 1
+            };
+            m_glShaderSimple.drawSurface(m_glHistogramBoxMatrix, rgba, q3, 4);
+
+            // (opsional) tulisan overlay di tengah pita kiri/kanan
+            // Gunakan utilitas tulisan yg sudah ada, serupa drawTextOverlay(...) di class ini
+            // (kalau mau, bisa di-skip agar simpel)
+        };
+
+    // Bagian kiri di luar data?
+    if (viewStart < dataStart) {
+        drawNoDataBand01(viewStart, dataStart, QVector4D(0.2f, 0.2f, 0.2f, 0.35f));
+    }
+    // Bagian kanan di luar data?
+    if (viewStop > dataStop) {
+        drawNoDataBand01(dataStop, viewStop, QVector4D(0.2f, 0.2f, 0.2f, 0.35f));
+    }
+    // ==== END OVERLAY ====
+
+
+    if (spectrumForDraw)
     {
         switch (m_measurement)
         {
@@ -4549,7 +4653,43 @@ void GLSpectrumView::updateFFTLimits()
 
 void GLSpectrumView::setFrequencyScale()
 {
-    int frequencySpan;
+
+    // === Dual-slice scale ===
+    if (m_dualSlicesEnabled && (m_leftSlice.centerHz != 0) && (m_rightSlice.centerHz != 0))
+    {
+        // Jika belum ada SR slice yang valid, pakai SR/FFT saat ini sebagai default
+        qint32 srL = m_leftSlice.sampleRate > 0 ? m_leftSlice.sampleRate : m_sampleRate;
+        qint32 srR = m_rightSlice.sampleRate > 0 ? m_rightSlice.sampleRate : m_sampleRate;
+
+        qint64 leftMin = m_leftSlice.centerHz - srL / 2;
+        qint64 rightMax = m_rightSlice.centerHz + srR / 2;
+
+        // pastikan urut
+        if (rightMax <= leftMin) {
+            // fallback: gunakan range normal
+        }
+        else {
+            m_frequencyScale.setRange(Unit::Frequency, leftMin, rightMax);
+            m_frequencyScale.setMakeOpposite(m_lsbDisplay);
+            return; // JANGAN lanjut ke mode manual-span/zoom default
+        }
+    }
+
+    m_frequencyScale.setSize(width() - m_leftMargin - m_rightMargin);
+
+    if (m_manualSpanEnabled)
+    {
+        qint64 start = m_manualCenterHz - (qint64)m_manualLeftHz;
+        qint64 stop = m_manualCenterHz + (qint64)m_manualRightHz;
+
+        // >>> HAPUS/COMMENT blok clamp ke minHw/maxHw di sini <<<
+
+        m_frequencyScale.setRange(Unit::Frequency, start, stop);
+        m_frequencyScale.setMakeOpposite(m_lsbDisplay);
+        return; // tetap keluar agar tidak lanjut ke mode zoom default
+    }
+
+    int     frequencySpan;
     int64_t centerFrequency;
 
     getFrequencyZoom(centerFrequency, frequencySpan);
@@ -5136,4 +5276,58 @@ bool GLSpectrumView::eventFilter(QObject *object, QEvent *event)
     {
         return QOpenGLWidget::eventFilter(object, event);
     }
+}
+
+
+void GLSpectrumView::setManualSpan(qint64 centerHz, int spanLeftHz, int spanRightHz)
+{
+    m_mutex.lock();
+    m_manualSpanEnabled = true;
+    m_manualCenterHz = centerHz;
+    m_manualLeftHz = std::max(0, spanLeftHz);
+    m_manualRightHz = std::max(0, spanRightHz);
+
+    // Optional: netralkan zoom agar tidak “mengambil alih” range
+    m_frequencyZoomFactor = 1.0f;
+    m_frequencyZoomPos = 0.5f;
+
+    m_changesPending = true;
+    m_mutex.unlock();
+
+    updateFFTLimits();   // konsistenkan pipeline vis/zoom
+    update();            // repaint
+}
+
+void GLSpectrumView::clearManualSpan()
+{
+    m_mutex.lock();
+    m_manualSpanEnabled = false;
+    m_changesPending = true;
+    m_mutex.unlock();
+
+    updateFFTLimits();
+    update();
+}
+
+
+void GLSpectrumView::enableDualSlices(qint64 leftCF, qint64 rightCF)
+{
+    QMutexLocker lk(&m_mutex);
+    m_dualSlicesEnabled = true;
+    m_leftSlice = ExtSlice{}; m_leftSlice.centerHz = leftCF;
+    m_rightSlice = ExtSlice{}; m_rightSlice.centerHz = rightCF;
+    m_dualComposite.resize(m_nbBins);
+    m_changesPending = true;
+    update();
+}
+
+void GLSpectrumView::clearDualSlices()
+{
+    QMutexLocker lk(&m_mutex);
+    m_dualSlicesEnabled = false;
+    m_leftSlice = ExtSlice{};
+    m_rightSlice = ExtSlice{};
+    m_dualComposite.clear();
+    m_changesPending = true;
+    update();
 }

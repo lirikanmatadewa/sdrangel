@@ -60,6 +60,16 @@ class SDRGUI_API GLSpectrumView : public QOpenGLWidget, public GLSpectrumInterfa
     Q_OBJECT
 
 public:
+
+    // Manual span control
+    void setManualSpan(qint64 centerHz, int spanLeftHz, int spanRightHz); // aktifkan mode manual
+    void clearManualSpan();                                               // kembali ke mode auto/zoom
+    bool isManualSpanEnabled() const { return m_manualSpanEnabled; }
+
+    void enableDualSlices(qint64 leftCF, qint64 rightCF);
+    void clearDualSlices();
+    bool dualSlicesEnabled() const { return m_dualSlicesEnabled; }
+
     class MsgReportSampleRate : public Message {
         MESSAGE_CLASS_DECLARATION
 
@@ -238,6 +248,26 @@ public:
     bool isDeviceSpectrum() const { return m_isDeviceSpectrum; }
 
 private:
+
+    // Manual span state
+    bool   m_manualSpanEnabled = false;
+    qint64 m_manualCenterHz = 0;
+    int    m_manualLeftHz = 0;
+    int    m_manualRightHz = 0;
+
+    struct ExtSlice {
+        qint64 centerHz = 0;      // CF slice
+        qint32 sampleRate = 0;    // SR saat slice ditangkap
+        int    fftSize = 0;       // FFT size saat slice ditangkap
+        QVector<Real> data;       // PSD (panjang = m_nbBins saat capture)
+        bool   hasData = false;
+    };
+
+    bool m_dualSlicesEnabled = false;
+    ExtSlice m_leftSlice, m_rightSlice;
+    QVector<Real> m_dualComposite; // buffer komposit sepanjang m_nbBins
+
+
     struct ChannelMarkerState {
         ChannelMarker* m_channelMarker;
         QMatrix4x4 m_glMatrixWaterfall;

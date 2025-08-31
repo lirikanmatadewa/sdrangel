@@ -42,6 +42,12 @@ public:
     void setMeasurementsVisible(bool visible);
     void setMeasurementsPosition(SpectrumSettings::MeasurementsPosition position);
 
+    // Manual span controls (forwarder ke GLSpectrumView)
+    void setManualSpan(qint64 centerHz, int spanLeftHz, int spanRightHz);
+    void clearManualSpan();
+    void enableDualSlices(qint64 leftCF, qint64 rightCF);
+    void clearDualSlices();
+
     void setCenterFrequency(qint64 frequency) { m_spectrum->setCenterFrequency(frequency); }
     qint64 getCenterFrequency() const { return m_spectrum->getCenterFrequency(); }
     float getPowerMax() const { return m_spectrum->getPowerMax(); }
