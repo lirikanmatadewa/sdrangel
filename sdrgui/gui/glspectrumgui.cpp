@@ -1257,7 +1257,15 @@ void GLSpectrumGUI::openIqReplay()
 	//// Kembali ke perilaku lama (zoom default):
 	//m_glSpectrum->clearManualSpan();
 
-	m_glSpectrum->enableDualSlices(100'000'000LL, 200'000'000LL);
+	//m_glSpectrum->enableDualSlices(100'000'000LL, 200'000'000LL);
+	m_glSpectrum->enableMultiSlices({ 2'300'000'000LL, 2'360'000'000LL});
+	// Paksa rentang X jadi 30–158 MHz:
+	const qint64 xmin = 2'300'000'000LL;
+	const qint64 xmax = 2'360'000'000LL;
+	const qint64 c = (xmin + xmax) / 2;       // 94 MHz
+	const int    L = int(c - xmin);           // 64 MHz
+	const int    R = int(xmax - c);           // 64 MHz
+	m_glSpectrum->setManualSpan(c, L, R);
 	qDebug() << "Geser manual --";
 }
 

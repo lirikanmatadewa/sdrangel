@@ -159,11 +159,7 @@ void GLSpectrum::clearManualSpan()
     if (m_spectrum) m_spectrum->clearManualSpan();
 }
 
-void GLSpectrum::enableDualSlices(qint64 leftCF, qint64 rightCF) 
+void GLSpectrum::enableMultiSlices(const QVector<qint64>& cfs)
 {
-    if (m_spectrum) m_spectrum->enableDualSlices(leftCF, rightCF);
-}
-
-void GLSpectrum::clearDualSlices() {
-    if (m_spectrum) m_spectrum->clearDualSlices();
+    if (m_spectrum) m_spectrum->enableMultiSlices(cfs);
 }

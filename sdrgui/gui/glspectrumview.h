@@ -66,9 +66,9 @@ public:
     void clearManualSpan();                                               // kembali ke mode auto/zoom
     bool isManualSpanEnabled() const { return m_manualSpanEnabled; }
 
-    void enableDualSlices(qint64 leftCF, qint64 rightCF);
-    void clearDualSlices();
-    bool dualSlicesEnabled() const { return m_dualSlicesEnabled; }
+    void enableMultiSlices(const QVector<qint64>& centersHz);
+    void clearMultiSlices();
+    bool multiSlicesEnabled() const { return m_multiSlicesEnabled; }
 
     class MsgReportSampleRate : public Message {
         MESSAGE_CLASS_DECLARATION
@@ -255,18 +255,28 @@ private:
     int    m_manualLeftHz = 0;
     int    m_manualRightHz = 0;
 
+    // --- header ---
     struct ExtSlice {
-        qint64 centerHz = 0;      // CF slice
-        qint32 sampleRate = 0;    // SR saat slice ditangkap
-        int    fftSize = 0;       // FFT size saat slice ditangkap
-        QVector<Real> data;       // PSD (panjang = m_nbBins saat capture)
+        qint64 centerHz = 0;
+        qint32 sampleRate = 0;
+        int    fftSize = 0;
+        QVector<Real> data;
         bool   hasData = false;
+        quint64 tick = 0;     // urutan capture (opsional untuk tie-break saat overlap)
     };
 
-    bool m_dualSlicesEnabled = false;
-    ExtSlice m_leftSlice, m_rightSlice;
-    QVector<Real> m_dualComposite; // buffer komposit sepanjang m_nbBins
+    // --- Multi-slices state ---
+    bool m_multiSlicesEnabled = false;
+    QVector<ExtSlice> m_slices;         // daftar slice dinamis
+    QHash<qint64, int> m_idxByCF;        // lookup cepat: CF -> index slice
+    QVector<Real> m_multiComposite;     // buffer komposit sepanjang m_nbBins
 
+    // (opsional) deteksi 1 siklus selesai:
+    QSet<qint64> m_visitedCFs;
+    qint64 m_firstCFSeen = 0;
+    bool   m_lockCapture = false;       // kalau true, stop overwrite setelah 1 siklus
+
+    bool m_multiCompositeDirty = false;
 
     struct ChannelMarkerState {
         ChannelMarker* m_channelMarker;
@@ -573,6 +583,9 @@ signals:
     void updateAnnotations();
     // Emitted when user ctrl-clicks on waterfall to select a time. time is in seconds.
     void timeSelected(float time);
+
+    void multiCaptureCycleDone();
+
 
 };
 

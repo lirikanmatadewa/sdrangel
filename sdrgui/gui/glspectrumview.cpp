@@ -246,6 +246,10 @@ GLSpectrumView::~GLSpectrumView()
 {
     QMutexLocker mutexLocker(&m_mutex);
 
+    m_multiSlicesEnabled = false;
+    m_lockCapture = false;
+
+
     if (m_waterfallBuffer)
     {
         delete m_waterfallBuffer;
@@ -297,7 +301,7 @@ void GLSpectrumView::setCenterFrequency(qint64 frequency)
     m_mutex.lock();
     m_centerFrequency = frequency;
 
-    if (m_manualSpanEnabled) {
+    if (m_manualSpanEnabled && !m_multiSlicesEnabled) {
         m_manualCenterHz = m_centerFrequency;
     }
 
@@ -701,49 +705,109 @@ float GLSpectrumView::getTimeMax() const
     return m_timeScale.getRangeMax();
 }
 
-void GLSpectrumView::newSpectrum(const Real *spectrum, int nbBins, int fftSize)
+//void GLSpectrumView::newSpectrum(const Real *spectrum, int nbBins, int fftSize)
+//{
+//    QMutexLocker mutexLocker(&m_mutex);
+//
+//    m_displayChanged = true;
+//    if (m_changesPending)
+//    {
+//        m_fftSize = fftSize;
+//        m_nbBins = nbBins;
+//        return;
+//    }
+//
+//    if ((fftSize != m_fftSize) || (m_nbBins != nbBins))
+//    {
+//        m_fftSize = fftSize;
+//        m_nbBins = nbBins;
+//        m_changesPending = true;
+//        return;
+//    }
+//
+//    updateWaterfall(spectrum);
+//    update3DSpectrogram(spectrum);
+//    updateHistogram(spectrum);
+//}
+
+// ganti fungsi lama:
+static inline bool nearCF(qint64 a, qint64 b, qint64 sr)
 {
-    QMutexLocker mutexLocker(&m_mutex);
+    if (sr <= 0) return llabs(a - b) <= 500;     // fallback kecil
+    qint64 tol = std::max<qint64>(sr / 2, 800000); // ±SR/2 atau min 0.8 MHz
+    return llabs(a - b) <= tol;
+}
 
+void GLSpectrumView::newSpectrum(const Real* spectrum, int nbBins, int fftSize) {
+    QMutexLocker lk(&m_mutex);
     m_displayChanged = true;
-    if (m_changesPending)
-    {
-        m_fftSize = fftSize;
-        m_nbBins = nbBins;
-        return;
-    }
+    if (m_changesPending) { m_fftSize = fftSize; m_nbBins = nbBins; return; }
+    if ((fftSize != m_fftSize) || (m_nbBins != nbBins)) { m_fftSize = fftSize; m_nbBins = nbBins; m_changesPending = true; return; }
 
-    if ((fftSize != m_fftSize) || (m_nbBins != nbBins))
-    {
-        m_fftSize = fftSize;
-        m_nbBins = nbBins;
-        m_changesPending = true;
-        return;
-    }
-
+    // pipeline existing (waterfall/histogram) tetap
     updateWaterfall(spectrum);
     update3DSpectrogram(spectrum);
     updateHistogram(spectrum);
 
-    // === Tambahan: auto-capture ke slice kiri/kanan kalau dual aktif ===
-    if (m_dualSlicesEnabled) {
-        // toleransi 200 Hz agar “nempel” saat CF persis ke CF target
-        auto nearCF = [](qint64 a, qint64 b) { return llabs(a - b) < 200; };
+    // --- Multi-slices capture ---
+    if (m_multiSlicesEnabled && !m_lockCapture && (nbBins > 0))
+    {
+        // cari slice dengan CF terdekat yang match
+        for (int i = 0; i < m_slices.size(); ++i)
+        {
+            auto& s = m_slices[i];
 
-        if (nearCF(m_centerFrequency, m_leftSlice.centerHz)) {
-            m_leftSlice.sampleRate = m_sampleRate;
-            m_leftSlice.fftSize = fftSize;
-            m_leftSlice.data = QVector<Real>(spectrum, spectrum + nbBins);
-            m_leftSlice.hasData = true;
-        }
-        if (nearCF(m_centerFrequency, m_rightSlice.centerHz)) {
-            m_rightSlice.sampleRate = m_sampleRate;
-            m_rightSlice.fftSize = fftSize;
-            m_rightSlice.data = QVector<Real>(spectrum, spectrum + nbBins);
-            m_rightSlice.hasData = true;
+            qint64 fMin = s.centerHz - s.sampleRate / 2;
+            qint64 fMax = s.centerHz + s.sampleRate / 2;
+          
+            if (nearCF(m_centerFrequency, s.centerHz, m_sampleRate))
+            {
+                s.sampleRate = m_sampleRate;
+                s.fftSize = fftSize;
+                s.data = QVector<Real>(spectrum, spectrum + nbBins);
+                s.hasData = true;
+                s.tick++;
+
+                //// LOG setelah field valid:
+                //qint64 half = s.sampleRate / 2;
+                //qDebug() << "-> CAP OK cf" << s.centerHz
+                //    << "sr" << s.sampleRate
+                //    << "span" << (s.centerHz - half) << (s.centerHz + half);
+
+                m_multiCompositeDirty = true;
+                m_changesPending = true;
+
+                //m_changesPending = true;
+                //update();
+
+                // deteksi siklus (opsional)
+                if (m_firstCFSeen == 0) m_firstCFSeen = s.centerHz;
+                m_visitedCFs.insert(s.centerHz);
+
+                if (m_visitedCFs.size() == m_slices.size()) {
+                    // semua target CF sudah terisi (1 siklus lengkap)
+                    emit multiCaptureCycleDone();          // if you added the signal
+                    // kunci agar tidak overwrite (opsional, sesuai kebutuhan):
+                    // m_lockCapture = true;
+                }
+                else if ((m_firstCFSeen != 0) && nearCF(m_centerFrequency, m_firstCFSeen, m_sampleRate)) {
+                    // kembali ke CF awal -> siklus “wrap”
+                    // m_lockCapture = true; // kalau mau berhenti di sini
+                }
+                break;
+            }
+            else {
+                // Trace jika tidak match
+                 qDebug() << "-> skip cf_now" << m_centerFrequency << "target" << s.centerHz
+                          << "tol" << (m_sampleRate > 0 ? (m_sampleRate/6) : 500);
+            }
         }
     }
+
+    // tetap simpan currentSpectrum agar mode single berjalan normal
+    m_currentSpectrum = spectrum;
 }
+
 
 void GLSpectrumView::updateWaterfall(const Real *spectrum)
 {
@@ -1441,36 +1505,69 @@ void GLSpectrumView::paintGL()
         }
     }
 
-    // Pilih buffer yang akan digambar
+    auto rbwFor = [](const ExtSlice& s)->double {
+        if (s.sampleRate <= 0 || s.fftSize <= 0) return 0.0;
+        return double(s.sampleRate) / double(s.fftSize);
+        };
+    auto mapBin = [&](qint64 f, const ExtSlice& s)->int {
+        double half = s.sampleRate / 2.0;
+        double fmin = s.centerHz - half;
+        double rbw = double(s.sampleRate) / double(s.fftSize);
+        if (rbw <= 0.0) return -1;
+        return int((double(f) - fmin) / rbw);
+        };
+
     const Real* spectrumForDraw = m_currentSpectrum;
-
-    if (m_dualSlicesEnabled && m_leftSlice.hasData && m_rightSlice.hasData)
+    if (m_multiSlicesEnabled && (m_nbBins > 0))
     {
-        // helper lokal: f (Hz absolut) -> bin di slice
-        auto mapFreqFromSlice = [](qint64 f, const ExtSlice& s) -> int {
-            if (s.sampleRate <= 0 || s.fftSize <= 0) return -1;
-            double half = s.sampleRate / 2.0;
-            double fmin = s.centerHz - half;
-            double rbw = double(s.sampleRate) / double(s.fftSize);
-            return int((double(f) - fmin) / rbw);
-            };
+        if (m_multiComposite.size() != m_nbBins)
+            m_multiComposite.resize(m_nbBins);
 
-        // Titik temu (seam) = tengah di antara CF kiri & kanan
-        const qint64 mid = (m_leftSlice.centerHz + m_rightSlice.centerHz) / 2;
+        if (m_multiCompositeDirty) {
+            struct Cover { int i; qint64 f1; qint64 f2; };
+            QVector<Cover> covers;
+            covers.reserve(m_slices.size());
 
-        m_dualComposite.resize(m_nbBins);
-        for (int i = 0; i < m_nbBins; ++i) {
-            qint64 fAbs = binToFrequency(i); // konversi bin tampilan -> Hz absolut :contentReference[oaicite:1]{index=1}
-            const ExtSlice& s = (fAbs <= mid) ? m_leftSlice : m_rightSlice;
-
-            int binS = mapFreqFromSlice(fAbs, s);
-            Real v = -std::numeric_limits<float>::max(); // default 'no data'
-            if (binS >= 0 && binS < s.data.size()) {
-                v = s.data[binS];
+            for (int i = 0; i < m_slices.size(); ++i) {
+                const auto& s = m_slices[i];
+                if (!s.hasData || s.sampleRate <= 0 || s.fftSize <= 0 || s.data.isEmpty())
+                    continue;
+                qint64 half = s.sampleRate / 2;
+                covers.push_back({ i, s.centerHz - half, s.centerHz + half });
             }
-            m_dualComposite[i] = v;
+
+            auto rbwFor = [](const ExtSlice& s)->double {
+                return (s.sampleRate > 0 && s.fftSize > 0) ? double(s.sampleRate) / double(s.fftSize) : 0.0;
+                };
+
+            for (int b = 0; b < m_nbBins; ++b)
+            {
+                qint64 fAbs = binToFrequency(b);
+
+                // pilih slice yang benar-benar mencakup fAbs
+                int winner = -1;
+                qint64 bestDist = std::numeric_limits<qint64>::max();
+
+                for (const auto& c : covers) {
+                    if (fAbs < c.f1 || fAbs > c.f2) continue;
+                    qint64 d = llabs(fAbs - m_slices[c.i].centerHz);
+                    if (d < bestDist) { bestDist = d; winner = c.i; }
+                }
+
+                Real v = -std::numeric_limits<float>::max(); // “no data” sentinel
+                if (winner >= 0) {
+                    const auto& s = m_slices[winner];
+                    double rbw = rbwFor(s);
+                    if (rbw > 0.0) {
+                        int sb = int((double(fAbs) - double(s.centerHz - s.sampleRate / 2)) / rbw);
+                        if (sb >= 0 && sb < s.data.size()) v = s.data[sb];
+                    }
+                }
+                m_multiComposite[b] = v;
+            }
+            m_multiCompositeDirty = false;
         }
-        spectrumForDraw = m_dualComposite.data();
+        spectrumForDraw = m_multiComposite.constData();
     }
 
 
@@ -2560,14 +2657,30 @@ float GLSpectrumView::calPower(float power) const
 
 int GLSpectrumView::frequencyToBin(int64_t frequency) const
 {
-    float rbw = (m_ssbSpectrum ? (m_sampleRate/2) : m_sampleRate) / (float)m_fftSize;
-    return (frequency - m_frequencyScale.getRangeMin()) / rbw;
+    const qint64 xmin = m_frequencyScale.getRangeMin();
+    const qint64 xmax = m_frequencyScale.getRangeMax();
+
+    if (m_manualSpanEnabled || m_multiSlicesEnabled) {
+        const float rbw = (xmax - xmin) / float(std::max(1, m_nbBins));
+        return int((frequency - xmin) / rbw);
+    }
+
+    const float rbw = (m_ssbSpectrum ? (m_sampleRate / 2) : m_sampleRate) / float(m_fftSize);
+    return int((frequency - xmin) / rbw);
 }
 
 int64_t GLSpectrumView::binToFrequency(int bin) const
 {
-    float rbw = (m_ssbSpectrum ? (m_sampleRate/2) : m_sampleRate) / (float)m_fftSize;
-    return m_frequencyScale.getRangeMin() + bin * rbw;
+    const qint64 xmin = m_frequencyScale.getRangeMin();
+    const qint64 xmax = m_frequencyScale.getRangeMax();
+
+    if (m_manualSpanEnabled || m_multiSlicesEnabled) {
+        const float rbw = (xmax - xmin) / float(std::max(1, m_nbBins));
+        return xmin + qint64(std::llround(bin * rbw));
+    }
+
+    const float rbw = (m_ssbSpectrum ? (m_sampleRate / 2) : m_sampleRate) / float(m_fftSize);
+    return xmin + qint64(std::llround(bin * rbw));
 }
 
 // Find a peak and measure SNR / THD / SINAD
@@ -4653,50 +4766,63 @@ void GLSpectrumView::updateFFTLimits()
 
 void GLSpectrumView::setFrequencyScale()
 {
-
-    // === Dual-slice scale ===
-    if (m_dualSlicesEnabled && (m_leftSlice.centerHz != 0) && (m_rightSlice.centerHz != 0))
-    {
-        // Jika belum ada SR slice yang valid, pakai SR/FFT saat ini sebagai default
-        qint32 srL = m_leftSlice.sampleRate > 0 ? m_leftSlice.sampleRate : m_sampleRate;
-        qint32 srR = m_rightSlice.sampleRate > 0 ? m_rightSlice.sampleRate : m_sampleRate;
-
-        qint64 leftMin = m_leftSlice.centerHz - srL / 2;
-        qint64 rightMax = m_rightSlice.centerHz + srR / 2;
-
-        // pastikan urut
-        if (rightMax <= leftMin) {
-            // fallback: gunakan range normal
-        }
-        else {
-            m_frequencyScale.setRange(Unit::Frequency, leftMin, rightMax);
-            m_frequencyScale.setMakeOpposite(m_lsbDisplay);
-            return; // JANGAN lanjut ke mode manual-span/zoom default
-        }
-    }
-
+    // pakai lebar kanvas yang aktual
     m_frequencyScale.setSize(width() - m_leftMargin - m_rightMargin);
 
-    if (m_manualSpanEnabled)
-    {
-        qint64 start = m_manualCenterHz - (qint64)m_manualLeftHz;
-        qint64 stop = m_manualCenterHz + (qint64)m_manualRightHz;
+    // 1) Manual span SELALU diprioritaskan
+    if (m_manualSpanEnabled && !m_multiSlicesEnabled) {
+        const qint64 f1 = m_manualCenterHz - (qint64)m_manualLeftHz;
+        const qint64 f2 = m_manualCenterHz + (qint64)m_manualRightHz;
 
-        // >>> HAPUS/COMMENT blok clamp ke minHw/maxHw di sini <<<
-
-        m_frequencyScale.setRange(Unit::Frequency, start, stop);
+        m_frequencyScale.setRange(Unit::Frequency, f1, f2);
         m_frequencyScale.setMakeOpposite(m_lsbDisplay);
-        return; // tetap keluar agar tidak lanjut ke mode zoom default
+        return;  // jangan biarkan path lain override manual
     }
 
+    // 2) Kalau tidak manual, dan multi-slice ON: pakai union dari semua slice yang punya data
+    if (m_multiSlicesEnabled && !m_slices.isEmpty()) {
+        qint64 fmin = std::numeric_limits<qint64>::max();
+        qint64 fmax = std::numeric_limits<qint64>::min();
+
+        // ambil dari SR aktual per slice jika sudah ada
+        for (const auto& s : m_slices) if (s.sampleRate > 0) {
+            const qint64 half = s.sampleRate / 2;
+            const qint64 a = s.centerHz - half;
+            const qint64 b = s.centerHz + half;
+            if (a < fmin) fmin = a;
+            if (b > fmax) fmax = b;
+        }
+
+        // fallback awal (kalau SR slice masih 0 semua), asumsi half = m_sampleRate/2
+        if (fmin == std::numeric_limits<qint64>::max() && m_sampleRate > 0) {
+            const qint64 half = m_sampleRate / 2;
+            for (const auto& s : m_slices) {
+                const qint64 a = s.centerHz - half;
+                const qint64 b = s.centerHz + half;
+                if (a < fmin) fmin = a;
+                if (b > fmax) fmax = b;
+            }
+        }
+
+        if (fmin < fmax) {
+            m_frequencyScale.setRange(Unit::Frequency, fmin, fmax);
+            m_frequencyScale.setMakeOpposite(m_lsbDisplay);
+            return; // stop di sini, jangan lanjut ke mode zoom default
+        }
+    }
+
+    // 3) fallback: logika zoom lama
     int     frequencySpan;
     int64_t centerFrequency;
-
     getFrequencyZoom(centerFrequency, frequencySpan);
-    m_frequencyScale.setSize(width() - m_leftMargin - m_rightMargin);
-    m_frequencyScale.setRange(Unit::Frequency, centerFrequency - frequencySpan / 2.0, centerFrequency + frequencySpan / 2.0);
+    m_frequencyScale.setRange(
+        Unit::Frequency,
+        centerFrequency - frequencySpan / 2.0,
+        centerFrequency + frequencySpan / 2.0
+    );
     m_frequencyScale.setMakeOpposite(m_lsbDisplay);
 }
+
 
 void GLSpectrumView::setPowerScale(int height)
 {
@@ -5282,20 +5408,31 @@ bool GLSpectrumView::eventFilter(QObject *object, QEvent *event)
 void GLSpectrumView::setManualSpan(qint64 centerHz, int spanLeftHz, int spanRightHz)
 {
     m_mutex.lock();
+
+    // >>> early-return: kalau nilainya sama, jangan kirim pesan/refresh lagi
+    if (m_manualSpanEnabled &&
+        centerHz == m_manualCenterHz &&
+        std::max(0, spanLeftHz) == m_manualLeftHz &&
+        std::max(0, spanRightHz) == m_manualRightHz)
+    {
+        m_mutex.unlock();
+        return;
+    }
+
     m_manualSpanEnabled = true;
     m_manualCenterHz = centerHz;
     m_manualLeftHz = std::max(0, spanLeftHz);
     m_manualRightHz = std::max(0, spanRightHz);
-
-    // Optional: netralkan zoom agar tidak “mengambil alih” range
     m_frequencyZoomFactor = 1.0f;
     m_frequencyZoomPos = 0.5f;
-
     m_changesPending = true;
     m_mutex.unlock();
 
-    updateFFTLimits();   // konsistenkan pipeline vis/zoom
-    update();            // repaint
+    // >>> Saat multi-slice aktif, JANGAN notify DSP (hindari banjir pesan)
+    if (!m_multiSlicesEnabled) {
+        updateFFTLimits();
+    }
+    update();  // repaint cukup aman
 }
 
 void GLSpectrumView::clearManualSpan()
@@ -5307,27 +5444,43 @@ void GLSpectrumView::clearManualSpan()
 
     updateFFTLimits();
     update();
-}
+} 
 
-
-void GLSpectrumView::enableDualSlices(qint64 leftCF, qint64 rightCF)
+void GLSpectrumView::enableMultiSlices(const QVector<qint64>& centersHz)
 {
     QMutexLocker lk(&m_mutex);
-    m_dualSlicesEnabled = true;
-    m_leftSlice = ExtSlice{}; m_leftSlice.centerHz = leftCF;
-    m_rightSlice = ExtSlice{}; m_rightSlice.centerHz = rightCF;
-    m_dualComposite.resize(m_nbBins);
+    m_multiSlicesEnabled = true;
+    m_lockCapture = false;
+    m_slices.clear();
+    m_idxByCF.clear();
+    m_multiComposite.clear();
+    m_visitedCFs.clear();
+    m_firstCFSeen = 0;
+
+    m_slices.resize(centersHz.size());
+    for (int i = 0; i < centersHz.size(); ++i) {
+        m_slices[i].centerHz = centersHz[i];
+        m_slices[i].sampleRate = 0;
+        m_slices[i].fftSize = 0;
+        m_slices[i].data.clear();
+        m_slices[i].hasData = false;
+        m_slices[i].tick = 0;
+        m_idxByCF.insert(centersHz[i], i);
+    }
     m_changesPending = true;
     update();
 }
 
-void GLSpectrumView::clearDualSlices()
+void GLSpectrumView::clearMultiSlices()
 {
     QMutexLocker lk(&m_mutex);
-    m_dualSlicesEnabled = false;
-    m_leftSlice = ExtSlice{};
-    m_rightSlice = ExtSlice{};
-    m_dualComposite.clear();
+    m_multiSlicesEnabled = false;
+    m_lockCapture = false;
+    m_slices.clear();
+    m_idxByCF.clear();
+    m_multiComposite.clear();
+    m_visitedCFs.clear();
+    m_firstCFSeen = 0;
     m_changesPending = true;
     update();
 }

@@ -47,6 +47,7 @@ public:
     void clearManualSpan();
     void enableDualSlices(qint64 leftCF, qint64 rightCF);
     void clearDualSlices();
+    void enableMultiSlices(const QVector<qint64>& cfs);
 
     void setCenterFrequency(qint64 frequency) { m_spectrum->setCenterFrequency(frequency); }
     qint64 getCenterFrequency() const { return m_spectrum->getCenterFrequency(); }
