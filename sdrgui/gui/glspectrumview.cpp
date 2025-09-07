@@ -798,8 +798,8 @@ void GLSpectrumView::newSpectrum(const Real* spectrum, int nbBins, int fftSize) 
             }
             else {
                 // Trace jika tidak match
-                 qDebug() << "-> skip cf_now" << m_centerFrequency << "target" << s.centerHz
-                          << "tol" << (m_sampleRate > 0 ? (m_sampleRate/6) : 500);
+                 /*qDebug() << "-> skip cf_now" << m_centerFrequency << "target" << s.centerHz
+                          << "tol" << (m_sampleRate > 0 ? (m_sampleRate/6) : 500);*/
             }
         }
     }

@@ -1,4 +1,4 @@
-///////////////////////////////////////////////////////////////////////////////////
+﻿///////////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2023 Jon Beniston, M7RCE <jon@beniston.com>                     //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
@@ -322,8 +322,12 @@ void FreqScannerGUI::on_channelBandwidth_changed(qint64 value)
 
 void FreqScannerGUI::on_scanTime_valueChanged(int value)
 {
-    ui->scanTimeText->setText(QString("%1 s").arg(value / 10.0, 0, 'f', 1));
-    m_settings.m_scanTime = value / 10.0;
+    //ui->scanTimeText->setText(QString("%1 s").arg(value / 10.0, 0, 'f', 1));
+    //m_settings.m_scanTime = value / 10.0;
+    //applySetting("scanTime");
+
+    ui->scanTimeText->setText(QString("%1 s").arg(value / 100.0, 0, 'f', 2));
+    m_settings.m_scanTime = value / 100.0;
     applySetting("scanTime");
 }
 
@@ -557,6 +561,32 @@ FreqScannerGUI::FreqScannerGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, B
     ui->table->setItemDelegateForColumn(COL_SQ, new DecimalDelegate(1, -120.0, 0.0, ui->table));
 
     connect(m_deviceUISet->m_spectrum->getSpectrumView(), &GLSpectrumView::updateAnnotations, this, &FreqScannerGUI::updateAnnotations);
+
+    auto* view = m_deviceUISet->m_spectrum->getSpectrumView();
+
+    // Multi-slices
+    connect(this, &FreqScannerGUI::sigEnableMultiSlices,
+        view, [view](const QVector<qint64>& centers) {
+            view->enableMultiSlices(centers);
+        });
+    connect(this, &FreqScannerGUI::sigClearMultiSlices,
+        view, [view]() {
+            view->clearMultiSlices();
+        });
+
+    // Manual span
+    connect(this, &FreqScannerGUI::sigSetManualSpan,
+        view, [view](qint64 c, int L, int R) {
+            view->setManualSpan(c, L, R);
+        });
+    connect(this, &FreqScannerGUI::sigClearManualSpan,
+        view, [view]() {
+            view->clearManualSpan();
+        });
+
+    connect(this, &FreqScannerGUI::requestMultiScan,
+        m_deviceUISet->m_spectrum->getSpectrumView(),
+        &GLSpectrumView::enableMultiSlices);
 }
 
 FreqScannerGUI::~FreqScannerGUI()
@@ -665,7 +695,7 @@ void FreqScannerGUI::enterEvent(EnterEventType* event)
 
 void FreqScannerGUI::on_startStop_toggled(bool checked)
 {
-    if (checked)
+    /*if (checked)
     {
         FreqScanner::MsgStartScan* message = FreqScanner::MsgStartScan::create();
         m_freqScanner->getInputMessageQueue()->push(message);
@@ -674,6 +704,91 @@ void FreqScannerGUI::on_startStop_toggled(bool checked)
     {
         FreqScanner::MsgStopScan* message = FreqScanner::MsgStopScan::create();
         m_freqScanner->getInputMessageQueue()->push(message);
+    }*/
+
+    //if (checked)
+    //{
+    //    QVector<qint64> freqs;
+    //    for (int row = 0; row < ui->table->rowCount(); ++row)
+    //    {
+    //        bool ok = false;
+    //        qint64 f = ui->table->item(row, COL_FREQUENCY)->text().toLongLong(&ok);
+    //        if (ok) freqs.append(f);
+    //    }
+
+    //    if (!freqs.isEmpty()) {
+    //        emit requestMultiScan(freqs);  // kirim ke spectrum
+    //    }
+
+    //    FreqScanner::MsgStartScan* message = FreqScanner::MsgStartScan::create();
+    //    m_freqScanner->getInputMessageQueue()->push(message);
+    //}
+
+    //if (!checked) {
+    //    m_deviceUISet->m_spectrum->getSpectrumView()->clearMultiSlices();
+    //    FreqScanner::MsgStopScan* message = FreqScanner::MsgStopScan::create();
+    //    m_freqScanner->getInputMessageQueue()->push(message);
+    //}
+
+    if (checked)
+    {
+        // Ambil semua frekuensi dari tabel → dapatkan fmin..fmax
+        QVector<qint64> freqs;
+        for (int row = 0; row < ui->table->rowCount(); ++row)
+        {
+            bool ok = false;
+            qint64 f = ui->table->item(row, COL_FREQUENCY)->text().toLongLong(&ok);
+            if (ok) freqs.append(f);
+        }
+        std::sort(freqs.begin(), freqs.end());
+        freqs.erase(std::unique(freqs.begin(), freqs.end()), freqs.end());
+
+        // SR dari perangkat (sudah kamu simpan di m_basebandSampleRate saat DSPSignalNotification)
+        // Pastikan > 0
+        const qint32 sr = (m_basebandSampleRate > 0) ? m_basebandSampleRate : 0;
+
+        QVector<qint64> centers;
+        if (!freqs.isEmpty() && sr > 0)
+        {
+            const qint64 fmin = freqs.first();
+            const qint64 fmax = freqs.last();
+
+            // Generate centers yang “menjahit” range fmin..fmax dgn step = SR*(1-overlap)
+            centers = generateCentersSRAligned(fmin, fmax, sr, kOverlapRatio);
+        }
+        else
+        {
+            // Fallback: gunakan apa adanya
+            centers = freqs;
+        }
+
+        if (!centers.isEmpty()) {
+            // Hidupkan multi-slices
+            emit requestMultiScan(centers);
+
+            // (Opsional) kunci X-axis agar persis menutupi komposit
+            applyManualSpanFromCenters(centers, sr);
+        }
+
+        // Mulai mesin scanner seperti biasa
+        if (m_freqScanner) {
+            auto* msg = FreqScanner::MsgStartScan::create();
+            m_freqScanner->getInputMessageQueue()->push(msg);
+        }
+    }
+    else
+    {
+        // Stop + bersihkan
+        if (m_deviceUISet && m_deviceUISet->m_spectrum) {
+            if (auto* view = m_deviceUISet->m_spectrum->getSpectrumView()) {
+                view->clearMultiSlices();
+                view->clearManualSpan(); // opsional: lepaskan lock X-axis
+            }
+        }
+        if (m_freqScanner) {
+            auto* msg = FreqScanner::MsgStopScan::create();
+            m_freqScanner->getInputMessageQueue()->push(msg);
+        }
     }
 }
 
@@ -741,7 +856,7 @@ void FreqScannerGUI::on_addSingle_clicked()
 
 void FreqScannerGUI::on_addRange_clicked()
 {
-    FreqScannerAddRangeDialog dialog(m_settings.m_channelBandwidth, this);
+    /*FreqScannerAddRangeDialog dialog(m_settings.m_channelBandwidth, this);
     new DialogPositioner(&dialog, false);
     if (dialog.exec())
     {
@@ -755,6 +870,47 @@ void FreqScannerGUI::on_addRange_clicked()
         }
         blockApplySettings(false);
         applySetting("frequencySettings");
+    }*/
+
+    FreqScannerAddRangeDialog dialog(m_settings.m_channelBandwidth, this);
+    new DialogPositioner(&dialog, false);
+    if (!dialog.exec()) return;
+
+    // 1) Ambil fmin/fmax dari hasil dialog (pakai ujung-ujungnya saja, abaikan step)
+    if (dialog.m_frequencies.isEmpty()) return;
+    qint64 fmin = dialog.m_frequencies.first();
+    qint64 fmax = dialog.m_frequencies.last();
+    if (fmin > fmax) std::swap(fmin, fmax);
+
+    // 2) Tentukan SR: pakai SR device jika sudah ada; fallback 60 MHz sesuai skenario kamu
+    const qint64 sr = (m_basebandSampleRate > 0) ? qint64(m_basebandSampleRate)
+        : 60'000'000LL; // SR = 60 MHz
+
+    // 3) Bangkitkan centers yang selaras SR dengan overlap (mis. 20%)
+    const double overlap = 0.20;
+    QVector<qint64> centers = generateCentersSRAligned(fmin, fmax, sr, overlap);
+
+    // 4) Tambahkan ke tabel (enable = true)
+    blockApplySettings(true);
+    for (qint64 c : centers) {
+        FreqScannerSettings::FrequencySettings fs;
+        fs.m_frequency = c;
+        fs.m_enabled = true;
+        addRow(fs);
+    }
+    blockApplySettings(false);
+    applySetting("frequencySettings");
+
+    // 5) (Opsional) Atur X-span di GLSpectrumView agar pas menutup semua slice
+    if (!centers.isEmpty()) {
+        if (auto* view = m_deviceUISet->m_spectrum->getSpectrumView()) {
+            const qint64 xmin = centers.first() - sr / 2;
+            const qint64 xmax = centers.last() + sr / 2;
+            const qint64 c = (xmin + xmax) / 2;
+            const int    L = int(c - xmin);
+            const int    R = int(xmax - c);
+            view->setManualSpan(c, L, R);
+        }
     }
 }
 
@@ -1156,4 +1312,111 @@ void FreqScannerGUI::makeUIConnections()
 void FreqScannerGUI::updateAbsoluteCenterFrequency()
 {
     setStatusFrequency(m_deviceCenterFrequency + m_settings.m_inputFrequencyOffset);
+}
+
+QVector<qint64> FreqScannerGUI::generateCentersSRAligned(qint64 fminHz, qint64 fmaxHz,
+    qint32 sampleRateHz, double overlapRatio)
+{
+    QVector<qint64> centers;
+    if (sampleRateHz <= 0) return centers;
+    if (fmaxHz <= fminHz) return centers;
+
+    // Step antar-center: SR * (1 - overlap)
+    const long long sr = static_cast<long long>(sampleRateHz);
+    long long step = static_cast<long long>(qRound64(sr * (1.0 - overlapRatio)));
+    if (step < 1) step = 1;
+
+    // Mulai dari center pertama = fmin + SR/2 (agar sisi kiri slice = fmin)
+    long long c = static_cast<long long>(fminHz) + sr / 2;
+
+    // Jika fmin..fmax lebih kecil dari satu lebar SR, pilih satu center di tengah
+    if (static_cast<long long>(fmaxHz) - static_cast<long long>(fminHz) <= sr) {
+        centers.push_back((fminHz + fmaxHz) / 2);
+        return centers;
+    }
+
+    // Iterasi center sampai sisi kanan slice melewati fmax
+    while ((c - sr / 2) <= fmaxHz) {
+        // Pastikan slice [c - SR/2, c + SR/2] masih menyentuh [fmin, fmax]
+        if ((c + sr / 2) >= fminHz && (c - sr / 2) <= fmaxHz) {
+            centers.push_back(c);
+        }
+        c += step;
+        // Guard overflow (safety)
+        if (centers.size() > 100000) break;
+    }
+
+    // Pastikan ujung kanan ter-cover rapi:
+    if (!centers.isEmpty()) {
+        const long long lastC = centers.back();
+        const long long rightEdge = lastC + sr / 2;
+        if (rightEdge < fmaxHz) {
+            const long long tailC = fmaxHz - sr / 2;
+            if (centers.isEmpty() || llabs(tailC - centers.back()) >= 1) {
+                centers.push_back(tailC);
+            }
+        }
+    }
+
+    // Sort + uniq (jaga-jaga)
+    std::sort(centers.begin(), centers.end());
+    centers.erase(std::unique(centers.begin(), centers.end()), centers.end());
+    return centers;
+}
+
+void FreqScannerGUI::applyManualSpanFromCenters(const QVector<qint64>& centersHz, qint32 sampleRateHz)
+{
+    if (centersHz.isEmpty() || sampleRateHz <= 0) return;
+
+    const qint64 sr = static_cast<qint64>(sampleRateHz);
+    const qint64 xmin = centersHz.first() - sr / 2;
+    const qint64 xmax = centersHz.last() + sr / 2;
+
+    const qint64 c = (xmin + xmax) / 2;
+    const int    L = int(c - xmin);
+    const int    R = int(xmax - c);
+
+    if (m_deviceUISet && m_deviceUISet->m_spectrum) {
+        if (auto* view = m_deviceUISet->m_spectrum->getSpectrumView()) {
+            view->setManualSpan(c, L, R);
+        }
+    }
+}
+
+QVector<qint64> FreqScannerGUI::generateCentersSRAligned(qint64 fminHz,
+    qint64 fmaxHz,
+    qint64 sampleRateHz,
+    double overlapRatio)
+{
+    QVector<qint64> centers;
+    if (sampleRateHz <= 0 || fmaxHz <= fminHz) return centers;
+
+    const qint64 sr = sampleRateHz;
+    qint64 step = qint64(llround(sr * (1.0 - overlapRatio)));
+    if (step < 1) step = 1;
+
+    // Kasus range lebih sempit dari 1 SR -> satu center di tengah
+    if ((fmaxHz - fminHz) <= sr) {
+        centers.push_back((fminHz + fmaxHz) / 2);
+        return centers;
+    }
+
+    // Mulai supaya tepi kiri slice pertama pas di fmin
+    qint64 c = fminHz + sr / 2;
+
+    while ((c - sr / 2) <= fmaxHz) {
+        if ((c + sr / 2) >= fminHz) centers.push_back(c);
+        c += step;
+        if (centers.size() > 200000) break; // guard
+    }
+
+    // Pastikan ujung kanan ter-cover
+    if (!centers.isEmpty()) {
+        const qint64 rightEdge = centers.back() + sr / 2;
+        if (rightEdge < fmaxHz) centers.push_back(fmaxHz - sr / 2);
+    }
+
+    std::sort(centers.begin(), centers.end());
+    centers.erase(std::unique(centers.begin(), centers.end()), centers.end());
+    return centers;
 }

@@ -66,6 +66,15 @@ public slots:
     void channelMarkerChangedByCursor();
     void channelMarkerHighlightedByCursor();
 
+signals:
+    void sigEnableMultiSlices(const QVector<qint64>& centersHz);
+    void sigClearMultiSlices();
+    void sigSetManualSpan(qint64 centerHz, int leftHz, int rightHz);
+    void sigClearManualSpan();
+
+    void requestMultiScan(const QVector<qint64>& freqs);
+
+
 private:
     Ui::FreqScannerGUI* ui;
     PluginAPI* m_pluginAPI;
@@ -121,6 +130,22 @@ private:
         COL_TH,
         COL_SQ
     };
+
+    // Rasio overlap (0.0..0.9). Default 20%:
+    static constexpr double kOverlapRatio = 0.20;
+
+    // Generate centers selaras SR dari fmin..fmax (Hz), dengan overlap rasio
+    static QVector<qint64> generateCentersSRAligned(qint64 fminHz, qint64 fmaxHz,
+        qint32 sampleRateHz, double overlapRatio);
+
+    // Hitung manual span dari daftar centers + SR, lalu apply ke view
+    void applyManualSpanFromCenters(const QVector<qint64>& centersHz, qint32 sampleRateHz);
+
+    // Generate centers selaras SR dari fmin..fmax (Hz), step = SR*(1-overlap)
+    static QVector<qint64> generateCentersSRAligned(qint64 fminHz,
+        qint64 fmaxHz,
+        qint64 sampleRateHz,
+        double overlapRatio);
 
 private slots:
     void on_channels_currentIndexChanged(int index);
