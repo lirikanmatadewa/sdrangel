@@ -744,10 +744,54 @@ void GLSpectrumView::newSpectrum(const Real* spectrum, int nbBins, int fftSize) 
     if (m_changesPending) { m_fftSize = fftSize; m_nbBins = nbBins; return; }
     if ((fftSize != m_fftSize) || (m_nbBins != nbBins)) { m_fftSize = fftSize; m_nbBins = nbBins; m_changesPending = true; return; }
 
+    const Real* wfLine = spectrum;                // default: single slice
+    QVector<Real> tmpComposite;                   // buffer sementara untuk komposit
+
+    if (m_multiSlicesEnabled && m_nbBins > 0) {
+        tmpComposite.resize(m_nbBins);
+
+        // Kumpulkan slice yang valid (punya data & SR/FFT sah)
+        struct Cover { int i; qint64 f1; qint64 f2; };
+        QVector<Cover> covers; covers.reserve(m_slices.size());
+        for (int i = 0; i < m_slices.size(); ++i) {
+            const auto& s = m_slices[i];
+            if (!s.hasData || s.sampleRate <= 0 || s.fftSize <= 0 || s.data.isEmpty()) continue;
+            qint64 half = s.sampleRate / 2;
+            covers.push_back({ i, s.centerHz - half, s.centerHz + half });
+        }
+
+        auto rbwFor = [](const ExtSlice& s)->double {
+            return (s.sampleRate > 0 && s.fftSize > 0) ? double(s.sampleRate) / double(s.fftSize) : 0.0;
+            };
+
+        for (int b = 0; b < m_nbBins; ++b) {
+            qint64 fAbs = binToFrequency(b);     // pakai skala frekuensi aktif (sudah aware multi/manual) :contentReference[oaicite:5]{index=5}
+            int winner = -1;
+            qint64 bestDist = std::numeric_limits<qint64>::max();
+            for (const auto& c : covers) {
+                if (fAbs < c.f1 || fAbs > c.f2) continue;
+                qint64 d = llabs(fAbs - m_slices[c.i].centerHz);
+                if (d < bestDist) { bestDist = d; winner = c.i; }
+            }
+
+            Real v = -std::numeric_limits<float>::max(); // sentinel "no data"
+            if (winner >= 0) {
+                const auto& s = m_slices[winner];
+                double rbw = rbwFor(s);
+                if (rbw > 0.0) {
+                    int sb = int((double(fAbs) - double(s.centerHz - s.sampleRate / 2)) / rbw);
+                    if (sb >= 0 && sb < s.data.size()) v = s.data[sb];
+                }
+            }
+            tmpComposite[b] = v;
+        }
+        wfLine = tmpComposite.constData();
+    }
+
     // pipeline existing (waterfall/histogram) tetap
-    updateWaterfall(spectrum);
-    update3DSpectrogram(spectrum);
-    updateHistogram(spectrum);
+    updateWaterfall(wfLine);
+    update3DSpectrogram(wfLine);
+    updateHistogram(wfLine);
 
     // --- Multi-slices capture ---
     if (m_multiSlicesEnabled && !m_lockCapture && (nbBins > 0))
@@ -811,6 +855,11 @@ void GLSpectrumView::newSpectrum(const Real* spectrum, int nbBins, int fftSize) 
 
 void GLSpectrumView::updateWaterfall(const Real *spectrum)
 {
+    // Aman dulu: kalau tidak tampil atau buffer belum ada, keluar
+    if (!m_displayWaterfall || !m_waterfallBuffer || m_nbBins <= 0) {
+        return;
+    }
+
     if (m_waterfallBufferPos < m_waterfallBuffer->height())
     {
         quint32* pix = (quint32*)m_waterfallBuffer->scanLine(m_waterfallBufferPos);
