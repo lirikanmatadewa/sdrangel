@@ -148,18 +148,3 @@ void GLSpectrum::setMeasurementParams(SpectrumSettings::Measurement measurement,
     m_splitter->setSizes(sizes);
     //resize(size().expandedTo(minimumSizeHint()));
 }
-
-void GLSpectrum::setManualSpan(qint64 centerHz, int spanLeftHz, int spanRightHz)
-{
-    if (m_spectrum) m_spectrum->setManualSpan(centerHz, spanLeftHz, spanRightHz);
-}
-
-void GLSpectrum::clearManualSpan()
-{
-    if (m_spectrum) m_spectrum->clearManualSpan();
-}
-
-void GLSpectrum::enableMultiSlices(const QVector<qint64>& cfs)
-{
-    if (m_spectrum) m_spectrum->enableMultiSlices(cfs);
-}

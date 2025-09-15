@@ -62,8 +62,8 @@ class SDRGUI_API GLSpectrumView : public QOpenGLWidget, public GLSpectrumInterfa
 public:
 
     // Manual span control
-    void setManualSpan(qint64 centerHz, int spanLeftHz, int spanRightHz); // aktifkan mode manual
-    void clearManualSpan();                                               // kembali ke mode auto/zoom
+    void setManualSpan(qint64 centerHz, int spanLeftHz, int spanRightHz); 
+    void clearManualSpan();                                               
     bool isManualSpanEnabled() const { return m_manualSpanEnabled; }
 
     void enableMultiSlices(const QVector<qint64>& centersHz);
@@ -257,19 +257,19 @@ private:
 
     // --- header ---
     struct ExtSlice {
-        qint64 centerHz = 0;
-        qint32 sampleRate = 0;
-        int    fftSize = 0;
-        QVector<Real> data;
-        bool   hasData = false;
-        quint64 tick = 0;     // urutan capture (opsional untuk tie-break saat overlap)
+        qint64              centerHz = 0;
+        qint32              sampleRate = 0;
+        int                 fftSize = 0;
+        QVector<Real>       data;
+        bool                hasData = false;
+        quint64             tick = 0;
     };
 
     // --- Multi-slices state ---
     bool m_multiSlicesEnabled = false;
-    QVector<ExtSlice> m_slices;         // daftar slice dinamis
-    QHash<qint64, int> m_idxByCF;        // lookup cepat: CF -> index slice
-    QVector<Real> m_multiComposite;     // buffer komposit sepanjang m_nbBins
+    QVector<ExtSlice> m_slices;
+    QHash<qint64, int> m_idxByCF;
+    QVector<Real> m_multiComposite;
 
     // (opsional) deteksi 1 siklus selesai:
     QSet<qint64> m_visitedCFs;

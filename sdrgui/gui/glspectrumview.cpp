@@ -705,32 +705,6 @@ float GLSpectrumView::getTimeMax() const
     return m_timeScale.getRangeMax();
 }
 
-//void GLSpectrumView::newSpectrum(const Real *spectrum, int nbBins, int fftSize)
-//{
-//    QMutexLocker mutexLocker(&m_mutex);
-//
-//    m_displayChanged = true;
-//    if (m_changesPending)
-//    {
-//        m_fftSize = fftSize;
-//        m_nbBins = nbBins;
-//        return;
-//    }
-//
-//    if ((fftSize != m_fftSize) || (m_nbBins != nbBins))
-//    {
-//        m_fftSize = fftSize;
-//        m_nbBins = nbBins;
-//        m_changesPending = true;
-//        return;
-//    }
-//
-//    updateWaterfall(spectrum);
-//    update3DSpectrogram(spectrum);
-//    updateHistogram(spectrum);
-//}
-
-// ganti fungsi lama:
 static inline bool nearCF(qint64 a, qint64 b, qint64 sr)
 {
     if (sr <= 0) return llabs(a - b) <= 500;     // fallback kecil
@@ -788,7 +762,6 @@ void GLSpectrumView::newSpectrum(const Real* spectrum, int nbBins, int fftSize) 
         wfLine = tmpComposite.constData();
     }
 
-    // pipeline existing (waterfall/histogram) tetap
     updateWaterfall(wfLine);
     update3DSpectrogram(wfLine);
     updateHistogram(wfLine);
@@ -812,17 +785,8 @@ void GLSpectrumView::newSpectrum(const Real* spectrum, int nbBins, int fftSize) 
                 s.hasData = true;
                 s.tick++;
 
-                //// LOG setelah field valid:
-                //qint64 half = s.sampleRate / 2;
-                //qDebug() << "-> CAP OK cf" << s.centerHz
-                //    << "sr" << s.sampleRate
-                //    << "span" << (s.centerHz - half) << (s.centerHz + half);
-
                 m_multiCompositeDirty = true;
                 m_changesPending = true;
-
-                //m_changesPending = true;
-                //update();
 
                 // deteksi siklus (opsional)
                 if (m_firstCFSeen == 0) m_firstCFSeen = s.centerHz;
@@ -830,20 +794,9 @@ void GLSpectrumView::newSpectrum(const Real* spectrum, int nbBins, int fftSize) 
 
                 if (m_visitedCFs.size() == m_slices.size()) {
                     // semua target CF sudah terisi (1 siklus lengkap)
-                    emit multiCaptureCycleDone();          // if you added the signal
-                    // kunci agar tidak overwrite (opsional, sesuai kebutuhan):
-                    // m_lockCapture = true;
-                }
-                else if ((m_firstCFSeen != 0) && nearCF(m_centerFrequency, m_firstCFSeen, m_sampleRate)) {
-                    // kembali ke CF awal -> siklus “wrap”
-                    // m_lockCapture = true; // kalau mau berhenti di sini
+                    emit multiCaptureCycleDone();
                 }
                 break;
-            }
-            else {
-                // Trace jika tidak match
-                 /*qDebug() << "-> skip cf_now" << m_centerFrequency << "target" << s.centerHz
-                          << "tol" << (m_sampleRate > 0 ? (m_sampleRate/6) : 500);*/
             }
         }
     }
@@ -855,7 +808,6 @@ void GLSpectrumView::newSpectrum(const Real* spectrum, int nbBins, int fftSize) 
 
 void GLSpectrumView::updateWaterfall(const Real *spectrum)
 {
-    // Aman dulu: kalau tidak tampil atau buffer belum ada, keluar
     if (!m_displayWaterfall || !m_waterfallBuffer || m_nbBins <= 0) {
         return;
     }

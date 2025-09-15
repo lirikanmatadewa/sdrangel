@@ -640,7 +640,7 @@ void FreqScannerGUI::displaySettings()
     }
     ui->deltaFrequency->setValue(m_settings.m_channelFrequencyOffset);
     ui->channelBandwidth->setValue(m_settings.m_channelBandwidth);
-    ui->scanTime->setValue(m_settings.m_scanTime * 10.0);
+    ui->scanTime->setValue(m_settings.m_scanTime * 100.0);
     ui->scanTimeText->setText(QString("%1 s").arg(m_settings.m_scanTime, 0, 'f', 1));
     ui->retransmitTime->setValue(m_settings.m_retransmitTime * 10.0);
     ui->retransmitTimeText->setText(QString("%1 s").arg(m_settings.m_retransmitTime, 0, 'f', 1));
