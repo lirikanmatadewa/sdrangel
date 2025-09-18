@@ -62,7 +62,7 @@ BladeRF2InputGui::BladeRF2InputGui(DeviceUISet *deviceUISet, QWidget* parent) :
 
     m_sampleSource->getSampleRateRange(min, max, step, scale);
     ui->sampleRate->setColorMapper(ColorMapper(ColorMapper::GrayGreenYellow));
-    ui->sampleRate->setValueRange(8, min, max);
+    ui->sampleRate->setValueRange(9, min, max);
 
     m_sampleSource->getBandwidthRange(min, max, step, scale);
     ui->bandwidth->setColorMapper(ColorMapper(ColorMapper::GrayYellow));
@@ -276,7 +276,7 @@ void BladeRF2InputGui::displaySampleRate()
         ui->sampleRateMode->setStyleSheet("QToolButton { background:rgb(60,60,60); }");
         ui->sampleRateMode->setText("SR");
         // BladeRF can go as low as 80 kS/s but because of buffering in practice experience is not good below 330 kS/s
-        ui->sampleRate->setValueRange(8, min, max);
+        ui->sampleRate->setValueRange(9, min, max);
         ui->sampleRate->setValue(m_settings.m_devSampleRate);
         ui->sampleRate->setToolTip("Device to host sample rate (S/s)");
         ui->deviceRateText->setToolTip("Baseband sample rate (S/s)");
@@ -288,7 +288,7 @@ void BladeRF2InputGui::displaySampleRate()
         ui->sampleRateMode->setStyleSheet("QToolButton { background:rgb(50,50,50); }");
         ui->sampleRateMode->setText("BB");
         // BladeRF can go as low as 80 kS/s but because of buffering in practice experience is not good below 330 kS/s
-        ui->sampleRate->setValueRange(8, min/(1<<m_settings.m_log2Decim), max/(1<<m_settings.m_log2Decim));
+        ui->sampleRate->setValueRange(9, min/(1<<m_settings.m_log2Decim), max/(1<<m_settings.m_log2Decim));
         ui->sampleRate->setValue(m_settings.m_devSampleRate/(1<<m_settings.m_log2Decim));
         ui->sampleRate->setToolTip("Baseband sample rate (S/s)");
         ui->deviceRateText->setToolTip("Device to host sample rate (S/s)");
