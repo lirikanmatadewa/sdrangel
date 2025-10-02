@@ -131,6 +131,12 @@ private:
         COL_SQ
     };
 
+    // Ambil semua center dari tabel (urut & unik)
+    QVector<qint64> collectCentersFromTable() const;
+
+    // Start scan memakai center dari tabel + apply ke spectrum view
+    void startScanWithTableCenters();
+
     // Rasio overlap (0.0..0.9). Default 20%:
     static constexpr double kOverlapRatio = 0.20;
 
@@ -146,6 +152,16 @@ private:
         qint64 fmaxHz,
         qint64 sampleRateHz,
         double overlapRatio);
+
+    QVector<qint64> generateCentersWithOverlap(qint64 startHz,
+        qint64 stopHz,
+        qint64 sampleRateHz,
+        double overlapFrac,
+        qint64 snapHz = 1) const;
+
+    static void cullSmallJumps(QVector<qint64>& centersHz,
+        qint64 sampleRateHz,
+        qint64 hardMinGapHz = 8'000'000);
 
 private slots:
     void on_channels_currentIndexChanged(int index);

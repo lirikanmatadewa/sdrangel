@@ -70,7 +70,7 @@ void BladeRF2InputThread::run()
 {
     int res;
 
-	 bool enable_oversampling = true;
+	 bool enable_oversampling = false;
 	 bladerf_format format = BLADERF_FORMAT_SC16_Q11;
 
     m_running = true;
