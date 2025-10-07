@@ -220,7 +220,7 @@
         <string>Decay divisor:</string>
        </property>
        <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
        </property>
        <property name="minimum">
         <number>1</number>
@@ -542,7 +542,7 @@
         <string>FFT window function</string>
        </property>
        <property name="sizeAdjustPolicy">
-        <enum>QComboBox::AdjustToContents</enum>
+        <enum>QComboBox::SizeAdjustPolicy::AdjustToContents</enum>
        </property>
        <item>
         <property name="text">
@@ -615,7 +615,7 @@
         <string>FFT size</string>
        </property>
        <property name="sizeAdjustPolicy">
-        <enum>QComboBox::AdjustToContents</enum>
+        <enum>QComboBox::SizeAdjustPolicy::AdjustToContents</enum>
        </property>
        <item>
         <property name="text">
@@ -681,7 +681,7 @@
         <string>FFT overlap</string>
        </property>
        <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
        </property>
        <property name="minimum">
         <number>0</number>
@@ -904,7 +904,7 @@
         <string>Reference level (dB)</string>
        </property>
        <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
        </property>
        <property name="minimum">
         <number>-200</number>
@@ -932,7 +932,7 @@
         <string>Range (dB)</string>
        </property>
        <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
        </property>
        <property name="minimum">
         <number>1</number>
@@ -1249,7 +1249,7 @@
         </size>
        </property>
        <property name="focusPolicy">
-        <enum>Qt::TabFocus</enum>
+        <enum>Qt::FocusPolicy::TabFocus</enum>
        </property>
        <property name="toolTip">
         <string>ADS-B Demodulator</string>
@@ -1286,7 +1286,7 @@
         </size>
        </property>
        <property name="focusPolicy">
-        <enum>Qt::TabFocus</enum>
+        <enum>Qt::FocusPolicy::TabFocus</enum>
        </property>
        <property name="toolTip">
         <string>AM Demodulator</string>
@@ -1311,7 +1311,7 @@
         </size>
        </property>
        <property name="focusPolicy">
-        <enum>Qt::TabFocus</enum>
+        <enum>Qt::FocusPolicy::TabFocus</enum>
        </property>
        <property name="toolTip">
         <string>SSB Demodulator</string>
@@ -1336,7 +1336,7 @@
         </size>
        </property>
        <property name="focusPolicy">
-        <enum>Qt::TabFocus</enum>
+        <enum>Qt::FocusPolicy::TabFocus</enum>
        </property>
        <property name="toolTip">
         <string>WFM Demodulator</string>
@@ -1424,6 +1424,13 @@
        </property>
        <property name="text">
         <string>Frequency Scanner</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="widebandScanner">
+       <property name="text">
+        <string>Wideband Scanner</string>
        </property>
       </widget>
      </item>

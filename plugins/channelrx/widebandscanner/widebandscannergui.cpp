@@ -1,0 +1,1505 @@
+﻿///////////////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2023 Jon Beniston, M7RCE <jon@beniston.com>                     //
+//                                                                               //
+// This program is free software; you can redistribute it and/or modify          //
+// it under the terms of the GNU General Public License as published by          //
+// the Free Software Foundation as version 3 of the License, or                  //
+// (at your option) any later version.                                           //
+//                                                                               //
+// This program is distributed in the hope that it will be useful,               //
+// but WITHOUT ANY WARRANTY; without even the implied warranty of                //
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                  //
+// GNU General Public License V3 for more details.                               //
+//                                                                               //
+// You should have received a copy of the GNU General Public License             //
+// along with this program. If not, see <http://www.gnu.org/licenses/>.          //
+///////////////////////////////////////////////////////////////////////////////////
+
+#include <QDebug>
+#include <QAction>
+#include <QClipboard>
+#include <QMenu>
+#include <QTableWidget>
+#include <QTableWidgetItem>
+#include <QComboBox>
+
+#include "device/deviceset.h"
+#include "device/deviceuiset.h"
+#include "dsp/dspengine.h"
+#include "dsp/dspcommands.h"
+#include "ui_widebandscannergui.h"
+#include "gui/basicchannelsettingsdialog.h"
+#include "dsp/dspengine.h"
+#include "gui/tabletapandhold.h"
+#include "gui/dialogpositioner.h"
+#include "gui/decimaldelegate.h"
+#include "gui/frequencydelegate.h"
+#include "gui/int64delegate.h"
+#include "gui/glspectrum.h"
+#include "channel/channelwebapiutils.h"
+#include "maincore.h"
+
+#include "widebandscannergui.h"
+#include "widebandscanneraddrangedialog.h"
+#include "widebandscanner.h"
+
+WidebandScannerGUI* WidebandScannerGUI::create(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, BasebandSampleSink *rxChannel)
+{
+    WidebandScannerGUI* gui = new WidebandScannerGUI(pluginAPI, deviceUISet, rxChannel);
+    return gui;
+}
+
+void WidebandScannerGUI::destroy()
+{
+    delete this;
+}
+
+void WidebandScannerGUI::resetToDefaults()
+{
+    m_settings.resetToDefaults();
+    displaySettings();
+    applyAllSettings();
+}
+
+QByteArray WidebandScannerGUI::serialize() const
+{
+    return m_settings.serialize();
+}
+
+bool WidebandScannerGUI::deserialize(const QByteArray& data)
+{
+    if(m_settings.deserialize(data))
+    {
+        displaySettings();
+        applyAllSettings();
+        return true;
+    }
+    else
+    {
+        resetToDefaults();
+        return false;
+    }
+}
+
+bool WidebandScannerGUI::handleMessage(const Message& message)
+{
+    if (WidebandScanner::MsgConfigureWidebandScanner::match(message))
+    {
+        qDebug("WidebandScannerGUI::handleMessage: WidebandScanner::MsgConfigureWidebandScanner");
+        const WidebandScanner::MsgConfigureWidebandScanner& cfg = (WidebandScanner::MsgConfigureWidebandScanner&) message;
+        m_settings = cfg.getSettings();
+        blockApplySettings(true);
+        m_channelMarker.updateSettings(static_cast<const ChannelMarker*>(m_settings.m_channelMarker));
+        displaySettings();
+        blockApplySettings(false);
+        return true;
+    }
+    else if (DSPSignalNotification::match(message))
+    {
+        DSPSignalNotification& notif = (DSPSignalNotification&) message;
+        m_deviceCenterFrequency = notif.getCenterFrequency();
+        m_basebandSampleRate = notif.getSampleRate();
+        if (m_basebandSampleRate != 0)
+        {
+            ui->deltaFrequency->setValueRange(true, 8, 0, m_basebandSampleRate/2);
+            ui->deltaFrequencyLabel->setToolTip(tr("Range %1 %L2 Hz").arg(QChar(0xB1)).arg(m_basebandSampleRate/2));
+            ui->channelBandwidth->setValueRange(true, 8, 0, m_basebandSampleRate);
+        }
+        if (m_channelMarker.getBandwidth() == 0) {
+            m_channelMarker.setBandwidth(m_basebandSampleRate);
+        }
+        updateAbsoluteCenterFrequency();
+        
+        if (m_deviceUISet && m_deviceUISet->m_spectrum && m_deviceUISet->m_spectrum->getSpectrumView()) {
+            m_deviceUISet->m_spectrum->getSpectrumView()->setSampleRate(m_basebandSampleRate);
+        }
+
+        return true;
+    }
+    else if (WidebandScanner::MsgReportChannels::match(message))
+    {
+        WidebandScanner::MsgReportChannels& report = (WidebandScanner::MsgReportChannels&)message;
+        updateChannelsList(report.getChannels(), report.getRenameFrom(), report.getRenameTo());
+        return true;
+    }
+    else if (WidebandScanner::MsgStatus::match(message))
+    {
+        WidebandScanner::MsgStatus& report = (WidebandScanner::MsgStatus&)message;
+        ui->status->setText(report.getText());
+        return true;
+    }
+    else if (WidebandScanner::MsgReportScanning::match(message))
+    {
+        ui->status->setText("Scanning");
+        ui->table->clearSelection();
+        ui->channelPower->setText("-");
+        return true;
+    }
+    else if (WidebandScanner::MsgScanComplete::match(message))
+    {
+        ui->startStop->setChecked(false);
+        return true;
+    }
+    else if (WidebandScanner::MsgReportActiveFrequency::match(message))
+    {
+        WidebandScanner::MsgReportActiveFrequency& report = (WidebandScanner::MsgReportActiveFrequency&)message;
+        qint64 f = report.getCenterFrequency();
+        QString frequency;
+        QString annotation;
+        QList<QTableWidgetItem*> items = ui->table->findItems(QString::number(f), Qt::MatchExactly);
+        if (items.size() > 0)
+        {
+            ui->table->selectRow(items[0]->row());
+            frequency = ui->table->item(items[0]->row(), COL_FREQUENCY)->text();
+            annotation = ui->table->item(items[0]->row(), COL_ANNOTATION)->text();
+        }
+        FrequencyDelegate freqDelegate("Auto", 3);
+        QString formattedFrequency = freqDelegate.displayText(frequency, QLocale::system());
+        ui->status->setText(QString("Active: %1 %2").arg(formattedFrequency).arg(annotation));
+
+        if (m_deviceUISet && m_deviceUISet->m_spectrum && m_deviceUISet->m_spectrum->getSpectrumView()) {
+            m_deviceUISet->m_spectrum->getSpectrumView()->setCenterFrequency(f);
+        }
+
+        return true;
+    }
+    else if (WidebandScanner::MsgReportActivePower::match(message))
+    {
+        WidebandScanner::MsgReportActivePower& report = (WidebandScanner::MsgReportActivePower&)message;
+        float power = report.getPower();
+        ui->channelPower->setText(QString::number(power, 'f', 1));
+        return true;
+    }
+    else if (WidebandScanner::MsgReportScanRange::match(message))
+    {
+        WidebandScanner::MsgReportScanRange& report = (WidebandScanner::MsgReportScanRange&)message;
+        m_channelMarker.setCenterFrequency(report.getCenterFrequency());
+        m_channelMarker.setBandwidth(report.getTotalBandwidth());
+        //m_channelMarker.setVisible(report.getTotalBandwidth() < m_basebandSampleRate); // Hide marker if full bandwidth
+        m_channelMarker.setVisible(false); // Selalu sembunyikan marker WidebandScanner
+
+        return true;
+    }
+    else if (WidebandScanner::MsgScanResult::match(message))
+    {
+        WidebandScanner::MsgScanResult& report = (WidebandScanner::MsgScanResult&)message;
+        QList<WidebandScanner::MsgScanResult::ScanResult> results = report.getScanResults();
+
+        // Clear column
+        for (int i = 0; i < ui->table->rowCount(); i++)
+        {
+            QTableWidgetItem* item = ui->table->item(i, COL_POWER);
+            item->setText("");
+            item->setBackground(QBrush());
+        }
+        // Add results
+        for (int i = 0; i < results.size(); i++)
+        {
+            qint64 freq = results[i].m_frequency;
+            QList<QTableWidgetItem *> items = ui->table->findItems(QString::number(freq), Qt::MatchExactly);
+            for (auto item : items)
+            {
+                int row = item->row();
+                QTableWidgetItem* powerItem = ui->table->item(row, COL_POWER);
+                powerItem->setData(Qt::DisplayRole, results[i].m_power);
+                WidebandScannerSettings::FrequencySettings *frequencySettings = m_settings.getFrequencySettings(freq);
+                Real threshold = m_settings.getThreshold(frequencySettings);
+                bool active = results[i].m_power >= threshold;
+                if (active)
+                {
+                    powerItem->setBackground(Qt::darkGreen);
+                    QTableWidgetItem* activeCountItem = ui->table->item(row, COL_ACTIVE_COUNT);
+                    activeCountItem->setData(Qt::DisplayRole, activeCountItem->data(Qt::DisplayRole).toInt() + 1);
+                }
+            }
+        }
+
+        return true;
+    }
+    else if (WidebandScanner::MsgStartScan::match(message))
+    {
+        ui->startStop->doToggle(true);
+        return true;
+    }
+    else if (WidebandScanner::MsgStopScan::match(message))
+    {
+        ui->startStop->doToggle(false);
+        return true;
+    }
+    return false;
+}
+
+void WidebandScannerGUI::updateChannelsCombo(QComboBox *combo, const AvailableChannelOrFeatureList& channels, const QString& channel, bool empty)
+{
+    combo->blockSignals(true);
+    combo->clear();
+    if (empty) {
+        combo->addItem("");
+    }
+
+    for (const auto& channel : channels)
+    {
+        // Add channels in this device set, other than ourself (Don't use ChannelGUI::getDeviceSetIndex()/getIndex() as not valid when this is first called)
+        if ((channel.m_superIndex == m_widebandScanner->getDeviceSetIndex()) && (channel.m_index != m_widebandScanner->getIndexInDeviceSet())) {
+            combo->addItem(channel.getId());
+        }
+    }
+
+    // Channel can be created after this plugin, so select it
+    // if the chosen channel appears
+    int channelIndex = combo->findText(channel);
+
+    if (channelIndex >= 0) {
+        combo->setCurrentIndex(channelIndex);
+    } else {
+        combo->setCurrentIndex(-1); // return to nothing selected
+    }
+
+    combo->blockSignals(false);
+}
+
+void WidebandScannerGUI::updateChannelsList(const AvailableChannelOrFeatureList& channels, const QStringList& renameFrom, const QStringList& renameTo)
+{
+    m_availableChannels = channels;
+
+    // Update channel setting if it has been renamed
+    if (renameFrom.contains(m_settings.m_channel))
+    {
+        m_settings.m_channel = renameTo[renameFrom.indexOf(m_settings.m_channel)];
+        applySetting("channel");
+    }
+    bool rename = false;
+    for (auto& setting : m_settings.m_frequencySettings)
+    {
+         if (renameFrom.contains(setting.m_channel))
+         {
+             setting.m_channel = renameTo[renameFrom.indexOf(setting.m_channel)];
+             rename = true;
+         }
+    }
+    if (rename) {
+         applySetting("frequencySettings");
+    }
+
+    updateChannelsCombo(ui->channels, channels, m_settings.m_channel, false);
+
+    for (int row = 0; row < ui->table->rowCount(); row++)
+    {
+        QComboBox *combo = qobject_cast<QComboBox *>(ui->table->cellWidget(row, COL_CHANNEL));
+        updateChannelsCombo(combo, channels, m_settings.m_frequencySettings[row].m_channel, true);
+    }
+}
+
+void WidebandScannerGUI::on_channels_currentIndexChanged(int index)
+{
+    if (index >= 0)
+    {
+        m_settings.m_channel = ui->channels->currentText();
+        applySetting("channel");
+    }
+}
+
+void WidebandScannerGUI::handleInputMessages()
+{
+    Message* message;
+
+    while ((message = getInputMessageQueue()->pop()) != 0)
+    {
+        if (handleMessage(*message)) {
+            delete message;
+        }
+    }
+}
+
+void WidebandScannerGUI::channelMarkerChangedByCursor()
+{
+}
+
+void WidebandScannerGUI::channelMarkerHighlightedByCursor()
+{
+    //setHighlighted(m_channelMarker.getHighlighted());
+}
+
+void WidebandScannerGUI::on_deltaFrequency_changed(qint64 value)
+{
+    m_settings.m_channelFrequencyOffset = value;
+    applySetting("channelFrequencyOffset");
+}
+
+void WidebandScannerGUI::on_channelBandwidth_changed(qint64 value)
+{
+    m_settings.m_channelBandwidth = value;
+    applySetting("channelBandwidth");
+}
+
+void WidebandScannerGUI::on_scanTime_valueChanged(int value)
+{
+    //ui->scanTimeText->setText(QString("%1 s").arg(value / 10.0, 0, 'f', 1));
+    //m_settings.m_scanTime = value / 10.0;
+    //applySetting("scanTime");
+
+    ui->scanTimeText->setText(QString("%1 s").arg(value / 10000.0, 0, 'f', 4));
+    m_settings.m_scanTime = value / 10000.0;
+    applySetting("scanTime");
+}
+
+void WidebandScannerGUI::on_retransmitTime_valueChanged(int value)
+{
+    ui->retransmitTimeText->setText(QString("%1 s").arg(value / 10.0, 0, 'f', 1));
+    m_settings.m_retransmitTime = value / 10.0;
+    applySetting("retransmitTime");
+}
+
+void WidebandScannerGUI::on_tuneTime_valueChanged(int value)
+{
+    ui->tuneTimeText->setText(QString("%1 ms").arg(value));
+    m_settings.m_tuneTime = value;
+    applySetting("tuneTime");
+}
+
+void WidebandScannerGUI::on_thresh_valueChanged(int value)
+{
+    ui->threshText->setText(QString("%1 dB").arg(value / 10.0, 0, 'f', 1));
+    m_settings.m_threshold = value / 10.0;
+    applySetting("threshold");
+}
+
+void WidebandScannerGUI::scanTimeIncClick()
+{
+   ui->scanTime->setValue(ui->scanTime->value() + 1);
+}
+
+void WidebandScannerGUI::scanTimeDecClick()
+{
+   ui->scanTime->setValue(ui->scanTime->value() - 1);
+}
+
+void WidebandScannerGUI::retransmitTimeIncClick()
+{
+   ui->retransmitTime->setValue(ui->retransmitTime->value() + 1);
+}
+
+void WidebandScannerGUI::retransmitTimeDecClick()
+{
+   ui->retransmitTime->setValue(ui->retransmitTime->value() - 1);
+}
+
+void WidebandScannerGUI::tuneTimeIncClick()
+{
+   ui->tuneTime->setValue(ui->tuneTime->value() + 1);
+}
+
+void WidebandScannerGUI::tuneTimeDecClick()
+{
+   ui->tuneTime->setValue(ui->tuneTime->value() - 1);
+}
+
+void WidebandScannerGUI::threshIncClick()
+{
+   ui->thresh->setValue(ui->thresh->value() + 1);
+}
+
+void WidebandScannerGUI::threshDecClick()
+{
+   ui->thresh->setValue(ui->thresh->value() - 1);
+}
+
+void WidebandScannerGUI::on_priority_currentIndexChanged(int index)
+{
+    m_settings.m_priority = (WidebandScannerSettings::Priority)index;
+    applySetting("priority");
+}
+
+void WidebandScannerGUI::on_measurement_currentIndexChanged(int index)
+{
+    m_settings.m_measurement = (WidebandScannerSettings::Measurement)index;
+    applySetting("measurement");
+}
+
+void WidebandScannerGUI::on_mode_currentIndexChanged(int index)
+{
+    m_settings.m_mode = (WidebandScannerSettings::Mode)index;
+    applySetting("mode");
+}
+
+void WidebandScannerGUI::onWidgetRolled(QWidget* widget, bool rollDown)
+{
+    (void) widget;
+    (void) rollDown;
+
+    getRollupContents()->saveState(m_rollupState);
+    applySetting("rollupState");
+}
+
+void WidebandScannerGUI::onMenuDialogCalled(const QPoint &p)
+{
+    if (m_contextMenuType == ContextMenuChannelSettings)
+    {
+        BasicChannelSettingsDialog dialog(&m_channelMarker, this);
+        dialog.setUseReverseAPI(m_settings.m_useReverseAPI);
+        dialog.setReverseAPIAddress(m_settings.m_reverseAPIAddress);
+        dialog.setReverseAPIPort(m_settings.m_reverseAPIPort);
+        dialog.setReverseAPIDeviceIndex(m_settings.m_reverseAPIDeviceIndex);
+        dialog.setReverseAPIChannelIndex(m_settings.m_reverseAPIChannelIndex);
+        dialog.setDefaultTitle(m_displayedName);
+
+        if (m_deviceUISet->m_deviceMIMOEngine)
+        {
+            dialog.setNumberOfStreams(m_widebandScanner->getNumberOfDeviceStreams());
+            dialog.setStreamIndex(m_settings.m_streamIndex);
+        }
+
+        dialog.move(p);
+        new DialogPositioner(&dialog, false);
+        dialog.exec();
+
+        m_settings.m_rgbColor = m_channelMarker.getColor().rgb();
+        m_settings.m_title = m_channelMarker.getTitle();
+        m_settings.m_useReverseAPI = dialog.useReverseAPI();
+        m_settings.m_reverseAPIAddress = dialog.getReverseAPIAddress();
+        m_settings.m_reverseAPIPort = dialog.getReverseAPIPort();
+        m_settings.m_reverseAPIDeviceIndex = dialog.getReverseAPIDeviceIndex();
+        m_settings.m_reverseAPIChannelIndex = dialog.getReverseAPIChannelIndex();
+
+        setWindowTitle(m_settings.m_title);
+        setTitle(m_channelMarker.getTitle());
+        setTitleColor(m_settings.m_rgbColor);
+
+        QList<QString> settingsKeys({
+            "rgbColor",
+            "title",
+            "useReverseAPI",
+            "reverseAPIAddress",
+            "reverseAPIPort",
+            "reverseAPIDeviceIndex",
+            "reverseAPIChannelIndex"
+        });
+
+        if (m_deviceUISet->m_deviceMIMOEngine)
+        {
+            m_settings.m_streamIndex = dialog.getSelectedStreamIndex();
+            m_channelMarker.clearStreamIndexes();
+            m_channelMarker.addStreamIndex(m_settings.m_streamIndex);
+            updateIndexLabel();
+        }
+
+        applySettings(settingsKeys);
+    }
+
+    resetContextMenuType();
+}
+
+WidebandScannerGUI::WidebandScannerGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, BasebandSampleSink *rxChannel, QWidget* parent) :
+    ChannelGUI(parent),
+    ui(new Ui::WidebandScannerGUI),
+    m_pluginAPI(pluginAPI),
+    m_deviceUISet(deviceUISet),
+    m_channelMarker(this),
+    m_deviceCenterFrequency(0),
+    m_doApplySettings(true)
+{
+    setAttribute(Qt::WA_DeleteOnClose, true);
+    m_helpURL = "plugins/channelrx/widebandscanner/readme.md";
+    RollupContents *rollupContents = getRollupContents();
+    ui->setupUi(rollupContents);
+    setSizePolicy(rollupContents->sizePolicy());
+    rollupContents->arrangeRollups();
+    connect(rollupContents, SIGNAL(widgetRolled(QWidget*,bool)), this, SLOT(onWidgetRolled(QWidget*,bool)));
+    connect(this, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(onMenuDialogCalled(const QPoint &)));
+
+    m_widebandScanner = reinterpret_cast<WidebandScanner*>(rxChannel);
+    m_widebandScanner->setMessageQueueToGUI(getInputMessageQueue());
+
+    ui->deltaFrequencyLabel->setText(QString("%1f").arg(QChar(0x94, 0x03)));
+    ui->deltaFrequency->setColorMapper(ColorMapper(ColorMapper::GrayGold));
+    ui->deltaFrequency->setValueRange(true, 8, 0, 9999999);
+
+    ui->channelBandwidth->setColorMapper(ColorMapper(ColorMapper::GrayGreenYellow));
+    ui->channelBandwidth->setValueRange(true, 8, 0, 9999999);
+
+    m_channelMarker.setColor(Qt::yellow);
+    m_channelMarker.setCenterFrequency(m_settings.m_inputFrequencyOffset);
+    m_channelMarker.setTitle("Frequency Scanner");
+    m_channelMarker.blockSignals(false);
+    //m_channelMarker.setVisible(true);
+    m_channelMarker.setVisible(false);
+    m_channelMarker.setHighlighted(false);
+    m_channelMarker.setTitle(QString());  // kosongkan teks
+
+    setTitleColor(m_channelMarker.getColor());
+    m_settings.setChannelMarker(&m_channelMarker);
+    m_settings.setRollupState(&m_rollupState);
+
+    m_deviceUISet->addChannelMarker(&m_channelMarker);
+
+    connect(&m_channelMarker, SIGNAL(changedByCursor()), this, SLOT(channelMarkerChangedByCursor()));
+    connect(&m_channelMarker, SIGNAL(highlightedByCursor()), this, SLOT(channelMarkerHighlightedByCursor()));
+    connect(getInputMessageQueue(), SIGNAL(messageEnqueued()), this, SLOT(handleInputMessages()));
+
+    // Resize the table using dummy data
+    resizeTable();
+    // Allow user to reorder columns
+    ui->table->horizontalHeader()->setSectionsMovable(true);
+    // Add context menu to allow hiding/showing of columns
+    m_menu = new QMenu(ui->table);
+    for (int i = 0; i < ui->table->horizontalHeader()->count(); i++)
+    {
+        QString text = ui->table->horizontalHeaderItem(i)->text();
+        m_menu->addAction(createCheckableItem(text, i, true));
+    }
+    ui->table->horizontalHeader()->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->table->horizontalHeader(), SIGNAL(customContextMenuRequested(QPoint)), SLOT(columnSelectMenu(QPoint)));
+    // Get signals when columns change
+    connect(ui->table->horizontalHeader(), SIGNAL(sectionMoved(int, int, int)), SLOT(table_sectionMoved(int, int, int)));
+    connect(ui->table->horizontalHeader(), SIGNAL(sectionResized(int, int, int)), SLOT(table_sectionResized(int, int, int)));
+    // Context menu
+    ui->table->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->table, &QTableWidget::customContextMenuRequested, this, &WidebandScannerGUI::table_customContextMenuRequested);
+    TableTapAndHold* tableTapAndHold = new TableTapAndHold(ui->table);
+    connect(tableTapAndHold, &TableTapAndHold::tapAndHold, this, &WidebandScannerGUI::table_customContextMenuRequested);
+
+    ui->startStop->setStyleSheet(QString("QToolButton{ background-color: blue; } QToolButton:checked{ background-color: green; }"));
+
+    displaySettings();
+    makeUIConnections();
+    ui->thresh->hide();
+    ui->tuneTime->hide();
+    ui->scanTime->hide();
+    ui->retransmitTime->hide();
+    applyAllSettings();
+    m_resizer.enableChildMouseTracking();
+
+    ui->table->setItemDelegateForColumn(COL_FREQUENCY, new FrequencyDelegate("Auto", 3, true, ui->table));
+    ui->table->setItemDelegateForColumn(COL_POWER, new DecimalDelegate(1, ui->table));
+    ui->table->setItemDelegateForColumn(COL_CHANNEL_BW, new Int64Delegate(0, 10000000, ui->table));
+    ui->table->setItemDelegateForColumn(COL_TH, new DecimalDelegate(1, -120.0, 0.0, ui->table));
+    ui->table->setItemDelegateForColumn(COL_SQ, new DecimalDelegate(1, -120.0, 0.0, ui->table));
+
+    connect(m_deviceUISet->m_spectrum->getSpectrumView(), &GLSpectrumView::updateAnnotations, this, &WidebandScannerGUI::updateAnnotations);
+
+     auto* view = m_deviceUISet->m_spectrum->getSpectrumView();
+
+    // Multi-slices
+    connect(this, &WidebandScannerGUI::sigEnableMultiSlices,
+        view, [view](const QVector<qint64>& centers) {
+            view->setDisplayCurrent(false);
+            view->enableMultiSlices(centers);
+        });
+
+    connect(this, &WidebandScannerGUI::sigClearMultiSlices,
+        view, [view]() {
+            view->clearMultiSlices();
+            view->setDisplayCurrent(true);
+        });
+
+
+    // Manual span
+    connect(this, &WidebandScannerGUI::sigSetManualSpan,
+        view, [view](qint64 c, int L, int R) {
+            view->setManualSpan(c, L, R);
+        });
+    connect(this, &WidebandScannerGUI::sigClearManualSpan,
+        view, [view]() {
+            view->clearManualSpan();
+        });
+
+    connect(this, &WidebandScannerGUI::requestMultiScan,
+        m_deviceUISet->m_spectrum->getSpectrumView(),
+        &GLSpectrumView::enableMultiSlices);
+}
+
+WidebandScannerGUI::~WidebandScannerGUI()
+{
+    delete ui;
+}
+
+void WidebandScannerGUI::blockApplySettings(bool block)
+{
+    m_doApplySettings = !block;
+}
+
+void WidebandScannerGUI::applySetting(const QString& settingsKey)
+{
+    applySettings({settingsKey});
+}
+
+void WidebandScannerGUI::applySettings(const QStringList& settingsKeys, bool force)
+{
+    m_settingsKeys.append(settingsKeys);
+    if (m_doApplySettings)
+    {
+        WidebandScanner::MsgConfigureWidebandScanner* message = WidebandScanner::MsgConfigureWidebandScanner::create(m_settings, m_settingsKeys, force);
+        m_widebandScanner->getInputMessageQueue()->push(message);
+        m_settingsKeys.clear();
+    }
+}
+
+void WidebandScannerGUI::applyAllSettings()
+{
+    applySettings(QStringList(), true);
+}
+
+void WidebandScannerGUI::displaySettings()
+{
+    m_channelMarker.blockSignals(true);
+    m_channelMarker.setBandwidth(m_basebandSampleRate);
+    m_channelMarker.setCenterFrequency(m_settings.m_inputFrequencyOffset);
+    m_channelMarker.setTitle(m_settings.m_title);
+    m_channelMarker.blockSignals(false);
+    m_channelMarker.setColor(m_settings.m_rgbColor); // activate signal on the last setting only
+
+    setTitleColor(m_settings.m_rgbColor);
+    setWindowTitle(m_channelMarker.getTitle());
+    setTitle(m_channelMarker.getTitle());
+
+    blockApplySettings(true);
+    int channelIndex = ui->channels->findText(m_settings.m_channel);
+    if (channelIndex >= 0) {
+        ui->channels->setCurrentIndex(channelIndex);
+    }
+    ui->deltaFrequency->setValue(m_settings.m_channelFrequencyOffset);
+    ui->channelBandwidth->setValue(m_settings.m_channelBandwidth);
+    ui->scanTime->setValue(m_settings.m_scanTime * 100.0);
+    ui->scanTimeText->setText(QString("%1 s").arg(m_settings.m_scanTime, 0, 'f', 1));
+    ui->retransmitTime->setValue(m_settings.m_retransmitTime * 10.0);
+    ui->retransmitTimeText->setText(QString("%1 s").arg(m_settings.m_retransmitTime, 0, 'f', 1));
+    ui->tuneTime->setValue(m_settings.m_tuneTime);
+    ui->tuneTimeText->setText(QString("%1 ms").arg(m_settings.m_tuneTime));
+    ui->thresh->setValue(m_settings.m_threshold * 10.0);
+    ui->threshText->setText(QString("%1 dB").arg(m_settings.m_threshold, 0, 'f', 1));
+    ui->priority->setCurrentIndex((int)m_settings.m_priority);
+    ui->measurement->setCurrentIndex((int)m_settings.m_measurement);
+    ui->mode->setCurrentIndex((int)m_settings.m_mode);
+
+    ui->table->blockSignals(true);
+    ui->table->setRowCount(0);
+    for (int i = 0; i < m_settings.m_frequencySettings.size(); i++)
+    {
+        addRow(m_settings.m_frequencySettings[i]);
+        updateAnnotation(i);
+    }
+    ui->table->blockSignals(false);
+
+    // Order and size columns
+    QHeaderView* header = ui->table->horizontalHeader();
+    for (int i = 0; i < m_settings.m_columnSizes.size(); i++)
+    {
+        bool hidden = m_settings.m_columnSizes[i] == 0;
+        header->setSectionHidden(i, hidden);
+        m_menu->actions().at(i)->setChecked(!hidden);
+        if (m_settings.m_columnSizes[i] > 0) {
+            ui->table->setColumnWidth(i, m_settings.m_columnSizes[i]);
+        }
+        header->moveSection(header->visualIndex(i), m_settings.m_columnIndexes[i]);
+    }
+
+    updateIndexLabel();
+
+    getRollupContents()->restoreState(m_rollupState);
+    updateAbsoluteCenterFrequency();
+    blockApplySettings(false);
+}
+
+void WidebandScannerGUI::leaveEvent(QEvent* event)
+{
+    m_channelMarker.setHighlighted(false);
+    ChannelGUI::leaveEvent(event);
+}
+
+void WidebandScannerGUI::enterEvent(EnterEventType* event)
+{
+    m_channelMarker.setHighlighted(false);
+    ChannelGUI::enterEvent(event);
+}
+
+void WidebandScannerGUI::on_startStop_toggled(bool checked)
+{
+    if (checked) {
+        // Mulai dengan center PERSIS sesuai tabel (urut & unik), dan view ikut diset sekaligus
+        startScanWithTableCenters();
+    }
+    else {
+        // Stop scan + bersihkan tampilan spectrum
+        if (m_deviceUISet && m_deviceUISet->m_spectrum) {
+            if (auto* view = m_deviceUISet->m_spectrum->getSpectrumView()) {
+                view->clearMultiSlices();
+                view->clearManualSpan();
+            }
+        }
+        if (m_widebandScanner) {
+            auto* msg = WidebandScanner::MsgStopScan::create();
+            m_widebandScanner->getInputMessageQueue()->push(msg);
+        }
+    }
+}
+
+void WidebandScannerGUI::addRow(const WidebandScannerSettings::FrequencySettings& frequencySettings)
+{
+    int row = ui->table->rowCount();
+    ui->table->setRowCount(row + 1);
+
+    // Must create before frequency so updateAnnotation can work
+    QTableWidgetItem* annotationItem = new QTableWidgetItem();
+    annotationItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+    ui->table->setItem(row, COL_ANNOTATION, annotationItem);
+
+    ui->table->setItem(row, COL_FREQUENCY, new QTableWidgetItem(QString("%1").arg(frequencySettings.m_frequency)));
+
+    QTableWidgetItem *enableItem = new QTableWidgetItem();
+    enableItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
+    enableItem->setCheckState(frequencySettings.m_enabled ? Qt::Checked : Qt::Unchecked);
+    ui->table->setItem(row, COL_ENABLE, enableItem);
+
+    QTableWidgetItem* powerItem = new QTableWidgetItem();
+    powerItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+    ui->table->setItem(row, COL_POWER, powerItem);
+
+    QTableWidgetItem *activeCountItem = new QTableWidgetItem();
+    activeCountItem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+    ui->table->setItem(row, COL_ACTIVE_COUNT, activeCountItem);
+    activeCountItem->setData(Qt::DisplayRole, 0);
+
+    QTableWidgetItem* notesItem = new QTableWidgetItem(frequencySettings.m_notes);
+    ui->table->setItem(row, COL_NOTES, notesItem);
+
+    QComboBox *channelComboBox = new QComboBox();
+    updateChannelsCombo(channelComboBox, m_availableChannels, frequencySettings.m_channel, true);
+    ui->table->setCellWidget(row, COL_CHANNEL, channelComboBox);
+    connect(channelComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &WidebandScannerGUI::on_table_channel_currentIndexChanged);
+
+    QTableWidgetItem* channelBandwidthItem = new QTableWidgetItem(frequencySettings.m_channelBandwidth);
+    ui->table->setItem(row, COL_CHANNEL_BW, channelBandwidthItem);
+
+    QTableWidgetItem* thresholdItem = new QTableWidgetItem(frequencySettings.m_threshold);
+    ui->table->setItem(row, COL_TH, thresholdItem);
+
+    QTableWidgetItem* squelchItem = new QTableWidgetItem(frequencySettings.m_squelch);
+    ui->table->setItem(row, COL_SQ, squelchItem);
+}
+
+void WidebandScannerGUI::on_table_channel_currentIndexChanged(int index)
+{
+    if (index >= 0)
+    {
+        QComboBox *combo = qobject_cast<QComboBox *>(sender());
+        QModelIndex tableIndex = ui->table->indexAt(combo->pos());
+        on_table_cellChanged(tableIndex.row(), tableIndex.column());
+    }
+}
+
+void WidebandScannerGUI::on_addSingle_clicked()
+{
+    WidebandScannerSettings::FrequencySettings frequencySettings;
+    frequencySettings.m_frequency = 0;
+    frequencySettings.m_enabled = true;
+    addRow(frequencySettings);
+}
+
+void WidebandScannerGUI::on_addRange_clicked()
+{
+    WidebandScannerAddRangeDialog dialog(m_settings.m_channelBandwidth, this);
+    new DialogPositioner(&dialog, false);
+    if (!dialog.exec()) return;
+    if (dialog.m_frequencies.isEmpty()) return;
+
+    qint64 startHz = dialog.m_frequencies.first();
+    qint64 stopHz = dialog.m_frequencies.last();
+    if (startHz > stopHz) std::swap(startHz, stopHz);
+
+    const qint64 srHz = (m_basebandSampleRate > 0) ? qint64(m_basebandSampleRate) : 60'000'000LL;
+
+    const double overlap = 0.1;
+    const qint64 snapHz = 100'000;
+
+    // Generate centers
+    QVector<qint64> centers = generateCentersWithOverlap(startHz, stopHz, srHz, overlap, snapHz);
+
+    // Filter loncatan kecil** (abaikan CF yang cuma selisih 8 MHz dlsb)
+    cullSmallJumps(centers, srHz, 8'000'000);
+
+    if (centers.isEmpty()) return;
+
+    // Kumpulkan freq existing di tabel (hindari duplikat)
+    QSet<qint64> existing;
+    if (ui && ui->table) {
+        for (int r = 0; r < ui->table->rowCount(); ++r) {
+            auto* it = ui->table->item(r, COL_FREQUENCY);
+            if (!it) continue;
+            bool ok = false;
+            qint64 f = it->text().toLongLong(&ok);
+            if (ok) existing.insert(f);
+        }
+    }
+
+    // Tambahkan baris enable
+    blockApplySettings(true);
+    for (qint64 cf : centers) {
+        if (existing.contains(cf)) continue;
+        WidebandScannerSettings::FrequencySettings fs;
+        fs.m_frequency = cf;
+        fs.m_enabled = true;
+        addRow(fs);
+    }
+    blockApplySettings(false);
+    applySetting("frequencySettings");
+
+    // LANGSUNG SET VIEW: multi-slices + span sesuai union
+    emit requestMultiScan(centers);                          // GLSpectrumView::enableMultiSlices
+    applyManualSpanFromCenters(centers, qint32(srHz));
+}
+
+void WidebandScannerGUI::on_remove_clicked()
+{
+    QList<QTableWidgetItem*> items = ui->table->selectedItems();
+
+    for (auto item : items)
+    {
+        int row = ui->table->row(item);
+        ui->table->removeRow(row);
+        m_settings.m_frequencySettings.removeAt(row);
+    }
+    applySetting("frequencySettings");
+}
+
+void WidebandScannerGUI::on_removeInactive_clicked()
+{
+    for (int i = ui->table->rowCount() - 1; i >= 0; i--)
+    {
+        if (ui->table->item(i, COL_ACTIVE_COUNT)->data(Qt::DisplayRole).toInt() == 0)
+        {
+            ui->table->removeRow(i);
+            m_settings.m_frequencySettings.removeAt(i);
+        }
+    }
+    applySetting("frequencySettings");
+}
+
+static QList<QTableWidgetItem*> takeRow(QTableWidget* table, int row)
+{
+    QList<QTableWidgetItem*> rowItems;
+
+    for (int col = 0; col < table->columnCount(); col++) {
+        rowItems.append(table->takeItem(row, col));
+    }
+    return rowItems;
+}
+
+static void setRow(QTableWidget* table, int row, const QList<QTableWidgetItem*>& rowItems)
+{
+    for (int col = 0; col < rowItems.size(); col++) {
+        table->setItem(row, col, rowItems.at(col));
+    }
+}
+
+void WidebandScannerGUI::on_up_clicked()
+{
+    QList<QTableWidgetItem*> items = ui->table->selectedItems();
+    for (auto item : items)
+    {
+        int row = ui->table->row(item);
+        if (row > 0)
+        {
+            QList<QTableWidgetItem*> sourceItems = takeRow(ui->table, row);
+            QList<QTableWidgetItem*> destItems = takeRow(ui->table, row - 1);
+            setRow(ui->table, row - 1, sourceItems);
+            setRow(ui->table, row, destItems);
+            ui->table->setCurrentCell(row - 1, 0);
+        }
+    }
+}
+
+void WidebandScannerGUI::on_down_clicked()
+{
+    QList<QTableWidgetItem*> items = ui->table->selectedItems();
+    for (auto item : items)
+    {
+        int row = ui->table->row(item);
+        if (row < ui->table->rowCount() - 1)
+        {
+            QList<QTableWidgetItem*> sourceItems = takeRow(ui->table, row);
+            QList<QTableWidgetItem*> destItems = takeRow(ui->table, row + 1);
+            setRow(ui->table, row + 1, sourceItems);
+            setRow(ui->table, row, destItems);
+            ui->table->setCurrentCell(row + 1, 0);
+        }
+    }
+}
+
+void WidebandScannerGUI::on_clearActiveCount_clicked()
+{
+    for (int i = 0; i < ui->table->rowCount(); i++) {
+        ui->table->item(i, COL_ACTIVE_COUNT)->setData(Qt::DisplayRole, 0);
+    }
+}
+
+void WidebandScannerGUI::on_table_cellChanged(int row, int column)
+{
+    QTableWidgetItem* item = ui->table->item(row, column);
+    if (item)
+    {
+        if (column == COL_FREQUENCY)
+        {
+            qint64 value = item->text().toLongLong();
+            while (m_settings.m_frequencySettings.size() <= row)
+            {
+                WidebandScannerSettings::FrequencySettings frequencySettings;
+                frequencySettings.m_frequency = 0;
+                frequencySettings.m_enabled = true;
+                m_settings.m_frequencySettings.append(frequencySettings);
+            }
+            m_settings.m_frequencySettings[row].m_frequency = value;
+            updateAnnotation(row);
+            applySetting("frequencySettings");
+        }
+        else if (column == COL_ENABLE)
+        {
+            m_settings.m_frequencySettings[row].m_enabled = item->checkState() == Qt::Checked;
+            applySetting("frequencySettings");
+        }
+        else if (column == COL_NOTES)
+        {
+            m_settings.m_frequencySettings[row].m_notes = item->text();
+            applySetting("frequencySettings");
+        }
+        else if (column == COL_CHANNEL_BW)
+        {
+            m_settings.m_frequencySettings[row].m_channelBandwidth = item->text();
+            applySetting("frequencySettings");
+        }
+        else if (column == COL_TH)
+        {
+            m_settings.m_frequencySettings[row].m_threshold = item->text();
+            applySetting("frequencySettings");
+        }
+        else if (column == COL_SQ)
+        {
+            m_settings.m_frequencySettings[row].m_squelch = item->text();
+            applySetting("frequencySettings");
+        }
+    }
+    else if (column == COL_CHANNEL)
+    {
+        QComboBox *combo = qobject_cast<QComboBox *>(ui->table->cellWidget(row, COL_CHANNEL));
+        m_settings.m_frequencySettings[row].m_channel = combo->currentText();
+        qDebug() << "Setting row" << row << "to" << combo->currentText();
+        applySetting("frequencySettings");
+    }
+}
+
+void WidebandScannerGUI::updateAnnotation(int row)
+{
+    QTableWidgetItem* item = ui->table->item(row, COL_FREQUENCY);
+    QTableWidgetItem* annotationItem = ui->table->item(row, COL_ANNOTATION);
+    if (item && annotationItem)
+    {
+        qint64 frequency = item->text().toLongLong();
+        const QList<SpectrumAnnotationMarker>& markers = m_deviceUISet->m_spectrum->getAnnotationMarkers();
+        const SpectrumAnnotationMarker* closest = nullptr;
+        for (const auto& marker : markers)
+        {
+            qint64 start1 = marker.m_startFrequency;
+            qint64 stop1 = marker.m_startFrequency + marker.m_bandwidth;
+            qint64 start2 = frequency - m_settings.m_channelBandwidth / 2;
+            qint64 stop2 = frequency + m_settings.m_channelBandwidth / 2;
+            if (   ((start2 >= start1) && (start2 <= stop1))
+                || ((stop2 >= start1) && (stop2 <= stop1))
+               )
+            {
+                if (marker.m_bandwidth == (unsigned)m_settings.m_channelBandwidth) {
+                    // Exact match
+                    annotationItem->setText(marker.m_text);
+                    return;
+                }
+                else if (!closest)
+                {
+                    closest = &marker;
+                }
+                else
+                {
+                    if (marker.m_bandwidth < closest->m_bandwidth) {
+                        closest = &marker;
+                    }
+                }
+            }
+        }
+        if (closest) {
+            annotationItem->setText(closest->m_text);
+        }
+    }
+}
+
+void WidebandScannerGUI::updateAnnotations()
+{
+    for (int i = 0; i < ui->table->rowCount(); i++) {
+        updateAnnotation(i);
+    }
+}
+
+void WidebandScannerGUI::setAllEnabled(bool enable)
+{
+    for (int i = 0; i < ui->table->rowCount(); i++) {
+        ui->table->item(i, COL_ENABLE)->setCheckState(enable ? Qt::Checked : Qt::Unchecked);
+    }
+}
+
+void WidebandScannerGUI::table_customContextMenuRequested(QPoint pos)
+{
+    QTableWidgetItem* item = ui->table->itemAt(pos);
+    if (item)
+    {
+        int row = item->row();
+
+        QMenu* tableContextMenu = new QMenu(ui->table);
+        connect(tableContextMenu, &QMenu::aboutToHide, tableContextMenu, &QMenu::deleteLater);
+
+        // Copy current cell
+
+        QAction* copyAction = new QAction("Copy", tableContextMenu);
+        const QString text = item->text();
+        connect(copyAction, &QAction::triggered, this, [text]()->void {
+            QClipboard* clipboard = QGuiApplication::clipboard();
+            clipboard->setText(text);
+            });
+        tableContextMenu->addAction(copyAction);
+
+        tableContextMenu->addSeparator();
+
+        // Enable all
+
+        QAction* enableAllAction = new QAction("Enable all", tableContextMenu);
+        connect(enableAllAction, &QAction::triggered, this, [this]()->void {
+            setAllEnabled(true);
+            });
+        tableContextMenu->addAction(enableAllAction);
+
+        // Disable all
+
+        QAction* disableAllAction = new QAction("Disable all", tableContextMenu);
+        connect(disableAllAction, &QAction::triggered, this, [this]()->void {
+            setAllEnabled(false);
+            });
+        tableContextMenu->addAction(disableAllAction);
+
+        // Remove selected rows
+
+        QAction* removeAction = new QAction("Remove", tableContextMenu);
+        connect(removeAction, &QAction::triggered, this, [this]()->void {
+            on_remove_clicked();
+            });
+        tableContextMenu->addAction(removeAction);
+
+        tableContextMenu->addSeparator();
+
+        // Tune to frequency
+
+        qint64 frequency = ui->table->item(row, COL_FREQUENCY)->text().toLongLong();
+        WidebandScannerSettings::FrequencySettings *frequencySettings = m_settings.getFrequencySettings(frequency);
+        QString channel = m_settings.getChannel(frequencySettings);
+        unsigned int scanDeviceSetIndex, scanChannelIndex;
+
+        if (MainCore::getDeviceAndChannelIndexFromId(channel, scanDeviceSetIndex, scanChannelIndex))
+        {
+            ButtonSwitch *startStop = ui->startStop;
+
+            QAction* findChannelMapAction = new QAction(QString("Tune %1 to %2").arg(channel).arg(frequency), tableContextMenu);
+            connect(findChannelMapAction, &QAction::triggered, this, [this, scanDeviceSetIndex, scanChannelIndex, frequency, startStop]()->void {
+
+                // Stop scanning
+                if (startStop->isChecked()) {
+                    startStop->click();
+                }
+
+                // Mute all channels
+                m_widebandScanner->muteAll(m_settings);
+
+                // Tune to frequency
+                if ((frequency - m_settings.m_channelBandwidth / 2 < m_deviceCenterFrequency - m_basebandSampleRate / 2)
+                    || (frequency + m_settings.m_channelBandwidth / 2 >= m_deviceCenterFrequency + m_basebandSampleRate / 2))
+                {
+                    qint64 centerFrequency = frequency;
+                    int offset = 0;
+                    while (frequency - centerFrequency < m_settings.m_channelFrequencyOffset)
+                    {
+                        centerFrequency -= m_settings.m_channelBandwidth;
+                        offset += m_settings.m_channelBandwidth;
+                    }
+
+                    if (!ChannelWebAPIUtils::setCenterFrequency(getDeviceSetIndex(), centerFrequency)) {
+                        qWarning() << "Scanner failed to set frequency" << centerFrequency;
+                    }
+                    ChannelWebAPIUtils::setFrequencyOffset(scanDeviceSetIndex, scanChannelIndex, offset);
+                }
+                else
+                {
+                    int offset = frequency - m_deviceCenterFrequency;
+                    ChannelWebAPIUtils::setFrequencyOffset(scanDeviceSetIndex, scanChannelIndex, offset);
+                }
+
+                // Unmute channel
+                ChannelWebAPIUtils::setAudioMute(scanDeviceSetIndex, scanChannelIndex, false);
+
+                });
+            tableContextMenu->addAction(findChannelMapAction);
+        }
+        else
+        {
+            qDebug() << "Failed to parse channel" << m_settings.m_channel;
+        }
+
+        tableContextMenu->popup(ui->table->viewport()->mapToGlobal(pos));
+    }
+}
+
+// Columns in table reordered
+void WidebandScannerGUI::table_sectionMoved(int logicalIndex, int oldVisualIndex, int newVisualIndex)
+{
+    (void)oldVisualIndex;
+    m_settings.m_columnIndexes[logicalIndex] = newVisualIndex;
+}
+
+// Column in table resized (when hidden size is 0)
+void WidebandScannerGUI::table_sectionResized(int logicalIndex, int oldSize, int newSize)
+{
+    (void)oldSize;
+    m_settings.m_columnSizes[logicalIndex] = newSize;
+}
+
+// Right click in ADSB table header - show column select menu
+void WidebandScannerGUI::columnSelectMenu(QPoint pos)
+{
+    m_menu->popup(ui->table->horizontalHeader()->viewport()->mapToGlobal(pos));
+}
+
+// Hide/show column when menu selected
+void WidebandScannerGUI::columnSelectMenuChecked(bool checked)
+{
+    (void)checked;
+    QAction* action = qobject_cast<QAction*>(sender());
+    if (action != nullptr)
+    {
+        int idx = action->data().toInt(nullptr);
+        ui->table->setColumnHidden(idx, !action->isChecked());
+    }
+}
+
+// Create column select menu item
+QAction* WidebandScannerGUI::createCheckableItem(QString& text, int idx, bool checked)
+{
+    QAction* action = new QAction(text, this);
+    action->setCheckable(true);
+    action->setChecked(checked);
+    action->setData(QVariant(idx));
+    connect(action, SIGNAL(triggered()), this, SLOT(columnSelectMenuChecked()));
+    return action;
+}
+
+void WidebandScannerGUI::resizeTable()
+{
+    // Fill table with a row of dummy data that will size the columns nicely
+    int row = ui->table->rowCount();
+    ui->table->setRowCount(row + 1);
+    ui->table->setItem(row, COL_FREQUENCY, new QTableWidgetItem("800,000.5 MHz"));
+    ui->table->setItem(row, COL_ANNOTATION, new QTableWidgetItem("London VOLMET"));
+    ui->table->setItem(row, COL_ENABLE, new QTableWidgetItem("Enable"));
+    ui->table->setItem(row, COL_POWER, new QTableWidgetItem("-100.0"));
+    ui->table->setItem(row, COL_ACTIVE_COUNT, new QTableWidgetItem("10000"));
+    ui->table->setItem(row, COL_NOTES, new QTableWidgetItem("A channel name"));
+    ui->table->setItem(row, COL_CHANNEL, new QTableWidgetItem("Enter some notes"));
+    ui->table->setItem(row, COL_CHANNEL_BW, new QTableWidgetItem("100000000"));
+    ui->table->setItem(row, COL_TH, new QTableWidgetItem("-100.0"));
+    ui->table->setItem(row, COL_SQ, new QTableWidgetItem("-100.0"));
+    ui->table->resizeColumnsToContents();
+    ui->table->setRowCount(row);
+}
+
+void WidebandScannerGUI::makeUIConnections()
+{
+    QObject::connect(ui->channels, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &WidebandScannerGUI::on_channels_currentIndexChanged);
+    QObject::connect(ui->deltaFrequency, &ValueDialZ::changed, this, &WidebandScannerGUI::on_deltaFrequency_changed);
+    QObject::connect(ui->channelBandwidth, &ValueDialZ::changed, this, &WidebandScannerGUI::on_channelBandwidth_changed);
+    QObject::connect(ui->scanTime, &QDial::valueChanged, this, &WidebandScannerGUI::on_scanTime_valueChanged);
+    QObject::connect(ui->retransmitTime, &QDial::valueChanged, this, &WidebandScannerGUI::on_retransmitTime_valueChanged);
+    QObject::connect(ui->tuneTime, &QDial::valueChanged, this, &WidebandScannerGUI::on_tuneTime_valueChanged);
+    QObject::connect(ui->thresh, &QDial::valueChanged, this, &WidebandScannerGUI::on_thresh_valueChanged);
+    QObject::connect(ui->priority, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &WidebandScannerGUI::on_priority_currentIndexChanged);
+    QObject::connect(ui->measurement, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &WidebandScannerGUI::on_measurement_currentIndexChanged);
+    QObject::connect(ui->mode, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &WidebandScannerGUI::on_mode_currentIndexChanged);
+    QObject::connect(ui->startStop, &ButtonSwitch::toggled, this, &WidebandScannerGUI::on_startStop_toggled);
+    QObject::connect(ui->table, &QTableWidget::cellChanged, this, &WidebandScannerGUI::on_table_cellChanged);
+    QObject::connect(ui->addSingle, &QToolButton::clicked, this, &WidebandScannerGUI::on_addSingle_clicked);
+    QObject::connect(ui->addRange, &QToolButton::clicked, this, &WidebandScannerGUI::on_addRange_clicked);
+    QObject::connect(ui->remove, &QToolButton::clicked, this, &WidebandScannerGUI::on_remove_clicked);
+    QObject::connect(ui->removeInactive, &QToolButton::clicked, this, &WidebandScannerGUI::on_removeInactive_clicked);
+    QObject::connect(ui->up, &QToolButton::clicked, this, &WidebandScannerGUI::on_up_clicked);
+    QObject::connect(ui->down, &QToolButton::clicked, this, &WidebandScannerGUI::on_down_clicked);
+    QObject::connect(ui->clearActiveCount, &QToolButton::clicked, this, &WidebandScannerGUI::on_clearActiveCount_clicked);
+    QObject::connect(ui->threshInc, &QToolButton::clicked, this, &WidebandScannerGUI::threshIncClick);
+    QObject::connect(ui->threshDec, &QToolButton::clicked, this, &WidebandScannerGUI::threshDecClick);
+    QObject::connect(ui->tuneTimeInc, &QToolButton::clicked, this, &WidebandScannerGUI::tuneTimeIncClick);
+    QObject::connect(ui->tuneTimeDec, &QToolButton::clicked, this, &WidebandScannerGUI::tuneTimeDecClick);
+    QObject::connect(ui->scanTimeInc, &QToolButton::clicked, this, &WidebandScannerGUI::scanTimeIncClick);
+    QObject::connect(ui->scanTimeDec, &QToolButton::clicked, this, &WidebandScannerGUI::scanTimeDecClick);
+    QObject::connect(ui->retransmitTimeInc, &QToolButton::clicked, this, &WidebandScannerGUI::retransmitTimeIncClick);
+    QObject::connect(ui->retransmitTimeDec, &QToolButton::clicked, this, &WidebandScannerGUI::retransmitTimeDecClick);
+}
+
+void WidebandScannerGUI::updateAbsoluteCenterFrequency()
+{
+    setStatusFrequency(m_deviceCenterFrequency + m_settings.m_inputFrequencyOffset);
+}
+
+QVector<qint64> WidebandScannerGUI::generateCentersSRAligned(qint64 fminHz, qint64 fmaxHz,
+    qint32 sampleRateHz, double overlapRatio)
+{
+    QVector<qint64> centers;
+    if (sampleRateHz <= 0) return centers;
+    if (fmaxHz <= fminHz) return centers;
+
+    // Step antar-center: SR * (1 - overlap)
+    const long long sr = static_cast<long long>(sampleRateHz);
+    long long step = static_cast<long long>(qRound64(sr * (1.0 - overlapRatio)));
+    if (step < 1) step = 1;
+
+    // Mulai dari center pertama = fmin + SR/2 (agar sisi kiri slice = fmin)
+    long long c = static_cast<long long>(fminHz) + sr / 2;
+
+    // Jika fmin..fmax lebih kecil dari satu lebar SR, pilih satu center di tengah
+    if (static_cast<long long>(fmaxHz) - static_cast<long long>(fminHz) <= sr) {
+        centers.push_back((fminHz + fmaxHz) / 2);
+        return centers;
+    }
+
+    // Iterasi center sampai sisi kanan slice melewati fmax
+    while ((c - sr / 2) <= fmaxHz) {
+        // Pastikan slice [c - SR/2, c + SR/2] masih menyentuh [fmin, fmax]
+        if ((c + sr / 2) >= fminHz && (c - sr / 2) <= fmaxHz) {
+            centers.push_back(c);
+        }
+        c += step;
+        // Guard overflow (safety)
+        if (centers.size() > 100000) break;
+    }
+
+    // Pastikan ujung kanan ter-cover rapi:
+    if (!centers.isEmpty()) {
+        const long long lastC = centers.back();
+        const long long rightEdge = lastC + sr / 2;
+        if (rightEdge < fmaxHz) {
+            const long long tailC = fmaxHz - sr / 2;
+            if (centers.isEmpty() || llabs(tailC - centers.back()) >= 1) {
+                centers.push_back(tailC);
+            }
+        }
+    }
+
+    // Sort + uniq (jaga-jaga)
+    std::sort(centers.begin(), centers.end());
+    centers.erase(std::unique(centers.begin(), centers.end()), centers.end());
+    return centers;
+}
+
+void WidebandScannerGUI::applyManualSpanFromCenters(const QVector<qint64>& centersHz, qint32 sampleRateHz)
+{
+    if (centersHz.isEmpty() || sampleRateHz <= 0) return;
+
+    const qint64 sr = static_cast<qint64>(sampleRateHz);
+    const qint64 xmin = centersHz.first() - sr / 2;
+    const qint64 xmax = centersHz.last() + sr / 2;
+
+    const qint64 c = (xmin + xmax) / 2;
+    const int    L = int(c - xmin);
+    const int    R = int(xmax - c);
+
+    if (m_deviceUISet && m_deviceUISet->m_spectrum) {
+        if (auto* view = m_deviceUISet->m_spectrum->getSpectrumView()) {
+            view->setManualSpan(c, L, R);
+        }
+    }
+}
+
+QVector<qint64> WidebandScannerGUI::generateCentersSRAligned(qint64 fminHz,
+    qint64 fmaxHz,
+    qint64 sampleRateHz,
+    double overlapRatio)
+{
+    QVector<qint64> centers;
+    if (sampleRateHz <= 0 || fmaxHz <= fminHz) return centers;
+
+    const qint64 sr = sampleRateHz;
+    qint64 step = qint64(llround(sr * (1.0 - overlapRatio)));
+    if (step < 1) step = 1;
+
+    // Kasus range lebih sempit dari 1 SR -> satu center di tengah
+    if ((fmaxHz - fminHz) <= sr) {
+        centers.push_back((fminHz + fmaxHz) / 2);
+        return centers;
+    }
+
+    // Mulai supaya tepi kiri slice pertama pas di fmin
+    qint64 c = fminHz + sr / 2;
+
+    while ((c - sr / 2) <= fmaxHz) {
+        if ((c + sr / 2) >= fminHz) centers.push_back(c);
+        c += step;
+        if (centers.size() > 200000) break; // guard
+    }
+
+    // Pastikan ujung kanan ter-cover
+    if (!centers.isEmpty()) {
+        const qint64 rightEdge = centers.back() + sr / 2;
+        if (rightEdge < fmaxHz) centers.push_back(fmaxHz - sr / 2);
+    }
+
+    std::sort(centers.begin(), centers.end());
+    centers.erase(std::unique(centers.begin(), centers.end()), centers.end());
+    return centers;
+}
+
+QVector<qint64> WidebandScannerGUI::collectCentersFromTable() const
+{
+    QVector<qint64> freqs;
+    if (!ui || !ui->table) return freqs;
+
+    const int rows = ui->table->rowCount();
+    freqs.reserve(rows);
+
+    for (int r = 0; r < rows; ++r) {
+        const QTableWidgetItem* it = ui->table->item(r, COL_FREQUENCY);
+        if (!it) continue;
+        bool ok = false;
+        const qint64 f = it->text().toLongLong(&ok);
+        if (ok) freqs.push_back(f);
+    }
+
+    std::sort(freqs.begin(), freqs.end());
+    freqs.erase(std::unique(freqs.begin(), freqs.end()), freqs.end());
+    return freqs;
+}
+
+void WidebandScannerGUI::startScanWithTableCenters()
+{
+    // 1) Ambil daftar center persis dari tabel
+    QVector<qint64> centers = collectCentersFromTable();
+    if (centers.isEmpty()) return;
+
+    // 2) Apply ke spectrum view: tampilkan slice & kunci X-span ke komposit
+    const qint32 sr = m_basebandSampleRate > 0 ? m_basebandSampleRate : 0;
+    emit requestMultiScan(centers);       // kirim daftar center ke GLSpectrumView
+    if (sr > 0) {
+        applyManualSpanFromCenters(centers, sr); // center=L/R dihitung dari SR
+    }
+
+    // 3) Start mesin scanner seperti biasa
+    if (m_widebandScanner) {
+        auto* msg = WidebandScanner::MsgStartScan::create();
+        m_widebandScanner->getInputMessageQueue()->push(msg);
+    }
+}
+
+static inline qint64 floorSnap(qint64 v, qint64 grid)
+{
+    if (grid <= 1) return v;
+    const qint64 r = v % grid;
+    return r == 0 ? v : (v - r);
+}
+
+QVector<qint64> WidebandScannerGUI::generateCentersWithOverlap(qint64 startHz,
+    qint64 stopHz,
+    qint64 sampleRateHz,
+    double overlapFrac,
+    qint64 snapHz) const
+{
+    QVector<qint64> centers;
+    if (stopHz <= startHz || sampleRateHz <= 0) return centers;
+
+    // clamp overlap 5..10%
+    if (overlapFrac < 0.05) overlapFrac = 0.05;
+    if (overlapFrac > 0.10) overlapFrac = 0.10;
+
+    // step efektif = SR * (1 - overlap)
+    const long double SR = (long double)sampleRateHz;
+    long double stepLD = SR * (1.0L - (long double)overlapFrac);
+    qint64 step = (qint64)(stepLD < 1.0L ? 1.0L : stepLD);
+
+    const qint64 half = sampleRateHz / 2;
+    qint64 firstCF = startHz + half;
+    qint64 lastCF = stopHz - half;
+
+    if (firstCF > lastCF) {
+        centers.push_back((startHz + stopHz) / 2);
+        return centers;
+    }
+
+    if (snapHz > 1) {
+        firstCF = floorSnap(firstCF, snapHz);
+        lastCF = floorSnap(lastCF, snapHz);
+        if (firstCF < startHz + half) firstCF += snapHz;
+    }
+
+    for (qint64 cf = firstCF; cf <= lastCF; ) {
+        centers.push_back(cf);
+        qint64 next = cf + step;
+        if (snapHz > 1) next = floorSnap(next, snapHz);
+        if (next <= cf) next = cf + (snapHz > 1 ? snapHz : 1); // guard
+        cf = next;
+    }
+
+    if (centers.isEmpty() || centers.back() < lastCF) centers.push_back(lastCF);
+
+    std::sort(centers.begin(), centers.end());
+    centers.erase(std::unique(centers.begin(), centers.end()), centers.end());
+    return centers;
+}
+
+// Median sederhana untuk qint64
+static inline qint64 medianStep(QVector<qint64> v)
+{
+    if (v.isEmpty()) return 0;
+    std::sort(v.begin(), v.end());
+    const int n = v.size();
+    return (n & 1) ? v[n / 2] : ((v[n / 2 - 1] + v[n / 2]) / 2);
+}
+
+// Buang loncatan kecil antar-center agar tidak ada CF "nyempil" (cth +8 MHz)
+void WidebandScannerGUI::cullSmallJumps(QVector<qint64>& centersHz,
+    qint64 sampleRateHz,
+    qint64 hardMinGapHz)
+{
+    if (centersHz.size() <= 1) return;
+
+    // Pastikan urut & unik
+    std::sort(centersHz.begin(), centersHz.end());
+    centersHz.erase(std::unique(centersHz.begin(), centersHz.end()), centersHz.end());
+    if (centersHz.size() <= 1) return;
+
+    // Hitung median step aktual untuk threshold adaptif
+    QVector<qint64> diffs;
+    diffs.reserve(centersHz.size() - 1);
+    for (int i = 1; i < centersHz.size(); ++i)
+        diffs.push_back(llabs(centersHz[i] - centersHz[i - 1]));
+    const qint64 med = medianStep(diffs);
+
+    // Min gap adaptif:
+    // - minimal “hard” (default 8 MHz sesuai request)
+    // - minimal proporsional SR (mis. SR/6 ~ 10 MHz untuk SR=60M)
+    // - dan >= seperempat median step agar tidak agresif saat step normal besar
+    const qint64 minSRGap = (sampleRateHz > 0) ? (sampleRateHz / 6) : 0;           // ~16.7%
+    qint64 minGap = std::max(hardMinGapHz, minSRGap);
+    if (med > 0) minGap = std::max(minGap, med / 4);
+
+    QVector<qint64> kept;
+    kept.reserve(centersHz.size());
+    qint64 last = centersHz.front();
+    kept.push_back(last);
+
+    for (int i = 1; i < centersHz.size(); ++i) {
+        const qint64 c = centersHz[i];
+        if ((c - last) >= minGap) {
+            kept.push_back(c);
+            last = c;
+        }
+        // else: terlalu dekat → buang
+    }
+
+    centersHz.swap(kept);
+}
