@@ -879,7 +879,7 @@ void GLSpectrumView::newSpectrum(const Real* spectrum, int nbBins, int fftSize)
             return;
         }
 
-        for (int b = 0; b < m_nbBins; ++b)
+        /*for (int b = 0; b < m_nbBins; ++b)
         {
             const qint64 fAbs = binToFrequency(b);
             double acc = 0.0; int cnt = 0;
@@ -900,7 +900,37 @@ void GLSpectrumView::newSpectrum(const Real* spectrum, int nbBins, int fftSize)
 
             m_multiComposite[b] = (cnt > 0) ? Real(acc / double(cnt))
                 : -std::numeric_limits<float>::max();
+        }*/
+
+        for (int b = 0; b < m_nbBins; ++b)
+        {
+            const qint64 fAbs = binToFrequency(b);
+
+            // Pilih satu slice pemenang (nearest center) yang benar-benar mencakup fAbs
+            int winner = -1;
+            qint64 bestDist = std::numeric_limits<qint64>::max();
+
+            for (int i = 0; i < covers.size(); ++i) {
+                const auto& c = covers[i];
+                if (fAbs < c.f1 || fAbs > c.f2) continue;
+                const qint64 d = llabs(fAbs - c.center);
+                if (d < bestDist) { bestDist = d; winner = i; }
+            }
+
+            Real v = -std::numeric_limits<float>::max(); // sentinel "no data"
+            if (winner >= 0) {
+                const auto& c = covers[winner];
+                const double startF = double(c.center) - double(m_sampleRate) / 2.0;
+                int sb = int(std::llround((double(fAbs) - startF) / c.rbw));
+                if (sb < 0) sb = 0;
+                int last = c.data->size() - 1;
+                if (sb > last) sb = last;
+                v = (*(c.data))[sb];
+            }
+
+            m_multiComposite[b] = v;
         }
+
 
         // Render 1x per siklus lengkap
         const Real* line = m_multiComposite.constData();

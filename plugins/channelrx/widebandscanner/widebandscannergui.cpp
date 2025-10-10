@@ -808,8 +808,8 @@ void WidebandScannerGUI::on_addRange_clicked()
 
     const qint64 srHz = (m_basebandSampleRate > 0) ? qint64(m_basebandSampleRate) : 60'000'000LL;
 
-    const double overlap = 0.1;
-    const qint64 snapHz = 100'000;
+    const double overlap = 0.01;
+    const qint64 snapHz = 10'000;
 
     // Generate centers
     QVector<qint64> centers = generateCentersWithOverlap(startHz, stopHz, srHz, overlap, snapHz);
