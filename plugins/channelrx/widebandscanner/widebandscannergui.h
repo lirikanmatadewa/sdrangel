@@ -200,6 +200,8 @@ private slots:
 	void scanTimeDecClick();
 	void retransmitTimeIncClick();
 	void retransmitTimeDecClick();
+
+    void onScanTimeChanged(int index);
 };
 
 #endif // INCLUDE_WIDEBANDSCANNERGUI_H

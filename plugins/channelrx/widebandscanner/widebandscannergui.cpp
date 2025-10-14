@@ -562,6 +562,7 @@ WidebandScannerGUI::WidebandScannerGUI(PluginAPI* pluginAPI, DeviceUISet *device
 
     displaySettings();
     makeUIConnections();
+
     ui->thresh->hide();
     ui->tuneTime->hide();
     ui->scanTime->hide();
@@ -606,6 +607,110 @@ WidebandScannerGUI::WidebandScannerGUI(PluginAPI* pluginAPI, DeviceUISet *device
     connect(this, &WidebandScannerGUI::requestMultiScan,
         m_deviceUISet->m_spectrum->getSpectrumView(),
         &GLSpectrumView::enableMultiSlices);
+
+    // custom
+    
+    // line power layout
+    ui->line_2->setVisible(false);
+    ui->line_3->setVisible(false);
+    ui->line_4->setVisible(false);
+    for (int i = 0; i < ui->channelPowerLayout->count(); ++i) {
+        QWidget* w = ui->channelPowerLayout->itemAt(i)->widget();
+        if (w) {
+            w->setVisible(false);
+        }
+    }
+    for (int i = 0; i < ui->powLayout->count(); ++i) {
+        QWidget* w = ui->powLayout->itemAt(i)->widget();
+        if (w) {
+            //w->setVisible(false);  // or w->hide();
+            w->setVisible(false);
+        }
+    }
+
+    for (int i = 0; i < ui->phySettingsLayout->count(); ++i) {
+        QWidget* w = ui->phySettingsLayout->itemAt(i)->widget();
+        if (w) {
+            w->setVisible(false);
+        }
+    }
+
+    ui->threshLabel->setVisible(false);
+    ui->threshText->setVisible(false);
+    for (int i = 0; i < ui->threshIncDec->count(); ++i) {
+        QWidget* w = ui->threshIncDec->itemAt(i)->widget();
+        if (w) {
+            w->setVisible(false);
+        }
+    }
+
+    ui->tuneTimeLabel->setVisible(false);
+    ui->tuneTimeText->setVisible(false);
+    for (int i = 0; i < ui->tuneTimeIncDec->count(); ++i) {
+        QWidget* w = ui->tuneTimeIncDec->itemAt(i)->widget();
+        if (w) {
+            w->setVisible(false);
+        }
+    }
+
+    ui->retransmitTimeLabel->setVisible(false);
+    ui->retransmitTimeText->setVisible(false);
+    for (int i = 0; i < ui->retransmitTimeIncDec->count(); ++i) {
+        QWidget* w = ui->retransmitTimeIncDec->itemAt(i)->widget();
+        if (w) {
+            w->setVisible(false);
+        }
+    }
+
+    ui->scanTimeText->setVisible(false);
+    ui->scanTimeLabel->setVisible(false);
+    for (int i = 0; i < ui->scanTimeIncDec->count(); ++i) {
+        QWidget* w = ui->scanTimeIncDec->itemAt(i)->widget();
+        if (w) {
+            w->setVisible(false);
+        }
+    }
+
+    ui->scanTimeList->addItem("0.1s", 100000);  // µs
+    ui->scanTimeList->addItem("0.005s", 5000);
+    ui->scanTimeList->addItem("0.001s", 1000);
+    ui->scanTimeList->addItem("0.0005s", 500);
+    ui->scanTimeList->addItem("0.0002s", 200);
+    ui->scanTimeList->addItem("0.0001s", 100);
+    
+    ui->mode->setVisible(false);
+    ui->status->setVisible(false);
+
+    ui->line_7->setVisible(false);
+    ui->filterLine->setVisible(false);
+    ui->line_5->setVisible(false);
+
+    ui->table->setVisible(false);
+
+    for (int i = 0; i < ui->horizontalLayout->count(); ++i) {
+        QWidget* w = ui->horizontalLayout->itemAt(i)->widget();
+        if (w) {
+            w->setVisible(false);
+        }
+    }
+
+    ui->start->setColorMapper(ColorMapper(ColorMapper::GrayGold));
+    ui->start->setValueRange(false, 11, 0, 99999999999);
+    ui->stop->setColorMapper(ColorMapper(ColorMapper::GrayGold));
+    ui->stop->setValueRange(false, 11, 0, 99999999999);
+    
+    // Nilai default (mis. dalam Hz)
+    constexpr quint64 kDefaultStartHz = 2100000000;   // 1 MHz
+    constexpr quint64 kDefaultStopHz = 2400000000;   // 3 MHz
+
+    // Set default TANPA memicu slot change
+    ui->start->blockSignals(true);
+    ui->start->setValue(kDefaultStartHz);
+    ui->start->blockSignals(false);
+
+    ui->stop->blockSignals(true);
+    ui->stop->setValue(kDefaultStopHz);
+    ui->stop->blockSignals(false);
 }
 
 WidebandScannerGUI::~WidebandScannerGUI()
@@ -661,15 +766,21 @@ void WidebandScannerGUI::displaySettings()
     ui->channelBandwidth->setValue(m_settings.m_channelBandwidth);
     ui->scanTime->setValue(m_settings.m_scanTime * 100.0);
     ui->scanTimeText->setText(QString("%1 s").arg(m_settings.m_scanTime, 0, 'f', 1));
+    
+    m_settings.m_retransmitTime = 0.0;
     ui->retransmitTime->setValue(m_settings.m_retransmitTime * 10.0);
     ui->retransmitTimeText->setText(QString("%1 s").arg(m_settings.m_retransmitTime, 0, 'f', 1));
+    
+    m_settings.m_tuneTime = 0.0;
     ui->tuneTime->setValue(m_settings.m_tuneTime);
     ui->tuneTimeText->setText(QString("%1 ms").arg(m_settings.m_tuneTime));
     ui->thresh->setValue(m_settings.m_threshold * 10.0);
     ui->threshText->setText(QString("%1 dB").arg(m_settings.m_threshold, 0, 'f', 1));
     ui->priority->setCurrentIndex((int)m_settings.m_priority);
     ui->measurement->setCurrentIndex((int)m_settings.m_measurement);
-    ui->mode->setCurrentIndex((int)m_settings.m_mode);
+    
+    m_settings.m_mode = WidebandScannerSettings::SCAN_ONLY;
+    ui->mode->setCurrentIndex(m_settings.m_mode);
 
     ui->table->blockSignals(true);
     ui->table->setRowCount(0);
@@ -797,13 +908,14 @@ void WidebandScannerGUI::on_addSingle_clicked()
 
 void WidebandScannerGUI::on_addRange_clicked()
 {
-    WidebandScannerAddRangeDialog dialog(m_settings.m_channelBandwidth, this);
-    new DialogPositioner(&dialog, false);
-    if (!dialog.exec()) return;
-    if (dialog.m_frequencies.isEmpty()) return;
+    // clear table
+    ui->table->setRowCount(0);
+    m_settings.m_frequencySettings.clear();
+    applySetting("frequencySettings");
 
-    qint64 startHz = dialog.m_frequencies.first();
-    qint64 stopHz = dialog.m_frequencies.last();
+    // get value start and stop
+    qint64 startHz = ui->start->getValue();
+    qint64 stopHz = ui->stop->getValue();
     if (startHz > stopHz) std::swap(startHz, stopHz);
 
     const qint64 srHz = (m_basebandSampleRate > 0) ? qint64(m_basebandSampleRate) : 60'000'000LL;
@@ -843,9 +955,20 @@ void WidebandScannerGUI::on_addRange_clicked()
     blockApplySettings(false);
     applySetting("frequencySettings");
 
-    // LANGSUNG SET VIEW: multi-slices + span sesuai union
-    emit requestMultiScan(centers);                          // GLSpectrumView::enableMultiSlices
-    applyManualSpanFromCenters(centers, qint32(srHz));
+    //emit requestMultiScan(centers);                          // GLSpectrumView::enableMultiSlices
+    //applyManualSpanFromCenters(centers, qint32(srHz));
+
+    // (Opsional) rapikan tampilan agar kembali ke “current” sampai user klik Run
+    emit sigClearMultiSlices();
+    emit sigClearManualSpan();
+    // atau langsung:
+    if (m_deviceUISet && m_deviceUISet->m_spectrum) {
+        if (auto* view = m_deviceUISet->m_spectrum->getSpectrumView()) {
+            view->clearMultiSlices();
+            view->clearManualSpan();
+            view->setDisplayCurrent(true);
+        }
+    }
 }
 
 void WidebandScannerGUI::on_remove_clicked()
@@ -1241,6 +1364,8 @@ void WidebandScannerGUI::makeUIConnections()
     QObject::connect(ui->scanTimeDec, &QToolButton::clicked, this, &WidebandScannerGUI::scanTimeDecClick);
     QObject::connect(ui->retransmitTimeInc, &QToolButton::clicked, this, &WidebandScannerGUI::retransmitTimeIncClick);
     QObject::connect(ui->retransmitTimeDec, &QToolButton::clicked, this, &WidebandScannerGUI::retransmitTimeDecClick);
+
+    QObject::connect(ui->scanTimeList, QOverload<int>::of(&QComboBox::currentIndexChanged),this, &WidebandScannerGUI::onScanTimeChanged);
 }
 
 void WidebandScannerGUI::updateAbsoluteCenterFrequency()
@@ -1483,7 +1608,7 @@ void WidebandScannerGUI::cullSmallJumps(QVector<qint64>& centersHz,
     // - minimal “hard” (default 8 MHz sesuai request)
     // - minimal proporsional SR (mis. SR/6 ~ 10 MHz untuk SR=60M)
     // - dan >= seperempat median step agar tidak agresif saat step normal besar
-    const qint64 minSRGap = (sampleRateHz > 0) ? (sampleRateHz / 6) : 0;           // ~16.7%
+    const qint64 minSRGap = (sampleRateHz > 0) ? (sampleRateHz / 6) : 0;
     qint64 minGap = std::max(hardMinGapHz, minSRGap);
     if (med > 0) minGap = std::max(minGap, med / 4);
 
@@ -1502,4 +1627,11 @@ void WidebandScannerGUI::cullSmallJumps(QVector<qint64>& centersHz,
     }
 
     centersHz.swap(kept);
+}
+
+void WidebandScannerGUI::onScanTimeChanged(int index)
+{
+    int us = ui->scanTimeList->currentData().toInt();
+    m_settings.m_scanTime = us / 1'000'000.0;
+    applySetting("scanTime");
 }
