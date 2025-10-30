@@ -34,6 +34,8 @@
 #include "settings/serializable.h"
 #include "util/messagequeue.h"
 
+#include <QPoint>
+
 namespace Ui {
 	class GLSpectrumGUI;
 }
@@ -96,6 +98,21 @@ private:
 	QString displayScaled(int64_t value, char type, int precision, bool showMult);
 
 	QMap<QString, int> rx_channel;
+
+	// marker
+	enum class DragKind { None, Histogram, Waterfall, AnnotationStart, AnnotationCenter };
+	DragKind m_dragKind = DragKind::None;
+	int      m_dragIndex = -1;
+	qint64   m_dragStartFreq = 0;
+
+	qint64 xToFrequency(int x) const;
+	int    frequencyToX(qint64 f) const;
+	bool   pickMarkerAt(const QPoint& p);
+	void   applyDragAt(const QPoint& p);
+	bool markersDragActive() const;
+
+protected:
+	bool eventFilter(QObject* obj, QEvent* ev) override;
 
 private slots:
 	void open_adsb();

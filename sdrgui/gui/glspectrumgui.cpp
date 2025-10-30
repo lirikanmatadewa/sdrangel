@@ -50,6 +50,15 @@
 #include "ui_glspectrumgui.h"
 #include "mainwindow.h"
 
+#include <QMouseEvent>
+#include <cmath>
+
+static inline double clamp01(double v) {
+	if (v < 0.0) return 0.0;
+	if (v > 1.0) return 1.0;
+	return v;
+}
+
 const int GLSpectrumGUI::m_fpsMs[] = { 500, 200, 100, 50, 20, 10, 5, 2 };
 
 GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
@@ -289,9 +298,9 @@ void GLSpectrumGUI::displaySettings()
 	ui->freeze->hide();
 	ui->save->hide();
 	ui->wsSpectrum->hide();
-	ui->markers->hide();
+	//ui->markers->hide();
 	ui->calibration->hide();
-	ui->gotoMarker->hide();
+	//ui->gotoMarker->hide();
 	ui->stroke->hide();
 }
 
@@ -561,6 +570,12 @@ void GLSpectrumGUI::on_markers_clicked(bool checked)
 	m_markersDialog->move(localCursorPos);
 	new DialogPositioner(m_markersDialog, false);
 
+	// marker
+	if (m_glSpectrum) {
+		m_glSpectrum->installEventFilter(this);
+		m_glSpectrum->setMouseTracking(true);
+	}
+
 	m_markersDialog->show();
 }
 
@@ -573,6 +588,14 @@ void GLSpectrumGUI::closeMarkersDialog()
 
 	displayGotoMarkers();
 	applySettings();
+
+	//marker
+	if (m_glSpectrum) {
+		m_glSpectrum->removeEventFilter(this);
+		m_glSpectrum->unsetCursor();
+	}
+	m_dragKind = DragKind::None;
+	m_dragIndex = -1;
 
 	delete m_markersDialog;
 	m_markersDialog = nullptr;
@@ -1267,4 +1290,170 @@ void GLSpectrumGUI::setRxChannel(QMap<QString, int>* rx_channel)
 		this->rx_channel[i.key()] = i.value();
 		qDebug() << i.key() << " = " << i.value();
 	}
+}
+
+
+// marker
+qint64 GLSpectrumGUI::xToFrequency(int x) const
+{
+	if (!m_glSpectrum || m_glSpectrum->width() <= 0) return 0;
+	const qint64 center = m_glSpectrum->getCenterFrequency();
+	const qint64 spanHz = static_cast<qint64>(m_glSpectrum->getSampleRate());
+	const qint64 start = center - spanHz / 2;
+	double ratio = clamp01(x / static_cast<double>(m_glSpectrum->width()));
+	return start + static_cast<qint64>(ratio * spanHz);
+}
+
+int GLSpectrumGUI::frequencyToX(qint64 f) const
+{
+	if (!m_glSpectrum || m_glSpectrum->width() <= 0) return 0;
+	const qint64 center = m_glSpectrum->getCenterFrequency();
+	const qint64 spanHz = static_cast<qint64>(m_glSpectrum->getSampleRate());
+	const qint64 start = center - spanHz / 2;
+	double ratio = (f - start) / static_cast<double>(spanHz);
+	return static_cast<int>(ratio * m_glSpectrum->width());
+}
+
+
+// Hit-test marker di sekitar posisi klik
+bool GLSpectrumGUI::pickMarkerAt(const QPoint& p)
+{
+	constexpr int tolPx = 8;
+	m_dragKind = DragKind::None;
+	m_dragIndex = -1;
+
+	if (!m_glSpectrum) return false;
+
+	// 1) Histogram markers
+	auto& h = m_glSpectrum->getHistogramMarkers();
+	for (int i = 0; i < h.size(); ++i) {
+		if (!h[i].m_show) continue;
+		int mx = frequencyToX(h[i].m_frequency);
+		if (std::abs(mx - p.x()) <= tolPx) {
+			m_dragKind = DragKind::Histogram;
+			m_dragIndex = i;
+			m_dragStartFreq = h[i].m_frequency;
+			return true;
+		}
+	}
+
+	// 2) Waterfall markers
+	auto& w = m_glSpectrum->getWaterfallMarkers();
+	for (int i = 0; i < w.size(); ++i) {
+		if (!w[i].m_show) continue;
+		int mx = frequencyToX(w[i].m_frequency);
+		if (std::abs(mx - p.x()) <= tolPx) {
+			m_dragKind = DragKind::Waterfall;
+			m_dragIndex = i;
+			m_dragStartFreq = w[i].m_frequency;
+			return true;
+		}
+	}
+
+	// 3) Annotation markers (drag di Start atau Center)
+	auto& a = m_glSpectrum->getAnnotationMarkers();
+	for (int i = 0; i < a.size(); ++i) {
+		if (a[i].m_show == SpectrumAnnotationMarker::Hidden) continue;
+		qint64 startF = a[i].m_startFrequency;
+		qint64 centerF = a[i].m_startFrequency + a[i].m_bandwidth / 2;
+		int xStart = frequencyToX(startF);
+		int xCenter = frequencyToX(centerF);
+		if (std::abs(xStart - p.x()) <= tolPx) {
+			m_dragKind = DragKind::AnnotationStart;
+			m_dragIndex = i;
+			m_dragStartFreq = startF;
+			return true;
+		}
+		if (std::abs(xCenter - p.x()) <= tolPx) {
+			m_dragKind = DragKind::AnnotationCenter;
+			m_dragIndex = i;
+			m_dragStartFreq = centerF;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+// Terapkan perubahan saat drag ke struktur marker & minta redraw
+void GLSpectrumGUI::applyDragAt(const QPoint& p)
+{
+	if (!m_glSpectrum || m_dragKind == DragKind::None || m_dragIndex < 0) return;
+	qint64 newFreq = xToFrequency(p.x());
+
+	switch (m_dragKind) {
+	case DragKind::Histogram: {
+		auto& h = m_glSpectrum->getHistogramMarkers();
+		if (m_dragIndex < h.size()) {
+			h[m_dragIndex].m_frequency = newFreq;
+			updateHistogramMarkers();
+		}
+		break;
+	}
+	case DragKind::Waterfall: {
+		auto& w = m_glSpectrum->getWaterfallMarkers();
+		if (m_dragIndex < w.size()) {
+			w[m_dragIndex].m_frequency = newFreq;
+			updateWaterfallMarkers();
+		}
+		break;
+	}
+	case DragKind::AnnotationStart: {
+		auto& a = m_glSpectrum->getAnnotationMarkers();
+		if (m_dragIndex < a.size()) {
+			a[m_dragIndex].m_startFrequency = newFreq;
+			updateAnnotationMarkers();
+		}
+		break;
+	}
+	case DragKind::AnnotationCenter: {
+		auto& a = m_glSpectrum->getAnnotationMarkers();
+		if (m_dragIndex < a.size()) {
+			qint64 bw = a[m_dragIndex].m_bandwidth;
+			a[m_dragIndex].m_startFrequency = newFreq - (bw / 2); 
+			updateAnnotationMarkers();
+		}
+		break;
+	}
+	default: break;
+	}
+}
+
+// Event filter aktif hanya ketika dialog marker terlihat
+bool GLSpectrumGUI::eventFilter(QObject* obj, QEvent* ev)
+{
+	if ((obj == m_glSpectrum) && markersDragActive()) {
+		if (ev->type() == QEvent::MouseButtonPress) {
+			auto* me = static_cast<QMouseEvent*>(ev);
+			if (me->button() == Qt::LeftButton) {
+				if (pickMarkerAt(me->pos())) {
+					m_glSpectrum->setCursor(Qt::SizeHorCursor);
+					return true; 
+				}
+			}
+		}
+		else if (ev->type() == QEvent::MouseMove) {
+			auto* me = static_cast<QMouseEvent*>(ev);
+			if ((me->buttons() & Qt::LeftButton) && m_dragKind != DragKind::None) {
+				applyDragAt(me->pos());
+				return true;
+			}
+		}
+		else if (ev->type() == QEvent::MouseButtonRelease) {
+			auto* me = static_cast<QMouseEvent*>(ev);
+			if (me->button() == Qt::LeftButton && m_dragKind != DragKind::None) {
+				applyDragAt(me->pos());
+				m_dragKind = DragKind::None;
+				m_dragIndex = -1;
+				m_glSpectrum->unsetCursor();
+				return true;
+			}
+		}
+	}
+
+	return QWidget::eventFilter(obj, ev);
+}
+
+bool GLSpectrumGUI::markersDragActive() const {
+	return m_markersDialog && m_markersDialog->isVisible();
 }

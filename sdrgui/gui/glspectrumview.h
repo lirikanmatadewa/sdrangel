@@ -249,6 +249,35 @@ public:
 
 private:
 
+    // marker
+    enum class DragTarget { None, Histo, Wat, AnnoStart, AnnoCenter };
+
+    DragTarget m_dragTarget = DragTarget::None;
+    int   m_dragIndex = -1;
+    QPointF m_dragStartPx;
+    qint64  m_dragStartFreq = 0;
+    float   m_dragStartPower = 0.0f;
+    float   m_dragStartTime = 0.0f;
+    float   m_markerGrabTolPx = 6.0f;
+    int  hitTestHistogramMarker(const QPointF& pLocalPx) const;
+    int  hitTestWaterfallMarker(const QPointF& pLocalPx) const;
+    std::pair<int, DragTarget> hitTestAnnotationMarker(const QPointF& pLocalPx) const;
+    inline float clamp01(float v) const { return v < 0.f ? 0.f : (v > 1.f ? 1.f : v); }
+    inline float normXHistogram(float px) const {
+        return (px / width() - m_histogramRect.left()) / m_histogramRect.width();
+    }
+    inline float normXWaterfall(float px) const {
+        return (px / width() - m_waterfallRect.left()) / m_waterfallRect.width();
+    }
+    inline int   xFromFreqHistogram(qint64 f) const {
+        float x = (float)((f - m_frequencyScale.getRangeMin()) / m_frequencyScale.getRange());
+        return int((m_histogramRect.left() + x * m_histogramRect.width()) * width());
+    }
+    inline int   xFromFreqWaterfall(qint64 f) const {
+        float x = (float)((f - m_frequencyScale.getRangeMin()) / m_frequencyScale.getRange());
+        return int((m_waterfallRect.left() + x * m_waterfallRect.width()) * width());
+    }
+
     // Manual span state
     bool   m_manualSpanEnabled = false;
     qint64 m_manualCenterHz = 0;

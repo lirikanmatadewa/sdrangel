@@ -44,6 +44,7 @@
 #include "util/profiler.h"
 
 #include <QDebug>
+#include <cmath>
 
 MESSAGE_CLASS_DEFINITION(GLSpectrumView::MsgReportSampleRate, Message)
 MESSAGE_CLASS_DEFINITION(GLSpectrumView::MsgReportWaterfallShare, Message)
@@ -1946,8 +1947,6 @@ void GLSpectrumView::paintGL()
         m_glShaderInfo.drawSurface(m_glInfoBoxMatrix, tex1, vtx1, 4);
     }
 
-    // ==== OVERLAY "NO DATA" DI LUAR ±SR/2 ====
-    // Hitung jendela data real (span live = sampleRate atau sampleRate/2 utk SSB)
     int   adjSR = m_ssbSpectrum ? m_sampleRate / 2 : m_sampleRate;
     qint64 adjCenter = m_centerFrequency + (m_ssbSpectrum ? m_sampleRate / 4 : 0);
     qint64 dataStart = adjCenter - adjSR / 2;
@@ -2123,6 +2122,22 @@ void GLSpectrumView::drawSpectrumMarkers()
 
             QPointF ypoint = m_histogramMarkers.at(i).m_point;
             QString powerStr = m_histogramMarkers.at(i).m_powerStr;
+            
+            // marker
+            if (powerStr.isEmpty()) {
+                float powerNow = m_linear
+                    ? (m_currentSpectrum[m_histogramMarkers.at(i).m_fftBin] * (m_useCalibration ? m_calibrationGain : 1.0f))
+                    : (m_currentSpectrum[m_histogramMarkers.at(i).m_fftBin] + (m_useCalibration ? m_calibrationShiftdB : 0.0f));
+
+                if ((m_histogramMarkers.at(i).m_markerType != SpectrumHistogramMarker::SpectrumMarkerTypePower) &&
+                    (m_histogramMarkers.at(i).m_markerType != SpectrumHistogramMarker::SpectrumMarkerTypePowerMax)) {
+                    ypoint.ry() = (m_powerScale.getRangeMax() - powerNow) / m_powerScale.getRange();
+                    ypoint.ry() = (ypoint.y() < 0.f) ? 0.f : ((ypoint.y() > 1.f) ? 1.f : ypoint.y());
+                }
+
+                powerStr = displayPower(powerNow, m_linear ? 'e' : 'f', m_linear ? 3 : 1);
+            }
+
 
             if (m_histogramMarkers.at(i).m_markerType == SpectrumHistogramMarker::SpectrumMarkerTypePower)
             {
@@ -2199,6 +2214,24 @@ void GLSpectrumView::drawSpectrumMarkers()
                     true,
                     ypoint.y() < 0.5f,
                     m_histogramRect);
+
+                // marker
+                {
+                    QString idx = QStringLiteral("M%1").arg(i + 1);
+                    QFont idxFont = m_textOverlayFont;
+                    idxFont.setPointSizeF(idxFont.pointSizeF() * 0.9);
+
+                    drawTextOverlayCentered(idx, textColor, idxFont,
+                        m_histogramMarkers.at(i).m_point.x() * m_histogramRect.width() + 1,
+                        0.5f * m_histogramRect.height() + 1, m_histogramRect);
+                    drawTextOverlayCentered(idx, textColor, idxFont,
+                        m_histogramMarkers.at(i).m_point.x() * m_histogramRect.width() - 1,
+                        0.5f * m_histogramRect.height() - 1, m_histogramRect);
+                    drawTextOverlayCentered(idx, textColor, idxFont,
+                        m_histogramMarkers.at(i).m_point.x() * m_histogramRect.width(),
+                        0.5f * m_histogramRect.height(), m_histogramRect);
+                }
+
             }
             else
             {
@@ -2247,6 +2280,44 @@ void GLSpectrumView::drawSpectrumMarkers()
                     false,
                     ypoint.y() < 0.5f,
                     m_histogramRect);
+                
+                // marker
+                drawTextOverlay(
+                    m_histogramMarkers.at(i).m_frequencyStr,
+                    textColor,
+                    m_textOverlayFont,
+                    m_histogramMarkers.at(i).m_point.x()* m_histogramRect.width(),
+                    (m_invertedWaterfall || (m_waterfallHeight == 0)) ? m_histogramRect.height() : 0,
+                    m_histogramMarkers.at(i).m_point.x() < 0.5f,
+                    !m_invertedWaterfall && (m_waterfallHeight != 0),
+                    m_histogramRect);
+
+                drawTextOverlay(
+                    powerStr,
+                    textColor,
+                    m_textOverlayFont,
+                    0,
+                    ypoint.y()* m_histogramRect.height(),
+                    true,
+                    ypoint.y() < 0.5f,
+                    m_histogramRect);
+
+                {
+                    QString idx = QStringLiteral("M%1").arg(i + 1);
+                    QFont idxFont = m_textOverlayFont;
+                    idxFont.setPointSizeF(idxFont.pointSizeF() * 0.9);
+                    drawTextOverlayCentered(idx, textColor, idxFont,
+                        m_histogramMarkers.at(i).m_point.x() * m_histogramRect.width() + 1,
+                        0.5f * m_histogramRect.height() + 1, m_histogramRect);
+                    drawTextOverlayCentered(idx, textColor, idxFont,
+                        m_histogramMarkers.at(i).m_point.x() * m_histogramRect.width() - 1,
+                        0.5f * m_histogramRect.height() - 1, m_histogramRect);
+                    drawTextOverlayCentered(idx, textColor, idxFont,
+                        m_histogramMarkers.at(i).m_point.x() * m_histogramRect.width(),
+                        0.5f * m_histogramRect.height(), m_histogramRect);
+                }
+
+
             }
         }
     }
@@ -2298,6 +2369,25 @@ void GLSpectrumView::drawSpectrumMarkers()
                     true,
                     m_waterfallMarkers.at(i).m_point.y() < 0.5f,
                     m_waterfallRect);
+
+                // marker
+                {
+                    QString idx = QStringLiteral("M%1").arg(i + 1);
+                    QFont idxFont = m_textOverlayFont;
+                    idxFont.setPointSizeF(idxFont.pointSizeF() * 0.9);
+
+                    drawTextOverlayCentered(idx, textColor, idxFont,
+                        m_waterfallMarkers.at(i).m_point.x() * m_waterfallRect.width() + 1,
+                        0.5f * m_waterfallRect.height() + 1, m_waterfallRect);
+                    drawTextOverlayCentered(idx, textColor, idxFont,
+                        m_waterfallMarkers.at(i).m_point.x() * m_waterfallRect.width() - 1,
+                        0.5f * m_waterfallRect.height() - 1, m_waterfallRect);
+
+                    drawTextOverlayCentered(idx, textColor, idxFont,
+                        m_waterfallMarkers.at(i).m_point.x() * m_waterfallRect.width(),
+                        0.5f * m_waterfallRect.height(), m_waterfallRect);
+                }
+
             }
             else
             {
@@ -2319,6 +2409,25 @@ void GLSpectrumView::drawSpectrumMarkers()
                     false,
                     m_waterfallMarkers.at(i).m_point.y() < 0.5f,
                     m_waterfallRect);
+
+                // marker
+                {
+                    QString idx = QStringLiteral("M%1").arg(i + 1);
+                    QFont idxFont = m_textOverlayFont;
+                    idxFont.setPointSizeF(idxFont.pointSizeF() * 0.9);
+
+                    drawTextOverlayCentered(idx, textColor, idxFont,
+                        m_waterfallMarkers.at(i).m_point.x() * m_waterfallRect.width() + 1,
+                        0.5f * m_waterfallRect.height() + 1, m_waterfallRect);
+                    drawTextOverlayCentered(idx, textColor, idxFont,
+                        m_waterfallMarkers.at(i).m_point.x() * m_waterfallRect.width() - 1,
+                        0.5f * m_waterfallRect.height() - 1, m_waterfallRect);
+
+                    drawTextOverlayCentered(idx, textColor, idxFont,
+                        m_waterfallMarkers.at(i).m_point.x() * m_waterfallRect.width(),
+                        0.5f * m_waterfallRect.height(), m_waterfallRect);
+                }
+
             }
         }
     }
@@ -2910,7 +3019,7 @@ float GLSpectrumView::calcChannelPower(int64_t centerFrequency, int channelBandw
 
 void GLSpectrumView::stopDrag()
 {
-    if (m_cursorState != CSNormal)
+   /* if (m_cursorState != CSNormal)
     {
         if ((m_cursorState == CSSplitterMoving) || (m_cursorState == CSChannelMoving)) {
             releaseMouse();
@@ -2918,7 +3027,10 @@ void GLSpectrumView::stopDrag()
 
         setCursor(Qt::ArrowCursor);
         m_cursorState = CSNormal;
-    }
+    }*/
+    m_dragTarget = DragTarget::None;
+    m_dragIndex = -1;
+    unsetCursor();
 }
 
 void GLSpectrumView::applyChanges()
@@ -4050,6 +4162,96 @@ bool GLSpectrumView::event(QEvent* event)
 
 void GLSpectrumView::mouseMoveEvent(QMouseEvent* event)
 {
+    const QPointF& p = event->localPos();
+
+    bool over = false;
+    if (hitTestHistogramMarker(p) >= 0) over = true;
+    else if (!m_display3DSpectrogram && hitTestWaterfallMarker(p) >= 0) over = true;
+    else {
+        auto pick = hitTestAnnotationMarker(p);
+        if (pick.second != DragTarget::None) over = true;
+    }
+
+    if (over) setCursor(Qt::SizeHorCursor);
+    else unsetCursor();
+
+    if (m_dragTarget != DragTarget::None && (event->buttons() & Qt::LeftButton))
+    {
+        if (m_dragTarget == DragTarget::Histo)
+        {
+            float x = clamp01(normXHistogram(p.x()));
+            float y = clamp01((p.y() / height() - m_histogramRect.top()) / m_histogramRect.height());
+            qint64 freq = (qint64)(m_frequencyScale.getRangeMin() + x * m_frequencyScale.getRange());
+            float  pw = m_powerScale.getRangeMin() + (1.0f - y) * m_powerScale.getRange();
+
+            auto& mk = m_histogramMarkers[m_dragIndex];
+            mk.m_frequency = freq;
+            if (mk.m_markerType == SpectrumHistogramMarker::SpectrumMarkerTypeManual)
+                mk.m_power = pw;
+
+            updateHistogramMarkers();
+            if (m_messageQueueToGUI) m_messageQueueToGUI->push(new MsgReportHistogramMarkersChange());
+            update();
+            return;
+        }
+        else if (m_dragTarget == DragTarget::Wat)
+        {
+            float x = clamp01(normXWaterfall(p.x()));
+            float y = clamp01((p.y() / height() - m_waterfallRect.top()) / m_waterfallRect.height());
+            qint64 freq = (qint64)(m_frequencyScale.getRangeMin() + x * m_frequencyScale.getRange());
+            float  t = m_timeScale.getRangeMin() + y * m_timeScale.getRange();
+
+            auto& mk = m_waterfallMarkers[m_dragIndex];
+            mk.m_frequency = freq;
+            mk.m_time = t;
+
+            updateWaterfallMarkers();
+            if (m_messageQueueToGUI) m_messageQueueToGUI->push(new MsgReportWaterfallMarkersChange());
+            update();
+            return;
+        }
+        else if (m_dragTarget == DragTarget::AnnoStart || m_dragTarget == DragTarget::AnnoCenter)
+        {
+            float xn = clamp01(normXHistogram(p.x()));
+            if (xn < 0.f || xn > 1.f) xn = clamp01(normXWaterfall(p.x()));
+            qint64 freq = (qint64)(m_frequencyScale.getRangeMin() + xn * m_frequencyScale.getRange());
+
+            auto& an = m_annotationMarkers[m_dragIndex];
+            if (m_dragTarget == DragTarget::AnnoStart) {
+                qint64 bw = an.m_bandwidth;
+                an.m_startFrequency = freq;
+                an.m_bandwidth = bw;
+            }
+            else {
+                qint64 bw = an.m_bandwidth;
+                an.m_startFrequency = freq - (bw / 2);
+            }
+
+            updateAnnotationMarkers();
+            if (m_messageQueueToGUI) emit updateAnnotations();
+            update();
+            return;
+        }
+    }
+
+    {
+        bool over = false;
+
+        if (hitTestHistogramMarker(p) >= 0)
+            over = true;
+        else if (!m_display3DSpectrogram && hitTestWaterfallMarker(p) >= 0)
+            over = true;
+        else {
+            auto pick = hitTestAnnotationMarker(p);
+            if (pick.second != DragTarget::None) over = true;
+        }
+
+        if (over) setCursor(Qt::SizeHorCursor);
+        else      unsetCursor();
+    }
+
+
+
     if (m_rotate3DSpectrogram && !m_pinching3D)
     {
         // Rotate 3D Spectrogram
@@ -4221,6 +4423,36 @@ void GLSpectrumView::mouseMoveEvent(QMouseEvent* event)
 void GLSpectrumView::mousePressEvent(QMouseEvent* event)
 {
     const QPointF& ep = event->localPos();
+
+    if (event->button() == Qt::LeftButton)
+    {
+        int idxH = hitTestHistogramMarker(ep);
+        if (idxH >= 0)
+        {
+            m_dragTarget = DragTarget::Histo;
+            m_dragIndex = idxH;
+            m_dragStartPx = ep;
+            m_dragStartFreq = m_histogramMarkers.at(idxH).m_frequency;
+            m_dragStartPower = m_histogramMarkers.at(idxH).m_power;
+            setCursor(Qt::ClosedHandCursor);
+            return;
+        }
+
+        if (!m_display3DSpectrogram)
+        {
+            int idxW = hitTestWaterfallMarker(ep);
+            if (idxW >= 0)
+            {
+                m_dragTarget = DragTarget::Wat;
+                m_dragIndex = idxW;
+                m_dragStartPx = ep;
+                m_dragStartFreq = m_waterfallMarkers.at(idxW).m_frequency;
+                m_dragStartTime = m_waterfallMarkers.at(idxW).m_time;
+                setCursor(Qt::ClosedHandCursor);
+                return;
+            }
+        }
+    }
 
     if ((event->button() == Qt::MiddleButton) && (m_displayMaxHold || m_displayCurrent || m_displayHistogram) && pointInHistogram(ep))
     {
@@ -4515,12 +4747,21 @@ void GLSpectrumView::mousePressEvent(QMouseEvent* event)
     }
 }
 
-void GLSpectrumView::mouseReleaseEvent(QMouseEvent*)
+void GLSpectrumView::mouseReleaseEvent(QMouseEvent* ev)
 {
+    if (m_dragTarget != DragTarget::None && ev->button() == Qt::LeftButton)
+    {
+        m_dragTarget = DragTarget::None;
+        m_dragIndex = -1;
+        unsetCursor();
+        return;
+    }
+
     m_scrollFrequency = false;
     m_pan3DSpectrogram = false;
     m_rotate3DSpectrogram = false;
     m_scaleZ3DSpectrogram = false;
+
     if (m_cursorState == CSSplitterMoving)
     {
         releaseMouse();
@@ -4531,6 +4772,8 @@ void GLSpectrumView::mouseReleaseEvent(QMouseEvent*)
         releaseMouse();
         m_cursorState = CSChannel;
     }
+
+    QOpenGLWidget::mouseReleaseEvent(ev);
 }
 
 void GLSpectrumView::wheelEvent(QWheelEvent *event)
@@ -4563,6 +4806,83 @@ void GLSpectrumView::wheelEvent(QWheelEvent *event)
         }
     }
     event->accept();
+}
+
+int GLSpectrumView::hitTestHistogramMarker(const QPointF& pLocalPx) const
+{
+    if (!pointInHistogram(pLocalPx)) return -1;
+    float x = clamp01(normXHistogram(pLocalPx.x()));
+    float tol = m_markerGrabTolPx / (m_histogramRect.width() * width()); 
+
+    int best = -1;
+    float bestDx = tol;
+    for (int i = 0; i < m_histogramMarkers.size(); ++i) {
+        if (!m_histogramMarkers.at(i).m_show) continue;
+        float mx = m_histogramMarkers.at(i).m_point.x(); 
+        float dx = std::abs(mx - x);
+        if (dx <= bestDx) { bestDx = dx; best = i; }
+    }
+    return best;
+}
+
+int GLSpectrumView::hitTestWaterfallMarker(const QPointF& pLocalPx) const
+{
+    if (!pointInWaterfallOrSpectrogram(pLocalPx)) return -1;
+    float x = clamp01(normXWaterfall(pLocalPx.x()));
+    float tol = m_markerGrabTolPx / (m_waterfallRect.width() * width());
+
+    int best = -1;
+    float bestDx = tol;
+    for (int i = 0; i < m_waterfallMarkers.size(); ++i) {
+        if (!m_waterfallMarkers.at(i).m_show) continue;
+        float mx = m_waterfallMarkers.at(i).m_point.x(); 
+        float dx = std::abs(mx - x);
+        if (dx <= bestDx) { bestDx = dx; best = i; }
+    }
+    return best;
+}
+
+std::pair<int, GLSpectrumView::DragTarget>
+GLSpectrumView::hitTestAnnotationMarker(const QPointF& pLocalPx) const
+{
+    bool inHist = pointInHistogram(pLocalPx);
+    bool inWat = pointInWaterfallOrSpectrogram(pLocalPx);
+
+    if (!inHist && !inWat) return { -1, DragTarget::None };
+
+    float tolPx = m_markerGrabTolPx;
+
+    int bestIdx = -1;
+    DragTarget bestT = DragTarget::None;
+    float bestDpx = tolPx;
+
+    for (int i = 0; i < m_annotationMarkers.size(); ++i) {
+        const auto& an = m_annotationMarkers.at(i);
+        if (an.m_show == SpectrumAnnotationMarker::Hidden) continue;
+
+        qint64 fStart = an.m_startFrequency;
+        qint64 fCenter = an.m_startFrequency + an.m_bandwidth / 2;
+
+        if (inHist) {
+            int xs = xFromFreqHistogram(fStart);
+            int xc = xFromFreqHistogram(fCenter);
+            float dxs = std::abs(xs - pLocalPx.x());
+            float dxc = std::abs(xc - pLocalPx.x());
+            if (dxs <= bestDpx) { bestDpx = dxs; bestIdx = i; bestT = DragTarget::AnnoStart; }
+            if (dxc <= bestDpx) { bestDpx = dxc; bestIdx = i; bestT = DragTarget::AnnoCenter; }
+        }
+        if (inWat) {
+            int xs = xFromFreqWaterfall(fStart);
+            int xc = xFromFreqWaterfall(fCenter);
+            float dxs = std::abs(xs - pLocalPx.x());
+            float dxc = std::abs(xc - pLocalPx.x());
+            if (dxs <= bestDpx) { bestDpx = dxs; bestIdx = i; bestT = DragTarget::AnnoStart; }
+            if (dxc <= bestDpx) { bestDpx = dxc; bestIdx = i; bestT = DragTarget::AnnoCenter; }
+        }
+    }
+
+    if (bestIdx >= 0) return { bestIdx, bestT };
+    return { -1, DragTarget::None };
 }
 
 void GLSpectrumView::zoomFactor(const QPointF& p, float factor)
