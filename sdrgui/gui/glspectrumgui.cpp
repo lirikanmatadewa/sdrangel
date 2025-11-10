@@ -52,6 +52,9 @@
 
 #include <QMouseEvent>
 #include <cmath>
+#include <QHeaderView>
+#include <QPainter>
+#include <QStyledItemDelegate>
 
 static inline double clamp01(double v) {
 	if (v < 0.0) return 0.0;
@@ -71,6 +74,25 @@ GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
 	m_markersDialog(nullptr)
 {
 	ui->setupUi(this);
+
+	// marker
+	m_histMarkersTable = new SpectrumMeasurementsTable();
+	m_histMarkersTable->setObjectName("histMarkersTable");
+	m_histMarkersTable->setRowCount(1);   
+	m_histMarkersTable->setColumnCount(1);
+	m_histMarkersTable->setShowGrid(true);
+	m_histMarkersTable->setAlternatingRowColors(true);
+	m_histMarkersTable->verticalHeader()->setVisible(false);
+	m_histMarkersTable->horizontalHeader()->setStretchLastSection(true);
+	m_histMarkersTable->horizontalHeader()->setSectionsMovable(true);
+
+	m_histMarkersTable->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+	m_histMarkersTable->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
+
+	ui->verticalLayout->addWidget(m_histMarkersTable);
+	m_histMarkersTable->setVisible(false);
+
+	rebuildHistogramMarkersTable();
 
 	// Use the custom flow layout for the 3 main horizontal layouts (lines)
 	ui->verticalLayout->removeItem(ui->Line7Layout);
@@ -144,7 +166,14 @@ void GLSpectrumGUI::setBuddies(SpectrumVis* spectrumVis, GLSpectrum* glSpectrum)
 	m_glSpectrum->setSpectrumVis(spectrumVis);
 	m_glSpectrum->setMessageQueueToGUI(&m_messageQueue);
 	m_spectrumVis->setMessageQueueToGUI(&m_messageQueue);
+
+	// marker 
+	rebuildHistogramMarkersTable();
+
 	applySettings();
+
+	// marker
+	
 
 	//m_glSpectrum->setManualSpan(100000000LL, 90000000, 90000000); // ±30 MHz di sekitar 100 MHz
 	//m_glSpectrum->setCenterFrequency(100000000LL);                // geser center ke 101 MHz
@@ -174,6 +203,11 @@ bool GLSpectrumGUI::deserialize(const QByteArray& data)
 		setAveragingCombo();
 		displaySettings(); // ends with blockApplySettings(false)
 		applySettings();
+
+		// marker
+		rebuildHistogramMarkersTable();
+		
+
 		return true;
 	}
 	else
@@ -436,6 +470,11 @@ void GLSpectrumGUI::applySpectrumSettings()
 	m_glSpectrum->setMarkersDisplay(m_settings.m_markersDisplay);
 	m_glSpectrum->setCalibrationPoints(m_settings.m_calibrationPoints);
 	m_glSpectrum->setCalibrationInterpMode(m_settings.m_calibrationInterpMode);
+
+	// marker
+	rebuildHistogramMarkersTable();
+	
+
 }
 
 void GLSpectrumGUI::on_fftWindow_currentIndexChanged(int index)
@@ -588,6 +627,8 @@ void GLSpectrumGUI::closeMarkersDialog()
 
 	displayGotoMarkers();
 	applySettings();
+
+	
 
 	//marker
 	if (m_glSpectrum) {
@@ -1053,9 +1094,21 @@ bool GLSpectrumGUI::handleMessage(const Message& message)
 	}
 	else if (GLSpectrumView::MsgReportHistogramMarkersChange::match(message))
 	{
-		if (m_markersDialog) {
-			m_markersDialog->updateHistogramMarkersDisplay();
+		const int expectedCols = 1 + 2 * static_cast<int>(m_glSpectrum->getHistogramMarkers().size());
+		if (!m_histMarkersTable || m_histMarkersTable->columnCount() != expectedCols) {
+			rebuildHistogramMarkersTable();
 		}
+		else {
+			refreshHistogramMarkersTableData();
+		}
+		
+		return true;
+	}
+	// marker
+	else if (GLSpectrumView::MsgReportLivePowersTick::match(message))
+	{
+		// hanya refresh isi (lebih ringan dari rebuild)
+		refreshHistogramMarkersTableData();
 		return true;
 	}
 	else if (GLSpectrumView::MsgReportWaterfallMarkersChange::match(message))
@@ -1456,4 +1509,227 @@ bool GLSpectrumGUI::eventFilter(QObject* obj, QEvent* ev)
 
 bool GLSpectrumGUI::markersDragActive() const {
 	return m_markersDialog && m_markersDialog->isVisible();
+}
+
+
+// table
+class SDRGUI_API HistUnitsDelegate : public QStyledItemDelegate
+{
+public:
+	enum Roles {
+		UNITS_ROLE = Qt::UserRole,
+		PRECISION_ROLE,
+		SPEC_ROLE
+	};
+
+	HistUnitsDelegate(QObject* parent = nullptr)
+		: QStyledItemDelegate(parent)
+	{
+	}
+
+	QSize sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const override
+	{
+		QString s = text(index);
+		return QSize(width(s, option.fontMetrics) + 2, option.fontMetrics.height());
+	}
+
+	void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override
+	{
+		QFontMetrics fm = painter->fontMetrics();
+
+		QString s = text(index);
+		int sWidth = width(s, fm);
+		while ((sWidth > option.rect.width()) && !s.isEmpty())
+		{
+			s = s.mid(1);
+			sWidth = width(s, fm);
+		}
+
+		int y = option.rect.y() + (option.rect.height()) - ((option.rect.height() - fm.ascent()) / 2); // vertical center
+
+		QStyleOptionViewItem opt = option;
+		initStyleOption(&opt, index);
+		QPalette::ColorGroup cg = opt.state & QStyle::State_Enabled ? QPalette::Normal : QPalette::Disabled;
+		painter->setPen(opt.palette.color(cg, QPalette::Text));
+
+		painter->drawText(option.rect.x() + option.rect.width() - 1 - sWidth, y, s);
+	}
+
+private:
+	int width(const QString& s, const QFontMetrics& fm) const
+	{
+		int left = s.size() > 0 ? fm.leftBearing(s[0]) : 0;
+		int right = s.size() > 0 ? fm.rightBearing(s[s.size() - 1]) : 0;
+		return fm.horizontalAdvance(s) + left + right;
+	}
+
+	QString text(const QModelIndex& index) const
+	{
+		const QString units = index.data(UNITS_ROLE).toString();
+		QString s;
+		if (units == "Hz")
+		{
+			s = formatEngineering(index.data().toLongLong());
+		}
+		else
+		{
+			const int precision = index.data(PRECISION_ROLE).toInt();
+			const double d = index.data().toDouble();
+			s = QString::number(d, 'f', precision);
+		}
+		return s + units;
+	}
+
+	// salin rumus format engineering dari referensi, tapi tetap private & lokal
+	QString formatEngineering(int64_t value) const
+	{
+		if (value == 0) return "0";
+
+		int64_t absValue = std::abs(value);
+		QString digits = QString::number(absValue);
+		int cnt = digits.size();
+
+		QString point = QLocale::system().decimalPoint();
+		QString group = QLocale::system().groupSeparator();
+		int i;
+		for (i = cnt - 3; i >= 4; i -= 3)
+			digits = digits.insert(i, group);
+		if (absValue >= 1000)
+			digits = digits.insert(i, point);
+
+		if (cnt > 9)      digits.append("G");
+		else if (cnt > 6) digits.append("M");
+		else if (cnt > 3) digits.append("k");
+
+		if (value < 0) digits.insert(0, "-");
+		return digits;
+	}
+};
+
+
+QColor GLSpectrumGUI::markerHeaderColor(int idx) const
+{
+	static const QColor palette[] = {
+		QColor(220, 0, 0),    // M1: merah
+		QColor(0, 170, 0),    // M2: hijau
+		QColor(230, 200, 0),  // M3: kuning
+		QColor(0, 160, 255),  // M4: cyan-ish
+		QColor(200, 0, 200),  // M5: magenta
+		QColor(255, 128, 0)   // M6: oranye
+	};
+	return palette[idx % (int)(sizeof(palette) / sizeof(palette[0]))];
+}
+
+void GLSpectrumGUI::rebuildHistogramMarkersTable()
+{
+	if (!m_glSpectrum || !m_histMarkersTable) return;
+
+	const auto& mk = m_glSpectrum->getHistogramMarkers();
+	const int N = mk.size();
+	const int cols = 1 + 2 * N;
+
+	// show/hide tergantung ada marker atau tidak
+	m_histMarkersTable->setVisible(N > 0);
+	if (N == 0) {
+		m_histMarkersTable->clear();
+		m_histMarkersTable->setColumnCount(0);
+		m_histMarkersTable->setRowCount(0);
+		return;
+	}
+
+	m_histMarkersTable->clear();
+	m_histMarkersTable->setColumnCount(cols);
+	m_histMarkersTable->setRowCount(1);
+
+	// Header labels
+	QStringList hdr;
+	hdr << "Histogram Markers";
+	for (int i = 0; i < N; ++i) {
+		hdr << QString("M%1 (F)").arg(i + 1)
+			<< QString("M%1 (P)").arg(i + 1);
+	}
+	for (int c = 0; c < cols; ++c)
+		m_histMarkersTable->setHorizontalHeaderItem(c, new QTableWidgetItem(hdr.value(c)));
+
+	// Header colors (kolom F & P untuk marker yang sama pakai warna sama)
+	for (int i = 0; i < N; ++i) {
+		const QColor c = markerHeaderColor(i);
+		if (auto* hF = m_histMarkersTable->horizontalHeaderItem(1 + 2 * i)) {
+			hF->setBackground(QBrush(c));
+			hF->setForeground(QBrush(Qt::black));
+		}
+		if (auto* hP = m_histMarkersTable->horizontalHeaderItem(1 + 2 * i + 1)) {
+			hP->setBackground(QBrush(c));
+			hP->setForeground(QBrush(Qt::black));
+		}
+	}
+
+	// Kolom 0 = judul baris
+	m_histMarkersTable->setItem(0, 0, new QTableWidgetItem("Histogram Marker"));
+
+	// Siapkan cell-item dan pasang UnitsDelegate seperti m_peakTable
+	for (int i = 0; i < N; ++i) {
+		auto* itF = new QTableWidgetItem(); itF->setFlags(Qt::ItemIsEnabled);
+		itF->setData(HistUnitsDelegate::UNITS_ROLE, "Hz");
+		itF->setData(HistUnitsDelegate::PRECISION_ROLE, 0);
+
+		auto* itP = new QTableWidgetItem(); itP->setFlags(Qt::ItemIsEnabled);
+
+		itP->setData(HistUnitsDelegate::UNITS_ROLE, " dB");
+		itP->setData(HistUnitsDelegate::PRECISION_ROLE, 1);
+
+		m_histMarkersTable->setItem(0, 1 + 2 * i, itF);
+		m_histMarkersTable->setItem(0, 1 + 2 * i + 1, itP);
+	}
+
+	// Delegate per kolom (signature benar: (int, QAbstractItemDelegate*))
+	for (int c = 0; c < cols; ++c)
+		m_histMarkersTable->setItemDelegateForColumn(c, new HistUnitsDelegate(m_histMarkersTable));
+
+
+	// Isi data pertama kali
+	refreshHistogramMarkersTableData();
+	m_histMarkersTable->resizeColumnsToContents();
+
+	// atur tinggi supaya 1 baris + header selalu terlihat (tidak kolaps)
+	int h = m_histMarkersTable->horizontalHeader()->height()
+		+ (m_histMarkersTable->rowCount() ? m_histMarkersTable->rowHeight(0) : 0)
+		+ 6; // padding kecil
+	m_histMarkersTable->setFixedHeight(h);
+}
+
+void GLSpectrumGUI::refreshHistogramMarkersTableData()
+{
+	if (!m_glSpectrum || !m_histMarkersTable) return;
+
+	const auto& mk = m_glSpectrum->getHistogramMarkers();
+	const int N = static_cast<int>(mk.size());
+	if (N == 0) {
+		m_histMarkersTable->setVisible(false);
+		return;
+	}
+
+	for (int i = 0; i < N; ++i) {
+		// F
+		if (auto* itF = m_histMarkersTable->item(0, 1 + 2 * i)) {
+			itF->setData(Qt::DisplayRole, QVariant(static_cast<qlonglong>(mk.at(i).m_frequency)));
+			itF->setTextAlignment(Qt::AlignCenter);
+		}
+
+		// P (LIVE, dB)
+		if (auto* itP = m_histMarkersTable->item(0, 1 + 2 * i + 1)) {
+			const double liveP = static_cast<double>(m_glSpectrum->getHistogramLivePowerAtIndex(i));
+			if (std::isfinite(liveP)) {
+				itP->setData(Qt::DisplayRole, QVariant(liveP));     // delegate akan render "... dB"
+			}
+			else if (!mk.at(i).m_powerStr.isEmpty()) {
+				itP->setData(Qt::DisplayRole, QVariant(static_cast<double>(mk.at(i).m_power)));
+			}
+			else {
+				itP->setData(Qt::DisplayRole, QVariant());
+				itP->setText("-");
+			}
+			itP->setTextAlignment(Qt::AlignCenter);
+		}
+	}
 }

@@ -47,7 +47,7 @@ struct SDRBASE_API SpectrumHistogramMarker
     QString m_powerStr;
     QString m_deltaFrequencyStr;
     QString m_deltaPowerStr;
-    static const int m_maxNbOfMarkers = 4;
+    static const int m_maxNbOfMarkers = 6;
 
     SpectrumHistogramMarker() :
         m_point(0, 0),
@@ -113,7 +113,7 @@ struct SDRBASE_API SpectrumWaterfallMarker
     QString m_timeStr;
     QString m_deltaFrequencyStr;
     QString m_deltaTimeStr;
-    static const int m_maxNbOfMarkers = 4;
+    static const int m_maxNbOfMarkers = 6;
 
     SpectrumWaterfallMarker() :
         m_point(0, 0),

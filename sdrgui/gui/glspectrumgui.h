@@ -36,6 +36,7 @@
 
 #include <QPoint>
 
+
 namespace Ui {
 	class GLSpectrumGUI;
 }
@@ -43,6 +44,7 @@ namespace Ui {
 class SpectrumVis;
 class GLSpectrum;
 class SpectrumMarkersDialog;
+class SpectrumMeasurementsTable;
 
 class SDRGUI_API GLSpectrumGUI : public QWidget, public Serializable {
 	Q_OBJECT
@@ -110,6 +112,13 @@ private:
 	bool   pickMarkerAt(const QPoint& p);
 	void   applyDragAt(const QPoint& p);
 	bool markersDragActive() const;
+
+	// Mirror of m_peakTable but for histogram markers:
+	SpectrumMeasurementsTable* m_histMarkersTable = nullptr;
+
+	void rebuildHistogramMarkersTable();
+	void refreshHistogramMarkersTableData();
+	QColor markerHeaderColor(int idx) const;
 
 protected:
 	bool eventFilter(QObject* obj, QEvent* ev) override;

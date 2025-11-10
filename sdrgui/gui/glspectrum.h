@@ -111,6 +111,9 @@ public:
     void setIsDeviceSpectrum(bool isDeviceSpectrum) { m_spectrum->setIsDeviceSpectrum(isDeviceSpectrum); }
     bool isDeviceSpectrum() const { return m_spectrum->isDeviceSpectrum(); }
 
+    // marker
+    float getHistogramLivePowerAtIndex(int idx) const;
+
 private:
     QSplitter *m_splitter;
     GLSpectrumView *m_spectrum;

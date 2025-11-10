@@ -148,3 +148,9 @@ void GLSpectrum::setMeasurementParams(SpectrumSettings::Measurement measurement,
     m_splitter->setSizes(sizes);
     //resize(size().expandedTo(minimumSizeHint()));
 }
+
+float GLSpectrum::getHistogramLivePowerAtIndex(int idx) const
+{
+    if (!m_spectrum) return NAN;
+    return m_spectrum->getHistogramLivePowerAtIndex(idx);
+}

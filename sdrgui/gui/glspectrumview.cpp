@@ -54,6 +54,9 @@ MESSAGE_CLASS_DEFINITION(GLSpectrumView::MsgReportCalibrationShift, Message)
 MESSAGE_CLASS_DEFINITION(GLSpectrumView::MsgReportHistogramMarkersChange, Message)
 MESSAGE_CLASS_DEFINITION(GLSpectrumView::MsgReportWaterfallMarkersChange, Message)
 
+// marker
+MESSAGE_CLASS_DEFINITION(GLSpectrumView::MsgReportLivePowersTick, Message)
+
 const float GLSpectrumView::m_maxFrequencyZoom = 10.0f;
 const float GLSpectrumView::m_annotationMarkerHeight = 20.0f;
 
@@ -804,6 +807,13 @@ void GLSpectrumView::newSpectrum(const Real* spectrum, int nbBins, int fftSize) 
 
     // tetap simpan currentSpectrum agar mode single berjalan normal
     m_currentSpectrum = spectrum;
+
+    if (m_messageQueueToGUI
+        && !m_histogramMarkers.isEmpty()   // hanya kalau ada marker
+        && (m_displayCurrent || m_displayHistogram))
+    {
+        m_messageQueueToGUI->push(new MsgReportLivePowersTick());
+    }
 }
 
 
@@ -5804,4 +5814,41 @@ void GLSpectrumView::clearMultiSlices()
     m_firstCFSeen = 0;
     m_changesPending = true;
     update();
+}
+
+// marker
+float GLSpectrumView::getHistogramLivePowerAtIndex(int idx) const
+{
+    if (idx < 0 || idx >= static_cast<int>(m_histogramMarkers.size())) {
+        return NAN;
+    }
+
+    // Bin marker
+    const auto& mk = m_histogramMarkers.at(idx);
+    int bin = mk.m_fftBin;
+
+    // Fallback: kalau m_fftBin belum diisi, hitung dari frekuensi marker (opsional)
+    if (bin < 0) {
+        const qint64 f = mk.m_frequency;
+        // pastikan kamu punya helper frequencyToBin(f)
+        bin = frequencyToBin(f);
+    }
+
+    // Validasi buffer spektrum
+    if (m_currentSpectrum == nullptr || m_nbBins <= 0 || bin < 0 || bin >= m_nbBins) {
+        return NAN;
+    }
+
+    // Ambil sample power: konversi ke dB jika spektrum linear
+    float p = m_currentSpectrum[bin];
+    if (m_linear) {
+        p = CalcDb::dbPower(p);
+    }
+
+    // Terapkan kalibrasi (dB shift)
+    if (m_useCalibration) {
+        p += m_calibrationShiftdB;
+    }
+
+    return p; // dB
 }

@@ -60,6 +60,8 @@ class SDRGUI_API GLSpectrumView : public QOpenGLWidget, public GLSpectrumInterfa
     Q_OBJECT
 
 public:
+    // marker
+    float getHistogramLivePowerAtIndex(int idx) const;
 
     // Manual span control
     void setManualSpan(qint64 centerHz, int spanLeftHz, int spanRightHz); 
@@ -163,6 +165,13 @@ public:
         MsgReportWaterfallMarkersChange() :
             Message()
         {}
+    };
+
+    // marker
+    class MsgReportLivePowersTick : public Message {
+        MESSAGE_CLASS_DECLARATION
+    public:
+        MsgReportLivePowersTick() : Message() {}
     };
 
     GLSpectrumView(QWidget* parent = nullptr);
