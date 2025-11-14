@@ -2272,6 +2272,31 @@ void GLSpectrumView::drawSpectrumMarkers()
                     deltaPowerStr = QString::number(poweri - power0, 'f', 1);
                 }
 
+                // --- Delta frequency text (top) ---
+                QString freqDeltaText;
+
+                if (m_histogramDeltaMode && (i > 0)) {
+                    // Delta vs marker sebelumnya (Mi - M(i-1))
+                    qint64 fCur = m_histogramMarkers.at(i).m_frequency;
+                    qint64 fPrev = m_histogramMarkers.at(i - 1).m_frequency;
+                    qint64 df = fCur - fPrev;
+                    freqDeltaText = displayFull(df);    // "ΔF" gaya full, sama helper lain
+                }
+                else {
+                    // Mode normal: pakai delta vs M1 seperti sebelumnya
+                    freqDeltaText = m_histogramMarkers.at(i).m_deltaFrequencyStr;
+                }
+
+                drawTextOverlay(
+                    freqDeltaText,
+                    textColor,
+                    m_textOverlayFont,
+                    m_histogramMarkers.at(i).m_point.x() * m_histogramRect.width(),
+                    (m_invertedWaterfall || (m_waterfallHeight == 0)) ? 0 : m_histogramRect.height(),
+                    m_histogramMarkers.at(i).m_point.x() < 0.5f,
+                    (m_invertedWaterfall || (m_waterfallHeight == 0)),
+                    m_histogramRect);
+
                 drawTextOverlay(
                     m_histogramMarkers.at(i).m_deltaFrequencyStr,
                     textColor,
@@ -2281,7 +2306,7 @@ void GLSpectrumView::drawSpectrumMarkers()
                     m_histogramMarkers.at(i).m_point.x() < 0.5f,
                     (m_invertedWaterfall || (m_waterfallHeight == 0)),
                     m_histogramRect);
-                drawTextOverlay(
+                /*drawTextOverlay(
                     deltaPowerStr,
                     textColor,
                     m_textOverlayFont,
@@ -2289,7 +2314,7 @@ void GLSpectrumView::drawSpectrumMarkers()
                     ypoint.y() * m_histogramRect.height(),
                     false,
                     ypoint.y() < 0.5f,
-                    m_histogramRect);
+                    m_histogramRect);*/
                 
                 // marker
                 drawTextOverlay(
@@ -5851,4 +5876,12 @@ float GLSpectrumView::getHistogramLivePowerAtIndex(int idx) const
     }
 
     return p; // dB
+}
+
+// marker
+void GLSpectrumView::postMarkersChangedToGUI()
+{
+    if (m_messageQueueToGUI) {
+        m_messageQueueToGUI->push(new MsgReportHistogramMarkersChange());
+    }
 }

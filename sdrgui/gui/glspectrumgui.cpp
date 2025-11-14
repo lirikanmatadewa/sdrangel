@@ -55,6 +55,8 @@
 #include <QHeaderView>
 #include <QPainter>
 #include <QStyledItemDelegate>
+#include <QCheckBox>
+
 
 static inline double clamp01(double v) {
 	if (v < 0.0) return 0.0;
@@ -616,6 +618,21 @@ void GLSpectrumGUI::on_markers_clicked(bool checked)
 	}
 
 	m_markersDialog->show();
+
+	// marker
+	connect(m_markersDialog, &SpectrumMarkersDialog::deltaModeChanged,
+		this, [this](bool on) {
+			if (!m_glSpectrum) return;
+			m_glSpectrum->setHistogramDeltaMode(on);
+			rebuildHistogramMarkersTable();
+			refreshHistogramMarkersTableData();
+		});
+
+	// Set state awal radio dari View
+	if (auto cb = m_markersDialog->findChild<QCheckBox*>("deltaModeRadio")) {
+		cb->setChecked(m_glSpectrum && m_glSpectrum->getHistogramDeltaMode());
+	}
+
 }
 
 void GLSpectrumGUI::closeMarkersDialog()
@@ -1642,12 +1659,16 @@ void GLSpectrumGUI::rebuildHistogramMarkersTable()
 	m_histMarkersTable->setRowCount(1);
 
 	// Header labels
-	QStringList hdr;
-	hdr << "Histogram Markers";
+	const bool delta = m_glSpectrum && m_glSpectrum->getHistogramDeltaMode();
+	QStringList hdr; hdr << "Histogram Markers";
 	for (int i = 0; i < N; ++i) {
-		hdr << QString("M%1 (F)").arg(i + 1)
-			<< QString("M%1 (P)").arg(i + 1);
+		hdr << (delta && i > 0 ? QString("ΔM%1 (F)").arg(i + 1)
+			: QString("M%1 (F)").arg(i + 1));
+		hdr << QString("M%1 (P)").arg(i + 1);
 	}
+	m_histMarkersTable->setHorizontalHeaderLabels(hdr);
+
+
 	for (int c = 0; c < cols; ++c)
 		m_histMarkersTable->setHorizontalHeaderItem(c, new QTableWidgetItem(hdr.value(c)));
 
@@ -1709,18 +1730,22 @@ void GLSpectrumGUI::refreshHistogramMarkersTableData()
 		return;
 	}
 
+	const bool delta = m_glSpectrum && m_glSpectrum->getHistogramDeltaMode();
 	for (int i = 0; i < N; ++i) {
-		// F
+		qint64 fDisplay = mk.at(i).m_frequency; // absolut default
+		if (delta && i > 0) {
+			fDisplay = mk.at(i).m_frequency - mk.at(i - 1).m_frequency;
+		}
 		if (auto* itF = m_histMarkersTable->item(0, 1 + 2 * i)) {
-			itF->setData(Qt::DisplayRole, QVariant(static_cast<qlonglong>(mk.at(i).m_frequency)));
+			itF->setData(Qt::DisplayRole, QVariant(static_cast<qlonglong>(fDisplay)));
 			itF->setTextAlignment(Qt::AlignCenter);
 		}
 
-		// P (LIVE, dB)
+		// --- Power (P) tetap seperti sekarang ---
 		if (auto* itP = m_histMarkersTable->item(0, 1 + 2 * i + 1)) {
 			const double liveP = static_cast<double>(m_glSpectrum->getHistogramLivePowerAtIndex(i));
 			if (std::isfinite(liveP)) {
-				itP->setData(Qt::DisplayRole, QVariant(liveP));     // delegate akan render "... dB"
+				itP->setData(Qt::DisplayRole, QVariant(liveP));
 			}
 			else if (!mk.at(i).m_powerStr.isEmpty()) {
 				itP->setData(Qt::DisplayRole, QVariant(static_cast<double>(mk.at(i).m_power)));
@@ -1732,4 +1757,5 @@ void GLSpectrumGUI::refreshHistogramMarkersTableData()
 			itP->setTextAlignment(Qt::AlignCenter);
 		}
 	}
+
 }

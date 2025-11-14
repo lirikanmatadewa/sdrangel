@@ -31,6 +31,10 @@
 class QSplitter;
 class SpectrumMeasurements;
 
+// marker
+class MessageQueue;
+
+
 // Combines GLSpectrumView with SpectrumMeasurements in a QSplitter
 class SDRGUI_API GLSpectrum : public QWidget, public GLSpectrumInterface {
     Q_OBJECT
@@ -113,6 +117,9 @@ public:
 
     // marker
     float getHistogramLivePowerAtIndex(int idx) const;
+    void setHistogramDeltaMode(bool on);
+    bool getHistogramDeltaMode() const;
+
 
 private:
     QSplitter *m_splitter;

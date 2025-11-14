@@ -862,3 +862,9 @@ void SpectrumMarkersDialog::updateWaterfallMarkersDisplay()
     ui->wMarker->setMaximum(m_waterfallMarkers.size() - 1);
     displayWaterfallMarker();
 }
+
+void SpectrumMarkersDialog::on_deltaModeRadio_toggled(bool checked)
+{
+    // Lempar ke GUI (GLSpectrumGUI) agar meneruskan ke GLSpectrum/GLSpectrumView
+    emit deltaModeChanged(checked);
+}

@@ -154,3 +154,16 @@ float GLSpectrum::getHistogramLivePowerAtIndex(int idx) const
     if (!m_spectrum) return NAN;
     return m_spectrum->getHistogramLivePowerAtIndex(idx);
 }
+
+// marker
+void GLSpectrum::setHistogramDeltaMode(bool on)
+{
+    if (m_spectrum) {
+        m_spectrum->setHistogramDeltaMode(on);
+    }
+}
+
+bool GLSpectrum::getHistogramDeltaMode() const
+{
+    return m_spectrum ? m_spectrum->getHistogramDeltaMode() : false;
+}

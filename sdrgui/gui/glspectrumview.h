@@ -61,7 +61,19 @@ class SDRGUI_API GLSpectrumView : public QOpenGLWidget, public GLSpectrumInterfa
 
 public:
     // marker
+    void postMarkersChangedToGUI();
+
+    // marker
+    // idx  : index marker (0..N-1)
+    // order: 1 = peak tertinggi, 2 = peak kedua, dst
+    void setHistogramMarkerFollowPeak(int idx, int order);
+    void clearHistogramMarkerFollowPeak(int idx);
+
+    // marker
     float getHistogramLivePowerAtIndex(int idx) const;
+    void setHistogramDeltaMode(bool on) { m_histogramDeltaMode = on; }
+    bool getHistogramDeltaMode() const { return m_histogramDeltaMode; }
+    MessageQueue* getMessageQueueToGUI() { return m_messageQueueToGUI; }
 
     // Manual span control
     void setManualSpan(qint64 centerHz, int spanLeftHz, int spanRightHz); 
@@ -286,6 +298,8 @@ private:
         float x = (float)((f - m_frequencyScale.getRangeMin()) / m_frequencyScale.getRange());
         return int((m_waterfallRect.left() + x * m_waterfallRect.width()) * width());
     }
+
+    bool m_histogramDeltaMode = false;
 
     // Manual span state
     bool   m_manualSpanEnabled = false;

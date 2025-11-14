@@ -118,6 +118,10 @@ private slots:
     void on_aMarkersExport_clicked();
     void on_aMarkersImport_clicked();
 
+    // marker
+    void on_deltaModeRadio_toggled(bool checked);
+
+
     static bool annotationMarkerLessThan(const SpectrumAnnotationMarker& m1, const SpectrumAnnotationMarker& m2) {
         return m1.m_startFrequency < m2.m_startFrequency;
     }
@@ -129,6 +133,9 @@ signals:
     void updateWaterfall();
     void updateAnnotations();
     void updateMarkersDisplay();
+
+    // marker
+    void deltaModeChanged(bool on);
 };
 
 #endif // SDRBASE_GUI_SPECTRUMMARKERSDIALOG_H_
