@@ -580,7 +580,11 @@ void GLSpectrumGUI::on_markers_clicked(bool checked)
 {
 	(void)checked;
 
-	if (!m_glSpectrum || m_markersDialog) {
+	/*if (!m_glSpectrum || m_markersDialog) {
+		return;
+	}*/
+
+	if (!m_glSpectrum) {
 		return;
 	}
 
@@ -632,6 +636,25 @@ void GLSpectrumGUI::on_markers_clicked(bool checked)
 	if (auto cb = m_markersDialog->findChild<QCheckBox*>("deltaModeRadio")) {
 		cb->setChecked(m_glSpectrum && m_glSpectrum->getHistogramDeltaMode());
 	}
+
+	connect(m_markersDialog, &SpectrumMarkersDialog::followPeakRequested,
+		this, [this](int idx) {
+			if (!m_glSpectrum) return;
+			if (auto* v = m_glSpectrum->getSpectrumView()) {
+				v->setHistogramMarkerFollowPeak(idx, 1); // 1 = peak tertinggi
+			}
+		});
+
+	connect(m_markersDialog, &SpectrumMarkersDialog::nextPeakRequested,
+		this, [this](int idx) {
+			if (!m_glSpectrum) return;
+			if (auto* v = m_glSpectrum->getSpectrumView()) {
+				// ambil order sekarang, lalu ++
+				int cur = v->getHistogramMarkerFollowPeakOrder(idx);
+				if (cur < 1) cur = 1;
+				v->setHistogramMarkerFollowPeak(idx, cur + 1);
+			}
+		});
 
 }
 
@@ -1674,7 +1697,8 @@ void GLSpectrumGUI::rebuildHistogramMarkersTable()
 
 	// Header colors (kolom F & P untuk marker yang sama pakai warna sama)
 	for (int i = 0; i < N; ++i) {
-		const QColor c = markerHeaderColor(i);
+		QColor c = m_glSpectrum->getHistogramMarkers().at(i).m_markerColor;
+		if (!c.isValid()) c = markerHeaderColor(i); // fallback jika belum pernah di-set
 		if (auto* hF = m_histMarkersTable->horizontalHeaderItem(1 + 2 * i)) {
 			hF->setBackground(QBrush(c));
 			hF->setForeground(QBrush(Qt::black));

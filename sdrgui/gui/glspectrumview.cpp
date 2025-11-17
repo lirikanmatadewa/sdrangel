@@ -3897,56 +3897,135 @@ void GLSpectrumView::updateHistogramMarkers()
     }
 }
 
+//void GLSpectrumView::updateHistogramPeaks()
+//{
+//    int j = 0;
+//    for (int i = 0; i < m_histogramMarkers.size(); i++)
+//    {
+//        if (j >= (int) m_peakFinder.getPeaks().size()) {
+//            break;
+//        }
+//
+//        int fftBin = m_peakFinder.getPeaks()[j].second;
+//        Real power = m_peakFinder.getPeaks()[j].first;
+//        // qDebug("GLSpectrumView::updateHistogramPeaks: %d %d %f", j, fftBin, power);
+//
+//        if ((m_histogramMarkers.at(i).m_markerType == SpectrumHistogramMarker::SpectrumMarkerTypePower) ||
+//            ((m_histogramMarkers.at(i).m_markerType == SpectrumHistogramMarker::SpectrumMarkerTypePowerMax) &&
+//            (m_histogramMarkers.at(i).m_holdReset || (power > m_histogramMarkers.at(i).m_powerMax))))
+//        {
+//            float binSize = m_frequencyScale.getRange() / m_nbBins;
+//            m_histogramMarkers[i].m_fftBin = fftBin;
+//            m_histogramMarkers[i].m_frequency = m_frequencyScale.getRangeMin() + binSize*fftBin;
+//            m_histogramMarkers[i].m_point.rx() = binSize*fftBin / m_frequencyScale.getRange();
+//
+//            if (i == 0)
+//            {
+//                m_histogramMarkers[i].m_frequencyStr = displayScaled(
+//                    m_histogramMarkers[i].m_frequency,
+//                    'f',
+//                    getPrecision((m_centerFrequency*1000)/m_sampleRate),
+//                    false
+//                );
+//            }
+//            else
+//            {
+//                int64_t deltaFrequency = m_histogramMarkers.at(i).m_frequency - m_histogramMarkers.at(0).m_frequency;
+//                m_histogramMarkers[i].m_deltaFrequencyStr = displayScaled(
+//                    deltaFrequency,
+//                    'f',
+//                    getPrecision(deltaFrequency/m_sampleRate),
+//                    true
+//                );
+//            }
+//        }
+//        else
+//        {
+//            continue;
+//        }
+//
+//        j++;
+//    }
+//}
+
 void GLSpectrumView::updateHistogramPeaks()
 {
-    int j = 0;
+    const auto& peaks = m_peakFinder.getPeaks();
+    if (peaks.empty()) return;
+
+    std::vector<bool> used(peaks.size(), false);
+
+    // Reservasi peak yg sudah dipetakan via follow-peak order
+    for (auto it = m_markerFollowPeakOrder.constBegin(); it != m_markerFollowPeakOrder.constEnd(); ++it) {
+        int ord = it.value();
+        if (ord >= 1 && ord <= (int)peaks.size()) used[ord - 1] = true;
+    }
+
+    int nextFree = 0;
     for (int i = 0; i < m_histogramMarkers.size(); i++)
     {
-        if (j >= (int) m_peakFinder.getPeaks().size()) {
-            break;
-        }
+        // Tentukan marker i eligible (ikut find-peaks) sesuai logika Anda saat ini:
+        bool eligible =
+            (m_histogramMarkers.at(i).m_markerType == SpectrumHistogramMarker::SpectrumMarkerTypePower) ||
+            (m_histogramMarkers.at(i).m_markerType == SpectrumHistogramMarker::SpectrumMarkerTypePowerMax);
 
-        int fftBin = m_peakFinder.getPeaks()[j].second;
-        Real power = m_peakFinder.getPeaks()[j].first;
-        // qDebug("GLSpectrumView::updateHistogramPeaks: %d %d %f", j, fftBin, power);
-
-        if ((m_histogramMarkers.at(i).m_markerType == SpectrumHistogramMarker::SpectrumMarkerTypePower) ||
-            ((m_histogramMarkers.at(i).m_markerType == SpectrumHistogramMarker::SpectrumMarkerTypePowerMax) &&
-            (m_histogramMarkers.at(i).m_holdReset || (power > m_histogramMarkers.at(i).m_powerMax))))
-        {
-            float binSize = m_frequencyScale.getRange() / m_nbBins;
-            m_histogramMarkers[i].m_fftBin = fftBin;
-            m_histogramMarkers[i].m_frequency = m_frequencyScale.getRangeMin() + binSize*fftBin;
-            m_histogramMarkers[i].m_point.rx() = binSize*fftBin / m_frequencyScale.getRange();
-
-            if (i == 0)
-            {
-                m_histogramMarkers[i].m_frequencyStr = displayScaled(
-                    m_histogramMarkers[i].m_frequency,
-                    'f',
-                    getPrecision((m_centerFrequency*1000)/m_sampleRate),
-                    false
-                );
-            }
-            else
-            {
-                int64_t deltaFrequency = m_histogramMarkers.at(i).m_frequency - m_histogramMarkers.at(0).m_frequency;
-                m_histogramMarkers[i].m_deltaFrequencyStr = displayScaled(
-                    deltaFrequency,
-                    'f',
-                    getPrecision(deltaFrequency/m_sampleRate),
-                    true
-                );
-            }
-        }
-        else
-        {
+        if (!eligible) {
             continue;
         }
 
-        j++;
+        int idxPeak = -1;
+
+        // Jika marker i punya order khusus → pakai itu
+        auto itOrd = m_markerFollowPeakOrder.find(i);
+        if (itOrd != m_markerFollowPeakOrder.end()) {
+            int ord = itOrd.value();
+            if (ord >= 1 && ord <= (int)peaks.size()) {
+                idxPeak = ord - 1;
+            }
+            else {
+                continue; // order di luar jumlah peaks yg ditemukan
+            }
+        }
+        else {
+            // Ambil next free peak yg belum dipakai
+            while (nextFree < (int)peaks.size() && used[nextFree]) ++nextFree;
+            if (nextFree >= (int)peaks.size()) break;
+            idxPeak = nextFree++;
+        }
+
+        used[idxPeak] = true;
+
+        // Terapkan posisi ke marker i
+        const int   fftBin = peaks[idxPeak].second;
+        const Real  power = peaks[idxPeak].first; // bila dibutuhkan untuk PowerMax
+        const float binSz = m_frequencyScale.getRange() / m_nbBins;
+
+        m_histogramMarkers[i].m_fftBin = fftBin;
+        m_histogramMarkers[i].m_frequency = m_frequencyScale.getRangeMin() + binSz * fftBin;
+        m_histogramMarkers[i].m_point.rx() = binSz * fftBin / m_frequencyScale.getRange();
+
+        if (i == 0)
+        {
+            m_histogramMarkers[i].m_frequencyStr = displayScaled(
+                m_histogramMarkers[i].m_frequency,
+                'f',
+                getPrecision((m_centerFrequency * 1000) / m_sampleRate),
+                false
+            );
+        }
+        else
+        {
+            int64_t deltaFrequency = m_histogramMarkers.at(i).m_frequency - m_histogramMarkers.at(0).m_frequency;
+            m_histogramMarkers[i].m_deltaFrequencyStr = displayScaled(
+                deltaFrequency,
+                'f',
+                getPrecision(deltaFrequency / m_sampleRate),
+                true
+            );
+        }
     }
 }
+
 
 void GLSpectrumView::updateWaterfallMarkers()
 {
@@ -5884,4 +5963,41 @@ void GLSpectrumView::postMarkersChangedToGUI()
     if (m_messageQueueToGUI) {
         m_messageQueueToGUI->push(new MsgReportHistogramMarkersChange());
     }
+}
+
+int GLSpectrumView::getHistogramMarkerFollowPeakOrder(int idx) const
+{
+    return m_markerFollowPeakOrder.value(idx, 0); // 0 = tidak follow peak spesifik
+}
+
+void GLSpectrumView::setHistogramMarkerFollowPeak(int idx, int order)
+{
+    if (idx < 0 || idx >= m_histogramMarkers.size()) return;
+    if (order < 1) order = 1;
+
+    // Pastikan mode Find Peaks aktif & marker ini mengikuti power (live)
+    m_histogramFindPeaks = true;
+    m_histogramMarkers[idx].m_markerType = SpectrumHistogramMarker::SpectrumMarkerTypePower;
+
+    // Kumpulkan order yang sudah dipakai marker lain
+    QSet<int> used;
+    for (auto it = m_markerFollowPeakOrder.constBegin(); it != m_markerFollowPeakOrder.constEnd(); ++it) {
+        if (it.key() != idx) used.insert(it.value());
+    }
+
+    // Kalau order yang diminta bentrok → eskalasi ke order terkecil yang masih kosong
+    int assigned = order;
+    while (used.contains(assigned)) ++assigned;
+
+    m_markerFollowPeakOrder[idx] = assigned;
+
+    // Trigger refresh
+    postMarkersChangedToGUI();
+    update();
+}
+
+void GLSpectrumView::clearHistogramMarkerFollowPeak(int idx)
+{
+    m_markerFollowPeakOrder.remove(idx);
+    update();
 }

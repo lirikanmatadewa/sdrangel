@@ -55,7 +55,11 @@ SpectrumMarkersDialog::SpectrumMarkersDialog(
     ui->setupUi(this);
     ui->markerFrequency->setColorMapper(ColorMapper(ColorMapper::GrayGold));
     ui->markerFrequency->setValueRange(false, 12, -999999999999L, 999999999999L);
-    ui->marker->setMaximum(m_histogramMarkers.size() - 1);
+
+    // marker
+    repopulateMarkerCombo();
+    ui->marker->setCurrentIndex(m_histogramMarkerIndex);
+
     ui->wMarkerFrequency->setColorMapper(ColorMapper(ColorMapper::GrayGold));
     ui->wMarkerFrequency->setValueRange(false, 12, -999999999999L, 999999999999L);
     ui->wMarker->setMaximum(m_waterfallMarkers.size() - 1);
@@ -94,7 +98,8 @@ void SpectrumMarkersDialog::displayHistogramMarker()
         ui->powerMode->setEnabled(false);
         ui->fixedPower->setEnabled(false);
         ui->showMarker->setEnabled(false);
-        ui->marker->setValue(0);
+        /*ui->marker->setValue(0);*/
+        ui->marker->setCurrentIndex(-1);
         ui->markerText->setText("-");
         ui->fixedPower->setValue(0);
     }
@@ -109,8 +114,14 @@ void SpectrumMarkersDialog::displayHistogramMarker()
         ui->powerMode->setEnabled(true);
         ui->fixedPower->setEnabled(true);
         ui->showMarker->setEnabled(true);
-        ui->marker->setValue(m_histogramMarkerIndex);
-        ui->markerText->setText(tr("%1").arg(m_histogramMarkerIndex));
+        // Pastikan jumlah item cocok dengan jumlah marker
+        if (ui->marker->count() != m_histogramMarkers.size()) {
+            repopulateMarkerCombo();
+        }
+        ui->marker->setCurrentIndex(m_histogramMarkerIndex);
+
+        ui->markerText->setText(QString::number(m_histogramMarkerIndex));
+
         ui->markerFrequency->setValue(m_histogramMarkers[m_histogramMarkerIndex].m_frequency);
         ui->powerMode->setCurrentIndex((int) m_histogramMarkers[m_histogramMarkerIndex].m_markerType);
         float powerDB = CalcDb::dbPower(m_histogramMarkers[m_histogramMarkerIndex].m_power) + m_calibrationShiftdB;
@@ -306,6 +317,9 @@ void SpectrumMarkersDialog::on_markerColor_clicked()
     {
         m_histogramMarkers[m_histogramMarkerIndex].m_markerColor = newColor;
         displayHistogramMarker();
+
+        // marker
+        emit updateHistogram();
     }
 }
 
@@ -329,15 +343,14 @@ void SpectrumMarkersDialog::on_fixedPower_changed(qint64 value)
     emit updateHistogram();
 }
 
-void SpectrumMarkersDialog::on_marker_valueChanged(int value)
+void SpectrumMarkersDialog::on_marker_currentIndexChanged(int index)
 {
-    if (m_histogramMarkers.size() == 0) {
-        return;
-    }
-
-    m_histogramMarkerIndex = value;
+    if (m_histogramMarkers.size() == 0) return;
+    if (index < 0 || index >= m_histogramMarkers.size()) return;
+    m_histogramMarkerIndex = index;
     displayHistogramMarker();
 }
+
 
 void SpectrumMarkersDialog::on_setReference_clicked()
 {
@@ -366,8 +379,8 @@ void SpectrumMarkersDialog::on_markerAdd_clicked()
     m_histogramMarkers.back().m_frequency = m_centerFrequency;
     m_histogramMarkers.back().m_power = m_power;
     m_histogramMarkerIndex = m_histogramMarkers.size() - 1;
-    ui->marker->setMaximum(m_histogramMarkers.size() - 1);
-    ui->marker->setMinimum(0);
+    repopulateMarkerCombo();
+    ui->marker->setCurrentIndex(m_histogramMarkerIndex);
     displayHistogramMarker();
 }
 
@@ -380,7 +393,8 @@ void SpectrumMarkersDialog::on_markerDel_clicked()
     m_histogramMarkers.removeAt(m_histogramMarkerIndex);
     m_histogramMarkerIndex = m_histogramMarkerIndex < m_histogramMarkers.size() ?
         m_histogramMarkerIndex : m_histogramMarkerIndex - 1;
-    ui->marker->setMaximum(m_histogramMarkers.size() - 1);
+    repopulateMarkerCombo();
+    ui->marker->setCurrentIndex(m_histogramMarkerIndex);
     displayHistogramMarker();
 }
 
@@ -851,8 +865,8 @@ void SpectrumMarkersDialog::on_showSelect_currentIndexChanged(int index)
 
 void SpectrumMarkersDialog::updateHistogramMarkersDisplay()
 {
-    m_histogramMarkerIndex = std::max(m_histogramMarkerIndex, (int)m_histogramMarkers.size() - 1);
-    ui->marker->setMaximum(m_histogramMarkers.size() - 1);
+    repopulateMarkerCombo();
+    ui->marker->setCurrentIndex(m_histogramMarkerIndex);
     displayHistogramMarker();
 }
 
@@ -867,4 +881,56 @@ void SpectrumMarkersDialog::on_deltaModeRadio_toggled(bool checked)
 {
     // Lempar ke GUI (GLSpectrumGUI) agar meneruskan ke GLSpectrum/GLSpectrumView
     emit deltaModeChanged(checked);
+}
+
+void SpectrumMarkersDialog::on_pushButton_2_clicked() // Peak
+{
+    if (m_histogramMarkers.size() == 0) return;
+
+    // Paksa Find Peaks ON agar algoritma peaks berjalan di view
+    if (!m_findPeaks) {
+        m_findPeaks = true;
+        if (auto* cb = this->findChild<QCheckBox*>("findPeaks")) cb->setChecked(true);
+    }
+
+    // Pastikan marker mode mengikuti power live (bukan manual)
+    m_histogramMarkers[m_histogramMarkerIndex].m_markerType =
+        SpectrumHistogramMarker::SpectrumMarkerTypePower;
+
+    // Minta view: ikuti peak #1 (peak tertinggi) untuk marker terpilih
+    emit followPeakRequested(m_histogramMarkerIndex);
+
+    // Minta refresh
+    displayHistogramMarker();
+    emit updateHistogram();
+}
+
+void SpectrumMarkersDialog::on_pushButton_clicked() // Next Peak
+{
+    if (m_histogramMarkers.size() == 0) return;
+
+    if (!m_findPeaks) {
+        m_findPeaks = true;
+        if (auto* cb = this->findChild<QCheckBox*>("findPeaks")) cb->setChecked(true);
+    }
+
+    m_histogramMarkers[m_histogramMarkerIndex].m_markerType =
+        SpectrumHistogramMarker::SpectrumMarkerTypePower;
+
+    // Minta view: naik ke peak berikutnya untuk marker terpilih
+    emit nextPeakRequested(m_histogramMarkerIndex);
+
+    displayHistogramMarker();
+    emit updateHistogram();
+}
+
+void SpectrumMarkersDialog::repopulateMarkerCombo()
+{
+    ui->marker->blockSignals(true);
+    ui->marker->clear();
+    // Isi item "0", "1", "2", ...
+    for (int i = 0; i < m_histogramMarkers.size(); ++i) {
+        ui->marker->addItem(QString::number(i));
+    }
+    ui->marker->blockSignals(false);
 }

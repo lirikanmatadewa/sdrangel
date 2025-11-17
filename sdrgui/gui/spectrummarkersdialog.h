@@ -75,13 +75,16 @@ private:
     void displayTime(float time);
     float getTime() const;
 
+    // marker
+    void repopulateMarkerCombo();
+
 private slots:
     void on_markerFrequency_changed(qint64 value);
     void on_centerFrequency_clicked();
     void on_markerColor_clicked();
     void on_showMarker_clicked(bool clicked);
     void on_fixedPower_changed(qint64 value);
-    void on_marker_valueChanged(int value);
+    void on_marker_currentIndexChanged(int index);
     void on_setReference_clicked();
     void on_markerAdd_clicked();
     void on_markerDel_clicked();
@@ -121,6 +124,9 @@ private slots:
     // marker
     void on_deltaModeRadio_toggled(bool checked);
 
+    void on_pushButton_2_clicked();  // "Peak"
+    void on_pushButton_clicked();    // "Next Peak"
+
 
     static bool annotationMarkerLessThan(const SpectrumAnnotationMarker& m1, const SpectrumAnnotationMarker& m2) {
         return m1.m_startFrequency < m2.m_startFrequency;
@@ -136,6 +142,9 @@ signals:
 
     // marker
     void deltaModeChanged(bool on);
+
+    void followPeakRequested(int markerIndex);
+    void nextPeakRequested(int markerIndex);
 };
 
 #endif // SDRBASE_GUI_SPECTRUMMARKERSDIALOG_H_

@@ -143,22 +143,6 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="centerFrequency">
-           <property name="maximumSize">
-            <size>
-             <width>24</width>
-             <height>24</height>
-            </size>
-           </property>
-           <property name="toolTip">
-            <string>Set marker as reference (index 0)</string>
-           </property>
-           <property name="text">
-            <string>C</string>
-           </property>
-          </widget>
-         </item>
-         <item>
           <widget class="ClickableLabel" name="markerColor">
            <property name="minimumSize">
             <size>
@@ -177,19 +161,6 @@
            </property>
            <property name="text">
             <string/>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="showMarker">
-           <property name="toolTip">
-            <string>Show this marker</string>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -227,23 +198,14 @@
           </widget>
          </item>
          <item>
-          <widget class="QDial" name="marker">
-           <property name="maximumSize">
-            <size>
-             <width>24</width>
-             <height>24</height>
-            </size>
-           </property>
-           <property name="toolTip">
-            <string>Marker index (0 is reference)</string>
-           </property>
-           <property name="maximum">
-            <number>0</number>
-           </property>
-           <property name="pageStep">
-            <number>1</number>
-           </property>
-          </widget>
+		    <widget class="QComboBox" name="marker">
+			    <property name="toolTip">
+				    <string>Marker index (0 is reference)</string>
+			    </property>
+			    <property name="sizeAdjustPolicy">
+				    <enum>QComboBox::AdjustToContents</enum>
+			    </property>
+		    </widget>
          </item>
          <item>
           <widget class="QPushButton" name="setReference">
@@ -1856,6 +1818,61 @@ All  - Show all markers</string>
         </size>
        </property>
       </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_2">
+       <property name="maximumSize">
+        <size>
+         <width>100</width>
+         <height>24</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Peak</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton">
+       <property name="maximumSize">
+        <size>
+         <width>100</width>
+         <height>24</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Next Peak</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="centerFrequency">
+       <property name="maximumSize">
+        <size>
+         <width>100</width>
+         <height>24</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Set marker as reference (index 0)</string>
+       </property>
+       <property name="text">
+        <string>Center</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="showMarker">
+       <property name="toolTip">
+        <string>Show this marker</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>

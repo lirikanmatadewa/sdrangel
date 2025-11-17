@@ -50,6 +50,8 @@
 #include "util/colormap.h"
 #include "util/peakfinder.h"
 
+#include <QHash>
+
 class QOpenGLShaderProgram;
 class MessageQueue;
 class SpectrumVis;
@@ -62,6 +64,8 @@ class SDRGUI_API GLSpectrumView : public QOpenGLWidget, public GLSpectrumInterfa
 public:
     // marker
     void postMarkersChangedToGUI();
+
+    int getHistogramMarkerFollowPeakOrder(int idx) const;
 
     // marker
     // idx  : index marker (0..N-1)
@@ -272,6 +276,8 @@ private:
 
     // marker
     enum class DragTarget { None, Histo, Wat, AnnoStart, AnnoCenter };
+
+    QHash<int, int> m_markerFollowPeakOrder;
 
     DragTarget m_dragTarget = DragTarget::None;
     int   m_dragIndex = -1;
