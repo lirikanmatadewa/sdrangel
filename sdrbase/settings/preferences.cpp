@@ -44,7 +44,7 @@ void Preferences::resetToDefaults()
 	m_multisampling = 0;
 	m_mapMultisampling = 0;
 	m_mapSmoothing = true;
-	m_fftEngine = "FFTW";
+	m_fftEngine = "vkFFT (Vulkan)";
 }
 
 QByteArray Preferences::serialize() const
@@ -128,7 +128,7 @@ bool Preferences::deserialize(const QByteArray& data)
 		d.readS32((int)MapMultisampling, &m_mapMultisampling, 0);
 		d.readBool((int)MapSmoothing, &m_mapSmoothing, true);
 
-		d.readString((int)FFTEngine, &m_fftEngine, "FFTW");
+		d.readString((int)FFTEngine, &m_fftEngine, "vkFFT (Vulkan)");
 
 		return true;
 	}

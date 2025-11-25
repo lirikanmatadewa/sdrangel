@@ -50,7 +50,7 @@ endif()
 
 # CUDA Toolkit: https://developer.nvidia.com/cuda-downloads
 if (${VKFFT_BACKEND} EQUAL 1)
-    find_package(CUDA 9.0)
+    find_package(CUDAToolkit)
     if(CUDA_FOUND)
         enable_language(CUDA)
         set(sdrbase_SOURCES
@@ -597,12 +597,13 @@ if(DEFINED LIBSIGMF_DEPENDS)
 endif()
 
 if(Vulkan_FOUND AND (${VKFFT_BACKEND} EQUAL 0))
+    add_dependencies(sdrbase vkfft)
     target_compile_definitions(sdrbase PUBLIC -DVK_API_VERSION=11)
     target_include_directories(sdrbase PUBLIC ${Vulkan_INCLUDE_DIR} ${Vulkan_INCLUDE_DIR}/glslang/Include)
     add_compile_definitions(sdrbase VKFFT_BACKEND=0)
 
     find_library(VULKAN_SPIRV_LIB SPIRV HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
-    find_library(VULKAN_SPVREMAPPER_LIB SPVRemapper HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
+    # find_library(VULKAN_SPVREMAPPER_LIB SPVRemapper HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
     find_library(VULKAN_SPIRV_TOOLS_LIB SPIRV-Tools HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
     find_library(VULKAN_SPIRV_TOOLS_OPT_LIB SPIRV-Tools-opt HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
     find_library(VULKAN_SPIRV_TOOLS_SHARED_LIB SPIRV-Tools-shared HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
@@ -618,7 +619,7 @@ if(Vulkan_FOUND AND (${VKFFT_BACKEND} EQUAL 0))
         set(VULKAN_DEBUG_POSTFIX "")
     endif()
     find_library(VULKAN_SPIRVD_LIB SPIRV${VULKAN_DEBUG_POSTFIX} HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
-    find_library(VULKAN_SPVREMAPPERD_LIB SPVRemapper${VULKAN_DEBUG_POSTFIX} HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
+    # find_library(VULKAN_SPVREMAPPERD_LIB SPVRemapper${VULKAN_DEBUG_POSTFIX} HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
     find_library(VULKAN_SPIRV_TOOLSD_LIB SPIRV-Tools${VULKAN_DEBUG_POSTFIX} HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
     find_library(VULKAN_SPIRV_TOOLS_OPTD_LIB SPIRV-Tools-opt${VULKAN_DEBUG_POSTFIX} HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
     find_library(VULKAN_SPIRV_TOOLS_SHAREDD_LIB SPIRV-Tools-shared${VULKAN_DEBUG_POSTFIX} HINTS "$ENV{VULKAN_SDK}/lib" REQUIRED)
@@ -630,7 +631,7 @@ if(Vulkan_FOUND AND (${VKFFT_BACKEND} EQUAL 0))
 
     target_link_libraries(sdrbase
         optimized ${VULKAN_SPIRV_LIB}
-        optimized ${VULKAN_SPVREMAPPER_LIB}
+        # optimized ${VULKAN_SPVREMAPPER_LIB}
         optimized ${VULKAN_SPIRV_TOOLS_LIB}
         optimized ${VULKAN_SPIRV_TOOLS_OPT_LIB}
         optimized ${VULKAN_SPIRV_TOOLS_SHARED_LIB}
@@ -641,7 +642,7 @@ if(Vulkan_FOUND AND (${VKFFT_BACKEND} EQUAL 0))
         optimized ${VULKAN_GENERICCODEGEN_LIB}
         optimized Vulkan::Vulkan
         debug ${VULKAN_SPIRVD_LIB}
-        debug ${VULKAN_SPVREMAPPERD_LIB}
+        # debug ${VULKAN_SPVREMAPPERD_LIB}
         debug ${VULKAN_SPIRV_TOOLSD_LIB}
         debug ${VULKAN_SPIRV_TOOLS_OPTD_LIB}
         debug ${VULKAN_SPIRV_TOOLS_SHAREDD_LIB}
