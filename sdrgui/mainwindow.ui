@@ -21,7 +21,7 @@
   </property>
   <property name="windowIcon">
    <iconset resource="resources/res.qrc">
-    <normaloff>:/defentech_icon.png</normaloff>:/defentech_icon.png</iconset>
+    <normaloff>:/waltech_icon.png</normaloff>:/waltech_icon.png</iconset>
   </property>
   <property name="animated">
    <bool>true</bool>

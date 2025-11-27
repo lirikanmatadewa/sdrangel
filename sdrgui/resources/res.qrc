@@ -79,6 +79,9 @@
     <file>defentech_icon.png</file>
     <file>defentech_black.png</file>
     <file>defentech_white.png</file>
+	<file>waltech_icon.png</file>
+	<file>waltech_black.png</file>
+	<file>waltech_white.png</file>
     <file>minus.png</file>
     <file>plus.png</file>
     <file>record_off.png</file>

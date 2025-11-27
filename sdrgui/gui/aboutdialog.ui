@@ -65,7 +65,7 @@
         <string/>
        </property>
        <property name="pixmap">
-        <pixmap resource="../resources/res.qrc">:/defentech_white.png</pixmap>
+        <pixmap resource="../resources/res.qrc">:/waltech_white.png</pixmap>
        </property>
        <property name="scaledContents">
         <bool>true</bool>
