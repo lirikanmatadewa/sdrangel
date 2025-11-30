@@ -29,7 +29,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="hisTab">
       <attribute name="title">
@@ -57,127 +57,15 @@
        <item>
         <layout class="QHBoxLayout" name="HMarkerPosLayout">
          <item>
-          <widget class="QLabel" name="markerFrequencyLabel">
-           <property name="text">
-            <string>F</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="ValueDialZ" name="markerFrequency" native="true">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>32</width>
-             <height>16</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <family>DejaVu Sans Mono</family>
-             <pointsize>12</pointsize>
-            </font>
-           </property>
-           <property name="cursor">
-            <cursorShape>PointingHandCursor</cursorShape>
-           </property>
-           <property name="focusPolicy">
-            <enum>Qt::FocusPolicy::StrongFocus</enum>
-           </property>
-           <property name="toolTip">
-            <string>Marker frequency (Hz)</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="markerFrequencyUnits">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>32</width>
-             <height>16</height>
-            </size>
-           </property>
-           <property name="cursor">
-            <cursorShape>PointingHandCursor</cursorShape>
-           </property>
-           <property name="focusPolicy">
-            <enum>Qt::FocusPolicy::StrongFocus</enum>
-           </property>
-           <property name="toolTip">
-            <string>Marker frequency (Hz)</string>
-           </property>
-           <property name="text">
-            <string>Hz</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="horizontalSpacer">
-           <property name="orientation">
-            <enum>Qt::Orientation::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="deltaModeRadio">
-           <property name="text">
-            <string>Delta Mode</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="ClickableLabel" name="markerColor">
-           <property name="minimumSize">
-            <size>
-             <width>16</width>
-             <height>16</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16</width>
-             <height>16</height>
-            </size>
-           </property>
-           <property name="toolTip">
-            <string>Current marker color (click to change)</string>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="HMarkerOptionsLayout">
-         <item>
           <widget class="QLabel" name="markerLabel">
            <property name="minimumSize">
             <size>
-             <width>24</width>
+             <width>40</width>
              <height>0</height>
             </size>
            </property>
            <property name="text">
-            <string>Mk</string>
+            <string>Marker</string>
            </property>
           </widget>
          </item>
@@ -198,28 +86,12 @@
           </widget>
          </item>
          <item>
-		    <widget class="QComboBox" name="marker">
-			    <property name="toolTip">
-				    <string>Marker index (0 is reference)</string>
-			    </property>
-			    <property name="sizeAdjustPolicy">
-				    <enum>QComboBox::AdjustToContents</enum>
-			    </property>
-		    </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="setReference">
-           <property name="maximumSize">
-            <size>
-             <width>24</width>
-             <height>24</height>
-            </size>
-           </property>
+          <widget class="QComboBox" name="marker">
            <property name="toolTip">
-            <string>Set marker as reference (index 0)</string>
+            <string>Marker index (0 is reference)</string>
            </property>
-           <property name="text">
-            <string>0</string>
+           <property name="sizeAdjustPolicy">
+            <enum>QComboBox::SizeAdjustPolicy::AdjustToContents</enum>
            </property>
           </widget>
          </item>
@@ -348,6 +220,134 @@
            </item>
           </layout>
          </item>
+         <item>
+          <widget class="QLabel" name="markerFrequencyLabel">
+           <property name="text">
+            <string>F</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="ValueDialZ" name="markerFrequency" native="true">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>32</width>
+             <height>16</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <family>DejaVu Sans Mono</family>
+             <pointsize>12</pointsize>
+            </font>
+           </property>
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
+           <property name="focusPolicy">
+            <enum>Qt::FocusPolicy::StrongFocus</enum>
+           </property>
+           <property name="toolTip">
+            <string>Marker frequency (Hz)</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="markerFrequencyUnits">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>32</width>
+             <height>16</height>
+            </size>
+           </property>
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
+           <property name="focusPolicy">
+            <enum>Qt::FocusPolicy::StrongFocus</enum>
+           </property>
+           <property name="toolTip">
+            <string>Marker frequency (Hz)</string>
+           </property>
+           <property name="text">
+            <string>Hz</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Orientation::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="setReference">
+           <property name="maximumSize">
+            <size>
+             <width>24</width>
+             <height>24</height>
+            </size>
+           </property>
+           <property name="toolTip">
+            <string>Set marker as reference (index 0)</string>
+           </property>
+           <property name="text">
+            <string>0</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="deltaModeRadio">
+           <property name="text">
+            <string>Delta Mode</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="ClickableLabel" name="markerColor">
+           <property name="minimumSize">
+            <size>
+             <width>16</width>
+             <height>16</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16</width>
+             <height>16</height>
+            </size>
+           </property>
+           <property name="toolTip">
+            <string>Current marker color (click to change)</string>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="HMarkerOptionsLayout">
          <item>
           <widget class="QLabel" name="powerLabel">
            <property name="minimumSize">
@@ -539,149 +539,15 @@ Max - Marker will move according to the maximum power at the marker frequency</s
        <item>
         <layout class="QHBoxLayout" name="WMarkerPosLayout">
          <item>
-          <widget class="QLabel" name="wMarkerFrequencyLabel">
-           <property name="text">
-            <string>F</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="ValueDialZ" name="wMarkerFrequency" native="true">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>32</width>
-             <height>16</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <family>DejaVu Sans Mono</family>
-             <pointsize>12</pointsize>
-            </font>
-           </property>
-           <property name="cursor">
-            <cursorShape>PointingHandCursor</cursorShape>
-           </property>
-           <property name="focusPolicy">
-            <enum>Qt::FocusPolicy::StrongFocus</enum>
-           </property>
-           <property name="toolTip">
-            <string>Marker frequency (Hz)</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="wMarkerFrequencyUnits">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>32</width>
-             <height>16</height>
-            </size>
-           </property>
-           <property name="cursor">
-            <cursorShape>PointingHandCursor</cursorShape>
-           </property>
-           <property name="focusPolicy">
-            <enum>Qt::FocusPolicy::StrongFocus</enum>
-           </property>
-           <property name="toolTip">
-            <string>Marker frequency (Hz)</string>
-           </property>
-           <property name="text">
-            <string>Hz</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="horizontalSpacer_3">
-           <property name="orientation">
-            <enum>Qt::Orientation::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item>
-          <widget class="QPushButton" name="wCenterFrequency">
-           <property name="maximumSize">
-            <size>
-             <width>24</width>
-             <height>24</height>
-            </size>
-           </property>
-           <property name="toolTip">
-            <string>Set marker as reference (index 0)</string>
-           </property>
-           <property name="text">
-            <string>C</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="ClickableLabel" name="wMarkerColor">
-           <property name="minimumSize">
-            <size>
-             <width>16</width>
-             <height>16</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16</width>
-             <height>16</height>
-            </size>
-           </property>
-           <property name="toolTip">
-            <string>Current marker color (click to change)</string>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="wShowMarker">
-           <property name="toolTip">
-            <string>Show this marker</string>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="WMarkerOptionsLayout">
-         <item>
           <widget class="QLabel" name="wMarkerLabel">
            <property name="minimumSize">
             <size>
-             <width>24</width>
+             <width>40</width>
              <height>0</height>
             </size>
            </property>
            <property name="text">
-            <string>Mk</string>
+            <string>Marker</string>
            </property>
           </widget>
          </item>
@@ -702,39 +568,7 @@ Max - Marker will move according to the maximum power at the marker frequency</s
           </widget>
          </item>
          <item>
-          <widget class="QDial" name="wMarker">
-           <property name="maximumSize">
-            <size>
-             <width>24</width>
-             <height>24</height>
-            </size>
-           </property>
-           <property name="toolTip">
-            <string>Marker index (0 is reference)</string>
-           </property>
-           <property name="maximum">
-            <number>0</number>
-           </property>
-           <property name="pageStep">
-            <number>1</number>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="wSetReference">
-           <property name="maximumSize">
-            <size>
-             <width>24</width>
-             <height>24</height>
-            </size>
-           </property>
-           <property name="toolTip">
-            <string>Set marker as reference (index 0)</string>
-           </property>
-           <property name="text">
-            <string>0</string>
-           </property>
-          </widget>
+          <widget class="QComboBox" name="wMarker"/>
          </item>
          <item>
           <layout class="QVBoxLayout" name="wMarkerAddRemoveLayout">
@@ -861,6 +695,156 @@ Max - Marker will move according to the maximum power at the marker frequency</s
            </item>
           </layout>
          </item>
+         <item>
+          <widget class="QLabel" name="wMarkerFrequencyLabel">
+           <property name="text">
+            <string>F</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="ValueDialZ" name="wMarkerFrequency" native="true">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>32</width>
+             <height>16</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <family>DejaVu Sans Mono</family>
+             <pointsize>12</pointsize>
+            </font>
+           </property>
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
+           <property name="focusPolicy">
+            <enum>Qt::FocusPolicy::StrongFocus</enum>
+           </property>
+           <property name="toolTip">
+            <string>Marker frequency (Hz)</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="wMarkerFrequencyUnits">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>32</width>
+             <height>16</height>
+            </size>
+           </property>
+           <property name="cursor">
+            <cursorShape>PointingHandCursor</cursorShape>
+           </property>
+           <property name="focusPolicy">
+            <enum>Qt::FocusPolicy::StrongFocus</enum>
+           </property>
+           <property name="toolTip">
+            <string>Marker frequency (Hz)</string>
+           </property>
+           <property name="text">
+            <string>Hz</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_3">
+           <property name="orientation">
+            <enum>Qt::Orientation::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="wSetReference">
+           <property name="maximumSize">
+            <size>
+             <width>24</width>
+             <height>24</height>
+            </size>
+           </property>
+           <property name="toolTip">
+            <string>Set marker as reference (index 0)</string>
+           </property>
+           <property name="text">
+            <string>0</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="wCenterFrequency">
+           <property name="maximumSize">
+            <size>
+             <width>24</width>
+             <height>24</height>
+            </size>
+           </property>
+           <property name="toolTip">
+            <string>Set marker as reference (index 0)</string>
+           </property>
+           <property name="text">
+            <string>C</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="ClickableLabel" name="wMarkerColor">
+           <property name="minimumSize">
+            <size>
+             <width>16</width>
+             <height>16</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16</width>
+             <height>16</height>
+            </size>
+           </property>
+           <property name="toolTip">
+            <string>Current marker color (click to change)</string>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="wShowMarker">
+           <property name="toolTip">
+            <string>Show this marker</string>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="WMarkerOptionsLayout">
          <item>
           <widget class="QLabel" name="timeLabel">
            <property name="minimumSize">

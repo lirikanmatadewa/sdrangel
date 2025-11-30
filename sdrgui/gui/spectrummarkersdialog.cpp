@@ -1,4 +1,4 @@
-///////////////////////////////////////////////////////////////////////////////////
+﻿///////////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2021-2022 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 // Copyright (C) 2022-2023 Jon Beniston, M7RCE <jon@beniston.com>                //
 //                                                                               //
@@ -62,7 +62,10 @@ SpectrumMarkersDialog::SpectrumMarkersDialog(
 
     ui->wMarkerFrequency->setColorMapper(ColorMapper(ColorMapper::GrayGold));
     ui->wMarkerFrequency->setValueRange(false, 12, -999999999999L, 999999999999L);
-    ui->wMarker->setMaximum(m_waterfallMarkers.size() - 1);
+    /*ui->wMarker->setMaximum(m_waterfallMarkers.size() - 1);*/
+    repopulateWMarkerCombo();
+    ui->wMarker->setCurrentIndex(m_waterfallMarkerIndex);
+
     ui->aMarkerFrequency->setColorMapper(ColorMapper(ColorMapper::GrayGold));
     ui->aMarkerFrequency->setValueRange(false, 12, -999999999999L, 999999999999L);
     ui->aMarker->setMaximum(m_annotationMarkers.size() - 1);
@@ -77,7 +80,7 @@ SpectrumMarkersDialog::SpectrumMarkersDialog(
     displayAnnotationMarker();
     DialPopup::addPopupsToChildDials(this);
 
-    // ==== Hook tombol Peak / Next Peak (optional � hanya jika ada di .ui) ====
+    // ==== Hook tombol Peak / Next Peak (optional – hanya jika ada di .ui) ====
     if (auto btn = this->findChild<QAbstractButton*>("peakButton")) {
         connect(btn, &QAbstractButton::clicked, this, [this] {
             emit requestMarkerPeak(m_histogramMarkerIndex);
@@ -88,6 +91,41 @@ SpectrumMarkersDialog::SpectrumMarkersDialog(
             emit requestMarkerNextPeak(m_histogramMarkerIndex);
         });
     }
+
+    // 1
+    ui->markerFrequency->hide();
+    ui->markerFrequencyLabel->hide();
+    ui->markerFrequencyUnits->hide();
+    ui->markerColor->hide();
+
+    // 2
+    ui->powerLabel->hide();
+    ui->powerHoldReset->hide();
+    ui->powerMode->hide();
+    m_histogramMarkers.back().m_markerType =(SpectrumHistogramMarker::SpectrumMarkerType)1;
+    ui->powerMode->setCurrentIndex((int)m_histogramMarkers[m_histogramMarkerIndex].m_markerType);
+    ui->findPeaks->hide();
+
+    // 3
+    ui->showSelect->hide();
+    m_markersDisplay = (SpectrumSettings::MarkersDisplay)3;
+    ui->showSelect->setCurrentIndex((int)m_markersDisplay);
+    ui->showLabel->hide();
+
+    // waterfall
+    // 1
+    ui->wShowMarker->hide();
+    ui->wMarkerFrequencyLabel->hide();
+    ui->wMarkerFrequency->hide();
+    ui->wMarkerFrequencyUnits->hide();
+    ui->wCenterFrequency->hide();
+    ui->timeLabel->hide();
+    ui->timeText->hide();
+    ui->timeFine->hide();
+    ui->timeCoarse->hide();
+    ui->timeExpText->hide();
+    ui->timeExp->hide();
+    ui->wMarkerColor->hide();
 }
 
 SpectrumMarkersDialog::~SpectrumMarkersDialog()
@@ -166,7 +204,7 @@ void SpectrumMarkersDialog::displayWaterfallMarker()
     ui->timeCoarse->blockSignals(true);
     ui->timeExp->blockSignals(true);
 
-    if (m_waterfallMarkers.size() == 0)
+    /*if (m_waterfallMarkers.size() == 0)
     {
         ui->wMarker->setEnabled(false);
         ui->wMarkerFrequency->setEnabled(false);
@@ -197,7 +235,54 @@ void SpectrumMarkersDialog::displayWaterfallMarker()
         m_waterfallMarkers[m_waterfallMarkerIndex].m_markerColor.getRgb(&r, &g, &b, &a);
         ui->wMarkerColor->setStyleSheet(tr("QLabel { background-color : rgb(%1,%2,%3); }").arg(r).arg(g).arg(b));
         displayTime(m_waterfallMarkers[m_waterfallMarkerIndex].m_time);
+    }*/
+
+    if (m_waterfallMarkers.size() == 0)
+    {
+        ui->wMarker->setEnabled(false);
+        ui->wMarkerFrequency->setEnabled(false);
+        ui->timeCoarse->setEnabled(false);
+        ui->timeFine->setEnabled(false);
+        ui->timeExp->setEnabled(false);
+        ui->wShowMarker->setEnabled(false);
+
+        ui->wMarker->blockSignals(true);
+        ui->wMarker->clear();
+        ui->wMarker->setCurrentIndex(-1);
+        ui->wMarker->blockSignals(false);
+
+        ui->wMarkerText->setText("-");
+        ui->timeCoarse->setValue(0);
+        ui->timeFine->setValue(0);
+        ui->timeText->setText("0.000");
+        ui->timeExp->setValue(0);
+        ui->timeExpText->setText("e+0");
     }
+    else
+    {
+        ui->wMarker->setEnabled(true);
+        ui->wMarkerFrequency->setEnabled(true);
+        ui->timeCoarse->setEnabled(true);
+        ui->timeFine->setEnabled(true);
+        ui->timeExp->setEnabled(true);
+        ui->wShowMarker->setEnabled(true);
+
+        // pastikan jumlah item combobox = jumlah marker
+        if (ui->wMarker->count() != m_waterfallMarkers.size()) {
+            repopulateWMarkerCombo();
+        }
+
+        ui->wMarker->setCurrentIndex(m_waterfallMarkerIndex);
+        ui->wMarkerText->setText(tr("%1").arg(m_waterfallMarkerIndex));
+
+        ui->wMarkerFrequency->setValue(m_waterfallMarkers[m_waterfallMarkerIndex].m_frequency);
+        int r, g, b, a;
+        m_waterfallMarkers[m_waterfallMarkerIndex].m_markerColor.getRgb(&r, &g, &b, &a);
+        ui->wMarkerColor->setStyleSheet(
+            tr("QLabel { background-color : rgb(%1,%2,%3); }").arg(r).arg(g).arg(b));
+        displayTime(m_waterfallMarkers[m_waterfallMarkerIndex].m_time);
+    }
+
 
     ui->wMarkerFrequency->blockSignals(false);
     ui->wCenterFrequency->blockSignals(false);
@@ -538,15 +623,19 @@ void SpectrumMarkersDialog::on_wShowMarker_clicked(bool clicked)
     m_waterfallMarkers[m_waterfallMarkerIndex].m_show = clicked;
 }
 
-void SpectrumMarkersDialog::on_wMarker_valueChanged(int value)
+void SpectrumMarkersDialog::on_wMarker_currentIndexChanged(int index)
 {
     if (m_waterfallMarkers.size() == 0) {
         return;
     }
+    if (index < 0 || index >= m_waterfallMarkers.size()) {
+        return;
+    }
 
-    m_waterfallMarkerIndex = value;
+    m_waterfallMarkerIndex = index;
     displayWaterfallMarker();
 }
+
 
 void SpectrumMarkersDialog::on_wSetReference_clicked()
 {
@@ -575,12 +664,14 @@ void SpectrumMarkersDialog::on_wMarkerAdd_clicked()
     m_waterfallMarkers.back().m_frequency = m_centerFrequency;
     m_waterfallMarkers.back().m_time = m_time;
     m_waterfallMarkerIndex = m_waterfallMarkers.size() - 1;
-    ui->wMarker->setMaximum(m_waterfallMarkers.size() - 1);
-    ui->wMarker->setMinimum(0);
+
+    repopulateWMarkerCombo();
+    ui->wMarker->setCurrentIndex(m_waterfallMarkerIndex);
     displayWaterfallMarker();
 
     emit updateWaterfall();
 }
+
 
 void SpectrumMarkersDialog::on_wMarkerDel_clicked()
 {
@@ -589,13 +680,25 @@ void SpectrumMarkersDialog::on_wMarkerDel_clicked()
     }
 
     m_waterfallMarkers.removeAt(m_waterfallMarkerIndex);
-    m_waterfallMarkerIndex = m_waterfallMarkerIndex < m_waterfallMarkers.size() ?
-        m_waterfallMarkerIndex : m_waterfallMarkerIndex - 1;
-    ui->wMarker->setMaximum(m_waterfallMarkers.size() - 1);
-    displayWaterfallMarker();
+    if (m_waterfallMarkers.size() == 0) {
+        m_waterfallMarkerIndex = 0;
+    }
+    else if (m_waterfallMarkerIndex >= m_waterfallMarkers.size()) {
+        m_waterfallMarkerIndex = m_waterfallMarkers.size() - 1;
+    }
 
+    repopulateWMarkerCombo();
+    if (m_waterfallMarkers.size() > 0) {
+        ui->wMarker->setCurrentIndex(m_waterfallMarkerIndex);
+    }
+    else {
+        ui->wMarker->setCurrentIndex(-1);
+    }
+
+    displayWaterfallMarker();
     emit updateWaterfall();
 }
+
 
 void SpectrumMarkersDialog::on_aMarkerToggleFrequency_toggled(bool checked)
 {
@@ -893,10 +996,24 @@ void SpectrumMarkersDialog::updateHistogramMarkersDisplay()
 
 void SpectrumMarkersDialog::updateWaterfallMarkersDisplay()
 {
-    m_waterfallMarkerIndex = std::max(m_waterfallMarkerIndex, (int)m_waterfallMarkers.size() - 1);
-    ui->wMarker->setMaximum(m_waterfallMarkers.size() - 1);
+    if (m_waterfallMarkers.isEmpty()) {
+        m_waterfallMarkerIndex = 0;
+    }
+    else if (m_waterfallMarkerIndex >= m_waterfallMarkers.size()) {
+        m_waterfallMarkerIndex = m_waterfallMarkers.size() - 1;
+    }
+
+    repopulateWMarkerCombo();
+    if (!m_waterfallMarkers.isEmpty()) {
+        ui->wMarker->setCurrentIndex(m_waterfallMarkerIndex);
+    }
+    else {
+        ui->wMarker->setCurrentIndex(-1);
+    }
+
     displayWaterfallMarker();
 }
+
 
 void SpectrumMarkersDialog::on_deltaModeRadio_toggled(bool checked)
 {
@@ -938,4 +1055,17 @@ void SpectrumMarkersDialog::repopulateMarkerCombo()
         ui->marker->addItem(QString::number(i));
     }
     ui->marker->blockSignals(false);
+}
+
+
+void SpectrumMarkersDialog::repopulateWMarkerCombo()
+{
+    ui->wMarker->blockSignals(true);
+    ui->wMarker->clear();
+
+    for (int i = 0; i < m_waterfallMarkers.size(); ++i) {
+        ui->wMarker->addItem(QString::number(i));
+    }
+
+    ui->wMarker->blockSignals(false);
 }

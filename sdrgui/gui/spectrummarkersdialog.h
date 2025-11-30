@@ -77,6 +77,7 @@ private:
 
     // marker
     void repopulateMarkerCombo();
+    void repopulateWMarkerCombo();
 
 private slots:
     void on_markerFrequency_changed(qint64 value);
@@ -99,7 +100,8 @@ private slots:
     void on_wCenterFrequency_clicked();
     void on_wMarkerColor_clicked();
     void on_wShowMarker_clicked(bool clicked);
-    void on_wMarker_valueChanged(int value);
+    //void on_wMarker_valueChanged(int value);
+    void on_wMarker_currentIndexChanged(int index);
     void on_wSetReference_clicked();
     void on_wMarkerAdd_clicked();
     void on_wMarkerDel_clicked();

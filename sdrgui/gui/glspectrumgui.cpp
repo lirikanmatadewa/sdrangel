@@ -1894,7 +1894,7 @@ void GLSpectrumGUI::rebuildWaterfallMarkersTable()
 
 		auto* itT = new QTableWidgetItem();
 		itT->setFlags(Qt::ItemIsEnabled);
-		itT->setData(HistUnitsDelegate::UNITS_ROLE, " s");
+		itT->setData(HistUnitsDelegate::UNITS_ROLE, " M");
 		itT->setData(HistUnitsDelegate::PRECISION_ROLE, 3);
 
 		m_waterfallMarkersTable->setItem(0, 1 + 2 * i, itF);
@@ -1938,10 +1938,10 @@ void GLSpectrumGUI::refreshWaterfallMarkersTableData()
 		if (auto* itT = m_waterfallMarkersTable->item(0, 1 + 2 * i + 1)) {
 			double tDisplay = 0.0;
 			if (i == 0) {
-				tDisplay = mk.at(i).m_time; // absolute time
+				tDisplay = mk.at(i).m_time * 1000.0; // absolute time
 			}
 			else {
-				tDisplay = mk.at(i).m_time - mk.at(0).m_time; // delta terhadap M1
+				tDisplay = mk.at(i).m_time - mk.at(0).m_time * 1000.0; // delta terhadap M1
 			}
 
 			itT->setData(Qt::DisplayRole, QVariant(tDisplay));
