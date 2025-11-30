@@ -80,7 +80,7 @@ GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
 	// marker
 	m_histMarkersTable = new SpectrumMeasurementsTable();
 	m_histMarkersTable->setObjectName("histMarkersTable");
-	m_histMarkersTable->setRowCount(1);   
+	m_histMarkersTable->setRowCount(1);
 	m_histMarkersTable->setColumnCount(1);
 	m_histMarkersTable->setShowGrid(true);
 	m_histMarkersTable->setAlternatingRowColors(true);
@@ -94,7 +94,25 @@ GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
 	ui->verticalLayout->addWidget(m_histMarkersTable);
 	m_histMarkersTable->setVisible(false);
 
+	// === NEW: Waterfall markers table ===
+	m_waterfallMarkersTable = new SpectrumMeasurementsTable();
+	m_waterfallMarkersTable->setObjectName("waterfallMarkersTable");
+	m_waterfallMarkersTable->setRowCount(1);
+	m_waterfallMarkersTable->setColumnCount(1);
+	m_waterfallMarkersTable->setShowGrid(true);
+	m_waterfallMarkersTable->setAlternatingRowColors(true);
+	m_waterfallMarkersTable->verticalHeader()->setVisible(false);
+	m_waterfallMarkersTable->horizontalHeader()->setStretchLastSection(true);
+	m_waterfallMarkersTable->horizontalHeader()->setSectionsMovable(true);
+
+	m_waterfallMarkersTable->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+	m_waterfallMarkersTable->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
+
+	ui->verticalLayout->addWidget(m_waterfallMarkersTable);
+	m_waterfallMarkersTable->setVisible(false);
+
 	rebuildHistogramMarkersTable();
+	rebuildWaterfallMarkersTable();
 
 	// Use the custom flow layout for the 3 main horizontal layouts (lines)
 	ui->verticalLayout->removeItem(ui->Line7Layout);
@@ -171,6 +189,7 @@ void GLSpectrumGUI::setBuddies(SpectrumVis* spectrumVis, GLSpectrum* glSpectrum)
 
 	// marker 
 	rebuildHistogramMarkersTable();
+	rebuildWaterfallMarkersTable();
 
 	applySettings();
 
@@ -208,7 +227,7 @@ bool GLSpectrumGUI::deserialize(const QByteArray& data)
 
 		// marker
 		rebuildHistogramMarkersTable();
-		
+		rebuildWaterfallMarkersTable();
 
 		return true;
 	}
@@ -475,7 +494,7 @@ void GLSpectrumGUI::applySpectrumSettings()
 
 	// marker
 	rebuildHistogramMarkersTable();
-	
+	rebuildWaterfallMarkersTable();
 
 }
 
@@ -629,6 +648,7 @@ void GLSpectrumGUI::on_markers_clicked(bool checked)
 			if (!m_glSpectrum) return;
 			m_glSpectrum->setHistogramDeltaMode(on);
 			rebuildHistogramMarkersTable();
+			rebuildWaterfallMarkersTable();
 			refreshHistogramMarkersTableData();
 		});
 
@@ -637,24 +657,21 @@ void GLSpectrumGUI::on_markers_clicked(bool checked)
 		cb->setChecked(m_glSpectrum && m_glSpectrum->getHistogramDeltaMode());
 	}
 
-	connect(m_markersDialog, &SpectrumMarkersDialog::followPeakRequested,
-		this, [this](int idx) {
-			if (!m_glSpectrum) return;
-			if (auto* v = m_glSpectrum->getSpectrumView()) {
-				v->setHistogramMarkerFollowPeak(idx, 1); // 1 = peak tertinggi
-			}
-		});
+	// ==== Peak actions ====
+	// Peak: minta peak tertinggi yg available (order=1; View akan menghindari peak yg sdg dipakai marker lain)
+	connect(m_markersDialog, &SpectrumMarkersDialog::requestMarkerPeak, this,
+		[this](int idx) {
+		if (!m_glSpectrum) return;
+			m_glSpectrum->setHistogramMarkerFollowPeak(idx, 1);
+	});
 
-	connect(m_markersDialog, &SpectrumMarkersDialog::nextPeakRequested,
-		this, [this](int idx) {
+	// Next Peak: minta peak berikutnya untuk marker tsb.
+	// Hint: kita kirim order=0 sebagai "NEXT" (View akan membaca state dan maju 1 order).
+	connect(m_markersDialog, &SpectrumMarkersDialog::requestMarkerNextPeak, this,
+		[this](int idx) {
 			if (!m_glSpectrum) return;
-			if (auto* v = m_glSpectrum->getSpectrumView()) {
-				// ambil order sekarang, lalu ++
-				int cur = v->getHistogramMarkerFollowPeakOrder(idx);
-				if (cur < 1) cur = 1;
-				v->setHistogramMarkerFollowPeak(idx, cur + 1);
-			}
-		});
+				m_glSpectrum->setHistogramMarkerFollowPeak(idx, 0);
+	});
 
 }
 
@@ -1142,6 +1159,9 @@ bool GLSpectrumGUI::handleMessage(const Message& message)
 			refreshHistogramMarkersTableData();
 		}
 		
+		if (m_markersDialog) {
+			m_markersDialog->updateWaterfallMarkersDisplay();
+		}
 		return true;
 	}
 	// marker
@@ -1153,6 +1173,18 @@ bool GLSpectrumGUI::handleMessage(const Message& message)
 	}
 	else if (GLSpectrumView::MsgReportWaterfallMarkersChange::match(message))
 	{
+		const int expectedCols =
+			1 + 2 * static_cast<int>(m_glSpectrum->getWaterfallMarkers().size());
+
+		if (m_waterfallMarkersTable) {
+			if (m_waterfallMarkersTable->columnCount() != expectedCols) {
+				rebuildWaterfallMarkersTable();
+			}
+			else {
+				refreshWaterfallMarkersTableData();
+			}
+		}
+
 		if (m_markersDialog) {
 			m_markersDialog->updateWaterfallMarkersDisplay();
 		}
@@ -1231,6 +1263,9 @@ void GLSpectrumGUI::updateHistogramMarkers()
 {
 	if (m_glSpectrum) {
 		m_glSpectrum->updateHistogramMarkers();
+
+		rebuildHistogramMarkersTable();
+		refreshHistogramMarkersTableData();
 	}
 }
 
@@ -1238,6 +1273,9 @@ void GLSpectrumGUI::updateWaterfallMarkers()
 {
 	if (m_glSpectrum) {
 		m_glSpectrum->updateWaterfallMarkers();
+
+		rebuildWaterfallMarkersTable();
+		refreshWaterfallMarkersTableData();
 	}
 }
 
@@ -1685,7 +1723,7 @@ void GLSpectrumGUI::rebuildHistogramMarkersTable()
 	const bool delta = m_glSpectrum && m_glSpectrum->getHistogramDeltaMode();
 	QStringList hdr; hdr << "Histogram Markers";
 	for (int i = 0; i < N; ++i) {
-		hdr << (delta && i > 0 ? QString("ΔM%1 (F)").arg(i + 1)
+		hdr << (delta && i > 0 ? QString("ΔM%1 (F) to ΔM1").arg(i + 1)
 			: QString("M%1 (F)").arg(i + 1));
 		hdr << QString("M%1 (P)").arg(i + 1);
 	}
@@ -1757,15 +1795,25 @@ void GLSpectrumGUI::refreshHistogramMarkersTableData()
 	const bool delta = m_glSpectrum && m_glSpectrum->getHistogramDeltaMode();
 	for (int i = 0; i < N; ++i) {
 		qint64 fDisplay = mk.at(i).m_frequency; // absolut default
+
+		// === PERUBAHAN DI SINI ===
+		// Dulu: delta terhadap marker sebelumnya (i-1)
+		// if (delta && i > 0) {
+		//     fDisplay = mk.at(i).m_frequency - mk.at(i - 1).m_frequency;
+		// }
+
+		// Sekarang: delta terhadap M1 (index 0)
 		if (delta && i > 0) {
-			fDisplay = mk.at(i).m_frequency - mk.at(i - 1).m_frequency;
+			fDisplay = mk.at(i).m_frequency - mk.at(0).m_frequency;
 		}
+		// === END PERUBAHAN ===
+
 		if (auto* itF = m_histMarkersTable->item(0, 1 + 2 * i)) {
 			itF->setData(Qt::DisplayRole, QVariant(static_cast<qlonglong>(fDisplay)));
 			itF->setTextAlignment(Qt::AlignCenter);
 		}
 
-		// --- Power (P) tetap seperti sekarang ---
+		// Power (P) tetap seperti sebelumnya
 		if (auto* itP = m_histMarkersTable->item(0, 1 + 2 * i + 1)) {
 			const double liveP = static_cast<double>(m_glSpectrum->getHistogramLivePowerAtIndex(i));
 			if (std::isfinite(liveP)) {
@@ -1781,5 +1829,123 @@ void GLSpectrumGUI::refreshHistogramMarkersTableData()
 			itP->setTextAlignment(Qt::AlignCenter);
 		}
 	}
+}
 
+void GLSpectrumGUI::rebuildWaterfallMarkersTable()
+{
+	if (!m_glSpectrum || !m_waterfallMarkersTable) return;
+
+	const auto& mk = m_glSpectrum->getWaterfallMarkers();
+	const int N = mk.size();
+	const int cols = 1 + 2 * N; // [Title] + (F,T) per marker
+
+	m_waterfallMarkersTable->setVisible(N > 0);
+	if (N == 0) {
+		m_waterfallMarkersTable->clear();
+		m_waterfallMarkersTable->setColumnCount(0);
+		m_waterfallMarkersTable->setRowCount(0);
+		return;
+	}
+
+	m_waterfallMarkersTable->clear();
+	m_waterfallMarkersTable->setColumnCount(cols);
+	m_waterfallMarkersTable->setRowCount(1);
+
+	// Header labels: M1 = F + Time absolute, M2+ = F absolute + ΔTime vs M1
+	QStringList hdr;
+	hdr << "Waterfall Markers";
+	for (int i = 0; i < N; ++i) {
+		hdr << QString("M%1 (F)").arg(i + 1);
+		if (i == 0)
+			hdr << QString("M1 (T)");
+		else
+			hdr << QString("ΔM%1 (T) to ΔM1").arg(i + 1);
+	}
+	m_waterfallMarkersTable->setHorizontalHeaderLabels(hdr);
+
+	for (int c = 0; c < cols; ++c) {
+		m_waterfallMarkersTable->setHorizontalHeaderItem(c, new QTableWidgetItem(hdr.value(c)));
+	}
+
+	// Header colors: sama dengan warna marker (fallback ke palette lokal bila belum di-set)
+	for (int i = 0; i < N; ++i) {
+		QColor c = mk.at(i).m_markerColor;
+		if (!c.isValid()) c = markerHeaderColor(i);
+
+		if (auto* hF = m_waterfallMarkersTable->horizontalHeaderItem(1 + 2 * i)) {
+			hF->setBackground(QBrush(c));
+			hF->setForeground(QBrush(Qt::black));
+		}
+		if (auto* hT = m_waterfallMarkersTable->horizontalHeaderItem(1 + 2 * i + 1)) {
+			hT->setBackground(QBrush(c));
+			hT->setForeground(QBrush(Qt::black));
+		}
+	}
+
+	// Kolom 0 = judul baris
+	m_waterfallMarkersTable->setItem(0, 0, new QTableWidgetItem("Waterfall Marker"));
+
+	// Siapkan cell-item + units untuk delegate
+	for (int i = 0; i < N; ++i) {
+		auto* itF = new QTableWidgetItem();
+		itF->setFlags(Qt::ItemIsEnabled);
+		itF->setData(HistUnitsDelegate::UNITS_ROLE, "Hz");
+		itF->setData(HistUnitsDelegate::PRECISION_ROLE, 0);
+
+		auto* itT = new QTableWidgetItem();
+		itT->setFlags(Qt::ItemIsEnabled);
+		itT->setData(HistUnitsDelegate::UNITS_ROLE, " s");
+		itT->setData(HistUnitsDelegate::PRECISION_ROLE, 3);
+
+		m_waterfallMarkersTable->setItem(0, 1 + 2 * i, itF);
+		m_waterfallMarkersTable->setItem(0, 1 + 2 * i + 1, itT);
+	}
+
+	// Delegate untuk seluruh kolom (sama seperti histogram)
+	for (int c = 0; c < cols; ++c) {
+		m_waterfallMarkersTable->setItemDelegateForColumn(c, new HistUnitsDelegate(m_waterfallMarkersTable));
+	}
+
+	// Isi data
+	refreshWaterfallMarkersTableData();
+	m_waterfallMarkersTable->resizeColumnsToContents();
+
+	int h = m_waterfallMarkersTable->horizontalHeader()->height()
+		+ (m_waterfallMarkersTable->rowCount() ? m_waterfallMarkersTable->rowHeight(0) : 0)
+		+ 6;
+	m_waterfallMarkersTable->setFixedHeight(h);
+}
+
+void GLSpectrumGUI::refreshWaterfallMarkersTableData()
+{
+	if (!m_glSpectrum || !m_waterfallMarkersTable) return;
+
+	const auto& mk = m_glSpectrum->getWaterfallMarkers();
+	const int N = static_cast<int>(mk.size());
+	if (N == 0) {
+		m_waterfallMarkersTable->setVisible(false);
+		return;
+	}
+
+	for (int i = 0; i < N; ++i) {
+		// Frequency: selalu absolut
+		if (auto* itF = m_waterfallMarkersTable->item(0, 1 + 2 * i)) {
+			itF->setData(Qt::DisplayRole, QVariant(static_cast<qlonglong>(mk.at(i).m_frequency)));
+			itF->setTextAlignment(Qt::AlignCenter);
+		}
+
+		// Time: M1 absolute, M2+ delta vs M1
+		if (auto* itT = m_waterfallMarkersTable->item(0, 1 + 2 * i + 1)) {
+			double tDisplay = 0.0;
+			if (i == 0) {
+				tDisplay = mk.at(i).m_time; // absolute time
+			}
+			else {
+				tDisplay = mk.at(i).m_time - mk.at(0).m_time; // delta terhadap M1
+			}
+
+			itT->setData(Qt::DisplayRole, QVariant(tDisplay));
+			itT->setTextAlignment(Qt::AlignCenter);
+		}
+	}
 }

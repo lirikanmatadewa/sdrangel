@@ -76,6 +76,18 @@ SpectrumMarkersDialog::SpectrumMarkersDialog(
     displayWaterfallMarker();
     displayAnnotationMarker();
     DialPopup::addPopupsToChildDials(this);
+
+    // ==== Hook tombol Peak / Next Peak (optional – hanya jika ada di .ui) ====
+    if (auto btn = this->findChild<QAbstractButton*>("peakButton")) {
+        connect(btn, &QAbstractButton::clicked, this, [this] {
+            emit requestMarkerPeak(m_histogramMarkerIndex);
+        });
+    }
+    if (auto btn = this->findChild<QAbstractButton*>("nextPeakButton")) {
+        connect(btn, &QAbstractButton::clicked, this, [this] {
+            emit requestMarkerNextPeak(m_histogramMarkerIndex);
+        });
+    }
 }
 
 SpectrumMarkersDialog::~SpectrumMarkersDialog()
@@ -382,6 +394,8 @@ void SpectrumMarkersDialog::on_markerAdd_clicked()
     repopulateMarkerCombo();
     ui->marker->setCurrentIndex(m_histogramMarkerIndex);
     displayHistogramMarker();
+
+    emit updateHistogram();
 }
 
 void SpectrumMarkersDialog::on_markerDel_clicked()
@@ -396,6 +410,9 @@ void SpectrumMarkersDialog::on_markerDel_clicked()
     repopulateMarkerCombo();
     ui->marker->setCurrentIndex(m_histogramMarkerIndex);
     displayHistogramMarker();
+
+    emit updateHistogram();
+
 }
 
 void SpectrumMarkersDialog::on_powerMode_currentIndexChanged(int index)
@@ -561,6 +578,8 @@ void SpectrumMarkersDialog::on_wMarkerAdd_clicked()
     ui->wMarker->setMaximum(m_waterfallMarkers.size() - 1);
     ui->wMarker->setMinimum(0);
     displayWaterfallMarker();
+
+    emit updateWaterfall();
 }
 
 void SpectrumMarkersDialog::on_wMarkerDel_clicked()
@@ -574,6 +593,8 @@ void SpectrumMarkersDialog::on_wMarkerDel_clicked()
         m_waterfallMarkerIndex : m_waterfallMarkerIndex - 1;
     ui->wMarker->setMaximum(m_waterfallMarkers.size() - 1);
     displayWaterfallMarker();
+
+    emit updateWaterfall();
 }
 
 void SpectrumMarkersDialog::on_aMarkerToggleFrequency_toggled(bool checked)
@@ -883,46 +904,30 @@ void SpectrumMarkersDialog::on_deltaModeRadio_toggled(bool checked)
     emit deltaModeChanged(checked);
 }
 
-void SpectrumMarkersDialog::on_pushButton_2_clicked() // Peak
+void SpectrumMarkersDialog::on_pushButton_2_clicked()
 {
-    if (m_histogramMarkers.size() == 0) return;
-
-    // Paksa Find Peaks ON agar algoritma peaks berjalan di view
-    if (!m_findPeaks) {
-        m_findPeaks = true;
-        if (auto* cb = this->findChild<QCheckBox*>("findPeaks")) cb->setChecked(true);
+    // Sesi Peak one-shot -> pastikan tidak realtime
+    m_findPeaks = false;
+    if (auto sw = this->findChild<QToolButton*>("findPeaks")) { // ButtonSwitch turunan QToolButton
+        sw->blockSignals(true);
+        sw->setChecked(false);
+        sw->blockSignals(false);
     }
-
-    // Pastikan marker mode mengikuti power live (bukan manual)
-    m_histogramMarkers[m_histogramMarkerIndex].m_markerType =
-        SpectrumHistogramMarker::SpectrumMarkerTypePower;
-
-    // Minta view: ikuti peak #1 (peak tertinggi) untuk marker terpilih
-    emit followPeakRequested(m_histogramMarkerIndex);
-
-    // Minta refresh
-    displayHistogramMarker();
-    emit updateHistogram();
+    emit requestMarkerPeak(m_histogramMarkerIndex);
 }
 
-void SpectrumMarkersDialog::on_pushButton_clicked() // Next Peak
+void SpectrumMarkersDialog::on_pushButton_clicked()
 {
-    if (m_histogramMarkers.size() == 0) return;
-
-    if (!m_findPeaks) {
-        m_findPeaks = true;
-        if (auto* cb = this->findChild<QCheckBox*>("findPeaks")) cb->setChecked(true);
+    // Next Peak, juga one-shot
+    m_findPeaks = false;
+    if (auto sw = this->findChild<QToolButton*>("findPeaks")) {
+        sw->blockSignals(true);
+        sw->setChecked(false);
+        sw->blockSignals(false);
     }
-
-    m_histogramMarkers[m_histogramMarkerIndex].m_markerType =
-        SpectrumHistogramMarker::SpectrumMarkerTypePower;
-
-    // Minta view: naik ke peak berikutnya untuk marker terpilih
-    emit nextPeakRequested(m_histogramMarkerIndex);
-
-    displayHistogramMarker();
-    emit updateHistogram();
+    emit requestMarkerNextPeak(m_histogramMarkerIndex);
 }
+
 
 void SpectrumMarkersDialog::repopulateMarkerCombo()
 {

@@ -140,6 +140,9 @@ signals:
     void updateAnnotations();
     void updateMarkersDisplay();
 
+    void requestMarkerPeak(int markerIndex);
+    void requestMarkerNextPeak(int markerIndex);
+
     // marker
     void deltaModeChanged(bool on);
 

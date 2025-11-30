@@ -276,6 +276,7 @@ private:
 
     // marker
     enum class DragTarget { None, Histo, Wat, AnnoStart, AnnoCenter };
+    QVector<int> m_markerLastPeakOrder;
 
     QHash<int, int> m_markerFollowPeakOrder;
 

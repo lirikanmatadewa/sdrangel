@@ -115,10 +115,15 @@ private:
 
 	// Mirror of m_peakTable but for histogram markers:
 	SpectrumMeasurementsTable* m_histMarkersTable = nullptr;
+	// Mirror of markers table for waterfall markers:
+	SpectrumMeasurementsTable* m_waterfallMarkersTable = nullptr;
 
 	void rebuildHistogramMarkersTable();
 	void refreshHistogramMarkersTableData();
+	void rebuildWaterfallMarkersTable();
+	void refreshWaterfallMarkersTableData();
 	QColor markerHeaderColor(int idx) const;
+
 
 protected:
 	bool eventFilter(QObject* obj, QEvent* ev) override;

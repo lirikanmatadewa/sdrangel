@@ -60,6 +60,24 @@ MESSAGE_CLASS_DEFINITION(GLSpectrumView::MsgReportLivePowersTick, Message)
 const float GLSpectrumView::m_maxFrequencyZoom = 10.0f;
 const float GLSpectrumView::m_annotationMarkerHeight = 20.0f;
 
+static QColor getStaticMarkerColor(int index)
+{
+    static QVector<QColor> palette = {
+        QColor("#8ecae6"), // soft blue
+        QColor("#ffb703"), // soft yellow
+        QColor("#fb8500"), // soft orange
+        QColor("#219ebc"), // teal
+        QColor("#7bdff2"), // light cyan
+        QColor("#98f5e1"), // mint
+        QColor("#bde0fe"), // baby blue
+        QColor("#ffc8dd"), // light pink
+        QColor("#ffafcc"), // rose
+        QColor("#cdb4db")  // lavender
+    };
+
+    return palette[index % palette.size()];
+}
+
 GLSpectrumView::GLSpectrumView(QWidget* parent) :
     QOpenGLWidget(parent),
     m_markersDisplay(SpectrumSettings::MarkersDisplaySpectrum),
@@ -2202,7 +2220,12 @@ void GLSpectrumView::drawSpectrumMarkers()
                 1, (float) ypoint.y()
             };
             m_glShaderSimple.drawSegments(m_glHistogramBoxMatrix, lineColor, v, 2);
+            
+            // replace color
+            m_histogramMarkers[i].m_markerColor = getStaticMarkerColor(i);
+
             QColor textColor = m_histogramMarkers.at(i).m_markerColor;
+
             // text
             if (i == 0)
             {
@@ -2317,25 +2340,25 @@ void GLSpectrumView::drawSpectrumMarkers()
                     m_histogramRect);*/
                 
                 // marker
-                drawTextOverlay(
-                    m_histogramMarkers.at(i).m_frequencyStr,
-                    textColor,
-                    m_textOverlayFont,
-                    m_histogramMarkers.at(i).m_point.x()* m_histogramRect.width(),
-                    (m_invertedWaterfall || (m_waterfallHeight == 0)) ? m_histogramRect.height() : 0,
-                    m_histogramMarkers.at(i).m_point.x() < 0.5f,
-                    !m_invertedWaterfall && (m_waterfallHeight != 0),
-                    m_histogramRect);
+                //drawTextOverlay(
+                //    m_histogramMarkers.at(i).m_frequencyStr,
+                //    textColor,
+                //    m_textOverlayFont,
+                //    m_histogramMarkers.at(i).m_point.x()* m_histogramRect.width(),
+                //    (m_invertedWaterfall || (m_waterfallHeight == 0)) ? m_histogramRect.height() : 0,
+                //    m_histogramMarkers.at(i).m_point.x() < 0.5f,
+                //    !m_invertedWaterfall && (m_waterfallHeight != 0),
+                //    m_histogramRect);
 
-                drawTextOverlay(
-                    powerStr,
-                    textColor,
-                    m_textOverlayFont,
-                    0,
-                    ypoint.y()* m_histogramRect.height(),
-                    true,
-                    ypoint.y() < 0.5f,
-                    m_histogramRect);
+                //drawTextOverlay(
+                //    powerStr,
+                //    textColor,
+                //    m_textOverlayFont,
+                //    0,
+                //    ypoint.y()* m_histogramRect.height(),
+                //    true,
+                //    ypoint.y() < 0.5f,
+                //    m_histogramRect);
 
                 {
                     QString idx = QStringLiteral("M%1").arg(i + 1);
@@ -5970,34 +5993,142 @@ int GLSpectrumView::getHistogramMarkerFollowPeakOrder(int idx) const
     return m_markerFollowPeakOrder.value(idx, 0); // 0 = tidak follow peak spesifik
 }
 
+//void GLSpectrumView::setHistogramMarkerFollowPeak(int idx, int order)
+//{
+//    if (idx < 0 || idx >= m_histogramMarkers.size()) return;
+//    if (order < 1) order = 1;
+//
+//    // Pastikan mode Find Peaks aktif & marker ini mengikuti power (live)
+//    m_histogramFindPeaks = true;
+//    m_histogramMarkers[idx].m_markerType = SpectrumHistogramMarker::SpectrumMarkerTypePower;
+//
+//    // Kumpulkan order yang sudah dipakai marker lain
+//    QSet<int> used;
+//    for (auto it = m_markerFollowPeakOrder.constBegin(); it != m_markerFollowPeakOrder.constEnd(); ++it) {
+//        if (it.key() != idx) used.insert(it.value());
+//    }
+//
+//    // Kalau order yang diminta bentrok → eskalasi ke order terkecil yang masih kosong
+//    int assigned = order;
+//    while (used.contains(assigned)) ++assigned;
+//
+//    m_markerFollowPeakOrder[idx] = assigned;
+//
+//    // Trigger refresh
+//    postMarkersChangedToGUI();
+//    update();
+//}
+
+//void GLSpectrumView::clearHistogramMarkerFollowPeak(int idx)
+//{
+//    m_markerFollowPeakOrder.remove(idx);
+//    update();
+//}
+
+// ===== Peak helpers for markers (click-only; non realtime) =====
 void GLSpectrumView::setHistogramMarkerFollowPeak(int idx, int order)
 {
+    QMutexLocker lock(&m_mutex);
     if (idx < 0 || idx >= m_histogramMarkers.size()) return;
-    if (order < 1) order = 1;
+    if (!m_currentSpectrum || m_nbBins <= 0) return;
 
-    // Pastikan mode Find Peaks aktif & marker ini mengikuti power (live)
-    m_histogramFindPeaks = true;
-    m_histogramMarkers[idx].m_markerType = SpectrumHistogramMarker::SpectrumMarkerTypePower;
+    // Pastikan vektor state Next-Peak seukuran jumlah marker
+    if (m_markerLastPeakOrder.size() != m_histogramMarkers.size())
+        m_markerLastPeakOrder = QVector<int>(m_histogramMarkers.size(), -1);
 
-    // Kumpulkan order yang sudah dipakai marker lain
-    QSet<int> used;
-    for (auto it = m_markerFollowPeakOrder.constBegin(); it != m_markerFollowPeakOrder.constEnd(); ++it) {
-        if (it.key() != idx) used.insert(it.value());
+    // Salin spektrum kerja agar bisa "dibolongi" di area peak yang sudah diambil
+    std::vector<Real> work(m_currentSpectrum, m_currentSpectrum + m_nbBins);
+
+    auto computeTopPeakBins = [&](int needCount) -> QVector<int> {
+        QVector<int> out;
+        out.reserve(needCount);
+        for (int k = 0; k < needCount; ++k) {
+            int peakBin = findPeakBin(work.data());                             // sudah ada di kelas【turn11file9†glspectrumview.cpp†L24-L62】
+            int left, right;
+            peakWidth(work.data(), peakBin, left, right, 0, m_nbBins);         // sudah ada di kelas【turn11file9†glspectrumview.cpp†L8-L22】
+            left++; right--;
+            left = std::max(0, left);
+            right = std::min(m_nbBins - 1, right);
+            out.push_back(peakBin);
+            // "matikan" daerah peak ini agar iterasi berikutnya menemukan peak lain
+            for (int j = left; j <= right; ++j) {
+                work[j] = -std::numeric_limits<float>::max();
+            }
+        }
+        return out;
+        };
+
+    // Berapa banyak peak yang perlu dihitung? cukup sampai jumlah marker atau order yang diminta
+    int minNeeded = std::max(1, (order > 0) ? order : 1);
+    int want = std::max(minNeeded, m_histogramMarkers.size());
+    QVector<int> peaks = computeTopPeakBins(std::min(want, m_nbBins));
+
+    if (peaks.isEmpty()) return;
+
+    // Kumpulkan "order" (index di 'peaks') yang sudah dipakai marker lain
+    QSet<int> taken;
+    for (int i = 0; i < m_histogramMarkers.size(); ++i) if (i != idx) {
+        int b = m_histogramMarkers[i].m_fftBin;
+        for (int k = 0; k < peaks.size(); ++k) {
+            if (peaks[k] == b) { taken.insert(k); break; }
+        }
     }
 
-    // Kalau order yang diminta bentrok → eskalasi ke order terkecil yang masih kosong
-    int assigned = order;
-    while (used.contains(assigned)) ++assigned;
+    // Cari order saat ini (jika marker sudah berada tepat di salah satu peak)
+    int curOrder = -1;
+    {
+        int b = m_histogramMarkers[idx].m_fftBin;
+        for (int k = 0; k < peaks.size(); ++k) {
+            if (peaks[k] == b) { curOrder = k; break; }
+        }
+    }
 
-    m_markerFollowPeakOrder[idx] = assigned;
+    // Tentukan titik mulai pencarian:
+    // - order > 0  -> mulai dari (order-1)
+    // - order == 0 -> NEXT PEAK: mulai dari (curOrder+1) jika ada, kalau belum pernah -> dari 0
+    int start = (order > 0) ? (order - 1) : ((curOrder >= 0) ? (curOrder + 1) : 0);
 
-    // Trigger refresh
-    postMarkersChangedToGUI();
+    // Pilih order pertama yang belum dipakai marker lain, mulai dari 'start', jika habis wrap ke awal
+    int chosen = -1;
+    for (int k = start; k < peaks.size(); ++k) {
+        if (!taken.contains(k)) { chosen = k; break; }
+    }
+    if (chosen < 0) {
+        for (int k = 0; k < peaks.size(); ++k) {
+            if (!taken.contains(k)) { chosen = k; break; }
+        }
+    }
+    if (chosen < 0) return; // tidak ada peak yg tersisa
+
+    // Terapkan ke marker
+    int peakBin = peaks[chosen];
+    qint64 freq = binToFrequency(peakBin);                                      // sudah ada di kelas【turn11file9†glspectrumview.cpp†L64-L88】
+
+    auto& mk = m_histogramMarkers[idx];
+    mk.m_fftBin = peakBin;
+    mk.m_frequency = freq;
+    mk.m_markerType = SpectrumHistogramMarker::SpectrumMarkerTypePower;
+    mk.m_show = true;
+
+    // Minta re-hitung posisi/teks/delta melalui helper existing
+    updateHistogramMarkers();                                                   // sudah ada【turn12file9†glspectrumview.cpp†L81-L130】
+
+    // Simpan order terakhir untuk fitur Next Peak
+    m_markerLastPeakOrder[idx] = chosen;
+
+    m_changesPending = true;
+    if (m_messageQueueToGUI) {
+        m_messageQueueToGUI->push(new MsgReportHistogramMarkersChange());
+    }
+    lock.unlock();
     update();
 }
 
 void GLSpectrumView::clearHistogramMarkerFollowPeak(int idx)
 {
-    m_markerFollowPeakOrder.remove(idx);
-    update();
+    QMutexLocker lock(&m_mutex);
+    if (idx < 0 || idx >= m_histogramMarkers.size()) return;
+    if (m_markerLastPeakOrder.size() != m_histogramMarkers.size())
+        m_markerLastPeakOrder = QVector<int>(m_histogramMarkers.size(), -1);
+    m_markerLastPeakOrder[idx] = -1;
 }

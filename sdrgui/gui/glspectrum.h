@@ -120,6 +120,8 @@ public:
     void setHistogramDeltaMode(bool on);
     bool getHistogramDeltaMode() const;
 
+    void setHistogramMarkerFollowPeak(int idx, int order) { m_spectrum->setHistogramMarkerFollowPeak(idx, order); }
+    void clearHistogramMarkerFollowPeak(int idx) { m_spectrum->clearHistogramMarkerFollowPeak(idx); }
 
 private:
     QSplitter *m_splitter;
