@@ -99,18 +99,20 @@ SpectrumMarkersDialog::SpectrumMarkersDialog(
     ui->markerColor->hide();
 
     // 2
+    ui->markerText->hide();
     ui->powerLabel->hide();
     ui->powerHoldReset->hide();
     ui->powerMode->hide();
-    m_histogramMarkers.back().m_markerType =(SpectrumHistogramMarker::SpectrumMarkerType)1;
-    ui->powerMode->setCurrentIndex((int)m_histogramMarkers[m_histogramMarkerIndex].m_markerType);
     ui->findPeaks->hide();
 
     // 3
     ui->showSelect->hide();
+    ui->showLabel->hide();
     m_markersDisplay = (SpectrumSettings::MarkersDisplay)3;
     ui->showSelect->setCurrentIndex((int)m_markersDisplay);
-    ui->showLabel->hide();
+    ui->fixedPower->hide();
+    ui->fixedPowerUnits->hide();
+
 
     // waterfall
     // 1
@@ -126,6 +128,7 @@ SpectrumMarkersDialog::SpectrumMarkersDialog(
     ui->timeExpText->hide();
     ui->timeExp->hide();
     ui->wMarkerColor->hide();
+    ui->wMarkerText->hide();
 }
 
 SpectrumMarkersDialog::~SpectrumMarkersDialog()
@@ -479,6 +482,10 @@ void SpectrumMarkersDialog::on_markerAdd_clicked()
     repopulateMarkerCombo();
     ui->marker->setCurrentIndex(m_histogramMarkerIndex);
     displayHistogramMarker();
+
+    // marker
+    m_histogramMarkers.back().m_markerType = (SpectrumHistogramMarker::SpectrumMarkerType)1;
+    ui->powerMode->setCurrentIndex((int)m_histogramMarkers[m_histogramMarkerIndex].m_markerType);
 
     emit updateHistogram();
 }
