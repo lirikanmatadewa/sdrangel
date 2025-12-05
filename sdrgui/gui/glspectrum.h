@@ -120,6 +120,12 @@ public:
     void setHistogramDeltaMode(bool on);
     bool getHistogramDeltaMode() const;
 
+    void setHistogramReferenceIndex(int idx) { m_spectrum->setHistogramReferenceIndex(idx); }
+    int histogramReferenceIndex() const { return m_spectrum->histogramReferenceIndex(); }
+
+    void setWaterfallReferenceIndex(int idx) { m_spectrum->setWaterfallReferenceIndex(idx); }
+    int waterfallReferenceIndex() const { return m_spectrum->waterfallReferenceIndex(); }
+
     void setHistogramMarkerFollowPeak(int idx, int order) { m_spectrum->setHistogramMarkerFollowPeak(idx, order); }
     void clearHistogramMarkerFollowPeak(int idx) { m_spectrum->clearHistogramMarkerFollowPeak(idx); }
 

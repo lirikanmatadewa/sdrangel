@@ -50,7 +50,9 @@ SpectrumMarkersDialog::SpectrumMarkersDialog(
     m_annotationMarkerIndex(0),
     m_centerFrequency(0),
     m_power(0.5f),
-    m_annoFreqStartElseCenter(true)
+    m_annoFreqStartElseCenter(true),
+    m_histogramReferenceIndex(0),
+    m_waterfallReferenceIndex(0)
 {
     ui->setupUi(this);
     ui->markerFrequency->setColorMapper(ColorMapper(ColorMapper::GrayGold));
@@ -94,7 +96,7 @@ SpectrumMarkersDialog::SpectrumMarkersDialog(
 
     // 1
     ui->markerFrequency->hide();
-    ui->markerFrequencyLabel->hide();
+    //ui->markerFrequencyLabel->hide();
     ui->markerFrequencyUnits->hide();
     ui->markerColor->hide();
 
@@ -117,7 +119,7 @@ SpectrumMarkersDialog::SpectrumMarkersDialog(
     // waterfall
     // 1
     ui->wShowMarker->hide();
-    ui->wMarkerFrequencyLabel->hide();
+    //ui->wMarkerFrequencyLabel->hide();
     ui->wMarkerFrequency->hide();
     ui->wMarkerFrequencyUnits->hide();
     ui->wCenterFrequency->hide();
@@ -129,6 +131,11 @@ SpectrumMarkersDialog::SpectrumMarkersDialog(
     ui->timeExp->hide();
     ui->wMarkerColor->hide();
     ui->wMarkerText->hide();
+
+    ui->setReference->hide();
+    ui->wSetReference->hide();
+
+    ui->tabWidget->hide();
 }
 
 SpectrumMarkersDialog::~SpectrumMarkersDialog()
@@ -454,19 +461,19 @@ void SpectrumMarkersDialog::on_marker_currentIndexChanged(int index)
 
 void SpectrumMarkersDialog::on_setReference_clicked()
 {
-    if ((m_histogramMarkerIndex == 0) || (m_histogramMarkers.size() < 2)) {
-        return;
-    }
+    //if ((m_histogramMarkerIndex == 0) || (m_histogramMarkers.size() < 2)) {
+    //    return;
+    //}
 
-    SpectrumHistogramMarker marker0 = m_histogramMarkers.at(0);
-    QColor color0 = marker0.m_markerColor; // do not exchange colors
-    QColor colorI = m_histogramMarkers[m_histogramMarkerIndex].m_markerColor;
-    m_histogramMarkers[0] = m_histogramMarkers[m_histogramMarkerIndex];
-    m_histogramMarkers[0].m_markerColor = color0;
-    m_histogramMarkers[m_histogramMarkerIndex] = marker0;
-    m_histogramMarkers[m_histogramMarkerIndex].m_markerColor = colorI;
-    displayHistogramMarker();
-    emit updateHistogram();
+    //SpectrumHistogramMarker marker0 = m_histogramMarkers.at(0);
+    //QColor color0 = marker0.m_markerColor; // do not exchange colors
+    //QColor colorI = m_histogramMarkers[m_histogramMarkerIndex].m_markerColor;
+    //m_histogramMarkers[0] = m_histogramMarkers[m_histogramMarkerIndex];
+    //m_histogramMarkers[0].m_markerColor = color0;
+    //m_histogramMarkers[m_histogramMarkerIndex] = marker0;
+    //m_histogramMarkers[m_histogramMarkerIndex].m_markerColor = colorI;
+    //displayHistogramMarker();
+    //emit updateHistogram();
 }
 
 void SpectrumMarkersDialog::on_markerAdd_clicked()
@@ -646,19 +653,19 @@ void SpectrumMarkersDialog::on_wMarker_currentIndexChanged(int index)
 
 void SpectrumMarkersDialog::on_wSetReference_clicked()
 {
-    if ((m_waterfallMarkerIndex == 0) || (m_waterfallMarkers.size() < 2)) {
-        return;
-    }
+    //if ((m_waterfallMarkerIndex == 0) || (m_waterfallMarkers.size() < 2)) {
+    //    return;
+    //}
 
-    SpectrumWaterfallMarker marker0 = m_waterfallMarkers.at(0);
-    QColor color0 = marker0.m_markerColor; // do not exchange colors
-    QColor colorI = m_waterfallMarkers[m_waterfallMarkerIndex].m_markerColor;
-    m_waterfallMarkers[0] = m_waterfallMarkers[m_waterfallMarkerIndex];
-    m_waterfallMarkers[0].m_markerColor = color0;
-    m_waterfallMarkers[m_waterfallMarkerIndex] = marker0;
-    m_waterfallMarkers[m_waterfallMarkerIndex].m_markerColor = colorI;
-    displayWaterfallMarker();
-    emit updateWaterfall();
+    //SpectrumWaterfallMarker marker0 = m_waterfallMarkers.at(0);
+    //QColor color0 = marker0.m_markerColor; // do not exchange colors
+    //QColor colorI = m_waterfallMarkers[m_waterfallMarkerIndex].m_markerColor;
+    //m_waterfallMarkers[0] = m_waterfallMarkers[m_waterfallMarkerIndex];
+    //m_waterfallMarkers[0].m_markerColor = color0;
+    //m_waterfallMarkers[m_waterfallMarkerIndex] = marker0;
+    //m_waterfallMarkers[m_waterfallMarkerIndex].m_markerColor = colorI;
+    //displayWaterfallMarker();
+    //emit updateWaterfall();
 }
 
 void SpectrumMarkersDialog::on_wMarkerAdd_clicked()
@@ -1057,22 +1064,185 @@ void SpectrumMarkersDialog::repopulateMarkerCombo()
 {
     ui->marker->blockSignals(true);
     ui->marker->clear();
-    // Isi item "0", "1", "2", ...
-    for (int i = 0; i < m_histogramMarkers.size(); ++i) {
-        ui->marker->addItem(QString::number(i));
-    }
-    ui->marker->blockSignals(false);
-}
 
+    // pastikan HsetReference ada di UI
+    if (ui->HsetReference) {
+        ui->HsetReference->blockSignals(true);
+        ui->HsetReference->clear();
+    }
+
+    for (int i = 0; i < m_histogramMarkers.size(); ++i) {
+        const QString label = QString::number(i + 1);
+        ui->marker->addItem(label);
+        if (ui->HsetReference) {
+            ui->HsetReference->addItem(label);
+        }
+    }
+
+    if (m_histogramMarkers.isEmpty()) {
+        m_histogramMarkerIndex = 0;
+        m_histogramReferenceIndex = 0;
+        ui->marker->setCurrentIndex(-1);
+        if (ui->HsetReference) {
+            ui->HsetReference->setCurrentIndex(-1);
+            ui->HsetReference->setEnabled(false);
+        }
+    }
+    else {
+        if (m_histogramReferenceIndex < 0
+            || m_histogramReferenceIndex >= m_histogramMarkers.size())
+        {
+            m_histogramReferenceIndex = 0;
+        }
+
+        ui->marker->setCurrentIndex(m_histogramMarkerIndex);
+
+        if (ui->HsetReference) {
+            ui->HsetReference->setEnabled(true);
+            ui->HsetReference->setCurrentIndex(m_histogramReferenceIndex);
+        }
+    }
+
+    // update tooltip supaya jelas index berapa yang jadi reference
+    ui->marker->setToolTip(
+        tr("Marker index (%1 is reference)").arg(m_histogramReferenceIndex + 1));
+
+    ui->marker->blockSignals(false);
+    if (ui->HsetReference) {
+        ui->HsetReference->blockSignals(false);
+    }
+}
 
 void SpectrumMarkersDialog::repopulateWMarkerCombo()
 {
     ui->wMarker->blockSignals(true);
     ui->wMarker->clear();
 
+    if (ui->WWSetReference) {
+        ui->WWSetReference->blockSignals(true);
+        ui->WWSetReference->clear();
+    }
+
     for (int i = 0; i < m_waterfallMarkers.size(); ++i) {
-        ui->wMarker->addItem(QString::number(i));
+        const QString label = QString::number(i + 1);
+        ui->wMarker->addItem(label);
+        if (ui->WWSetReference) {
+            ui->WWSetReference->addItem(label);
+        }
+    }
+
+    if (m_waterfallMarkers.isEmpty()) {
+        m_waterfallMarkerIndex = 0;
+        m_waterfallReferenceIndex = 0;
+        ui->wMarker->setCurrentIndex(-1);
+        if (ui->WWSetReference) {
+            ui->WWSetReference->setCurrentIndex(-1);
+            ui->WWSetReference->setEnabled(false);
+        }
+    }
+    else {
+        if (m_waterfallReferenceIndex < 0
+            || m_waterfallReferenceIndex >= m_waterfallMarkers.size())
+        {
+            m_waterfallReferenceIndex = 0;
+        }
+
+        ui->wMarker->setCurrentIndex(m_waterfallMarkerIndex);
+
+        if (ui->WWSetReference) {
+            ui->WWSetReference->setEnabled(true);
+            ui->WWSetReference->setCurrentIndex(m_waterfallReferenceIndex);
+        }
     }
 
     ui->wMarker->blockSignals(false);
+    if (ui->WWSetReference) {
+        ui->WWSetReference->blockSignals(false);
+    }
+}
+
+void SpectrumMarkersDialog::on_HsetReference_currentIndexChanged(int index)
+{
+    if (index < 0 || index >= m_histogramMarkers.size()) {
+        return;
+    }
+
+    // index combo = index marker yang mau dijadikan reference
+    setHistogramReferenceFromIndex(index);
+}
+
+
+void SpectrumMarkersDialog::on_WWSetReference_currentIndexChanged(int index)
+{
+    if (index < 0 || index >= m_waterfallMarkers.size()) {
+        return;
+    }
+
+    setWaterfallReferenceFromIndex(index);
+}
+
+
+void SpectrumMarkersDialog::setHistogramReferenceFromIndex(int refIdx)
+{
+    if ((refIdx == 0) || (m_histogramMarkers.size() < 2)) {
+        return;
+    }
+
+    // ini persis logika lama, cuma pakai refIdx
+    SpectrumHistogramMarker marker0 = m_histogramMarkers.at(0);
+    QColor color0 = marker0.m_markerColor; // do not exchange colors
+    QColor colorI = m_histogramMarkers[refIdx].m_markerColor;
+
+    m_histogramMarkers[0] = m_histogramMarkers[refIdx];
+    m_histogramMarkers[0].m_markerColor = color0;
+    m_histogramMarkers[refIdx] = marker0;
+    m_histogramMarkers[refIdx].m_markerColor = colorI;
+
+    // reference sekarang ada di index 0
+    m_histogramMarkerIndex = 0;
+
+    ui->marker->blockSignals(true);
+    ui->marker->setCurrentIndex(0);
+    ui->marker->blockSignals(false);
+
+    // kalau kamu punya dropdown HsetReference, boleh di-set ke 0 juga
+    if (ui->HsetReference) {
+        ui->HsetReference->blockSignals(true);
+        ui->HsetReference->setCurrentIndex(0);
+        ui->HsetReference->blockSignals(false);
+    }
+
+    displayHistogramMarker();
+    emit updateHistogram();
+}
+
+void SpectrumMarkersDialog::setWaterfallReferenceFromIndex(int refIdx)
+{
+    if ((refIdx == 0) || (m_waterfallMarkers.size() < 2)) {
+        return;
+    }
+
+    SpectrumWaterfallMarker marker0 = m_waterfallMarkers.at(0);
+    QColor color0 = marker0.m_markerColor; // do not exchange colors
+    QColor colorI = m_waterfallMarkers[refIdx].m_markerColor;
+
+    m_waterfallMarkers[0] = m_waterfallMarkers[refIdx];
+    m_waterfallMarkers[0].m_markerColor = color0;
+    m_waterfallMarkers[refIdx] = marker0;
+    m_waterfallMarkers[refIdx].m_markerColor = colorI;
+
+    m_waterfallMarkerIndex = 0;
+
+    ui->wMarker->blockSignals(true);
+    ui->wMarker->setCurrentIndex(0);
+    ui->wMarker->blockSignals(false);
+
+    if (ui->WWSetReference) {
+        ui->WWSetReference->blockSignals(true);
+        ui->WWSetReference->setCurrentIndex(0);
+        ui->WWSetReference->blockSignals(false);
+    }
+
+    displayWaterfallMarker();
+    emit updateWaterfall();
 }

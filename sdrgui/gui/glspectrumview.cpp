@@ -159,7 +159,9 @@ GLSpectrumView::GLSpectrumView(QWidget* parent) :
     m_measurementHarmonics(5),
     m_measurementPeaks(5),
     m_measurementHighlight(true),
-    m_measurementPrecision(1)
+    m_measurementPrecision(1), 
+    m_histogramReferenceIndex(0), 
+    m_waterfallReferenceIndex(0)
 {
     // Enable multisampling anti-aliasing (MSAA)
     int multisamples = MainCore::instance()->getSettings().getMultisampling();
@@ -2268,7 +2270,7 @@ void GLSpectrumView::drawSpectrumMarkers()
             }
             else
             {
-                textColor.setAlpha(192);
+                /*textColor.setAlpha(192);
                 float power0, poweri;
 
                 if (m_histogramMarkers.at(0).m_markerType == SpectrumHistogramMarker::SpectrumMarkerTypePower) {
@@ -2277,6 +2279,29 @@ void GLSpectrumView::drawSpectrumMarkers()
                     power0 = m_histogramMarkers.at(0).m_powerMax;
                 } else {
                     power0 = m_linear ? m_histogramMarkers.at(0).m_power : CalcDb::dbPower(m_histogramMarkers.at(0).m_power);
+                }*/
+
+                textColor.setAlpha(192);
+
+                if (m_histogramMarkers.isEmpty())
+                    continue;
+
+                int refIdx = m_histogramReferenceIndex;
+                if (refIdx < 0 || refIdx >= m_histogramMarkers.size())
+                    refIdx = 0;
+
+                float power0, poweri;
+
+                const auto& refMk = m_histogramMarkers.at(refIdx);
+
+                if (refMk.m_markerType == SpectrumHistogramMarker::SpectrumMarkerTypePower) {
+                    power0 = m_currentSpectrum[refMk.m_fftBin];
+                }
+                else if (refMk.m_markerType == SpectrumHistogramMarker::SpectrumMarkerTypePowerMax) {
+                    power0 = refMk.m_powerMax;
+                }
+                else {
+                    power0 = m_linear ? refMk.m_power : CalcDb::dbPower(refMk.m_power);
                 }
 
                 if (m_histogramMarkers.at(i).m_markerType == SpectrumHistogramMarker::SpectrumMarkerTypePower) {
@@ -2298,15 +2323,13 @@ void GLSpectrumView::drawSpectrumMarkers()
                 // --- Delta frequency text (top) ---
                 QString freqDeltaText;
 
-                if (m_histogramDeltaMode && (i > 0)) {
-                    // Delta vs marker sebelumnya (Mi - M(i-1))
+                if (m_histogramDeltaMode && (i != refIdx)) {
                     qint64 fCur = m_histogramMarkers.at(i).m_frequency;
-                    qint64 fPrev = m_histogramMarkers.at(i - 1).m_frequency;
-                    qint64 df = fCur - fPrev;
-                    freqDeltaText = displayFull(df);    // "ΔF" gaya full, sama helper lain
+                    qint64 fRef = m_histogramMarkers.at(refIdx).m_frequency;
+                    qint64 df = fCur - fRef;
+                    freqDeltaText = displayFull(df);
                 }
                 else {
-                    // Mode normal: pakai delta vs M1 seperti sebelumnya
                     freqDeltaText = m_histogramMarkers.at(i).m_deltaFrequencyStr;
                 }
 
@@ -6131,4 +6154,40 @@ void GLSpectrumView::clearHistogramMarkerFollowPeak(int idx)
     if (m_markerLastPeakOrder.size() != m_histogramMarkers.size())
         m_markerLastPeakOrder = QVector<int>(m_histogramMarkers.size(), -1);
     m_markerLastPeakOrder[idx] = -1;
+}
+
+void GLSpectrumView::setHistogramReferenceIndex(int idx)
+{
+    QMutexLocker locker(&m_mutex);
+
+    if (m_histogramMarkers.isEmpty()) {
+        m_histogramReferenceIndex = 0;
+    }
+    else {
+        if (idx < 0 || idx >= m_histogramMarkers.size())
+            idx = 0;
+        m_histogramReferenceIndex = idx;
+    }
+
+    m_changesPending = true;
+    locker.unlock();
+    update();
+}
+
+void GLSpectrumView::setWaterfallReferenceIndex(int idx)
+{
+    QMutexLocker locker(&m_mutex);
+
+    if (m_waterfallMarkers.isEmpty()) {
+        m_waterfallReferenceIndex = 0;
+    }
+    else {
+        if (idx < 0 || idx >= m_waterfallMarkers.size())
+            idx = 0;
+        m_waterfallReferenceIndex = idx;
+    }
+
+    m_changesPending = true;
+    locker.unlock();
+    update();
 }

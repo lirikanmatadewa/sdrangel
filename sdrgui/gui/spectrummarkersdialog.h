@@ -78,6 +78,12 @@ private:
     // marker
     void repopulateMarkerCombo();
     void repopulateWMarkerCombo();
+    int m_histogramReferenceIndex;
+    int m_waterfallReferenceIndex;
+
+    void setHistogramReferenceFromIndex(int refIdx);
+    void setWaterfallReferenceFromIndex(int refIdx);
+
 
 private slots:
     void on_markerFrequency_changed(qint64 value);
@@ -128,6 +134,8 @@ private slots:
 
     void on_pushButton_2_clicked();  // "Peak"
     void on_pushButton_clicked();    // "Next Peak"
+    void on_HsetReference_currentIndexChanged(int index);
+    void on_WWSetReference_currentIndexChanged(int index);
 
 
     static bool annotationMarkerLessThan(const SpectrumAnnotationMarker& m1, const SpectrumAnnotationMarker& m2) {
@@ -150,6 +158,9 @@ signals:
 
     void followPeakRequested(int markerIndex);
     void nextPeakRequested(int markerIndex);
+
+    void histogramReferenceIndexChanged(int index);
+    void waterfallReferenceIndexChanged(int index);
 };
 
 #endif // SDRBASE_GUI_SPECTRUMMARKERSDIALOG_H_

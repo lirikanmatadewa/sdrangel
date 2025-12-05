@@ -79,6 +79,12 @@ public:
     bool getHistogramDeltaMode() const { return m_histogramDeltaMode; }
     MessageQueue* getMessageQueueToGUI() { return m_messageQueueToGUI; }
 
+    void setHistogramReferenceIndex(int idx);
+    int histogramReferenceIndex() const { return m_histogramReferenceIndex; }
+
+    void setWaterfallReferenceIndex(int idx);
+    int waterfallReferenceIndex() const { return m_waterfallReferenceIndex; }
+
     // Manual span control
     void setManualSpan(qint64 centerHz, int spanLeftHz, int spanRightHz); 
     void clearManualSpan();                                               
@@ -279,6 +285,9 @@ private:
     QVector<int> m_markerLastPeakOrder;
 
     QHash<int, int> m_markerFollowPeakOrder;
+
+    int m_histogramReferenceIndex = 0;
+    int m_waterfallReferenceIndex = 0;
 
     DragTarget m_dragTarget = DragTarget::None;
     int   m_dragIndex = -1;
