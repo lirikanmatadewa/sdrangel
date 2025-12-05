@@ -42,7 +42,7 @@
 #include "util/messagequeue.h"
 #include "util/db.h"
 #include "util/profiler.h"
-
+#include <limits>
 #include <QDebug>
 #include <cmath>
 
@@ -736,106 +736,246 @@ static inline bool nearCF(qint64 a, qint64 b, qint64 sr)
     return llabs(a - b) <= tol;
 }
 
-void GLSpectrumView::newSpectrum(const Real* spectrum, int nbBins, int fftSize) {
+
+void GLSpectrumView::newSpectrum(const Real* spectrum, int nbBins, int fftSize)
+{
     QMutexLocker lk(&m_mutex);
     m_displayChanged = true;
+
+    // Sinkron ukuran FFT/bins bila berubah
     if (m_changesPending) { m_fftSize = fftSize; m_nbBins = nbBins; return; }
-    if ((fftSize != m_fftSize) || (m_nbBins != nbBins)) { m_fftSize = fftSize; m_nbBins = nbBins; m_changesPending = true; return; }
+    if ((fftSize != m_fftSize) || (nbBins != m_nbBins)) {
+        m_fftSize = fftSize;
+        m_nbBins = nbBins;
+        m_changesPending = true;
+        return;
+    }
 
-    const Real* wfLine = spectrum;                // default: single slice
-    QVector<Real> tmpComposite;                   // buffer sementara untuk komposit
-
-    if (m_multiSlicesEnabled && m_nbBins > 0) {
-        tmpComposite.resize(m_nbBins);
-
-        // Kumpulkan slice yang valid (punya data & SR/FFT sah)
-        struct Cover { int i; qint64 f1; qint64 f2; };
-        QVector<Cover> covers; covers.reserve(m_slices.size());
-        for (int i = 0; i < m_slices.size(); ++i) {
-            const auto& s = m_slices[i];
-            if (!s.hasData || s.sampleRate <= 0 || s.fftSize <= 0 || s.data.isEmpty()) continue;
-            qint64 half = s.sampleRate / 2;
-            covers.push_back({ i, s.centerHz - half, s.centerHz + half });
+    // ===== Mode multi-slices: Pemetaan CF → index unik (dedup) =====
+    if (m_multiSlicesEnabled && nbBins > 0)
+    {
+        if (m_slices.isEmpty()) {
+            // fallback single-slice kalau daftar center belum ada
+            m_currentSpectrum = spectrum;
+            updateWaterfall(spectrum);
+            update3DSpectrogram(spectrum);
+            updateHistogram(spectrum);
+            return;
         }
 
-        auto rbwFor = [](const ExtSlice& s)->double {
-            return (s.sampleRate > 0 && s.fftSize > 0) ? double(s.sampleRate) / double(s.fftSize) : 0.0;
-            };
+        const qint64 cfNow = m_centerFrequency;
 
-        for (int b = 0; b < m_nbBins; ++b) {
-            qint64 fAbs = binToFrequency(b);     // pakai skala frekuensi aktif (sudah aware multi/manual) :contentReference[oaicite:5]{index=5}
-            int winner = -1;
-            qint64 bestDist = std::numeric_limits<qint64>::max();
+        // --- urutkan index berdasarkan centerHz ---
+        const int N = m_slices.size();
+        QVector<int> order(N);
+        for (int i = 0; i < N; ++i) order[i] = i;
+        std::sort(order.begin(), order.end(), [&](int a, int b) {
+            return m_slices[a].centerHz < m_slices[b].centerHz;
+            });
+
+        // --- bentuk grup unik (center yang sama digabung) ---
+        struct Group { qint64 center; QVector<int> sliceIdxs; };
+        QVector<Group> groups;
+        groups.reserve(N);
+
+        for (int k = 0; k < N; ++k) {
+            const int si = order[k];
+            const qint64 c = m_slices[si].centerHz;
+            if (groups.isEmpty() || groups.back().center != c) {
+                Group g; g.center = c; g.sliceIdxs.clear(); g.sliceIdxs.push_back(si);
+                groups.push_back(g);
+            }
+            else {
+                groups.back().sliceIdxs.push_back(si);
+            }
+        }
+        const int M = groups.size(); // jumlah pusat unik
+
+        static QVector<qint64> s_centersUniq;
+        static int             s_cachedM = -1;
+        static QVector<bool>   s_seenUniq;
+
+        // cache pusat unik
+        QVector<qint64> centersUniq; centersUniq.reserve(M);
+        for (int i = 0; i < M; ++i) centersUniq.push_back(groups[i].center);
+
+        // reset jika ada perubahan layout pusat unik
+        if (s_cachedM != M || s_centersUniq != centersUniq) {
+            s_centersUniq = centersUniq;
+            s_cachedM = M;
+            s_seenUniq.resize(M);
+            std::fill(s_seenUniq.begin(), s_seenUniq.end(), false);
+            for (auto& sl : m_slices) sl.hasData = false;
+        }
+
+        // --- Voronoi boundaries (pakai pusat unik) + hysteresis ---
+        const qint64 half = (m_sampleRate > 0 ? m_sampleRate / 2 : 0);
+        QVector<qint64> L(M), R(M);
+        for (int i = 0; i < M; ++i) {
+            L[i] = (i == 0) ? (centersUniq[i] - half) : (centersUniq[i - 1] + centersUniq[i]) / 2;
+            R[i] = (i == M - 1) ? (centersUniq[i] + half) : (centersUniq[i] + centersUniq[i + 1]) / 2;
+            if (R[i] < L[i]) std::swap(L[i], R[i]);
+        }
+        // step min untuk margin hysteresis
+        qint64 stepMin = (M > 1 ? centersUniq[1] - centersUniq[0] : (m_sampleRate > 0 ? m_sampleRate : 1));
+        for (int i = 1; i < M - 1; ++i) stepMin = std::min(stepMin, centersUniq[i + 1] - centersUniq[i]);
+        const qint64 hyst = std::max<qint64>(stepMin / 10, 200'000); // 10% step atau min 200 kHz
+
+        // --- tentukan index unik untuk cfNow ---
+        int idxU = -1;
+        for (int i = 0; i < M; ++i) {
+            if (cfNow >= L[i] - hyst && cfNow <= R[i] + hyst) { idxU = i; break; }
+        }
+        if (idxU < 0) {
+            // fallback: nearest unik
+            qint64 best = std::numeric_limits<qint64>::max();
+            for (int i = 0; i < M; ++i) {
+                qint64 d = qAbs(cfNow - centersUniq[i]);
+                if (d < best) { best = d; idxU = i; }
+            }
+        }
+        if (idxU < 0) {
+            m_currentSpectrum = spectrum;
+            return;
+        }
+
+        // --- Capture 1x per pusat unik per siklus ---
+        if (!s_seenUniq[idxU]) {
+            // simpan hanya ke slice pertama di grup (cukup untuk komposit unik)
+            const int si0 = groups[idxU].sliceIdxs.front();
+            auto& sl = m_slices[si0];
+            sl.sampleRate = m_sampleRate;
+            sl.fftSize = fftSize;
+            sl.data = QVector<Real>(spectrum, spectrum + nbBins);
+            sl.hasData = true;
+
+            // (opsional) kalau mau, bisa isi semua duplikat juga:
+            // for (int si : groups[idxU].sliceIdxs) { ... isi sama ... }
+
+            s_seenUniq[idxU] = true;
+        }
+        else {
+            // index unik ini sudah dicapture; tunggu pindah CF
+            m_currentSpectrum = spectrum;
+            return;
+        }
+
+        // --- cek lengkap 1 siklus? (berdasarkan pusat unik) ---
+        int seenCount = 0; for (bool v : s_seenUniq) if (v) ++seenCount;
+        if (seenCount < M) {
+            m_currentSpectrum = spectrum;
+            return;
+        }
+
+        // ===== Komposit dari pusat unik (tanpa bobot ganda) =====
+        if (m_multiComposite.size() != m_nbBins)
+            m_multiComposite.resize(m_nbBins);
+
+        // kunci sumbu X ke union cover unik
+        const qint64 covMin = centersUniq.front() - half;
+        const qint64 covMax = centersUniq.back() + half;
+        m_frequencyScale.setMakeOpposite(false);
+        m_frequencyScale.setRange(Unit::Frequency, covMin, covMax);
+
+        // Bangun cover unik (ambil slice pertama tiap grup)
+        struct Cover { qint64 center; qint64 f1; qint64 f2; double rbw; const QVector<Real>* data; };
+        QVector<Cover> covers; covers.reserve(M);
+
+        for (int i = 0; i < M; ++i) {
+            const int si = groups[i].sliceIdxs.front();
+            const auto& s = m_slices[si];
+            if (!s.hasData || s.sampleRate <= 0 || s.fftSize <= 0 || s.data.isEmpty())
+                continue;
+
+            const qint64 f1 = s.centerHz - s.sampleRate / 2;
+            const qint64 f2 = s.centerHz + s.sampleRate / 2;
+
+            Cover c;
+            c.center = s.centerHz;
+            c.f1 = f1;
+            c.f2 = f2;
+            c.rbw = double(s.sampleRate) / double(s.fftSize);
+            c.data = &s.data;
+            covers.append(c);
+        }
+        if (covers.isEmpty()) {
+            m_currentSpectrum = spectrum;
+            return;
+        }
+
+        /*for (int b = 0; b < m_nbBins; ++b)
+        {
+            const qint64 fAbs = binToFrequency(b);
+            double acc = 0.0; int cnt = 0;
+
             for (const auto& c : covers) {
                 if (fAbs < c.f1 || fAbs > c.f2) continue;
-                qint64 d = llabs(fAbs - m_slices[c.i].centerHz);
-                if (d < bestDist) { bestDist = d; winner = c.i; }
+
+                const double start = double(c.center) - double(m_sampleRate) / 2.0;
+                const double idxF = (double(fAbs) - start) / c.rbw;
+                int sb = int(std::llround(idxF));
+                if (sb < 0) sb = 0;
+                int last = c.data->size() - 1;
+                if (sb > last) sb = last;
+
+                acc += double((*c.data)[sb]);
+                ++cnt;
+            }
+
+            m_multiComposite[b] = (cnt > 0) ? Real(acc / double(cnt))
+                : -std::numeric_limits<float>::max();
+        }*/
+
+        for (int b = 0; b < m_nbBins; ++b)
+        {
+            const qint64 fAbs = binToFrequency(b);
+
+            // Pilih satu slice pemenang (nearest center) yang benar-benar mencakup fAbs
+            int winner = -1;
+            qint64 bestDist = std::numeric_limits<qint64>::max();
+
+            for (int i = 0; i < covers.size(); ++i) {
+                const auto& c = covers[i];
+                if (fAbs < c.f1 || fAbs > c.f2) continue;
+                const qint64 d = llabs(fAbs - c.center);
+                if (d < bestDist) { bestDist = d; winner = i; }
             }
 
             Real v = -std::numeric_limits<float>::max(); // sentinel "no data"
             if (winner >= 0) {
-                const auto& s = m_slices[winner];
-                double rbw = rbwFor(s);
-                if (rbw > 0.0) {
-                    int sb = int((double(fAbs) - double(s.centerHz - s.sampleRate / 2)) / rbw);
-                    if (sb >= 0 && sb < s.data.size()) v = s.data[sb];
-                }
+                const auto& c = covers[winner];
+                const double startF = double(c.center) - double(m_sampleRate) / 2.0;
+                int sb = int(std::llround((double(fAbs) - startF) / c.rbw));
+                if (sb < 0) sb = 0;
+                int last = c.data->size() - 1;
+                if (sb > last) sb = last;
+                v = (*(c.data))[sb];
             }
-            tmpComposite[b] = v;
+
+            m_multiComposite[b] = v;
         }
-        wfLine = tmpComposite.constData();
+
+
+        // Render 1x per siklus lengkap
+        const Real* line = m_multiComposite.constData();
+        updateWaterfall(line);
+        update3DSpectrogram(line);
+        updateHistogram(line);
+
+        // Reset siklus (bersihkan flag; cache pusat unik dipertahankan)
+        for (auto& sl : m_slices) sl.hasData = false;
+        std::fill(s_seenUniq.begin(), s_seenUniq.end(), false);
+
+        m_currentSpectrum = spectrum;
+        return;
     }
 
-    updateWaterfall(wfLine);
-    update3DSpectrogram(wfLine);
-    updateHistogram(wfLine);
-
-    // --- Multi-slices capture ---
-    if (m_multiSlicesEnabled && !m_lockCapture && (nbBins > 0))
-    {
-        // cari slice dengan CF terdekat yang match
-        for (int i = 0; i < m_slices.size(); ++i)
-        {
-            auto& s = m_slices[i];
-
-            qint64 fMin = s.centerHz - s.sampleRate / 2;
-            qint64 fMax = s.centerHz + s.sampleRate / 2;
-          
-            if (nearCF(m_centerFrequency, s.centerHz, m_sampleRate))
-            {
-                s.sampleRate = m_sampleRate;
-                s.fftSize = fftSize;
-                s.data = QVector<Real>(spectrum, spectrum + nbBins);
-                s.hasData = true;
-                s.tick++;
-
-                m_multiCompositeDirty = true;
-                m_changesPending = true;
-
-                // deteksi siklus (opsional)
-                if (m_firstCFSeen == 0) m_firstCFSeen = s.centerHz;
-                m_visitedCFs.insert(s.centerHz);
-
-                if (m_visitedCFs.size() == m_slices.size()) {
-                    // semua target CF sudah terisi (1 siklus lengkap)
-                    emit multiCaptureCycleDone();
-                }
-                break;
-            }
-        }
-    }
-
-    // tetap simpan currentSpectrum agar mode single berjalan normal
+    // ===== Mode single-slice =====
     m_currentSpectrum = spectrum;
-
-    if (m_messageQueueToGUI
-        && !m_histogramMarkers.isEmpty()   // hanya kalau ada marker
-        && (m_displayCurrent || m_displayHistogram))
-    {
-        m_messageQueueToGUI->push(new MsgReportLivePowersTick());
-    }
+    updateWaterfall(spectrum);
+    update3DSpectrogram(spectrum);
+    updateHistogram(spectrum);
 }
-
 
 void GLSpectrumView::updateWaterfall(const Real *spectrum)
 {
@@ -1189,30 +1329,33 @@ void GLSpectrumView::paintGL()
         // paint channels
         if (m_mouseInside)
         {
-            for (int i = 0; i < m_channelMarkerStates.size(); ++i)
+            if (!m_multiSlicesEnabled)              // <<< TAMBAHKAN GUARD INI
             {
-                ChannelMarkerState* dv = m_channelMarkerStates[i];
-
-                if (dv->m_channelMarker->getVisible()
-                    && (dv->m_channelMarker->getSourceOrSinkStream() == m_displaySourceOrSink)
-                    && dv->m_channelMarker->streamIndexApplies(m_displayStreamIndex))
+                for (int i = 0; i < m_channelMarkerStates.size(); ++i)
                 {
+                    ChannelMarkerState* dv = m_channelMarkerStates[i];
+
+                    if (dv->m_channelMarker->getVisible()
+                        && (dv->m_channelMarker->getSourceOrSinkStream() == m_displaySourceOrSink)
+                        && dv->m_channelMarker->streamIndexApplies(m_displayStreamIndex))
                     {
-                        GLfloat q3[] {
-                            0, 0,
-                            1, 0,
-                            1, 1,
-                            0, 1,
-                            0.5, 0,
-                            0.5, 1,
-                        };
+                        {
+                            GLfloat q3[]{
+                                0, 0,
+                                1, 0,
+                                1, 1,
+                                0, 1,
+                                0.5, 0,
+                                0.5, 1,
+                            };
 
-                        QVector4D color(dv->m_channelMarker->getColor().redF(), dv->m_channelMarker->getColor().greenF(), dv->m_channelMarker->getColor().blueF(), 0.3f);
-                        m_glShaderSimple.drawSurface(dv->m_glMatrixWaterfall, color, q3, 4);
+                            QVector4D color(dv->m_channelMarker->getColor().redF(), dv->m_channelMarker->getColor().greenF(), dv->m_channelMarker->getColor().blueF(), 0.3f);
+                            m_glShaderSimple.drawSurface(dv->m_glMatrixWaterfall, color, q3, 4);
 
-                        QVector4D colorLine(0.8f, 0.8f, 0.6f, 1.0f);
-                        m_glShaderSimple.drawSegments(dv->m_glMatrixDsbWaterfall, colorLine, &q3[8], 2);
+                            QVector4D colorLine(0.8f, 0.8f, 0.6f, 1.0f);
+                            m_glShaderSimple.drawSegments(dv->m_glMatrixDsbWaterfall, colorLine, &q3[8], 2);
 
+                        }
                     }
                 }
             }
@@ -3652,46 +3795,50 @@ void GLSpectrumView::applyChanges()
                 }
             }
 
-            // Frequency overlay on highlighted marker
-            for (int i = 0; i < m_channelMarkerStates.size(); ++i)
+            if (!m_multiSlicesEnabled)                  // <<< TAMBAHKAN GUARD INI
             {
-                ChannelMarkerState* dv = m_channelMarkerStates[i];
-
-                if (dv->m_channelMarker->getHighlighted()
-                    && (dv->m_channelMarker->getSourceOrSinkStream() == m_displaySourceOrSink)
-                    && dv->m_channelMarker->streamIndexApplies(m_displayStreamIndex))
+                // Frequency overlay on highlighted marker
+                for (int i = 0; i < m_channelMarkerStates.size(); ++i)
                 {
-                    qreal xc;
-                    int shift;
-                    //ChannelMarker::sidebands_t sidebands = dv->m_channelMarker->getSidebands();
-                    xc = m_centerFrequency + dv->m_channelMarker->getCenterFrequency(); // marker center frequency
-                    QString ftext;
-                    switch (dv->m_channelMarker->getFrequencyScaleDisplayType())
+                    ChannelMarkerState* dv = m_channelMarkerStates[i];
+
+                    if (dv->m_channelMarker->getHighlighted()
+                        && (dv->m_channelMarker->getSourceOrSinkStream() == m_displaySourceOrSink)
+                        && dv->m_channelMarker->streamIndexApplies(m_displayStreamIndex))
                     {
-                    case ChannelMarker::FScaleDisplay_freq:
-                        ftext = QString::number((m_centerFrequency + dv->m_channelMarker->getCenterFrequency())/1e6, 'f', 6);
-                        break;
-                    case ChannelMarker::FScaleDisplay_title:
-                        ftext = dv->m_channelMarker->getTitle();
-                        break;
-                    case ChannelMarker::FScaleDisplay_addressSend:
-                        ftext = dv->m_channelMarker->getDisplayAddressSend();
-                        break;
-                    case ChannelMarker::FScaleDisplay_addressReceive:
-                        ftext = dv->m_channelMarker->getDisplayAddressReceive();
-                        break;
-                    default:
-                        ftext = QString::number((m_centerFrequency + dv->m_channelMarker->getCenterFrequency())/1e6, 'f', 6);
-                        break;
+                        qreal xc;
+                        int shift;
+                        //ChannelMarker::sidebands_t sidebands = dv->m_channelMarker->getSidebands();
+                        xc = m_centerFrequency + dv->m_channelMarker->getCenterFrequency(); // marker center frequency
+                        QString ftext;
+                        switch (dv->m_channelMarker->getFrequencyScaleDisplayType())
+                        {
+                        case ChannelMarker::FScaleDisplay_freq:
+                            ftext = QString::number((m_centerFrequency + dv->m_channelMarker->getCenterFrequency()) / 1e6, 'f', 6);
+                            break;
+                        case ChannelMarker::FScaleDisplay_title:
+                            ftext = dv->m_channelMarker->getTitle();
+                            break;
+                        case ChannelMarker::FScaleDisplay_addressSend:
+                            ftext = dv->m_channelMarker->getDisplayAddressSend();
+                            break;
+                        case ChannelMarker::FScaleDisplay_addressReceive:
+                            ftext = dv->m_channelMarker->getDisplayAddressReceive();
+                            break;
+                        default:
+                            ftext = QString::number((m_centerFrequency + dv->m_channelMarker->getCenterFrequency()) / 1e6, 'f', 6);
+                            break;
+                        }
+                        if (dv->m_channelMarker->getCenterFrequency() < 0) { // left half of scale
+                            ftext = " " + ftext;
+                            shift = 0;
+                        }
+                        else { // right half of scale
+                            ftext = ftext + " ";
+                            shift = -fm.horizontalAdvance(ftext);
+                        }
+                        painter.drawText(QPointF(m_leftMargin + m_frequencyScale.getPosFromValue(xc) + shift, 2 * fm.height() + fm.ascent() / 2 - 1), ftext);
                     }
-                    if (dv->m_channelMarker->getCenterFrequency() < 0) { // left half of scale
-                        ftext = " " + ftext;
-                        shift = 0;
-                    } else { // right half of scale
-                        ftext = ftext + " ";
-                        shift = - fm.horizontalAdvance(ftext);
-                    }
-                    painter.drawText(QPointF(m_leftMargin + m_frequencyScale.getPosFromValue(xc) + shift, 2*fm.height() + fm.ascent() / 2 - 1), ftext);
                 }
             }
 
@@ -5929,6 +6076,9 @@ void GLSpectrumView::clearManualSpan()
 
 void GLSpectrumView::enableMultiSlices(const QVector<qint64>& centersHz)
 {
+    qDebug() << "[SpectrumView] enableMultiSlices count=" << centersHz.size();
+    for (auto c : centersHz) qDebug() << "  cf=" << c;
+
     QMutexLocker lk(&m_mutex);
     m_multiSlicesEnabled = true;
     m_lockCapture = false;

@@ -16,34 +16,34 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.          //
 ///////////////////////////////////////////////////////////////////////////////////
 
-#ifndef INCLUDE_FREQSCANNERGUI_H
-#define INCLUDE_FREQSCANNERGUI_H
+#ifndef INCLUDE_WIDEBANDSCANNERGUI_H
+#define INCLUDE_WIDEBANDSCANNERGUI_H
 
 #include "channel/channelgui.h"
 #include "dsp/channelmarker.h"
 #include "util/messagequeue.h"
 #include "settings/rollupstate.h"
-#include "freqscanner.h"
-#include "freqscannersettings.h"
+#include "widebandscanner.h"
+#include "widebandscannersettings.h"
 
 class PluginAPI;
 class DeviceUISet;
 class BasebandSampleSink;
-class FreqScanner;
-class FreqScannerGUI;
+class WidebandScanner;
+class WidebandScannerGUI;
 class QMenu;
 class QComboBox;
 
 namespace Ui {
-    class FreqScannerGUI;
+    class WidebandScannerGUI;
 }
-class FreqScannerGUI;
+class WidebandScannerGUI;
 
-class FreqScannerGUI : public ChannelGUI {
+class WidebandScannerGUI : public ChannelGUI {
     Q_OBJECT
 
 public:
-    static FreqScannerGUI* create(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, BasebandSampleSink *rxChannel);
+    static WidebandScannerGUI* create(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, BasebandSampleSink *rxChannel);
     virtual void destroy();
 
     void resetToDefaults();
@@ -76,17 +76,17 @@ signals:
 
 
 private:
-    Ui::FreqScannerGUI* ui;
+    Ui::WidebandScannerGUI* ui;
     PluginAPI* m_pluginAPI;
     DeviceUISet* m_deviceUISet;
     ChannelMarker m_channelMarker;
     RollupState m_rollupState;
-    FreqScannerSettings m_settings;
+    WidebandScannerSettings m_settings;
     QList<QString> m_settingsKeys;
     qint64 m_deviceCenterFrequency;
     bool m_doApplySettings;
 
-    FreqScanner* m_freqScanner;
+    WidebandScanner* m_widebandScanner;
     int m_basebandSampleRate;
     MessageQueue m_inputMessageQueue;
 
@@ -94,8 +94,8 @@ private:
 
     AvailableChannelOrFeatureList m_availableChannels;
 
-    explicit FreqScannerGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, BasebandSampleSink *rxChannel, QWidget* parent = 0);
-    virtual ~FreqScannerGUI();
+    explicit WidebandScannerGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, BasebandSampleSink *rxChannel, QWidget* parent = 0);
+    virtual ~WidebandScannerGUI();
 
     void blockApplySettings(bool block);
     void applySetting(const QString& settingsKey);
@@ -105,7 +105,7 @@ private:
     bool handleMessage(const Message& message);
     void makeUIConnections();
     void updateAbsoluteCenterFrequency();
-    void addRow(const FreqScannerSettings::FrequencySettings& frequencySettings);
+    void addRow(const WidebandScannerSettings::FrequencySettings& frequencySettings);
     void updateAnnotation(int row);
     void updateAnnotations();
     void updateChannelsCombo(QComboBox *combo, const AvailableChannelOrFeatureList& channels, const QString& channel, bool empty);
@@ -138,7 +138,7 @@ private:
     void startScanWithTableCenters();
 
     // Rasio overlap (0.0..0.9). Default 20%:
-    static constexpr double kOverlapRatio = 0.20;
+    static constexpr double kOverlapRatio = 0.30;
 
     // Generate centers selaras SR dari fmin..fmax (Hz), dengan overlap rasio
     static QVector<qint64> generateCentersSRAligned(qint64 fminHz, qint64 fmaxHz,
@@ -200,6 +200,8 @@ private slots:
 	void scanTimeDecClick();
 	void retransmitTimeIncClick();
 	void retransmitTimeDecClick();
+
+    void onScanTimeChanged(int index);
 };
 
-#endif // INCLUDE_FREQSCANNERGUI_H
+#endif // INCLUDE_WIDEBANDSCANNERGUI_H

@@ -116,7 +116,7 @@ ChannelGUI::ChannelGUI(QWidget *parent) :
     m_duplicateButton->setFixedSize(20, 20);
     QIcon m_duplicateIcon(":/duplicate.png");
     m_duplicateButton->setIcon(m_duplicateIcon);
-    m_duplicateButton->setToolTip("Duplicate channel");
+    m_duplicateButton->setToolTip("Duplicate channel"); 
 
     m_moveToDeviceButton = new QPushButton();
     m_moveToDeviceButton->setFixedSize(20, 20);
@@ -467,6 +467,15 @@ void ChannelGUI::shrinkWindow()
 void ChannelGUI::setTitle(const QString& title)
 {
     m_titleLabel->setText(title);
+
+    // for wideband only
+    if (title == "Wideband Scanner") {
+        m_statusFrequency->setVisible(false);
+        m_moveToDeviceButton->setVisible(false);
+        m_duplicateButton->setVisible(false);
+
+        QTimer::singleShot(0, this, SLOT(shrinkWindow()));
+    }
 }
 
 void ChannelGUI::setTitleColor(const QColor& c)

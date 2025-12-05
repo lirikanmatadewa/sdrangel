@@ -1,0 +1,86 @@
+///////////////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2019-2021 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
+// Copyright (C) 2020-2021, 2023 Jon Beniston, M7RCE <jon@beniston.com>          //
+// Copyright (C) 2020 Kacper Michajłow <kasper93@gmail.com>                      //
+//                                                                               //
+// This program is free software; you can redistribute it and/or modify          //
+// it under the terms of the GNU General Public License as published by          //
+// the Free Software Foundation as version 3 of the License, or                  //
+// (at your option) any later version.                                           //
+//                                                                               //
+// This program is distributed in the hope that it will be useful,               //
+// but WITHOUT ANY WARRANTY; without even the implied warranty of                //
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                  //
+// GNU General Public License V3 for more details.                               //
+//                                                                               //
+// You should have received a copy of the GNU General Public License             //
+// along with this program. If not, see <http://www.gnu.org/licenses/>.          //
+///////////////////////////////////////////////////////////////////////////////////
+
+#ifndef INCLUDE_WIDEBANDSCANNERSINK_H
+#define INCLUDE_WIDEBANDSCANNERSINK_H
+
+#include <QDateTime>
+
+#include "dsp/channelsamplesink.h"
+#include "dsp/nco.h"
+#include "dsp/interpolator.h"
+#include "dsp/fftengine.h"
+#include "dsp/fftwindow.h"
+#include "util/fixedaverage2d.h"
+#include "util/messagequeue.h"
+
+#include "widebandscannersettings.h"
+
+class ChannelAPI;
+class WidebandScanner;
+
+class WidebandScannerSink : public ChannelSampleSink {
+public:
+    WidebandScannerSink(WidebandScanner *packetDemod);
+    ~WidebandScannerSink();
+
+    virtual void feed(const SampleVector::const_iterator& begin, const SampleVector::const_iterator& end);
+
+    void applyChannelSettings(int channelSampleRate, int channelFrequencyOffset, int scannerSampleRate, int fftSize, int binsPerChannel, bool force = false);
+    void applySettings(const WidebandScannerSettings& settings, const QStringList& settingsKeys, bool force = false);
+    void setMessageQueueToChannel(MessageQueue *messageQueue) { m_messageQueueToChannel = messageQueue; }
+    void setChannel(ChannelAPI *channel) { m_channel = channel; }
+    void setCenterFrequency(qint64 centerFrequency) { m_centerFrequency = centerFrequency; }
+
+private:
+
+    WidebandScanner *m_widebandScanner;
+    WidebandScannerSettings m_settings;
+    ChannelAPI *m_channel;
+    int m_channelSampleRate;
+    int m_channelFrequencyOffset;
+    int m_scannerSampleRate; // Sample rate scanner runs at
+    qint64 m_centerFrequency;
+
+    NCO m_nco;
+    Interpolator m_interpolator;
+    Real m_interpolatorDistance;
+    Real m_interpolatorDistanceRemain;
+
+    MessageQueue *m_messageQueueToChannel;
+
+    int m_fftSequence;
+    FFTEngine *m_fft;
+    int m_fftCounter;
+    FFTWindow m_fftWindow;
+    int m_fftSize;
+    int m_binsPerChannel;
+    QDateTime m_fftStartTime;
+    FixedAverage2D<Real> m_fftAverage;     // magSq average
+    QVector<Real> m_magSq;
+    int m_averageCount;
+
+    void processOneSample(Complex &ci);
+    MessageQueue *getMessageQueueToChannel() { return m_messageQueueToChannel; }
+    Real totalPower(int bin, int channelBins) const;
+    Real peakPower(int bin, int channelBins) const;
+    Real magSq(int bin) const;
+};
+
+#endif // INCLUDE_WIDEBANDSCANNERSINK_H

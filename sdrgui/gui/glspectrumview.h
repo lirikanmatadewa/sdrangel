@@ -346,6 +346,17 @@ private:
 
     bool m_multiCompositeDirty = false;
 
+    struct CycleSlice {
+        qint32        sampleRate = 0;
+        int           fftSize = 0;
+        QVector<Real> data;
+    };
+
+    QHash<qint64, CycleSlice> m_cycleSlices;   // data per CF aktual dalam siklus berjalan
+    QSet<qint64>              m_cycleCFs;      // set CF yang sudah dikumpulkan
+    qint64                    m_prevCF = std::numeric_limits<qint64>::min();
+    int                       m_cycleDir = 0;  // +1: naik, -1: turun, 0: belum tahu
+
     struct ChannelMarkerState {
         ChannelMarker* m_channelMarker;
         QMatrix4x4 m_glMatrixWaterfall;
