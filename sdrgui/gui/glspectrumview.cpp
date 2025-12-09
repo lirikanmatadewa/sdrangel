@@ -760,6 +760,11 @@ void GLSpectrumView::newSpectrum(const Real* spectrum, int nbBins, int fftSize)
             updateWaterfall(spectrum);
             update3DSpectrogram(spectrum);
             updateHistogram(spectrum);
+
+            if (m_messageQueueToGUI) {
+                m_messageQueueToGUI->push(new MsgReportLivePowersTick());
+            }
+
             return;
         }
 
@@ -962,6 +967,10 @@ void GLSpectrumView::newSpectrum(const Real* spectrum, int nbBins, int fftSize)
         update3DSpectrogram(line);
         updateHistogram(line);
 
+        if (m_messageQueueToGUI) {
+            m_messageQueueToGUI->push(new MsgReportLivePowersTick());
+        }
+
         // Reset siklus (bersihkan flag; cache pusat unik dipertahankan)
         for (auto& sl : m_slices) sl.hasData = false;
         std::fill(s_seenUniq.begin(), s_seenUniq.end(), false);
@@ -975,6 +984,10 @@ void GLSpectrumView::newSpectrum(const Real* spectrum, int nbBins, int fftSize)
     updateWaterfall(spectrum);
     update3DSpectrogram(spectrum);
     updateHistogram(spectrum);
+
+    if (m_messageQueueToGUI) {
+        m_messageQueueToGUI->push(new MsgReportLivePowersTick());
+    }
 }
 
 void GLSpectrumView::updateWaterfall(const Real *spectrum)
@@ -4034,37 +4047,48 @@ void GLSpectrumView::updateHistogramMarkers()
     if (m_sampleRate == 0) {
         return;
     }
-    int64_t centerFrequency;
-    int frequencySpan;
-    getFrequencyZoom(centerFrequency, frequencySpan);
-    int effFftSize = m_fftSize * ((float) frequencySpan / (float) m_sampleRate);
 
     for (int i = 0; i < m_histogramMarkers.size(); i++)
     {
         float powerI = m_linear ?
             m_histogramMarkers.at(i).m_power * (m_useCalibration ? m_calibrationGain : 1.0f) :
             CalcDb::dbPower(m_histogramMarkers.at(i).m_power) + (m_useCalibration ? m_calibrationShiftdB : 0.0f);
+
+        // Posisi X/Y di layar tetap pakai m_frequencyScale / m_powerScale seperti sebelumnya
         m_histogramMarkers[i].m_point.rx() =
             (m_histogramMarkers[i].m_frequency - m_frequencyScale.getRangeMin()) / m_frequencyScale.getRange();
         m_histogramMarkers[i].m_point.ry() =
             (m_powerScale.getRangeMax() - powerI) / m_powerScale.getRange();
-        // m_histogramMarkers[i].m_fftBin =
-        //     (((m_histogramMarkers[i].m_frequency - m_centerFrequency) / (float) m_sampleRate) + 0.5) * m_fftSize;
-        m_histogramMarkers[i].m_fftBin =
-            (((m_histogramMarkers[i].m_frequency - centerFrequency) / (float) frequencySpan) + 0.5) * effFftSize;
+
+        // === BIN marker: gunakan helper yang aware wideband / manual span ===
+        int bin = frequencyToBin(m_histogramMarkers[i].m_frequency);
+
+        if (m_nbBins > 0) {
+            if (bin < 0) {
+                bin = 0;
+            }
+            else if (bin >= m_nbBins) {
+                bin = m_nbBins - 1;
+            }
+            m_histogramMarkers[i].m_fftBin = bin;
+        }
+        else {
+            m_histogramMarkers[i].m_fftBin = -1;
+        }
+
+        // Clamp 0..1 untuk koordinat normalisasi
         m_histogramMarkers[i].m_point.rx() = m_histogramMarkers[i].m_point.rx() < 0 ?
             0 : m_histogramMarkers[i].m_point.rx() > 1 ?
-                1 : m_histogramMarkers[i].m_point.rx();
+            1 : m_histogramMarkers[i].m_point.rx();
         m_histogramMarkers[i].m_point.ry() = m_histogramMarkers[i].m_point.ry() < 0 ?
             0 : m_histogramMarkers[i].m_point.ry() > 1 ?
-                1 : m_histogramMarkers[i].m_point.ry();
-        m_histogramMarkers[i].m_fftBin = m_histogramMarkers[i].m_fftBin < 0 ?
-            0 : m_histogramMarkers[i].m_fftBin > m_fftSize - 1 ?
-                m_fftSize - 1 : m_histogramMarkers[i].m_fftBin;
+            1 : m_histogramMarkers[i].m_point.ry();
+
+        // String frequency & power tetap sama
         m_histogramMarkers[i].m_frequencyStr = displayScaled(
             m_histogramMarkers[i].m_frequency,
             'f',
-            getPrecision((m_centerFrequency*1000)/m_sampleRate),
+            getPrecision((m_centerFrequency * 1000) / m_sampleRate),
             false);
         m_histogramMarkers[i].m_powerStr = displayPower(
             powerI,
@@ -6123,35 +6147,36 @@ float GLSpectrumView::getHistogramLivePowerAtIndex(int idx) const
         return NAN;
     }
 
-    // Bin marker
     const auto& mk = m_histogramMarkers.at(idx);
-    int bin = mk.m_fftBin;
 
-    // Fallback: kalau m_fftBin belum diisi, hitung dari frekuensi marker (opsional)
-    if (bin < 0) {
-        const qint64 f = mk.m_frequency;
-        // pastikan kamu punya helper frequencyToBin(f)
-        bin = frequencyToBin(f);
-    }
+    // hitung bin dari frekuensi marker terhadap lebar spectrum
+    int bin = frequencyToBin(mk.m_frequency);
 
-    // Validasi buffer spektrum
-    if (m_currentSpectrum == nullptr || m_nbBins <= 0 || bin < 0 || bin >= m_nbBins) {
+    if (m_currentSpectrum == nullptr || m_nbBins <= 0) {
         return NAN;
     }
 
-    // Ambil sample power: konversi ke dB jika spektrum linear
+    // Clamp ke range buffer spektrum yang ada (0 .. m_nbBins-1)
+    if (bin < 0) {
+        bin = 0;
+    }
+    else if (bin >= m_nbBins) {
+        bin = m_nbBins - 1;
+    }
+
     float p = m_currentSpectrum[bin];
+
     if (m_linear) {
         p = CalcDb::dbPower(p);
     }
 
-    // Terapkan kalibrasi (dB shift)
     if (m_useCalibration) {
         p += m_calibrationShiftdB;
     }
 
     return p; // dB
 }
+
 
 // marker
 void GLSpectrumView::postMarkersChangedToGUI()
