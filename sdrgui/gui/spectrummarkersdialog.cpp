@@ -26,6 +26,7 @@
 #include "util/csv.h"
 #include "spectrummarkersdialog.h"
 
+#include "gui/rollupcontents.h"
 #include "ui_spectrummarkersdialog.h"
 
 
@@ -57,6 +58,41 @@ SpectrumMarkersDialog::SpectrumMarkersDialog(
     ui->setupUi(this);
     ui->markerFrequency->setColorMapper(ColorMapper(ColorMapper::GrayGold));
     ui->markerFrequency->setValueRange(false, 12, -999999999999L, 999999999999L);
+
+    ui->verticalSpacer_4->changeSize(0, 0, QSizePolicy::Fixed, QSizePolicy::Fixed);
+    ui->commonLayout->setContentsMargins(0, 0, 0, 0);
+    ui->verticalLayout->invalidate();
+    ui->verticalLayout->activate();
+
+    ui->verticalLayout->setContentsMargins(0, 0, 0, 0);
+    ui->verticalLayout->setSpacing(0);
+    ui->commonLayout->setContentsMargins(0, 0, 0, 0);
+
+    auto rollup = new RollupContents(this);
+    rollup->setContentsMargins(0, 0, 0, 0);
+
+    // taruh sebelum commonLayout
+    int idx = ui->verticalLayout->indexOf(ui->commonLayout);
+    ui->verticalLayout->insertWidget(idx, rollup);
+
+    QWidget* histogram = ui->widget;
+    QWidget* waterfall = ui->widget_2;
+
+    histogram->setParent(rollup);
+    waterfall->setParent(rollup);
+
+    histogram->setWindowTitle("Histogram");
+    waterfall->setWindowTitle("Waterfall");
+
+    // PENTING: jangan Expanding
+    histogram->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    waterfall->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+
+    histogram->show();
+    waterfall->hide();
+
+    rollup->arrangeRollups();
+    rollup->updateGeometry();
 
     // marker
     repopulateMarkerCombo();
@@ -136,6 +172,7 @@ SpectrumMarkersDialog::SpectrumMarkersDialog(
     ui->wSetReference->hide();
 
     ui->tabWidget->hide();
+
 }
 
 SpectrumMarkersDialog::~SpectrumMarkersDialog()
