@@ -43,7 +43,7 @@ else()
   set(DEFAULT_ENABLE_LIBUNWIND OFF)
 endif()
 option(ENABLE_LIBUNWIND "Use libunwind for stack traces in exception handlers" ${DEFAULT_ENABLE_LIBUNWIND})
-set(VKFFT_BACKEND 1 CACHE STRING "vkFFT Backend: 0 - Vulkan, 1 - CUDA")
+set(VKFFT_BACKEND 0 CACHE STRING "vkFFT Backend: 0 - Vulkan, 1 - CUDA")
 option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 
 set(HAVE_LIBUNWIND OFF)
