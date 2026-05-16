@@ -26,6 +26,9 @@
 #include "util/messagequeue.h"
 #include "settings/rollupstate.h"
 
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+
 #include "wfmdemodsettings.h"
 
 class PluginAPI;
@@ -96,6 +99,8 @@ private:
 	void leaveEvent(QEvent*);
 	void enterEvent(EnterEventType*);
 
+	QNetworkAccessManager* m_networkManager;
+
 private slots:
 	void on_deltaFrequency_changed(qint64 value);
 	void on_rfBW_changed(quint64 value);
@@ -108,6 +113,8 @@ private slots:
     void handleInputMessages();
     void audioSelect(const QPoint& p);
 	void tick();
+
+	void on_DF();
 };
 
 #endif // INCLUDE_WFMDEMODGUI_H

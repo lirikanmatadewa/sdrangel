@@ -275,6 +275,10 @@ MapGUI::MapGUI(PluginAPI* pluginAPI, FeatureUISet *featureUISet, Feature *featur
     ui->map->rootContext()->setContextProperty("imageModelFiltered", &m_imageMapFilter);
     ui->map->rootContext()->setContextProperty("polygonModelFiltered", &m_polygonMapFilter);
     ui->map->rootContext()->setContextProperty("polylineModelFiltered", &m_polylineMapFilter);
+
+    // bearing
+    ui->map->rootContext()->setContextProperty("mapGui", this);
+
     connect(ui->map, &QQuickWidget::statusChanged, this, &MapGUI::statusChanged);
 #if (QT_VERSION < QT_VERSION_CHECK(6, 0, 0))
     ui->map->setSource(QUrl(QStringLiteral("qrc:/map/map/map.qml")));
@@ -386,6 +390,16 @@ MapGUI::MapGUI(PluginAPI* pluginAPI, FeatureUISet *featureUISet, Feature *featur
     new DialogPositioner(&m_ibpBeaconDialog, true);
     new DialogPositioner(&m_radioTimeDialog, true);
     m_resizer.enableChildMouseTracking();
+
+    // bearing
+    m_bearingApiManager = new QNetworkAccessManager(this);
+    connect(&m_bearingApiTimer, &QTimer::timeout, this, &MapGUI::requestBearingApi);
+    connect(m_bearingApiManager, &QNetworkAccessManager::finished,
+        this, &MapGUI::bearingApiReplyFinished);
+
+    m_bearingLineName = "Bearing Nawasanga";
+    m_bearingColor = QColor("#00ff00");
+    startBearingApi("http://192.168.1.10:9000/get_map_data", 1);
 }
 
 MapGUI::~MapGUI()
@@ -2836,3 +2850,211 @@ void MapGUI::makeUIConnections()
     QObject::connect(ui->radiotime, &QToolButton::clicked, this, &MapGUI::on_radiotime_clicked);
 }
 
+// bearing
+void MapGUI::startBearingApi(const QString& url, int refreshSeconds)
+{
+    m_bearingApiUrl = url;
+    setBearingRefreshInterval(refreshSeconds);
+
+    requestBearingApi(); // ambil langsung sekali
+    m_bearingApiTimer.start();
+}
+
+void MapGUI::stopBearingApi()
+{
+    m_bearingApiTimer.stop();
+}
+
+void MapGUI::setBearingRefreshInterval(int seconds)
+{
+    if (seconds < 1) {
+        seconds = 1;
+    }
+
+    m_bearingRefreshSeconds = seconds;
+    m_bearingApiTimer.setInterval(m_bearingRefreshSeconds * 1000);
+}
+
+void MapGUI::requestBearingApi()
+{
+    if (m_bearingApiUrl.isEmpty() || m_bearingApiBusy) {
+        return;
+    }
+
+    m_bearingApiBusy = true;
+
+    QNetworkRequest request{ QUrl(m_bearingApiUrl) };
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    m_bearingApiManager->get(request);
+}
+
+void MapGUI::bearingApiReplyFinished(QNetworkReply* reply)
+{
+    m_bearingApiBusy = false;
+
+    if (!reply) {
+        return;
+    }
+
+    if (reply->error() != QNetworkReply::NoError)
+    {
+        qWarning() << "MapGUI::bearingApiReplyFinished network error:"
+            << reply->errorString();
+        reply->deleteLater();
+        return;
+    }
+
+    QByteArray responseBytes = reply->readAll();
+    reply->deleteLater();
+
+    //qDebug() << "API Response:" << responseBytes;
+
+    QJsonParseError parseError;
+    QJsonDocument doc = QJsonDocument::fromJson(responseBytes, &parseError);
+
+    if (parseError.error != QJsonParseError::NoError)
+    {
+        qWarning() << "MapGUI::bearingApiReplyFinished JSON parse error:"
+            << parseError.errorString()
+            << "response:" << responseBytes;
+        return;
+    }
+
+    if (!doc.isObject())
+    {
+        qWarning() << "MapGUI::bearingApiReplyFinished response is not JSON object:"
+            << responseBytes;
+        return;
+    }
+
+    QJsonObject obj = doc.object();
+
+    if (!obj.contains("start_lat") ||
+        !obj.contains("start_lon") ||
+        !obj.contains("end_lat") ||
+        !obj.contains("end_lon") ||
+        !obj.contains("kraken_bearing_relative"))
+    {
+        qWarning() << "MapGUI::bearingApiReplyFinished missing required fields:"
+            << responseBytes;
+        return;
+    }
+
+    double startLat = obj.value("start_lat").toDouble();
+    double startLon = obj.value("start_lon").toDouble();
+    double endLat = obj.value("end_lat").toDouble();
+    double endLon = obj.value("end_lon").toDouble();
+    double bearingRelative = obj.value("kraken_bearing_relative").toDouble();
+    setDoaAngle(bearingRelative);
+
+    //qDebug() << "Start:" << startLat << startLon;
+    //qDebug() << "End:" << endLat << endLon;
+    //qDebug() << "Bearing relative:" << bearingRelative;
+
+    // Optional: update posisi marker station ke start point API
+    m_antennaMapItem.setLatitude(startLat);
+    m_antennaMapItem.setLongitude(startLon);
+    m_antennaMapItem.setAltitude(0.0);
+
+    if (m_antennaMapItem.getPositionDateTime() != nullptr) {
+        delete m_antennaMapItem.getPositionDateTime();
+    }
+
+    m_antennaMapItem.setPositionDateTime(
+        new QString(QDateTime::currentDateTime().toString(Qt::ISODateWithMs))
+    );
+
+    update(m_map, &m_antennaMapItem, "Station");
+
+    updateBearingLineFromApi(startLat,
+        startLon,
+        endLat,
+        endLon,
+        bearingRelative,
+        m_bearingLineName,
+        m_bearingColor);
+}
+
+void MapGUI::updateBearingLineFromApi(double startLat,
+    double startLon,
+    double endLat,
+    double endLon,
+    double bearingRelative,
+    const QString& name,
+    const QColor& color)
+{
+    SWGSDRangel::SWGMapItem lineItem;
+
+    lineItem.setName(new QString(name));
+    lineItem.setLatitude(startLat);
+    lineItem.setLongitude(startLon);
+    lineItem.setAltitude(0.0);
+    lineItem.setImage(new QString("none"));
+    lineItem.setImageRotation(0);
+    lineItem.setFixedPosition(true);
+    lineItem.setOrientation(0);
+    lineItem.setAltitudeReference(1);
+    lineItem.setType(3); // polyline
+
+    QGeoCoordinate startCoord(startLat, startLon);
+    QGeoCoordinate endCoord(endLat, endLon);
+
+    double distanceMeters = startCoord.distanceTo(endCoord);
+    double azimuthDeg = startCoord.azimuthTo(endCoord);
+
+    QString text = QString("API Bearing Line\n"
+        "Start: %1, %2\n"
+        "End: %3, %4\n"
+        "Distance: %5 m\n"
+        "Azimuth: %6 deg\n"
+        "Kraken Bearing Relative: %7 deg")
+        .arg(startLat, 0, 'f', 8)
+        .arg(startLon, 0, 'f', 8)
+        .arg(endLat, 0, 'f', 8)
+        .arg(endLon, 0, 'f', 8)
+        .arg(distanceMeters, 0, 'f', 2)
+        .arg(azimuthDeg, 0, 'f', 2)
+        .arg(bearingRelative, 0, 'f', 2);
+
+    lineItem.setText(new QString(text));
+    lineItem.setLabel(new QString(QString("%1 (%2°)")
+        .arg(name)
+        .arg(bearingRelative, 0, 'f', 1)));
+    lineItem.setLabelAltitudeOffset(4.5);
+
+    QList<SWGSDRangel::SWGMapCoordinate*>* coords =
+        new QList<SWGSDRangel::SWGMapCoordinate*>();
+
+    SWGSDRangel::SWGMapCoordinate* pStart = new SWGSDRangel::SWGMapCoordinate();
+    pStart->setLatitude(startLat);
+    pStart->setLongitude(startLon);
+    pStart->setAltitude(0.0);
+    coords->append(pStart);
+
+    SWGSDRangel::SWGMapCoordinate* pEnd = new SWGSDRangel::SWGMapCoordinate();
+    pEnd->setLatitude(endLat);
+    pEnd->setLongitude(endLon);
+    pEnd->setAltitude(0.0);
+    coords->append(pEnd);
+
+    lineItem.setCoordinates(coords);
+
+    qint32 colorInt = (color.red() << 16) |
+        (color.green() << 8) |
+        (color.blue());
+
+    lineItem.setColor(colorInt);
+
+    update(m_map, &lineItem, "Station");
+}
+
+void MapGUI::setDoaAngle(double angle)
+{
+    if (qFuzzyCompare(m_doaAngle + 1.0, angle + 1.0)) {
+        return;
+    }
+
+    m_doaAngle = angle;
+    qDebug() << "MapGUI::setDoaAngle =" << m_doaAngle;
+    emit doaAngleChanged();
+}

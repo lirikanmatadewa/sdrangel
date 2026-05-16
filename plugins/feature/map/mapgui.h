@@ -36,6 +36,15 @@
 #include <math.h>
 #include <limits>
 
+// bearing
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QColor>
+#include <QGeoCoordinate>
+
+
 #include "feature/featuregui.h"
 #include "util/messagequeue.h"
 #include "util/giro.h"
@@ -148,6 +157,9 @@ struct IonosondeStation {
 
 class MapGUI : public FeatureGUI {
     Q_OBJECT
+        // bearing
+        Q_PROPERTY(double doaAngle READ doaAngle WRITE setDoaAngle NOTIFY doaAngleChanged)
+        Q_PROPERTY(QString doaLabel READ doaLabel NOTIFY doaAngleChanged)
 public:
     static MapGUI* create(PluginAPI* pluginAPI, FeatureUISet *featureUISet, Feature *feature);
     virtual void destroy();
@@ -187,6 +199,15 @@ public:
     Q_INVOKABLE void supportedMapsChanged();
     MapSettings::MapItemSettings *getItemSettings(const QString &group);
     CesiumInterface *cesium() { return m_cesium; }
+
+    // bearing
+    void startBearingApi(const QString& url, int refreshSeconds = 1);
+    void stopBearingApi();
+    void setBearingRefreshInterval(int seconds);
+
+    double doaAngle() const { return m_doaAngle; }
+    QString doaLabel() const { return QString::number(m_doaAngle, 'f', 0); }
+    void setDoaAngle(double angle);
 
 private:
     Ui::MapGUI* ui;
@@ -302,7 +323,36 @@ private:
         NASA_ROWS
     };
 
+    // bearing
+    QNetworkAccessManager* m_bearingApiManager;
+    QTimer m_bearingApiTimer;
+    QString m_bearingApiUrl;
+    int m_bearingRefreshSeconds = 1;
+    bool m_bearingApiBusy = false;
+
+    QString m_bearingLineName = "API Bearing Line";
+    QColor m_bearingColor = QColor("#ff0000");
+
+    void requestBearingApi();
+    void updateBearingLineFromApi(double startLat,
+        double startLon,
+        double endLat,
+        double endLon,
+        double bearingRelative,
+        const QString& name,
+        const QColor& color);
+
+    double m_doaAngle = 0.0;
+
+
+signals:
+    void doaAngleChanged();
+
+
 private slots:
+    // bearing
+    void bearingApiReplyFinished(QNetworkReply* reply);
+
     void init3DMap();
     void onMenuDialogCalled(const QPoint &p);
     void onWidgetRolled(QWidget* widget, bool rollDown);
@@ -363,5 +413,7 @@ private slots:
     void linkClicked(const QString& url);
 
 };
+
+
 
 #endif // INCLUDE_FEATURE_MAPGUI_H_

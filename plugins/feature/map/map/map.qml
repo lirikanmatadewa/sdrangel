@@ -20,15 +20,14 @@ Item {
             paramString = paramString + parameter
         }
         var pluginString = 'import QtLocation 5.14; Plugin{ name:"' + mapProvider + '"; '  + paramString + '}'
-        var plugin = Qt.createQmlObject (pluginString, qmlMap)
+        var plugin = Qt.createQmlObject(pluginString, qmlMap)
 
         if (mapPtr) {
-            // Objects aren't destroyed immediately, so don't call findChild("map")
             mapPtr.destroy()
             mapPtr = null
         }
         mapPtr = actualMapComponent.createObject(page)
-        mapPtr.plugin = plugin;
+        mapPtr.plugin = plugin
         mapPtr.forceActiveFocus()
         return mapPtr
     }
@@ -56,6 +55,285 @@ Item {
         anchors.fill: parent
     }
 
+    Item{
+        id: doaOverlay
+        anchors.left: parent.left
+        anchors.top: parent.top
+        anchors.margins: 8
+        width: 240
+        height: 240
+        z: 9999
+        visible: (typeof mapGui !== "undefined" && mapGui !== null)
+
+        Rectangle {
+            anchors.fill: parent
+            radius: 8
+            color: "#66000000"
+            border.width: 1
+            border.color: "#66ffffff"
+        }
+
+        Text {
+            id: doaTitle
+            property string currentAngleText: "0"
+            anchors.left: parent.left
+            anchors.top: parent.top
+            anchors.leftMargin: 10
+            anchors.topMargin: 8
+            text: "MAX DOA Angle: " + currentAngleText
+            color: "white"
+            font.pixelSize: 14
+            font.bold: true
+            z: 2
+
+            function updateAngleText() {
+                var angleValue = 0
+                if (typeof mapGui !== "undefined" && mapGui !== null) {
+                    angleValue = Number(mapGui.doaAngle)
+                }
+                if (isNaN(angleValue)) {
+                    angleValue = 0
+                }
+                currentAngleText = Math.round(angleValue).toString()
+            }
+
+            Component.onCompleted: {
+                updateAngleText()
+            }
+        }
+
+                Canvas {
+            id: doaCanvas
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: doaTitle.bottom
+            anchors.bottom: parent.bottom
+            anchors.margins: 8
+
+            onPaint: {
+                var ctx = getContext("2d")
+                ctx.reset()
+
+                var w = width
+                var h = height
+                var cx = w / 2
+                var cy = h / 2 + 8
+                var r = Math.min(w, h) * 0.42
+
+                // ===== background =====
+                var bgGrad = ctx.createRadialGradient(cx, cy, r * 0.08, cx, cy, r)
+                bgGrad.addColorStop(0.0, "#0d1522")
+                bgGrad.addColorStop(0.55, "#09111b")
+                bgGrad.addColorStop(1.0, "#04070c")
+
+                ctx.beginPath()
+                ctx.arc(cx, cy, r, 0, 2 * Math.PI)
+                ctx.fillStyle = bgGrad
+                ctx.fill()
+
+                // outer glow ring
+                ctx.beginPath()
+                ctx.arc(cx, cy, r + 2, 0, 2 * Math.PI)
+                ctx.strokeStyle = "rgba(110,170,255,0.18)"
+                ctx.lineWidth = 6
+                ctx.stroke()
+
+                // outer ring
+                ctx.beginPath()
+                ctx.arc(cx, cy, r, 0, 2 * Math.PI)
+                ctx.strokeStyle = "#7aa7d9"
+                ctx.lineWidth = 1.5
+                ctx.stroke()
+
+                // ===== concentric rings =====
+                for (var i = 1; i <= 5; i++) {
+                    var rr = r * i / 5
+                    ctx.beginPath()
+                    ctx.arc(cx, cy, rr, 0, 2 * Math.PI)
+                    ctx.strokeStyle = (i === 5) ? "rgba(100,160,220,0.28)" : "rgba(90,130,170,0.16)"
+                    ctx.lineWidth = 1
+                    ctx.stroke()
+                }
+
+                // ===== radial lines =====
+                for (var deg = 0; deg < 360; deg += 45) {
+                    var rr1 = (deg - 90) * Math.PI / 180.0
+                    var x = cx + Math.cos(rr1) * r
+                    var y = cy + Math.sin(rr1) * r
+
+                    ctx.beginPath()
+                    ctx.moveTo(cx, cy)
+                    ctx.lineTo(x, y)
+                    ctx.strokeStyle = (deg % 90 === 0) ? "rgba(130,180,230,0.28)" : "rgba(130,180,230,0.14)"
+                    ctx.lineWidth = (deg % 90 === 0) ? 1.2 : 1
+                    ctx.stroke()
+                }
+
+                // ===== degree labels =====
+                ctx.fillStyle = "rgba(255,255,255,0.92)"
+                ctx.font = "bold 12px sans-serif"
+                var labels = [0, 45, 90, 135, 180, 225, 270, 315]
+                for (var j = 0; j < labels.length; j++) {
+                    var d = labels[j]
+                    var rad = (d - 90) * Math.PI / 180.0
+                    var lx = cx + Math.cos(rad) * (r + 18)
+                    var ly = cy + Math.sin(rad) * (r + 18)
+                    ctx.fillText(d + "\u00B0", lx - 14, ly + 4)
+                }
+
+                // ===== safe DOA read =====
+                var doa = 0
+                if (typeof mapGui !== "undefined" && mapGui !== null) {
+                    doa = Number(mapGui.doaAngle)
+                }
+                if (isNaN(doa)) {
+                    doa = 0
+                }
+
+                // ===== orientation config =====
+                var spreadDeg = 42
+                var angleOffset = -90
+
+                var startDeg = doa - spreadDeg / 2
+                var endDeg = doa + spreadDeg / 2
+
+                var startRad = (startDeg + angleOffset) * Math.PI / 180.0
+                var endRad = (endDeg + angleOffset) * Math.PI / 180.0
+                var doaRad = (doa + angleOffset) * Math.PI / 180.0
+
+                // ===== soft wedge glow =====
+                ctx.beginPath()
+                ctx.moveTo(cx, cy)
+                ctx.arc(cx, cy, r * 0.96, startRad, endRad, false)
+                ctx.closePath()
+                ctx.fillStyle = "rgba(88, 130, 255, 0.18)"
+                ctx.fill()
+
+                // inner wedge
+                ctx.beginPath()
+                ctx.moveTo(cx, cy)
+                ctx.arc(cx, cy, r * 0.88, startRad, endRad, false)
+                ctx.closePath()
+                var wedgeGrad = ctx.createRadialGradient(cx, cy, r * 0.06, cx, cy, r * 0.88)
+                wedgeGrad.addColorStop(0.0, "rgba(130,180,255,0.35)")
+                wedgeGrad.addColorStop(0.65, "rgba(90,120,255,0.22)")
+                wedgeGrad.addColorStop(1.0, "rgba(70,95,220,0.10)")
+                ctx.fillStyle = wedgeGrad
+                ctx.fill()
+
+                // wedge edge lines
+                ctx.beginPath()
+                ctx.moveTo(cx, cy)
+                ctx.lineTo(cx + Math.cos(startRad) * r * 0.9, cy + Math.sin(startRad) * r * 0.9)
+                ctx.moveTo(cx, cy)
+                ctx.lineTo(cx + Math.cos(endRad) * r * 0.9, cy + Math.sin(endRad) * r * 0.9)
+                ctx.strokeStyle = "rgba(150,190,255,0.26)"
+                ctx.lineWidth = 1.2
+                ctx.stroke()
+
+                // ===== needle glow =====
+                var tipX = cx + Math.cos(doaRad) * r * 0.86
+                var tipY = cy + Math.sin(doaRad) * r * 0.86
+                var tailX = cx - Math.cos(doaRad) * r * 0.18
+                var tailY = cy - Math.sin(doaRad) * r * 0.18
+
+                ctx.beginPath()
+                ctx.moveTo(tailX, tailY)
+                ctx.lineTo(tipX, tipY)
+                ctx.strokeStyle = "rgba(90,170,255,0.22)"
+                ctx.lineWidth = 10
+                ctx.lineCap = "round"
+                ctx.stroke()
+
+                // ===== modern needle body =====
+                var nx = Math.cos(doaRad)
+                var ny = Math.sin(doaRad)
+                var px = -ny
+                var py = nx
+
+                var baseHalf = 5.5
+                var midHalf = 3.0
+                var tailHalf = 3.8
+
+                var frontBaseX = cx + nx * 16
+                var frontBaseY = cy + ny * 16
+
+                var midX = cx + nx * (r * 0.48)
+                var midY = cy + ny * (r * 0.48)
+
+                ctx.beginPath()
+                ctx.moveTo(cx + px * baseHalf, cy + py * baseHalf)
+                ctx.lineTo(frontBaseX + px * midHalf, frontBaseY + py * midHalf)
+                ctx.lineTo(tipX, tipY)
+                ctx.lineTo(frontBaseX - px * midHalf, frontBaseY - py * midHalf)
+                ctx.lineTo(cx - px * baseHalf, cy - py * baseHalf)
+                ctx.closePath()
+
+                var needleGrad = ctx.createLinearGradient(cx, cy, tipX, tipY)
+                needleGrad.addColorStop(0.0, "#8fe3ff")
+                needleGrad.addColorStop(0.45, "#54b8ff")
+                needleGrad.addColorStop(1.0, "#2d7cff")
+                ctx.fillStyle = needleGrad
+                ctx.fill()
+
+                ctx.strokeStyle = "rgba(210,240,255,0.70)"
+                ctx.lineWidth = 1
+                ctx.stroke()
+
+                // ===== tail =====
+                ctx.beginPath()
+                ctx.moveTo(cx + px * tailHalf, cy + py * tailHalf)
+                ctx.lineTo(tailX, tailY)
+                ctx.lineTo(cx - px * tailHalf, cy - py * tailHalf)
+                ctx.closePath()
+                ctx.fillStyle = "rgba(70,120,180,0.55)"
+                ctx.fill()
+
+                // ===== center hub glow =====
+                ctx.beginPath()
+                ctx.arc(cx, cy, 13, 0, 2 * Math.PI)
+                ctx.fillStyle = "rgba(90,170,255,0.16)"
+                ctx.fill()
+
+                // center hub outer
+                ctx.beginPath()
+                ctx.arc(cx, cy, 8.5, 0, 2 * Math.PI)
+                var hubGrad = ctx.createRadialGradient(cx, cy, 1, cx, cy, 8.5)
+                hubGrad.addColorStop(0.0, "#d8f6ff")
+                hubGrad.addColorStop(0.35, "#7ed5ff")
+                hubGrad.addColorStop(1.0, "#2d79d9")
+                ctx.fillStyle = hubGrad
+                ctx.fill()
+
+                // center hub inner
+                ctx.beginPath()
+                ctx.arc(cx, cy, 3.2, 0, 2 * Math.PI)
+                ctx.fillStyle = "#f6fdff"
+                ctx.fill()
+
+                // ===== top highlight arc =====
+                ctx.beginPath()
+                ctx.arc(cx, cy, r * 0.72, -115 * Math.PI / 180, -65 * Math.PI / 180, false)
+                ctx.strokeStyle = "rgba(255,255,255,0.10)"
+                ctx.lineWidth = 2
+                ctx.stroke()
+            }
+
+            Component.onCompleted: {
+                doaTitle.updateAngleText()
+                requestPaint()
+            }
+
+            Connections {
+                target: (typeof mapGui !== "undefined") ? mapGui : null
+                function onDoaAngleChanged() {
+                    doaTitle.updateAngleText()
+                    doaCanvas.requestPaint()
+                }
+            }
+        }
+    }
+
     Component {
         id: actualMapComponent
 
@@ -63,7 +341,7 @@ Item {
             id: map
             objectName: "map"
             anchors.fill: parent
-            center: QtPositioning.coordinate(51.5, 0.125) // London
+            center: QtPositioning.coordinate(51.5, 0.125)
             zoomLevel: 10
             gesture.enabled: true
             gesture.acceptedGestures: MapGestureArea.PinchGesture | MapGestureArea.PanGesture
@@ -93,7 +371,6 @@ Item {
                 delegate: polylineNameComponent
             }
 
-            // Tracks first, so drawn under other items
             MapItemView {
                 model: mapModelFiltered
                 delegate: groundTrack1Component
@@ -121,43 +398,39 @@ Item {
 
             onZoomLevelChanged: {
                 mapZoomLevel = zoomLevel
-                mapModelFiltered.viewChanged(visibleRegion.boundingGeoRectangle().topLeft.longitude, visibleRegion.boundingGeoRectangle().topLeft.latitude, visibleRegion.boundingGeoRectangle().bottomRight.longitude, visibleRegion.boundingGeoRectangle().bottomRight.latitude, zoomLevel);
-                imageModelFiltered.viewChanged(visibleRegion.boundingGeoRectangle().topLeft.longitude, visibleRegion.boundingGeoRectangle().topLeft.latitude, visibleRegion.boundingGeoRectangle().bottomRight.longitude, visibleRegion.boundingGeoRectangle().bottomRight.latitude, zoomLevel);
-                polygonModelFiltered.viewChanged(visibleRegion.boundingGeoRectangle().topLeft.longitude, visibleRegion.boundingGeoRectangle().topLeft.latitude, visibleRegion.boundingGeoRectangle().bottomRight.longitude, visibleRegion.boundingGeoRectangle().bottomRight.latitude, zoomLevel);
-                polylineModelFiltered.viewChanged(visibleRegion.boundingGeoRectangle().topLeft.longitude, visibleRegion.boundingGeoRectangle().topLeft.latitude, visibleRegion.boundingGeoRectangle().bottomRight.longitude, visibleRegion.boundingGeoRectangle().bottomRight.latitude, zoomLevel);
+                mapModelFiltered.viewChanged(visibleRegion.boundingGeoRectangle().topLeft.longitude, visibleRegion.boundingGeoRectangle().topLeft.latitude, visibleRegion.boundingGeoRectangle().bottomRight.longitude, visibleRegion.boundingGeoRectangle().bottomRight.latitude, zoomLevel)
+                imageModelFiltered.viewChanged(visibleRegion.boundingGeoRectangle().topLeft.longitude, visibleRegion.boundingGeoRectangle().topLeft.latitude, visibleRegion.boundingGeoRectangle().bottomRight.longitude, visibleRegion.boundingGeoRectangle().bottomRight.latitude, zoomLevel)
+                polygonModelFiltered.viewChanged(visibleRegion.boundingGeoRectangle().topLeft.longitude, visibleRegion.boundingGeoRectangle().topLeft.latitude, visibleRegion.boundingGeoRectangle().bottomRight.longitude, visibleRegion.boundingGeoRectangle().bottomRight.latitude, zoomLevel)
+                polylineModelFiltered.viewChanged(visibleRegion.boundingGeoRectangle().topLeft.longitude, visibleRegion.boundingGeoRectangle().topLeft.latitude, visibleRegion.boundingGeoRectangle().bottomRight.longitude, visibleRegion.boundingGeoRectangle().bottomRight.latitude, zoomLevel)
             }
 
-            // The map displays MapPolyLines in the wrong place (+360 degrees) if
-            // they start to the left of the visible region, so we need to
-            // split them so they don't, each time the visible region is changed. meh.
             onCenterChanged: {
-                polylineModelFiltered.viewChanged(visibleRegion.boundingGeoRectangle().topLeft.longitude, visibleRegion.boundingGeoRectangle().topLeft.latitude, visibleRegion.boundingGeoRectangle().bottomRight.longitude, visibleRegion.boundingGeoRectangle().bottomRight.latitude, zoomLevel);
-                polygonModelFiltered.viewChanged(visibleRegion.boundingGeoRectangle().topLeft.longitude, visibleRegion.boundingGeoRectangle().topLeft.latitude, visibleRegion.boundingGeoRectangle().bottomRight.longitude, visibleRegion.boundingGeoRectangle().bottomRight.latitude, zoomLevel);
-                imageModelFiltered.viewChanged(visibleRegion.boundingGeoRectangle().topLeft.longitude, visibleRegion.boundingGeoRectangle().topLeft.latitude, visibleRegion.boundingGeoRectangle().bottomRight.longitude, visibleRegion.boundingGeoRectangle().bottomRight.latitude, zoomLevel);
-                mapModelFiltered.viewChanged(visibleRegion.boundingGeoRectangle().topLeft.longitude, visibleRegion.boundingGeoRectangle().topLeft.latitude, visibleRegion.boundingGeoRectangle().bottomRight.longitude, visibleRegion.boundingGeoRectangle().bottomRight.latitude, zoomLevel);
-                mapModel.viewChanged(visibleRegion.boundingGeoRectangle().bottomLeft.longitude, visibleRegion.boundingGeoRectangle().bottomRight.longitude);
+                polylineModelFiltered.viewChanged(visibleRegion.boundingGeoRectangle().topLeft.longitude, visibleRegion.boundingGeoRectangle().topLeft.latitude, visibleRegion.boundingGeoRectangle().bottomRight.longitude, visibleRegion.boundingGeoRectangle().bottomRight.latitude, zoomLevel)
+                polygonModelFiltered.viewChanged(visibleRegion.boundingGeoRectangle().topLeft.longitude, visibleRegion.boundingGeoRectangle().topLeft.latitude, visibleRegion.boundingGeoRectangle().bottomRight.longitude, visibleRegion.boundingGeoRectangle().bottomRight.latitude, zoomLevel)
+                imageModelFiltered.viewChanged(visibleRegion.boundingGeoRectangle().topLeft.longitude, visibleRegion.boundingGeoRectangle().topLeft.latitude, visibleRegion.boundingGeoRectangle().bottomRight.longitude, visibleRegion.boundingGeoRectangle().bottomRight.latitude, zoomLevel)
+                mapModelFiltered.viewChanged(visibleRegion.boundingGeoRectangle().topLeft.longitude, visibleRegion.boundingGeoRectangle().topLeft.latitude, visibleRegion.boundingGeoRectangle().bottomRight.longitude, visibleRegion.boundingGeoRectangle().bottomRight.latitude, zoomLevel)
+                mapModel.viewChanged(visibleRegion.boundingGeoRectangle().bottomLeft.longitude, visibleRegion.boundingGeoRectangle().bottomRight.longitude)
             }
 
-            onSupportedMapTypesChanged : {
+            onSupportedMapTypesChanged: {
                 guiPtr.supportedMapsChanged()
             }
-
         }
     }
 
     function mapRect() {
         if (mapPtr)
-            return mapPtr.visibleRegion.boundingGeoRectangle();
+            return mapPtr.visibleRegion.boundingGeoRectangle()
         else
-            return null;
+            return null
     }
 
     Component {
         id: imageComponent
         MapQuickItem {
             coordinate: position
-            anchorPoint.x: imageId.width/2
-            anchorPoint.y: imageId.height/2
+            anchorPoint.x: imageId.width / 2
+            anchorPoint.y: imageId.height / 2
             zoomLevel: imageZoomLevel
             sourceItem: Image {
                 id: imageId
@@ -182,8 +455,8 @@ Item {
         id: polygonNameComponent
         MapQuickItem {
             coordinate: position
-            anchorPoint.x: polygonText.width/2
-            anchorPoint.y: polygonText.height/2
+            anchorPoint.x: polygonText.width / 2
+            anchorPoint.y: polygonText.height / 2
             zoomLevel: mapZoomLevel > 11 ? mapZoomLevel : 11
             sourceItem: Grid {
                 columns: 1
@@ -215,8 +488,8 @@ Item {
         id: polylineNameComponent
         MapQuickItem {
             coordinate: position
-            anchorPoint.x: polylineText.width/2
-            anchorPoint.y: polylineText.height/2
+            anchorPoint.x: polylineText.width / 2
+            anchorPoint.y: polylineText.height / 2
             zoomLevel: mapZoomLevel > 11 ? mapZoomLevel : 11
             sourceItem: Grid {
                 columns: 1
@@ -238,12 +511,11 @@ Item {
         id: mapComponent
         MapQuickItem {
             id: mapElement
-            anchorPoint.x: image.width/2
-            anchorPoint.y: image.height/2
+            anchorPoint.x: image.width / 2
+            anchorPoint.y: image.height / 2
             coordinate: position
-            // when zooming, mapImageMinZoom can be temporarily undefined. Not sure why
-            zoomLevel: (typeof mapImageMinZoom !== 'undefined') ? (mapZoomLevel > mapImageMinZoom ? mapZoomLevel : mapImageMinZoom) : zoomLevel
-            autoFadeIn: false               // not in 5.12
+            zoomLevel: (typeof mapImageMinZoom !== "undefined") ? (mapZoomLevel > mapImageMinZoom ? mapZoomLevel : mapImageMinZoom) : zoomLevel
+            autoFadeIn: false
 
             sourceItem: Grid {
                 id: gridItem
@@ -369,7 +641,6 @@ Item {
                                 Instantiator {
                                     model: menus
                                     delegate: Menu {
-                                        //cascade: true
                                         id: contextSubMenu
                                         title: model.title
                                     }
@@ -387,28 +658,23 @@ Item {
                                         onTriggered: mapModel.setFrequency(model.frequency, model.deviceSet)
                                     }
                                     onObjectAdded: function(index, object) {
-                                        // index is index in to menuItems model
-                                        // object is the MenuItem
                                         var menuItem = menuItems.get(index)
-                                        var menu = menus.get(menuItem.menuIndex)
                                         contextMenu.menuAt(menuItem.menuIndex).insertItem(index, object)
                                     }
                                     onObjectRemoved: function(index, object) {
-                                        // Can't use menuItems.get(index) here, as already removed from model
                                         object.menu.removeItem(object)
                                     }
                                 }
                             }
                         }
-                        // Have Text after MouseArea, so links can be clicked
                         Text {
                             id: text
                             anchors.centerIn: parent
                             text: mapText
                             textFormat: TextEdit.RichText
                             onLinkActivated: {
-                                console.log("Link", link);
-                                mapModel.link(link);
+                                console.log("Link", link)
+                                mapModel.link(link)
                             }
                         }
                     }
@@ -427,7 +693,6 @@ Item {
         }
     }
 
-    // Part of the line that crosses edge of map
     Component {
         id: predictedGroundTrack2Component
         MapPolyline {
@@ -448,7 +713,6 @@ Item {
         }
     }
 
-    // Part of the line that crosses edge of map
     Component {
         id: groundTrack2Component
         MapPolyline {
@@ -458,5 +722,4 @@ Item {
             autoFadeIn: false
         }
     }
-
 }
