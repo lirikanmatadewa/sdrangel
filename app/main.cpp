@@ -53,7 +53,7 @@ static int runQtApplication(int argc, char* argv[], qtwebapp::LoggerWithFile *lo
     QTextCodec::setCodecForCStrings(QTextCodec::codecForName("UTF-8"));
 */
     QCoreApplication::setOrganizationName("BWE Solutions");
-    QCoreApplication::setApplicationName("SDR Analyzer");
+    QCoreApplication::setApplicationName("Wideband Receiver");
     QCoreApplication::setApplicationVersion(SDRANGEL_VERSION);
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)
@@ -251,6 +251,6 @@ int main(int argc, char* argv[])
         delete logger;
     }
     
-    qWarning("SDR Analyzer quit.");
+    qWarning("Wideband Receiver quit.");
     return res;
 }

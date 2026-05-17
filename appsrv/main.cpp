@@ -129,6 +129,6 @@ int main(int argc, char* argv[])
         logger->installMsgHandler();
         int res = runQtApplication(argc, argv, logger);
         delete logger;
-        qWarning("SDR Analyzer quit.");
+        qWarning("Wideband Receiver quit.");
         return res;
 }
