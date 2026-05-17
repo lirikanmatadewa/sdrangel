@@ -45,6 +45,9 @@
 #include "mainwindow.h"
 #include "remotetcpsinkstarter.h"
 #include "dsp/dsptypes.h"
+#include "licensing-framework/licensemanager.h"
+
+#define NO_LICENSE 1
 
 static int runQtApplication(int argc, char* argv[], qtwebapp::LoggerWithFile *logger)
 {
@@ -85,7 +88,22 @@ static int runQtApplication(int argc, char* argv[], qtwebapp::LoggerWithFile *lo
         qputenv("QT_SCALE_FACTOR", scaleFactor.toLatin1());
     }
 
-    QApplication a(argc, argv);
+	QApplication a(argc, argv);
+
+    // Initialize licensing system early
+    qDebug() << "Initializing licensing framework...";
+    LicenseManager::getInstance().initialize();
+
+    // Check license status and exit if invalid
+    if (!LicenseManager::getInstance().isLicenseValid())
+    {
+        qCritical() << "License validation failed. Application cannot continue.";
+        qCritical() << "License Type:" << LicenseManager::getInstance().getLicenseTypeString();
+        qCritical() << "Please ensure you have a valid license file.";
+        return NO_LICENSE;
+    }
+
+    qInfo() << "License validation successful. License Type:" << LicenseManager::getInstance().getLicenseTypeString();
 
 #if 1
     qApp->setStyle(QStyleFactory::create("fusion"));
