@@ -39,21 +39,21 @@ option(ENABLE_PROFILER "Enable runtime profiler" OFF)
 set(VKFFT_BACKEND 0 CACHE STRING "vkFFT Backend: 0 - Vulkan, 1 - CUDA")
 
 # Sampling devices enablers
-option(ENABLE_AIRSPY "Enable AirSpy support" ON)
-option(ENABLE_AIRSPYHF "Enable AirSpyHF support" ON)
+option(ENABLE_AIRSPY "Enable AirSpy support" OFF)
+option(ENABLE_AIRSPYHF "Enable AirSpyHF support" OFF)
 option(ENABLE_BLADERF "Enable bladeRF support" ON)
-option(ENABLE_FUNCUBE "Enable FUNcube support" ON)
-option(ENABLE_HACKRF "Enable HackRF support" ON)
-option(ENABLE_IIO "Enable liniio support like PlutoSDR" ON)
-option(ENABLE_LIMESUITE "Enable limesuite support" ON)
-option(ENABLE_MIRISDR "Enable LibMiri for old SDRPlay" ON)
-option(ENABLE_PERSEUS "Enable perseus support" ON)
-option(ENABLE_RTLSDR "Enable rtl-sdr support" ON)
-option(ENABLE_SDRPLAY "Enable SDRplay support" ON)
-option(ENABLE_SOAPYSDR "Enable SoapySDR support" ON)
-option(ENABLE_XTRX "Enable XTRX support" ON)
+option(ENABLE_FUNCUBE "Enable FUNcube support" OFF)
+option(ENABLE_HACKRF "Enable HackRF support" OFF)
+option(ENABLE_IIO "Enable liniio support like PlutoSDR" OFF)
+option(ENABLE_LIMESUITE "Enable limesuite support" OFF)
+option(ENABLE_MIRISDR "Enable LibMiri for old SDRPlay" OFF)
+option(ENABLE_PERSEUS "Enable perseus support" OFF)
+option(ENABLE_RTLSDR "Enable rtl-sdr support" OFF)
+option(ENABLE_SDRPLAY "Enable SDRplay support" OFF)
+option(ENABLE_SOAPYSDR "Enable SoapySDR support" OFF)
+option(ENABLE_XTRX "Enable XTRX support" OFF)
 option(ENABLE_PACK_MIRSDRAPI "Enable inclusion of the mirsdr-api library - for personal use only" OFF)
-option(ENABLE_USRP "Enable USRP support" ON)
+option(ENABLE_USRP "Enable USRP support" OFF)
 
 # Channel Rx enablers
 option(ENABLE_CHANNELRX "Enable channelrx plugins" ON)
@@ -846,6 +846,7 @@ if(ENABLE_FUNCUBE AND LIBUSB_FOUND AND HIDAPI_FOUND)
 endif()
 
 # base libraries
+add_subdirectory(licensing-framework)
 add_subdirectory(sdrbase)
 add_subdirectory(httpserver)
 add_subdirectory(logging)
@@ -885,6 +886,7 @@ endif()
 
 # includes needed by the following target
 include_directories(
+    ${CMAKE_SOURCE_DIR}/licensing-framework
     ${CMAKE_SOURCE_DIR}/sdrbase
     ${CMAKE_SOURCE_DIR}/exports
     ${CMAKE_SOURCE_DIR}/sdrgui
@@ -982,6 +984,7 @@ if (BUILD_GUI)
               Qt::Svg
               Qt::QmlModels
               Qt::Quick
+              licensing
               sdrbase
               sdrgui
               logging
@@ -997,6 +1000,7 @@ if (BUILD_GUI)
               Qt::QmlModels
               Qt::Quick
               Qt::AndroidExtras
+              licensing
               sdrbase
               sdrgui
               logging
@@ -1010,6 +1014,7 @@ if (BUILD_GUI)
           Qt::Widgets
           Qt::Multimedia
           Qt::Quick
+          licensing
           sdrbase
           sdrgui
           logging
@@ -1037,6 +1042,7 @@ if (BUILD_SERVER)
 
     target_link_libraries(sdrangelsrv
         Qt::Multimedia
+        licensing
         sdrbase
         sdrsrv
         logging
