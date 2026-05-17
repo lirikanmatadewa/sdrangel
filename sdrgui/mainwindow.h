@@ -94,6 +94,8 @@ public slots:
 	void openIqReplayDialog(Workspace* deviceWorkspace, Workspace* spectrumWorkSpace);
 
 private:
+	//MainSettings& m_mainSettings;
+
 	enum {
 		PGroup,
 		PItem

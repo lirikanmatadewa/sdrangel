@@ -129,6 +129,7 @@ GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
 	connect(ui->iqReplay, SIGNAL(clicked()), this, SLOT(openIqReplay()));
 	connect(ui->frequencyScanner, SIGNAL(clicked()), this, SLOT(openFrequencyScanner()));
 	connect(ui->widebandScanner, SIGNAL(clicked()), this, SLOT(openWidebandScanner()));
+	ui->widebandScanner->setVisible(false);
 
 	displaySettings();
 	setAveragingCombo();
@@ -351,8 +352,8 @@ void GLSpectrumGUI::displaySettings()
 	ui->fftWindow->hide();
 	ui->fftOverlap->hide();
 	ui->linscale->hide();
-	ui->freeze->hide();
-	ui->save->hide();
+	//ui->freeze->hide();
+	//ui->save->hide();
 	ui->wsSpectrum->hide();
 	//ui->markers->hide();
 	ui->calibration->hide();

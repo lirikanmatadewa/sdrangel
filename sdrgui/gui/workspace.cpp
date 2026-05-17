@@ -122,6 +122,12 @@ Workspace::Workspace(int index, QWidget *parent, Qt::WindowFlags flags) :
     m_addFeatureButton->setToolTip("Add features");
     m_addFeatureButton->setFixedSize(20, 20);
 
+    m_callMap = new QPushButton();
+    QIcon addMapIcon(":/world.png");
+    m_callMap->setIcon(addMapIcon);
+    m_callMap->setToolTip("Open Map");
+    m_callMap->setFixedSize(20, 20);
+
     m_featurePresetsButton = new QPushButton();
     QIcon presetsIcon(":/tool_star.png");
     m_featurePresetsButton->setIcon(presetsIcon);
@@ -185,12 +191,14 @@ Workspace::Workspace(int index, QWidget *parent, Qt::WindowFlags flags) :
     m_titleBarLayout->addWidget(m_startStopButton);
     m_titleBarLayout->addWidget(m_vline1);
     m_titleBarLayout->addWidget(m_addRxDeviceButton);
+    //m_titleBarLayout->addWidget(m_addFeatureButton);
     m_titleBarLayout->addWidget(m_vline2);
     m_titleBarLayout->addWidget(m_cascadeSubWindows);
     m_titleBarLayout->addWidget(m_tileSubWindows);
     m_titleBarLayout->addWidget(m_stackVerticalSubWindows);
     m_titleBarLayout->addWidget(m_stackSubWindows);
     m_titleBarLayout->addWidget(m_tabSubWindows);
+    m_titleBarLayout->addWidget(m_callMap);
     m_titleBarLayout->addStretch(1);
 #ifndef ANDROID
     // Can't undock on Android, as windows don't have title bars to allow them to be moved
@@ -294,6 +302,13 @@ Workspace::Workspace(int index, QWidget *parent, Qt::WindowFlags flags) :
         &Workspace::toggleFloating
     );
 
+    QObject::connect(
+        m_callMap,
+        &QPushButton::clicked,
+        this,
+        &Workspace::addMapFeatureClicked
+    );
+
     connect(m_closeButton, SIGNAL(clicked()), this, SLOT(hide()));
 
     QObject::connect(
@@ -347,6 +362,7 @@ Workspace::~Workspace()
     delete m_titleBarLayout;
     delete m_titleBar;
     delete m_mdi;
+    delete m_callMap;
 }
 
 void Workspace::setIndex(int index)
@@ -1119,3 +1135,9 @@ void Workspace::adjustSubWindowsAfterRestore()
     }
 }
 
+
+void Workspace::addMapFeatureClicked()
+{
+    qDebug() << "--->> " << "eksekusi 8";
+    emit addFeature(this, 8);
+}

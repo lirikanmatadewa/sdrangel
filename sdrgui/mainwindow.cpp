@@ -135,7 +135,7 @@ MainWindow::MainWindow(qtwebapp::LoggerWithFile* logger, const MainParser& parse
 	m_profileDialog(nullptr),
 	m_fftWisdomProcess(nullptr)
 {
-	setWindowTitle("BWE Solutions - SDR Analyzer");
+	setWindowTitle("BWE Solutions - Wideband Receiver");
 #ifdef ANDROID
 	bool showWelcome = true;
 #else
@@ -146,7 +146,7 @@ MainWindow::MainWindow(qtwebapp::LoggerWithFile* logger, const MainParser& parse
 	QAccessible::installFactory(AccessibleValueDialZ::factory);
 
 	qDebug() << "MainWindow::MainWindow: start";
-	setWindowTitle("SDR Analyzer");
+	setWindowTitle("Wideband Receiver");
 
 	m_instance = this;
 	m_mainCore->m_logger = logger;
@@ -1671,13 +1671,13 @@ void MainWindow::createMenuBar(QToolButton* button)
 	QAction* graphicsAction = preferencesMenu->addAction("&Graphics...");
 	graphicsAction->setToolTip("Graphics preferences");
 	QObject::connect(graphicsAction, &QAction::triggered, this, &MainWindow::on_action_Graphics_triggered);
-	QAction* loggingAction = preferencesMenu->addAction("&Logging...");
+	/*QAction* loggingAction = preferencesMenu->addAction("&Logging...");
 	loggingAction->setToolTip("Logging preferences");
-	QObject::connect(loggingAction, &QAction::triggered, this, &MainWindow::on_action_Logging_triggered);
+	QObject::connect(loggingAction, &QAction::triggered, this, &MainWindow::on_action_Logging_triggered);*/
 	QAction* myPositionAction = preferencesMenu->addAction("My &Position...");
 	myPositionAction->setToolTip("Set station position");
 	QObject::connect(myPositionAction, &QAction::triggered, this, &MainWindow::on_action_My_Position_triggered);
-	QAction* fftAction = preferencesMenu->addAction("&FFT...");
+	/*QAction* fftAction = preferencesMenu->addAction("&FFT...");
 	fftAction->setToolTip("Set FFT preferences");
 	QObject::connect(fftAction, &QAction::triggered, this, &MainWindow::on_action_FFT_triggered);
 	QAction* fftWisdomAction = preferencesMenu->addAction("&FFTW Wisdom...");
@@ -1689,12 +1689,12 @@ void MainWindow::createMenuBar(QToolButton* button)
 	QObject::connect(userArgumentsAction, &QAction::triggered, this, &MainWindow::on_action_DeviceUserArguments_triggered);
 	QAction* commandsAction = preferencesMenu->addAction("C&ommands...");
 	commandsAction->setToolTip("External commands dialog");
-	QObject::connect(commandsAction, &QAction::triggered, this, &MainWindow::on_action_commands_triggered);
+	QObject::connect(commandsAction, &QAction::triggered, this, &MainWindow::on_action_commands_triggered);*/
 	QAction* saveAllAction = preferencesMenu->addAction("&Save all");
 	saveAllAction->setToolTip("Save all current settings");
 	QObject::connect(saveAllAction, &QAction::triggered, this, &MainWindow::on_action_saveAll_triggered);
 
-	QAction* quickStartAction = helpMenu->addAction("&Quick start...");
+	/*QAction* quickStartAction = helpMenu->addAction("&Quick start...");
 	quickStartAction->setToolTip("Instructions for quick start");
 	QObject::connect(quickStartAction, &QAction::triggered, this, &MainWindow::on_action_Quick_Start_triggered);
 	QAction* mainWindowAction = helpMenu->addAction("&Main Window...");
@@ -1702,9 +1702,9 @@ void MainWindow::createMenuBar(QToolButton* button)
 	QObject::connect(mainWindowAction, &QAction::triggered, this, &MainWindow::on_action_Main_Window_triggered);
 	QAction* loadedPluginsAction = helpMenu->addAction("Loaded &Plugins...");
 	loadedPluginsAction->setToolTip("List available plugins");
-	QObject::connect(loadedPluginsAction, &QAction::triggered, this, &MainWindow::on_action_Loaded_Plugins_triggered);
-	QAction* aboutAction = helpMenu->addAction("&About SDR Analyzer...");
-	aboutAction->setToolTip("SDR Analyzer application details");
+	QObject::connect(loadedPluginsAction, &QAction::triggered, this, &MainWindow::on_action_Loaded_Plugins_triggered);*/
+	QAction* aboutAction = helpMenu->addAction("&About Wideband Receiver...");
+	aboutAction->setToolTip("Wideband Receiver application details");
 	QObject::connect(aboutAction, &QAction::triggered, this, &MainWindow::on_action_About_triggered);
 }
 
@@ -1713,10 +1713,10 @@ void MainWindow::createStatusBar()
 	QString qtVersionStr = QString("Qt %1 ").arg(QT_VERSION_STR);
 	QString openGLVersionStr = QString("OpenGL %1 ").arg(openGLVersion());
 #if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
-	m_showSystemWidget = new QLabel("SDR Analyzer " + qApp->applicationVersion() + " " + qtVersionStr + openGLVersionStr
+	m_showSystemWidget = new QLabel("Wideband Receiver " + qApp->applicationVersion() + " " + qtVersionStr + openGLVersionStr
 		+ QSysInfo::currentCpuArchitecture() + " " + QSysInfo::prettyProductName(), this);
 #else
-	m_showSystemWidget = new QLabel("SDR Analyzer " + qApp->applicationVersion() + " " + qtVersionStr + openGLVersionStr, this);
+	m_showSystemWidget = new QLabel("Wideband Receiver " + qApp->applicationVersion() + " " + qtVersionStr + openGLVersionStr, this);
 #endif
 	statusBar()->addPermanentWidget(m_showSystemWidget);
 

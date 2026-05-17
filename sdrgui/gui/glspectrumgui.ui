@@ -619,31 +619,6 @@
        </property>
        <item>
         <property name="text">
-         <string>64</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>128</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>256</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>512</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>1k</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
          <string>2k</string>
         </property>
        </item>
@@ -660,11 +635,6 @@
        <item>
         <property name="text">
          <string>16k</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>32k</string>
         </property>
        </item>
       </widget>
@@ -1099,6 +1069,9 @@
        </property>
        <property name="toolTip">
         <string>Open spectrum markers dialog</string>
+       </property>
+       <property name="text">
+        <string> Marker</string>
        </property>
        <property name="icon">
         <iconset>
