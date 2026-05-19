@@ -105,7 +105,7 @@ void SamplingDeviceDialog::on_refreshDevices_clicked()
     connect(worker, &SamplingDeviceDialogWorker::finishedWork, thread, &QThread::quit);
     connect(worker, &SamplingDeviceDialogWorker::finishedWork, m_progressDialog, &QProgressDialog::close);
     connect(worker, &SamplingDeviceDialogWorker::finishedWork, m_progressDialog, &QProgressDialog::deleteLater);
-    connect(worker, &SamplingDeviceDialogWorker::finishedWork, this, &SamplingDeviceDialog::displayDevices);
+	connect(worker, &SamplingDeviceDialogWorker::finishedWork, this, &SamplingDeviceDialog::displayDevices, Qt::ConnectionType::DirectConnection);
     connect(worker, &SamplingDeviceDialogWorker::finishedWork, worker, &SamplingDeviceDialog::deleteLater);
     connect(thread, &QThread::finished, thread, &QThread::deleteLater);
     thread->start();
@@ -128,6 +128,61 @@ void SamplingDeviceDialog::enumeratingDevice(const QString &deviceId)
     if (m_progressDialog) {
         m_progressDialog->setLabelText("Enumerating " + deviceId);
     }
+}
+
+QMap<int, QString> SamplingDeviceDialog::getDeviceMap()
+{
+	QMap<int, QString> deviceMap;
+	QList<QString> deviceDisplayNames;
+	bool isBladeRF2Found = false;
+
+	m_deviceIndexes.clear();
+	if (m_deviceType == 0) { // Single Rx
+		DeviceEnumerator::instance()->listRxDeviceNames(deviceDisplayNames, m_deviceIndexes);
+	}
+	else if (m_deviceType == 1) { // Single Tx
+		DeviceEnumerator::instance()->listTxDeviceNames(deviceDisplayNames, m_deviceIndexes);
+	}
+	else if (m_deviceType == 2) { // MIMO
+		DeviceEnumerator::instance()->listMIMODeviceNames(deviceDisplayNames, m_deviceIndexes);
+	}
+
+	foreach(QString var, deviceDisplayNames)
+	{
+		if (var.contains("BladeRF2[0:0]")) {
+			isBladeRF2Found = true;
+		}
+	}
+
+	if (!isBladeRF2Found)
+	{
+		on_refreshDevices_clicked();
+		m_deviceIndexes.clear();
+		deviceDisplayNames.clear();
+
+		if (m_deviceType == 0) { // Single Rx
+			DeviceEnumerator::instance()->listRxDeviceNames(deviceDisplayNames, m_deviceIndexes);
+		}
+		else if (m_deviceType == 1) { // Single Tx
+			DeviceEnumerator::instance()->listTxDeviceNames(deviceDisplayNames, m_deviceIndexes);
+		}
+		else if (m_deviceType == 2) { // MIMO
+			DeviceEnumerator::instance()->listMIMODeviceNames(deviceDisplayNames, m_deviceIndexes);
+		}
+	}
+
+	ui->deviceSelect->clear();
+	ui->deviceSelect->addItems(deviceDisplayNames);
+
+	auto dI = m_deviceIndexes.begin();
+	auto dN = deviceDisplayNames.begin();
+
+	while (dI != m_deviceIndexes.end() && dN != deviceDisplayNames.end()) {
+		deviceMap.insert(*dI, *dN);
+		dI++;
+		dN++;
+	}
+	return deviceMap;
 }
 
 void SamplingDeviceDialogWorker::enumerateDevices()

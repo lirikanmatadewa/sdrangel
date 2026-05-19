@@ -66,6 +66,7 @@ public:
     void getDeviceId(QString& id) const;
     int exec();
     bool hasChanged() const { return m_hasChanged; }
+	QMap<int, QString> getDeviceMap();
 
 private:
     Ui::SamplingDeviceDialog* ui;
@@ -75,14 +76,13 @@ private:
     bool m_hasChanged;
     QProgressDialog *m_progressDialog;
 
-    void displayDevices();
-
 private slots:
     void on_deviceSelect_currentIndexChanged(int index);
     void on_refreshDevices_clicked();
     void accept();
     void reject();
     void enumeratingDevice(const QString &deviceId);
+	void displayDevices();
 };
 
 #endif /* SDRGUI_GUI_SAMPLINGDEVICEDIALOG_H_ */
