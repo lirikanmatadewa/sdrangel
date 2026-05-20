@@ -389,7 +389,7 @@ void Workspace::addRxDeviceClicked()
     SamplingDeviceDialog dialog(0, this);
 
 	m_addRxDeviceButton->setDisabled(true);
-	QString searchString = "BladeRF2[0:0]";
+	QString searchString = "CS100[0:0]";
 	QMap<int, QString> deviceMap = dialog.getDeviceMap();
 	QList<int> matchingKeys;
 
