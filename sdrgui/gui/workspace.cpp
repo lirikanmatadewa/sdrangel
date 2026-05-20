@@ -401,7 +401,7 @@ void Workspace::addRxDeviceClicked()
 	if (matchingKeys.isEmpty()) {
 		QMessageBox msgBox;
 		msgBox.setIcon(QMessageBox::Information);
-		msgBox.setText("Please plug-in the BladerRF2.");
+		msgBox.setText("Please plug-in the CS100.");
 		msgBox.setStandardButtons(QMessageBox::Ok);
 		msgBox.setDefaultButton(QMessageBox::Ok);
 		msgBox.exec();
