@@ -5,7 +5,7 @@ name: SDRangel CI/CD
 on:
   push:
     branches:
-      - master
+      - '**'        # matches every branch
       - mac_ci
     tags:
       - 'v*'
