@@ -17,6 +17,7 @@
 
 #include <stdio.h>
 #include <algorithm>
+#include <type_traits>
 
 #include <QTime>
 #include <QDebug>
@@ -28,6 +29,19 @@
 #include "maincore.h"
 
 #include "cwdemodsink.h"
+
+// Compatibility clamp for projects compiled with C++14 where std::clamp is not available.
+// Uses std::common_type to safely handle mixed numeric literal types.
+namespace {
+    template<typename T, typename U, typename V>
+    inline auto clamp_compat(const T& v, const U& lo, const V& hi) -> typename std::common_type<T,U,V>::type {
+        using C = typename std::common_type<T,U,V>::type;
+        C vc = static_cast<C>(v);
+        C clo = static_cast<C>(lo);
+        C chi = static_cast<C>(hi);
+        return vc < clo ? clo : (vc > chi ? chi : vc);
+    }
+}
 
 const int CWDemodSink::m_ssbFftLen = 2048;
 const int CWDemodSink::m_agcTarget = 3276; // 32768/10 -10 dB amplitude => -20 dB power: center of normal signal
@@ -195,8 +209,8 @@ void CWDemodSink::processOneSample(Complex &ci)
         {
             Real left  = m_audioFlipChannels ? z.imag() : z.real();
             Real right = m_audioFlipChannels ? z.real() : z.imag();
-            left  = std::clamp(left  * m_volume, -32767.0f, 32767.0f);
-            right = std::clamp(right * m_volume, -32767.0f, 32767.0f);
+            left  = clamp_compat(left  * m_volume, -32767.0f, 32767.0f);
+            right = clamp_compat(right * m_volume, -32767.0f, 32767.0f);
             sample_l = (qint16) left;
             sample_r = (qint16) right;
 
@@ -206,7 +220,7 @@ void CWDemodSink::processOneSample(Complex &ci)
         else
         {
             Real demod = (z.real() + z.imag()) * 0.7;
-            qint16 sample = (qint16)(std::clamp(demod * m_volume, -32767.0f, 32767.0f));
+            qint16 sample = (qint16)(clamp_compat(demod * m_volume, -32767.0f, 32767.0f));
             sample_l = sample;
             sample_r = sample;
             m_demodBuffer[m_demodBufferFill++] = (z.real() + z.imag()) * 0.7;
