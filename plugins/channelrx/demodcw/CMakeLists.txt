@@ -44,7 +44,9 @@ else()
 endif()
 
 if(NOT Qt6_FOUND)
-    add_library(${TARGET_NAME} ${cw_SOURCES})
+    # Explicitly build the demodcw plugin as a shared library so it
+    # always produces linker-created artifacts (PDBs on Windows).
+    add_library(${TARGET_NAME} SHARED ${cw_SOURCES})
 else()
     qt_add_plugin(${TARGET_NAME} CLASS_NAME CWPlugin ${cw_SOURCES})
 endif()
