@@ -1,0 +1,453 @@
+///////////////////////////////////////////////////////////////////////////////////
+// Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
+// written by Christian Daniel                                                   //
+// Copyright (C) 2015-2019, 2022-2023 Edouard Griffiths, F4EXB <f4exb06@gmail.com> //
+// Copyright (C) 2021 Jon Beniston, M7RCE <jon@beniston.com>                     //
+//                                                                               //
+// This program is free software; you can redistribute it and/or modify          //
+// it under the terms of the GNU General Public License as published by          //
+// the Free Software Foundation as version 3 of the License, or                  //
+// (at your option) any later version.                                           //
+//                                                                               //
+// This program is distributed in the hope that it will be useful,               //
+// but WITHOUT ANY WARRANTY; without even the implied warranty of                //
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the                  //
+// GNU General Public License V3 for more details.                               //
+//                                                                               //
+// You should have received a copy of the GNU General Public License             //
+// along with this program. If not, see <http://www.gnu.org/licenses/>.          //
+///////////////////////////////////////////////////////////////////////////////////
+
+#include <QColor>
+
+#include "audio/audiodevicemanager.h"
+#include "util/simpleserializer.h"
+#include "settings/serializable.h"
+#include "cwdemodsettings.h"
+
+#ifdef SDR_RX_SAMPLE_24BIT
+const int CWDemodSettings::m_minPowerThresholdDB = -120;
+const float CWDemodSettings::m_mminPowerThresholdDBf = 120.0f;
+#else
+const int CWDemodSettings::m_minPowerThresholdDB = -100;
+const float CWDemodSettings::m_mminPowerThresholdDBf = 100.0f;
+#endif
+
+CWDemodSettings::CWDemodSettings() :
+    m_channelMarker(nullptr),
+    m_spectrumGUI(nullptr),
+    m_rollupState(nullptr)
+{
+    m_filterBank.resize(10);
+    resetToDefaults();
+}
+
+void CWDemodSettings::resetToDefaults()
+{
+    m_audioBinaural = false;
+    m_audioFlipChannels = false;
+    m_dsb = false;
+    m_audioMute = false;
+    m_agc = false;
+    m_agcClamping = false;
+    m_agcPowerThreshold = -100;
+    m_agcThresholdGate = 4;
+    m_agcTimeLog2 = 5;
+    m_volume = 2.0;
+    m_inputFrequencyOffset = 0;
+    m_dnr = false;
+    m_dnrScheme = 0;
+    m_dnrAboveAvgFactor = 40.0f;
+    m_dnrSigmaFactor = 4.0f;
+    m_dnrNbPeaks = 20;
+    m_dnrAlpha = 1.0;
+    m_rgbColor = QColor(0, 255, 0).rgb();
+    m_title = "CW Demodulator";
+    m_audioDeviceName = AudioDeviceManager::m_defaultDeviceName;
+    m_streamIndex = 0;
+    m_useReverseAPI = false;
+    m_reverseAPIAddress = "127.0.0.1";
+    m_reverseAPIPort = 8888;
+    m_reverseAPIDeviceIndex = 0;
+    m_reverseAPIChannelIndex = 0;
+    m_workspaceIndex = 0;
+    m_hidden = false;
+    m_filterIndex = 0;
+
+    auto initFilter = [](CWDemodFilterSettings& filter, int spanLog2, Real rfBandwidth, Real lowCutoff) {
+        filter.m_spanLog2 = spanLog2;
+        filter.m_rfBandwidth = rfBandwidth;
+        filter.m_lowCutoff = lowCutoff;
+        filter.m_fftWindow = FFTWindow::Blackman;
+        filter.m_dnr = false;
+        filter.m_dnrScheme = 0;
+        filter.m_dnrAboveAvgFactor = 40.0f;
+        filter.m_dnrSigmaFactor = 4.0f;
+        filter.m_dnrNbPeaks = 20;
+        filter.m_dnrAlpha = 1.0f;
+    };
+
+    initFilter(m_filterBank[0], 3, 750, 450);
+    initFilter(m_filterBank[1], 3, 100, 0);
+    initFilter(m_filterBank[2], 3, 200, 0);
+    initFilter(m_filterBank[3], 3, 400, 0);
+    initFilter(m_filterBank[4], 3, 600, 0);
+    initFilter(m_filterBank[5], 3, 800, 400);
+    initFilter(m_filterBank[6], 3, 1000, 400);
+    initFilter(m_filterBank[7], 3, 1000, 400);
+    initFilter(m_filterBank[8], 3, 1000, 400);
+    initFilter(m_filterBank[9], 3, 1000, 400);
+}
+
+QByteArray CWDemodSettings::serialize() const
+{
+    SimpleSerializer s(1);
+    s.writeS32(1, m_inputFrequencyOffset);
+    s.writeS32(3, m_volume * 10.0);
+
+    if (m_spectrumGUI) {
+        s.writeBlob(4, m_spectrumGUI->serialize());
+    }
+
+    s.writeU32(5, m_rgbColor);
+    s.writeBool(8, m_audioBinaural);
+    s.writeBool(9, m_audioFlipChannels);
+    s.writeBool(10, m_dsb);
+    s.writeBool(11, m_agc);
+    s.writeS32(12, m_agcTimeLog2);
+    s.writeS32(13, m_agcPowerThreshold);
+    s.writeS32(14, m_agcThresholdGate);
+    s.writeBool(15, m_agcClamping);
+    s.writeString(16, m_title);
+    s.writeString(17, m_audioDeviceName);
+    s.writeBool(18, m_useReverseAPI);
+    s.writeString(19, m_reverseAPIAddress);
+    s.writeU32(20, m_reverseAPIPort);
+    s.writeU32(21, m_reverseAPIDeviceIndex);
+    s.writeU32(22, m_reverseAPIChannelIndex);
+    s.writeS32(23, m_streamIndex);
+
+    if (m_rollupState) {
+        s.writeBlob(24, m_rollupState->serialize());
+    }
+
+    s.writeS32(25, m_workspaceIndex);
+    s.writeBlob(26, m_geometryBytes);
+    s.writeBool(27, m_hidden);
+    s.writeU32(29, m_filterIndex);
+    s.writeBool(30, m_dnr);
+    s.writeS32(31, m_dnrScheme);
+    s.writeFloat(32, m_dnrAboveAvgFactor);
+    s.writeFloat(33, m_dnrSigmaFactor);
+    s.writeS32(34, m_dnrNbPeaks);
+    s.writeFloat(35, m_dnrAlpha);
+    s.writeBool(36, m_audioMute);
+
+    for (unsigned int i = 0; i <  10; i++)
+    {
+        s.writeS32(100 + 10*i, m_filterBank[i].m_spanLog2);
+        s.writeS32(101 + 10*i, m_filterBank[i].m_rfBandwidth / 100.0);
+        s.writeS32(102 + 10*i, m_filterBank[i].m_lowCutoff / 100.0);
+        s.writeS32(103 + 10*i, (int) m_filterBank[i].m_fftWindow);
+        s.writeBool(104 + 10*i, m_filterBank[i].m_dnr);
+        s.writeS32(105 + 10*i, m_filterBank[i].m_dnrScheme);
+        s.writeFloat(106 + 10*i, m_filterBank[i].m_dnrAboveAvgFactor);
+        s.writeFloat(107 + 10*i, m_filterBank[i].m_dnrSigmaFactor);
+        s.writeS32(108 + 10*i, m_filterBank[i].m_dnrNbPeaks);
+        s.writeFloat(109 + 10*i, m_filterBank[i].m_dnrAlpha);
+    }
+
+    return s.final();
+}
+
+bool CWDemodSettings::deserialize(const QByteArray& data)
+{
+    SimpleDeserializer d(data);
+
+    if(!d.isValid())
+    {
+        resetToDefaults();
+        return false;
+    }
+
+    if(d.getVersion() == 1)
+    {
+        QByteArray bytetmp;
+        qint32 tmp;
+        uint32_t utmp;
+        QString strtmp;
+
+        d.readS32(1, &m_inputFrequencyOffset, 0);
+        d.readS32(3, &tmp, 30);
+        m_volume = tmp / 10.0;
+
+        if (m_spectrumGUI)
+        {
+            d.readBlob(4, &bytetmp);
+            m_spectrumGUI->deserialize(bytetmp);
+        }
+
+        d.readU32(5, &m_rgbColor);
+        d.readBool(8, &m_audioBinaural, false);
+        d.readBool(9, &m_audioFlipChannels, false);
+        d.readBool(10, &m_dsb, false);
+        d.readBool(11, &m_agc, false);
+        d.readS32(12, &m_agcTimeLog2, 7);
+        d.readS32(13, &m_agcPowerThreshold, -40);
+        d.readS32(14, &m_agcThresholdGate, 4);
+        d.readBool(15, &m_agcClamping, false);
+        d.readString(16, &m_title, "CW Demodulator");
+        d.readString(17, &m_audioDeviceName, AudioDeviceManager::m_defaultDeviceName);
+        d.readBool(18, &m_useReverseAPI, false);
+        d.readString(19, &m_reverseAPIAddress, "127.0.0.1");
+        d.readU32(20, &utmp, 0);
+
+        if ((utmp > 1023) && (utmp < 65535)) {
+            m_reverseAPIPort = utmp;
+        } else {
+            m_reverseAPIPort = 8888;
+        }
+
+        d.readU32(21, &utmp, 0);
+        m_reverseAPIDeviceIndex = utmp > 99 ? 99 : utmp;
+        d.readU32(22, &utmp, 0);
+        m_reverseAPIChannelIndex = utmp > 99 ? 99 : utmp;
+        d.readS32(23, &m_streamIndex, 0);
+
+        if (m_rollupState)
+        {
+            d.readBlob(24, &bytetmp);
+            m_rollupState->deserialize(bytetmp);
+        }
+
+        d.readS32(25, &m_workspaceIndex, 0);
+        d.readBlob(26, &m_geometryBytes);
+        d.readBool(27, &m_hidden, false);
+        d.readU32(29, &utmp, 0);
+        m_filterIndex = utmp < 10 ? utmp : 0;
+        d.readBool(30, &m_dnr, false);
+        d.readS32(31, &m_dnrScheme, 0);
+        d.readFloat(32, &m_dnrAboveAvgFactor, 40.0f);
+        d.readFloat(33, &m_dnrSigmaFactor, 4.0f);
+        d.readS32(34, &m_dnrNbPeaks, 20);
+        d.readFloat(35, &m_dnrAlpha, 1.0);
+        d.readBool(36, &m_audioMute, false);
+
+        for (unsigned int i = 0; (i < 10); i++)
+        {
+            d.readS32(100 + 10*i, &m_filterBank[i].m_spanLog2, 3);
+            d.readS32(101 + 10*i, &tmp, 30);
+            m_filterBank[i].m_rfBandwidth = tmp * 100.0;
+            d.readS32(102+ 10*i, &tmp, 3);
+            m_filterBank[i].m_lowCutoff = tmp * 100.0;
+            d.readS32(103 + 10*i, &tmp, (int) FFTWindow::Blackman);
+            m_filterBank[i].m_fftWindow =
+                (FFTWindow::Function) (tmp < 0 ? 0 : tmp > (int) FFTWindow::BlackmanHarris7 ? (int) FFTWindow::BlackmanHarris7 : tmp);
+            d.readBool(104 + 10*i, &m_filterBank[i].m_dnr, false);
+            d.readS32(105 + 10*i, &m_filterBank[i].m_dnrScheme, 0);
+            d.readFloat(106 + 10*i, &m_filterBank[i].m_dnrAboveAvgFactor, 20.0f);
+            d.readFloat(107 + 10*i, &m_filterBank[i].m_dnrSigmaFactor, 4.0f);
+            d.readS32(108 + 10*i, &m_filterBank[i].m_dnrNbPeaks, 10);
+            d.readFloat(109 + 10*i, &m_filterBank[i].m_dnrAlpha, 0.95f);
+        }
+
+        return true;
+    }
+    else
+    {
+        resetToDefaults();
+        return false;
+    }
+}
+
+void CWDemodSettings::applySettings(const QStringList& settingsKeys, const CWDemodSettings& settings)
+{
+    if (settingsKeys.contains("inputFrequencyOffset")) {
+        m_inputFrequencyOffset = settings.m_inputFrequencyOffset;
+    }
+    if (settingsKeys.contains("volume")) {
+        m_volume = settings.m_volume;
+    }
+    if (settingsKeys.contains("audioBinaural")) {
+        m_audioBinaural = settings.m_audioBinaural;
+    }
+    if (settingsKeys.contains("audioFlipChannels")) {
+        m_audioFlipChannels = settings.m_audioFlipChannels;
+    }
+    if (settingsKeys.contains("dsb")) {
+        m_dsb = settings.m_dsb;
+    }
+    if (settingsKeys.contains("audioMute")) {
+        m_audioMute = settings.m_audioMute;
+    }
+    if (settingsKeys.contains("agc")) {
+        m_agc = settings.m_agc;
+    }
+    if (settingsKeys.contains("agcClamping")) {
+        m_agcClamping = settings.m_agcClamping;
+    }
+    if (settingsKeys.contains("agcTimeLog2")) {
+        m_agcTimeLog2 = settings.m_agcTimeLog2;
+    }
+    if (settingsKeys.contains("agcPowerThreshold")) {
+        m_agcPowerThreshold = settings.m_agcPowerThreshold;
+    }
+    if (settingsKeys.contains("agcThresholdGate")) {
+        m_agcThresholdGate = settings.m_agcThresholdGate;
+    }
+    if (settingsKeys.contains("dnr")) {
+        m_dnr = settings.m_dnr;
+    }
+    if (settingsKeys.contains("dnrScheme")) {
+        m_dnrScheme = settings.m_dnrScheme;
+    }
+    if (settingsKeys.contains("dnrAboveAvgFactor")) {
+        m_dnrAboveAvgFactor = settings.m_dnrAboveAvgFactor;
+    }
+    if (settingsKeys.contains("dnrSigmaFactor")) {
+        m_dnrSigmaFactor = settings.m_dnrSigmaFactor;
+    }
+    if (settingsKeys.contains("dnrNbPeaks")) {
+        m_dnrNbPeaks = settings.m_dnrNbPeaks;
+    }
+    if (settingsKeys.contains("dnrAlpha")) {
+        m_dnrAlpha = settings.m_dnrAlpha;
+    }
+    if (settingsKeys.contains("rgbColor")) {
+        m_rgbColor = settings.m_rgbColor;
+    }
+    if (settingsKeys.contains("title")) {
+        m_title = settings.m_title;
+    }
+    if (settingsKeys.contains("audioDeviceName")) {
+        m_audioDeviceName = settings.m_audioDeviceName;
+    }
+    if (settingsKeys.contains("streamIndex")) {
+        m_streamIndex = settings.m_streamIndex;
+    }
+    if (settingsKeys.contains("useReverseAPI")) {
+        m_useReverseAPI = settings.m_useReverseAPI;
+    }
+    if (settingsKeys.contains("reverseAPIAddress")) {
+        m_reverseAPIAddress = settings.m_reverseAPIAddress;
+    }
+    if (settingsKeys.contains("reverseAPIPort")) {
+        m_reverseAPIPort = settings.m_reverseAPIPort;
+    }
+    if (settingsKeys.contains("reverseAPIDeviceIndex")) {
+        m_reverseAPIDeviceIndex = settings.m_reverseAPIDeviceIndex;
+    }
+    if (settingsKeys.contains("reverseAPIChannelIndex")) {
+        m_reverseAPIChannelIndex = settings.m_reverseAPIChannelIndex;
+    }
+    if (settingsKeys.contains("workspaceIndex")) {
+        m_workspaceIndex = settings.m_workspaceIndex;
+    }
+    if (settingsKeys.contains("geometryBytes")) {
+        m_geometryBytes = settings.m_geometryBytes;
+    }
+    if (settingsKeys.contains("hidden")) {
+        m_hidden = settings.m_hidden;
+    }
+    if (settingsKeys.contains("filterBank")) {
+        m_filterBank = settings.m_filterBank;
+    }
+    if (settingsKeys.contains("filterIndex")) {
+        m_filterIndex = settings.m_filterIndex;
+    }
+}
+
+QString CWDemodSettings::getDebugString(const QStringList& settingsKeys, bool force) const
+{
+    std::ostringstream ostr;
+
+    if (settingsKeys.contains("inputFrequencyOffset") || force) {
+        ostr << " m_inputFrequencyOffset: " << m_inputFrequencyOffset;
+    }
+    if (settingsKeys.contains("volume") || force) {
+        ostr << " m_volume: " << m_volume;
+    }
+    if (settingsKeys.contains("audioBinaural") || force) {
+        ostr << " m_audioBinaural: " << m_audioBinaural;
+    }
+    if (settingsKeys.contains("audioFlipChannels") || force) {
+        ostr << " m_audioFlipChannels: " << m_audioFlipChannels;
+    }
+    if (settingsKeys.contains("dsb") || force) {
+        ostr << " m_dsb: " << m_dsb;
+    }
+    if (settingsKeys.contains("audioMute") || force) {
+        ostr << " m_audioMute: " << m_audioMute;
+    }
+    if (settingsKeys.contains("agc") || force) {
+        ostr << " m_agc: " << m_agc;
+    }
+    if (settingsKeys.contains("agcClamping") || force) {
+        ostr << " m_agcClamping: " << m_agcClamping;
+    }
+    if (settingsKeys.contains("agcTimeLog2") || force) {
+        ostr << " m_agcTimeLog2: " << m_agcTimeLog2;
+    }
+    if (settingsKeys.contains("agcPowerThreshold") || force) {
+        ostr << " m_agcPowerThreshold: " << m_agcPowerThreshold;
+    }
+    if (settingsKeys.contains("agcThresholdGate") || force) {
+        ostr << " m_agcThresholdGate: " << m_agcThresholdGate;
+    }
+    if (settingsKeys.contains("dnr") || force) {
+        ostr << " m_dnr: " << m_dnr;
+    }
+    if (settingsKeys.contains("dnrScheme") || force) {
+        ostr << " m_dnrScheme: " << m_dnrScheme;
+    }
+    if (settingsKeys.contains("dnrAboveAvgFactor") || force) {
+        ostr << " m_dnrAboveAvgFactor: " << m_dnrAboveAvgFactor;
+    }
+    if (settingsKeys.contains("dnrSigmaFactor") || force) {
+        ostr << " m_dnrSigmaFactor: " << m_dnrSigmaFactor;
+    }
+    if (settingsKeys.contains("dnrNbPeaks") || force) {
+        ostr << " m_dnrNbPeaks: " << m_dnrNbPeaks;
+    }
+    if (settingsKeys.contains("dnrAlpha") || force) {
+        ostr << " m_dnrAlpha: " << m_dnrAlpha;
+    }
+    if (settingsKeys.contains("rgbColor") || force) {
+        ostr << " m_rgbColor: " << m_rgbColor;
+    }
+    if (settingsKeys.contains("title") || force) {
+        ostr << " m_title: " << m_title.toStdString();
+    }
+    if (settingsKeys.contains("audioDeviceName") || force) {
+        ostr << " m_audioDeviceName: " << m_audioDeviceName.toStdString();
+    }
+    if (settingsKeys.contains("streamIndex") || force) {
+        ostr << " m_streamIndex: " << m_streamIndex;
+    }
+    if (settingsKeys.contains("useReverseAPI") || force) {
+        ostr << " m_useReverseAPI: " << m_useReverseAPI;
+    }
+    if (settingsKeys.contains("reverseAPIAddress") || force) {
+        ostr << " m_reverseAPIAddress: " << m_reverseAPIAddress.toStdString();
+    }
+    if (settingsKeys.contains("reverseAPIPort") || force) {
+        ostr << " m_reverseAPIPort: " << m_reverseAPIPort;
+    }
+    if (settingsKeys.contains("reverseAPIDeviceIndex") || force) {
+        ostr << " m_reverseAPIDeviceIndex: " << m_reverseAPIDeviceIndex;
+    }
+    if (settingsKeys.contains("reverseAPIChannelIndex") || force) {
+        ostr << " m_reverseAPIChannelIndex: " << m_reverseAPIChannelIndex;
+    }
+    if (settingsKeys.contains("workspaceIndex") || force) {
+        ostr << " m_workspaceIndex: " << m_workspaceIndex;
+    }
+    if (settingsKeys.contains("hidden") || force) {
+        ostr << " m_hidden: " << m_hidden;
+    }
+    if (settingsKeys.contains("filterIndex") || force) {
+        ostr << " m_filterIndex: " << m_filterIndex;
+    }
+
+    return QString(ostr.str().c_str());
+}

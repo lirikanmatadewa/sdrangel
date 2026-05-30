@@ -47,6 +47,12 @@ else()
     message(STATUS "Not building demodssb (ENABLE_CHANNELRX_DEMODSSB=${ENABLE_CHANNELRX_DEMODSSB})")
 endif()
 
+if (ENABLE_CHANNELRX_DEMODCW)
+    add_subdirectory(demodcw)
+else()
+    message(STATUS "Not building demodcw (ENABLE_CHANNELRX_DEMODCW=${ENABLE_CHANNELRX_DEMODCW})")
+endif()
+
 if (ENABLE_CHANNELRX_UDPSINK)
     add_subdirectory(udpsink)
 else()

@@ -27,6 +27,7 @@ const QStringList MorseDecoderSettings::m_channelURIs = {
     QStringLiteral("sdrangel.channel.amdemod"),
     QStringLiteral("sdrangel.channel.nfmdemod"),
     QStringLiteral("sdrangel.channel.ssbdemod"),
+    QStringLiteral("sdrangel.channel.cwdemod"),
     QStringLiteral("sdrangel.channel.wfmdemod"),
     QStringLiteral("sdrangel.channel.wdsprx"),
 };

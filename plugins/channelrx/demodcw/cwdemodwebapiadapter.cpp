@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 2012 maintech GmbH, Otto-Hahn-Str. 15, 97204 Hoechberg, Germany //
 // written by Christian Daniel                                                   //
-// Copyright (C) 2015-2017, 2019 Edouard Griffiths, F4EXB <f4exb06@gmail.com>    //
+// Copyright (C) 2015-2020 Edouard Griffiths, F4EXB <f4exb06@gmail.com>          //
 //                                                                               //
 // This program is free software; you can redistribute it and/or modify          //
 // it under the terms of the GNU General Public License as published by          //
@@ -17,33 +17,37 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.          //
 ///////////////////////////////////////////////////////////////////////////////////
 
-#include "channelutils.h"
+#include "SWGChannelSettings.h"
+#include "cwdemod.h"
+#include "cwdemodwebapiadapter.h"
 
-bool ChannelUtils::compareChannelURIs(const QString& registerdChannelURI, const QString& xChannelURI)
+CWDemodWebAPIAdapter::CWDemodWebAPIAdapter()
+{}
+
+CWDemodWebAPIAdapter::~CWDemodWebAPIAdapter()
+{}
+
+int CWDemodWebAPIAdapter::webapiSettingsGet(
+        SWGSDRangel::SWGChannelSettings& response,
+        QString& errorMessage)
 {
-    return registerdChannelURI == getRegisteredChannelURI(xChannelURI);
+    (void) errorMessage;
+    response.setSsbDemodSettings(new SWGSDRangel::SWGSSBDemodSettings());
+    response.getSsbDemodSettings()->init();
+    CWDemod::webapiFormatChannelSettings(response, m_settings);
+
+    return 200;
 }
 
-QString ChannelUtils::getRegisteredChannelURI(const QString& xChannelURI)
+int CWDemodWebAPIAdapter::webapiSettingsPutPatch(
+        bool force,
+        const QStringList& channelSettingsKeys,
+        SWGSDRangel::SWGChannelSettings& response,
+        QString& errorMessage)
 {
-    if ((xChannelURI == "sdrangel.channel.chanalyzerng")
-     || (xChannelURI == "org.f4exb.sdrangelove.channel.chanalyzer")) {
-        return "sdrangel.channel.chanalyzer";
-    } else if (xChannelURI == "de.maintech.sdrangelove.channel.am") {
-        return "sdrangel.channel.amdemod";
-    } else if (xChannelURI == "de.maintech.sdrangelove.channel.nfm") {
-        return "sdrangel.channel.nfmdemod";
-    } else if (xChannelURI == "de.maintech.sdrangelove.channel.ssb") {
-        return "sdrangel.channel.ssbdemod";
-    } else if (xChannelURI == "sdrangel.channel.cwdemod") {
-        return "sdrangel.channel.cwdemod";
-    } else if (xChannelURI == "de.maintech.sdrangelove.channel.wfm") {
-        return "sdrangel.channel.wfmdemod";
-    } else if (xChannelURI == "sdrangel.channel.udpsrc") {
-        return "sdrangel.channel.udpsink";
-    } else if (xChannelURI == "sdrangel.channeltx.udpsink") {
-        return "sdrangel.channeltx.udpsource";
-    } else  {
-        return xChannelURI;
-    }
+    (void) force; // no action
+    (void) errorMessage;
+    CWDemod::webapiUpdateChannelSettings(m_settings, channelSettingsKeys, response);
+
+    return 200;
 }

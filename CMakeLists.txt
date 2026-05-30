@@ -77,6 +77,7 @@ option(ENABLE_CHANNELRX_DEMODCHIRPCHAT "Enable channelrx demodchirpchat plugin" 
 option(ENABLE_CHANNELRX_REMOTESINK "Enable channelrx remotesink plugin" ON)
 option(ENABLE_CHANNELRX_REMOTETCPSINK "Enable channelrx remotetcpsink plugin" ON)
 option(ENABLE_CHANNELRX_DEMODSSB "Enable channelrx demodssb plugin" ON)
+option(ENABLE_CHANNELRX_DEMODCW "Enable channelrx demodcw plugin" ON)
 option(ENABLE_CHANNELRX_CHANALYZER "Enable channelrx chanalyzer plugin" ON)
 option(ENABLE_CHANNELRX_SIGMFFILESINK "Enable channelrx sigmffilesink plugin" ON)
 option(ENABLE_CHANNELRX_DEMODBFM "Enable channelrx demodbfm plugin" ON)
