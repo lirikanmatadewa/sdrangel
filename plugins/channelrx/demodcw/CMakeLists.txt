@@ -67,6 +67,14 @@ install(TARGETS ${TARGET_NAME} DESTINATION ${INSTALL_FOLDER})
 
 # Install debug symbols
 if (WIN32)
-    install(FILES $<TARGET_PROPERTY:${TARGET_NAME},RUNTIME_OUTPUT_DIRECTORY>/${TARGET_NAME}stripped.pdb CONFIGURATIONS Release DESTINATION ${INSTALL_FOLDER} RENAME ${TARGET_NAME}.pdb )
-    install(FILES $<TARGET_PDB_FILE:${TARGET_NAME}> CONFIGURATIONS Debug RelWithDebInfo DESTINATION ${INSTALL_FOLDER} )
+    # Install PDB for Debug/RelWithDebInfo when the target produces linker
+    # artifacts. Do not unconditionally install a "stripped" PDB because
+    # some build configurations do not generate it and that causes CPack to
+    # fail during packaging.
+    get_target_property(_tgt_type ${TARGET_NAME} TYPE)
+    if(_tgt_type STREQUAL "EXECUTABLE" OR _tgt_type STREQUAL "SHARED_LIBRARY" OR _tgt_type STREQUAL "MODULE_LIBRARY")
+        install(FILES $<TARGET_PDB_FILE:${TARGET_NAME}>
+                CONFIGURATIONS Debug RelWithDebInfo
+                DESTINATION ${INSTALL_FOLDER} )
+    endif()
 endif()
