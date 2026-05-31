@@ -45,8 +45,10 @@
 #include "mainwindow.h"
 #include "remotetcpsinkstarter.h"
 #include "dsp/dsptypes.h"
+#include "licensing-framework/licensemanager.h"
 
-static int runQtApplication(int argc, char* argv[], qtwebapp::LoggerWithFile *logger)
+#define NO_LICENSE 1
+static int runQtApplication(int argc, char *argv[], qtwebapp::LoggerWithFile *logger)
 {
 /*
     QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8"));
@@ -73,7 +75,7 @@ static int runQtApplication(int argc, char* argv[], qtwebapp::LoggerWithFile *lo
     QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 #endif
 #ifndef ANDROID
-     QApplication::setAttribute(Qt::AA_DontUseNativeDialogs); // Don't use on Android, otherwise we can't access files on internal storage
+    QApplication::setAttribute(Qt::AA_DontUseNativeDialogs); // Don't use on Android, otherwise we can't access files on internal storage
 #endif
 
     // Set UI scale factor for High DPI displays
@@ -86,6 +88,21 @@ static int runQtApplication(int argc, char* argv[], qtwebapp::LoggerWithFile *lo
     }
 
     QApplication a(argc, argv);
+
+    // Initialize licensing system early
+    qDebug() << "Initializing licensing framework...";
+    LicenseManager::getInstance().initialize();
+
+    // Check license status and exit if invalid
+    if (!LicenseManager::getInstance().isLicenseValid())
+    {
+        qCritical() << "License validation failed. Application cannot continue.";
+        qCritical() << "License Type:" << LicenseManager::getInstance().getLicenseTypeString();
+        qCritical() << "Please ensure you have a valid license file.";
+        return NO_LICENSE;
+    }
+
+    qInfo() << "License validation successful. License Type:" << LicenseManager::getInstance().getLicenseTypeString();
 
 #if 1
     qApp->setStyle(QStyleFactory::create("fusion"));
@@ -156,8 +173,7 @@ static int runQtApplication(int argc, char* argv[], qtwebapp::LoggerWithFile *lo
                         "QSlider::handle:horizontal { background: #585858; border: 1px double  #676767; width: 16px; margin: -8px 0px; border-radius: 3px;}"
                         "QSlider::sub-page {background: #ff8c00; border: 1px solid #2e2e2e;border-top-right-radius: 0px;border-bottom-right-radius: 0px;border-top-left-radius: 5px;border-bottom-left-radius: 5px;}"
                         "QSlider::add-page {background: #444444; border: 1px solid #2e2e2e;border-top-right-radius: 5px;border-bottom-right-radius: 5px;border-top-left-radius: 0px;border-bottom-left-radius: 0px;}"
-                        "QDialog { border: 1px solid #ff8c00;}"
-                        );
+                        "QDialog { border: 1px solid #ff8c00;}");
 #endif
 
     MainParser parser;

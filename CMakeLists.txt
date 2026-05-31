@@ -853,7 +853,7 @@ add_subdirectory(logging)
 add_subdirectory(qrtplib)
 add_subdirectory(swagger)
 add_subdirectory(devices)
-
+add_subdirectory(licensing-framework)
 add_subdirectory(modemm17)
 
 if (FFTW3F_FOUND)
@@ -892,6 +892,7 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/sdrsrv
     ${CMAKE_SOURCE_DIR}/sdrbench
     ${CMAKE_SOURCE_DIR}/logging
+    ${CMAKE_SOURCE_DIR}/licensing-framework
 )
 if(NOT ANDROID)
     include_directories(
@@ -1014,6 +1015,7 @@ if (BUILD_GUI)
           sdrbase
           sdrgui
           logging
+          licensing
 )
   endif()
   if(APPLE)
@@ -1041,6 +1043,7 @@ if (BUILD_SERVER)
         sdrbase
         sdrsrv
         logging
+        licensing
     )
 endif()
 
