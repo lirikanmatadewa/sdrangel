@@ -25,6 +25,7 @@
 #include <QDialog>
 #include "settings/mainsettings.h"
 #include "export.h"
+#include <QString>
 
 namespace Ui {
 	class MyPositionDialog;
@@ -40,6 +41,9 @@ public:
 private:
 	Ui::MyPositionDialog* ui;
 	MainSettings& m_mainSettings;
+
+	QString loadIPAddress();
+	void saveIPAddress(const QString& ip);
 
 private slots:
 	void accept();

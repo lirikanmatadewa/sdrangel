@@ -44,6 +44,11 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 
+#include <QFile>
+#include <QTextStream>
+#include <QStandardPaths>
+#include <QDir>
+
 #include "wfmdemod.h"
 
 WFMDemodGUI* WFMDemodGUI::create(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, BasebandSampleSink *rxChannel)
@@ -184,7 +189,31 @@ void WFMDemodGUI::on_DF()
     qDebug() << "DF Clicked :: CF(Hz) =" << cfHz;
     qDebug() << "DF Clicked :: CF(MHz int) =" << cfMHz;
 
-    QUrl url("http://192.168.1.10:8080/api/daq/center-freq");
+    //QUrl url("http://192.168.1.10:8080/api/daq/center-freq");
+    QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+
+    QFile file(path + "/ip_device.txt");
+
+    QString ip = "192.168.1.10";
+
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        QTextStream in(&file);
+        QString savedIp = in.readLine().trimmed();
+
+        if (!savedIp.isEmpty())
+        {
+            ip = savedIp;
+        }
+
+        file.close();
+    }
+
+    QString urlString = QString("http://%1:8080/api/daq/center-freq").arg(ip);
+
+    qDebug() << "Using API URL:" << urlString;
+
+    QUrl url(urlString);
     QNetworkRequest request(url);
 
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");

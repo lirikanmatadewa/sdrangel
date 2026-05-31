@@ -60,6 +60,11 @@
 #include "SWGKiwiSDRSettings.h"
 #include "SWGRemoteTCPInputSettings.h"
 
+#include <QFile>
+#include <QTextStream>
+#include <QStandardPaths>
+#include <QDir>
+
 MapGUI* MapGUI::create(PluginAPI* pluginAPI, FeatureUISet *featureUISet, Feature *feature)
 {
     MapGUI* gui = new MapGUI(pluginAPI, featureUISet, feature);
@@ -399,7 +404,33 @@ MapGUI::MapGUI(PluginAPI* pluginAPI, FeatureUISet *featureUISet, Feature *featur
 
     m_bearingLineName = "Bearing Nawasanga";
     m_bearingColor = QColor("#00ff00");
-    startBearingApi("http://192.168.1.10:9000/get_map_data", 1);
+
+    // Load IP from config file
+    QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+
+    QFile file(path + "/ip_device.txt");
+
+    QString ip = "192.168.1.10";
+
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        QTextStream in(&file);
+
+        QString savedIp = in.readLine().trimmed();
+
+        if (!savedIp.isEmpty())
+        {
+            ip = savedIp;
+        }
+
+        file.close();
+    }
+
+    QString bearingUrl = QString("http://%1:9000/get_map_data").arg(ip);
+
+    qDebug() << "Bearing API URL:" << bearingUrl;
+
+    startBearingApi(bearingUrl, 1);
 }
 
 MapGUI::~MapGUI()
@@ -2892,6 +2923,10 @@ void MapGUI::bearingApiReplyFinished(QNetworkReply* reply)
 {
     m_bearingApiBusy = false;
 
+    qDebug() << "Reply error =" << reply->error();
+    qDebug() << "Reply error string =" << reply->errorString();
+    qDebug() << "Reply URL =" << reply->url();
+
     if (!reply) {
         return;
     }
@@ -2905,6 +2940,9 @@ void MapGUI::bearingApiReplyFinished(QNetworkReply* reply)
     }
 
     QByteArray responseBytes = reply->readAll();
+
+    qDebug() << "Bearing API RAW =" << responseBytes;
+
     reply->deleteLater();
 
     //qDebug() << "API Response:" << responseBytes;
@@ -2933,7 +2971,7 @@ void MapGUI::bearingApiReplyFinished(QNetworkReply* reply)
         !obj.contains("start_lon") ||
         !obj.contains("end_lat") ||
         !obj.contains("end_lon") ||
-        !obj.contains("kraken_bearing_relative"))
+        !obj.contains("gps_heading"))
     {
         qWarning() << "MapGUI::bearingApiReplyFinished missing required fields:"
             << responseBytes;
@@ -2944,7 +2982,9 @@ void MapGUI::bearingApiReplyFinished(QNetworkReply* reply)
     double startLon = obj.value("start_lon").toDouble();
     double endLat = obj.value("end_lat").toDouble();
     double endLon = obj.value("end_lon").toDouble();
-    double bearingRelative = obj.value("kraken_bearing_relative").toDouble();
+    double bearingRelative = obj.value("gps_heading").toDouble();
+    qDebug() << "Parsed bearing =" << bearingRelative;
+
     setDoaAngle(bearingRelative);
 
     //qDebug() << "Start:" << startLat << startLon;

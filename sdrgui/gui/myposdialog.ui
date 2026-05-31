@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>324</width>
-    <height>219</height>
+    <height>267</height>
    </rect>
   </property>
   <property name="font">
@@ -20,22 +20,73 @@
    <string>My Position</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="1" column="0">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-     </property>
-    </widget>
-   </item>
    <item row="0" column="0">
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
       <string>My Station Position</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
+      <item row="2" column="1">
+       <widget class="QDoubleSpinBox" name="longitudeSpinBox">
+        <property name="toolTip">
+         <string>Longitude in decimal degrees</string>
+        </property>
+        <property name="decimals">
+         <number>6</number>
+        </property>
+        <property name="minimum">
+         <double>-180.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>180.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="longitudeLabel">
+        <property name="text">
+         <string>Longitude</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="altitudeLabel">
+        <property name="text">
+         <string>Altitude (m)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1" colspan="2">
+       <widget class="QLineEdit" name="name">
+        <property name="toolTip">
+         <string>Enter the name of your station</string>
+        </property>
+        <property name="text">
+         <string>Home</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="nameLabel">
+        <property name="text">
+         <string>Station name</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QToolButton" name="gps">
+        <property name="toolTip">
+         <string>Set position now using GPS (or other means if available)</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset resource="../resources/res.qrc">
+          <normaloff>:/gps.png</normaloff>:/gps.png</iconset>
+        </property>
+       </widget>
+      </item>
       <item row="1" column="1">
        <widget class="QDoubleSpinBox" name="latitudeSpinBox">
         <property name="toolTip">
@@ -59,34 +110,10 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="1" colspan="2">
-       <widget class="QLineEdit" name="name">
-        <property name="toolTip">
-         <string>Enter the name of your station</string>
-        </property>
+      <item row="4" column="0">
+       <widget class="QLabel" name="autoUpdatePositionLabel">
         <property name="text">
-         <string>Home</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="altitudeLabel">
-        <property name="text">
-         <string>Altitude (m)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="longitudeLabel">
-        <property name="text">
-         <string>Longitude</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="nameLabel">
-        <property name="text">
-         <string>Station name</string>
+         <string>Auto-update position</string>
         </property>
        </widget>
       </item>
@@ -97,43 +124,6 @@
         </property>
         <property name="text">
          <string/>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QDoubleSpinBox" name="longitudeSpinBox">
-        <property name="toolTip">
-         <string>Longitude in decimal degrees</string>
-        </property>
-        <property name="decimals">
-         <number>6</number>
-        </property>
-        <property name="minimum">
-         <double>-180.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>180.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="autoUpdatePositionLabel">
-        <property name="text">
-         <string>Auto-update position</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="2">
-       <widget class="QToolButton" name="gps">
-        <property name="toolTip">
-         <string>Set position now using GPS (or other means if available)</string>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-        <property name="icon">
-         <iconset resource="../resources/res.qrc">
-          <normaloff>:/gps.png</normaloff>:/gps.png</iconset>
         </property>
        </widget>
       </item>
@@ -149,6 +139,42 @@
       </item>
      </layout>
     </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <layout class="QGridLayout" name="gridLayout_3" rowstretch="0,0,0" columnstretch="0,0" rowminimumheight="0,0,0" columnminimumwidth="0,0">
+     <property name="leftMargin">
+      <number>9</number>
+     </property>
+     <property name="topMargin">
+      <number>9</number>
+     </property>
+     <property name="rightMargin">
+      <number>9</number>
+     </property>
+     <property name="bottomMargin">
+      <number>9</number>
+     </property>
+     <item row="1" column="0">
+      <widget class="QLabel" name="ipLabel">
+       <property name="text">
+        <string>IP</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLineEdit" name="ipDevice"/>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>

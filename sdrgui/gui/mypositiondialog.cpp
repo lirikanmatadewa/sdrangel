@@ -25,6 +25,11 @@
 
 #include <QGeoCoordinate>
 
+#include <QFile>
+#include <QTextStream>
+#include <QStandardPaths>
+#include <QDir>
+
 MyPositionDialog::MyPositionDialog(MainSettings& mainSettings, QWidget* parent) :
     QDialog(parent),
     ui(new Ui::MyPositionDialog),
@@ -36,6 +41,8 @@ MyPositionDialog::MyPositionDialog(MainSettings& mainSettings, QWidget* parent) 
     ui->longitudeSpinBox->setValue(m_mainSettings.getLongitude());
     ui->altitudeSpinBox->setValue(m_mainSettings.getAltitude());
     ui->autoUpdatePosition->setChecked(m_mainSettings.getAutoUpdatePosition());
+
+    ui->ipDevice->setText(loadIPAddress());
 }
 
 MyPositionDialog::~MyPositionDialog()
@@ -50,6 +57,9 @@ void MyPositionDialog::accept()
     m_mainSettings.setLongitude(ui->longitudeSpinBox->value());
     m_mainSettings.setAltitude(ui->altitudeSpinBox->value());
     m_mainSettings.setAutoUpdatePosition(ui->autoUpdatePosition->isChecked());
+
+    saveIPAddress(ui->ipDevice->text());
+
 	QDialog::accept();
 }
 
@@ -67,4 +77,50 @@ void MyPositionDialog::on_gps_clicked()
     {
         qDebug() << "MyPositionDialog::on_gps_clicked: Position is not valid.";
     }
+}
+
+QString MyPositionDialog::loadIPAddress()
+{
+    QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+
+    QDir().mkpath(path);
+
+    QFile file(path + "/ip_device.txt");
+
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        return "192.168.1.10";
+    }
+
+    QTextStream in(&file);
+    QString ip = in.readLine().trimmed();
+
+    file.close();
+
+    if (ip.isEmpty())
+    {
+        return "192.168.1.10";
+    }
+
+    return ip;
+}
+
+void MyPositionDialog::saveIPAddress(const QString& ip)
+{
+    QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+
+    QDir().mkpath(path);
+
+    QFile file(path + "/ip_device.txt");
+
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        qDebug() << "Failed save IP file";
+        return;
+    }
+
+    QTextStream out(&file);
+    out << ip;
+
+    file.close();
 }
