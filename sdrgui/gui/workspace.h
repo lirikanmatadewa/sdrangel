@@ -81,6 +81,7 @@ private:
     QPushButton *m_addMIMODeviceButton;
     QFrame *m_vline2;
     QPushButton *m_addFeatureButton;
+    QPushButton* m_callMap;
     QPushButton *m_featurePresetsButton;
     QFrame *m_vline3;
     QPushButton *m_cascadeSubWindows;
@@ -125,6 +126,7 @@ private slots:
     void toggleFloating();
     void deviceStateChanged(int, DeviceAPI *deviceAPI);
     void subWindowActivated(QMdiSubWindow *window);
+    void addMapFeatureClicked();
 
 signals:
     void addRxDevice(Workspace *inWorkspace, int deviceIndex);
