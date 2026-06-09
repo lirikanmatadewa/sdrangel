@@ -134,6 +134,10 @@ SWGChannelReport::SWGChannelReport() {
     m_wfm_demod_report_isSet = false;
     wfm_mod_report = nullptr;
     m_wfm_mod_report_isSet = false;
+    rdf_demod_report = nullptr;
+    m_rdf_demod_report_isSet = false;
+    rdf_mod_report = nullptr;
+    m_rdf_mod_report_isSet = false;
 }
 
 SWGChannelReport::~SWGChannelReport() {
@@ -248,6 +252,11 @@ SWGChannelReport::init() {
     m_wfm_demod_report_isSet = false;
     wfm_mod_report = new SWGWFMModReport();
     m_wfm_mod_report_isSet = false;
+
+    rdf_demod_report = new SWGRDFDemodReport();
+    m_rdf_demod_report_isSet = false;
+    rdf_mod_report = new SWGRDFModReport();
+    m_rdf_mod_report_isSet = false;
 }
 
 void
@@ -409,6 +418,12 @@ SWGChannelReport::cleanup() {
     if(wfm_mod_report != nullptr) { 
         delete wfm_mod_report;
     }
+    if (rdf_demod_report != nullptr) {
+        delete rdf_demod_report;
+    }
+    if (rdf_mod_report != nullptr) {
+        delete rdf_mod_report;
+    }
 }
 
 SWGChannelReport*
@@ -527,6 +542,10 @@ SWGChannelReport::fromJsonObject(QJsonObject &pJson) {
     ::SWGSDRangel::setValue(&wfm_demod_report, pJson["WFMDemodReport"], "SWGWFMDemodReport", "SWGWFMDemodReport");
     
     ::SWGSDRangel::setValue(&wfm_mod_report, pJson["WFMModReport"], "SWGWFMModReport", "SWGWFMModReport");
+
+    ::SWGSDRangel::setValue(&rdf_demod_report, pJson["RDFDemodReport"], "SWGRDFDemodReport", "SWGRDFDemodReport");
+
+    ::SWGSDRangel::setValue(&rdf_mod_report, pJson["RDFModReport"], "SWGRDFModReport", "SWGRDFModReport");
     
 }
 
@@ -702,6 +721,13 @@ SWGChannelReport::asJsonObject() {
     }
     if((wfm_mod_report != nullptr) && (wfm_mod_report->isSet())){
         toJsonValue(QString("WFMModReport"), wfm_mod_report, obj, QString("SWGWFMModReport"));
+    }
+
+    if ((rdf_demod_report != nullptr) && (rdf_demod_report->isSet())) {
+        toJsonValue(QString("RDFDemodReport"), rdf_demod_report, obj, QString("SWGRDFDemodReport"));
+    }
+    if ((rdf_mod_report != nullptr) && (rdf_mod_report->isSet())) {
+        toJsonValue(QString("RDFModReport"), rdf_mod_report, obj, QString("SWGRDFModReport"));
     }
 
     return obj;
@@ -1237,6 +1263,25 @@ SWGChannelReport::setWfmModReport(SWGWFMModReport* wfm_mod_report) {
     this->m_wfm_mod_report_isSet = true;
 }
 
+SWGRDFDemodReport*
+SWGChannelReport::getRdfDemodReport() {
+    return rdf_demod_report;
+}
+void
+SWGChannelReport::setRdfDemodReport(SWGRDFDemodReport* rdf_demod_report) {
+    this->rdf_demod_report = rdf_demod_report;
+    this->m_rdf_demod_report_isSet = true;
+}
+
+SWGRDFModReport*
+SWGChannelReport::getRdfModReport() {
+    return rdf_mod_report;
+}
+void
+SWGChannelReport::setRdfModReport(SWGRDFModReport* rdf_mod_report) {
+    this->rdf_mod_report = rdf_mod_report;
+    this->m_rdf_mod_report_isSet = true;
+}
 
 bool
 SWGChannelReport::isSet(){
@@ -1399,6 +1444,12 @@ SWGChannelReport::isSet(){
             isObjectUpdated = true; break;
         }
         if(wfm_mod_report && wfm_mod_report->isSet()){
+            isObjectUpdated = true; break;
+        }
+        if (rdf_demod_report && rdf_demod_report->isSet()) {
+            isObjectUpdated = true; break;
+        }
+        if (rdf_mod_report && rdf_mod_report->isSet()) {
             isObjectUpdated = true; break;
         }
     }while(false);

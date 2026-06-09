@@ -2971,7 +2971,7 @@ void MapGUI::bearingApiReplyFinished(QNetworkReply* reply)
         !obj.contains("start_lon") ||
         !obj.contains("end_lat") ||
         !obj.contains("end_lon") ||
-        !obj.contains("gps_heading"))
+        !obj.contains("kraken_bearing_relative"))
     {
         qWarning() << "MapGUI::bearingApiReplyFinished missing required fields:"
             << responseBytes;
@@ -2982,10 +2982,18 @@ void MapGUI::bearingApiReplyFinished(QNetworkReply* reply)
     double startLon = obj.value("start_lon").toDouble();
     double endLat = obj.value("end_lat").toDouble();
     double endLon = obj.value("end_lon").toDouble();
-    double bearingRelative = obj.value("gps_heading").toDouble();
-    qDebug() << "Parsed bearing =" << bearingRelative;
 
-    setDoaAngle(bearingRelative);
+    double bearingRelative =
+        obj.value("kraken_bearing_relative").toDouble();
+
+    double absoluteBearing =
+        obj.value("absolute_bearing").toDouble();
+
+    qDebug() << "Relative bearing =" << bearingRelative;
+    qDebug() << "Absolute bearing =" << absoluteBearing;
+
+    // compass pakai ABSOLUTE bearing
+    setDoaAngle(absoluteBearing);
 
     //qDebug() << "Start:" << startLat << startLon;
     //qDebug() << "End:" << endLat << endLon;
@@ -3013,6 +3021,7 @@ void MapGUI::bearingApiReplyFinished(QNetworkReply* reply)
         bearingRelative,
         m_bearingLineName,
         m_bearingColor);
+
 }
 
 void MapGUI::updateBearingLineFromApi(double startLat,

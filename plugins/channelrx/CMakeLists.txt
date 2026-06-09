@@ -65,6 +65,12 @@ else()
     message(STATUS "Not building demodwfm (ENABLE_CHANNELRX_DEMODWFM=${ENABLE_CHANNELRX_DEMODWFM})")
 endif()
 
+if (ENABLE_CHANNELRX_DEMODRDF)
+    add_subdirectory(demodrdf)
+else()
+    message(STATUS "Not building demodrdf (ENABLE_CHANNELRX_DEMODRDF=${ENABLE_CHANNELRX_DEMODRDF})")
+endif()
+
 if (ENABLE_CHANNELRX_LOCALSINK)
     add_subdirectory(localsink)
 else()

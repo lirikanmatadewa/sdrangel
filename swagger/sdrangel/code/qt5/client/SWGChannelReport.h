@@ -73,6 +73,8 @@
 #include "SWGWDSPRxReport.h"
 #include "SWGWFMDemodReport.h"
 #include "SWGWFMModReport.h"
+#include "SWGRDFDemodReport.h"
+#include "SWGRDFModReport.h"
 #include <QString>
 
 #include "SWGObject.h"
@@ -252,6 +254,12 @@ public:
     SWGWFMModReport* getWfmModReport();
     void setWfmModReport(SWGWFMModReport* wfm_mod_report);
 
+    SWGRDFDemodReport* getRdfDemodReport();
+    void setRdfDemodReport(SWGRDFDemodReport* rdf_demod_report);
+
+    SWGRDFModReport* getRdfModReport();
+    void setRdfModReport(SWGRDFModReport* rdf_mod_report);
+
 
     virtual bool isSet() override;
 
@@ -414,6 +422,12 @@ private:
 
     SWGWFMModReport* wfm_mod_report;
     bool m_wfm_mod_report_isSet;
+
+    SWGRDFDemodReport* rdf_demod_report;
+    bool m_rdf_demod_report_isSet;
+
+    SWGRDFModReport* rdf_mod_report;
+    bool m_rdf_mod_report_isSet;
 
 };
 

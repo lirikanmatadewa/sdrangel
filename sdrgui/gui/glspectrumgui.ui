@@ -219,9 +219,6 @@
        <property name="toolTip">
         <string>Decay divisor:</string>
        </property>
-       <property name="alignment">
-        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-       </property>
        <property name="minimum">
         <number>1</number>
        </property>
@@ -542,7 +539,7 @@
         <string>FFT window function</string>
        </property>
        <property name="sizeAdjustPolicy">
-        <enum>QComboBox::SizeAdjustPolicy::AdjustToContents</enum>
+        <enum>QComboBox::AdjustToContents</enum>
        </property>
        <item>
         <property name="text">
@@ -615,7 +612,7 @@
         <string>FFT size</string>
        </property>
        <property name="sizeAdjustPolicy">
-        <enum>QComboBox::SizeAdjustPolicy::AdjustToContents</enum>
+        <enum>QComboBox::AdjustToContents</enum>
        </property>
        <item>
         <property name="text">
@@ -679,9 +676,6 @@
        </property>
        <property name="toolTip">
         <string>FFT overlap</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
        </property>
        <property name="minimum">
         <number>0</number>
@@ -903,9 +897,6 @@
        <property name="toolTip">
         <string>Reference level (dB)</string>
        </property>
-       <property name="alignment">
-        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-       </property>
        <property name="minimum">
         <number>-200</number>
        </property>
@@ -930,9 +921,6 @@
        </property>
        <property name="toolTip">
         <string>Range (dB)</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
        </property>
        <property name="minimum">
         <number>1</number>
@@ -1249,7 +1237,7 @@
         </size>
        </property>
        <property name="focusPolicy">
-        <enum>Qt::FocusPolicy::TabFocus</enum>
+        <enum>Qt::NoFocus</enum>
        </property>
        <property name="toolTip">
         <string>ADS-B Demodulator</string>
@@ -1286,7 +1274,7 @@
         </size>
        </property>
        <property name="focusPolicy">
-        <enum>Qt::FocusPolicy::TabFocus</enum>
+        <enum>Qt::NoFocus</enum>
        </property>
        <property name="toolTip">
         <string>AM Demodulator</string>
@@ -1311,7 +1299,7 @@
         </size>
        </property>
        <property name="focusPolicy">
-        <enum>Qt::FocusPolicy::TabFocus</enum>
+        <enum>Qt::NoFocus</enum>
        </property>
        <property name="toolTip">
         <string>SSB Demodulator</string>
@@ -1336,7 +1324,7 @@
         </size>
        </property>
        <property name="focusPolicy">
-        <enum>Qt::FocusPolicy::TabFocus</enum>
+        <enum>Qt::NoFocus</enum>
        </property>
        <property name="toolTip">
         <string>WFM Demodulator</string>
@@ -1431,6 +1419,13 @@
       <widget class="QPushButton" name="widebandScanner">
        <property name="text">
         <string>Wideband Scanner</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnDrf">
+       <property name="text">
+        <string>Radio Direction Finder</string>
        </property>
       </widget>
      </item>

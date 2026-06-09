@@ -129,6 +129,6 @@ int main(int argc, char* argv[])
         logger->installMsgHandler();
         int res = runQtApplication(argc, argv, logger);
         delete logger;
-        qWarning("SDR Analyzer quit.");
+        qWarning("Navix PD100 quit.");
         return res;
 }

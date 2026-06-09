@@ -133,6 +133,7 @@ private slots:
 	void open_am();
 	void open_ssb();
 	void open_wfm();
+	void open_rdf();
 	void openIqRecord();
 	void openIqReplay();
 	void openFrequencyScanner();

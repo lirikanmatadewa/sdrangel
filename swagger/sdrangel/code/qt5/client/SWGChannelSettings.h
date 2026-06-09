@@ -83,6 +83,8 @@
 #include "SWGWDSPRxSettings.h"
 #include "SWGWFMDemodSettings.h"
 #include "SWGWFMModSettings.h"
+#include "SWGRDFDemodSettings.h"
+#include "SWGRDFModSettings.h"
 #include <QString>
 
 #include "SWGObject.h"
@@ -298,6 +300,12 @@ public:
     SWGWFMModSettings* getWfmModSettings();
     void setWfmModSettings(SWGWFMModSettings* wfm_mod_settings);
 
+    SWGRDFDemodSettings* getRdfDemodSettings();
+    void setRdfDemodSettings(SWGRDFDemodSettings* wfm_demod_settings);
+
+    SWGRDFModSettings* getRdfModSettings();
+    void setRdfModSettings(SWGRDFModSettings* wfm_mod_settings);
+
 
     virtual bool isSet() override;
 
@@ -496,6 +504,12 @@ private:
 
     SWGWFMModSettings* wfm_mod_settings;
     bool m_wfm_mod_settings_isSet;
+
+    SWGRDFDemodSettings* rdf_demod_settings;
+    bool m_rdf_demod_settings_isSet;
+
+    SWGRDFModSettings* rdf_mod_settings;
+    bool m_rdf_mod_settings_isSet;
 
 };
 

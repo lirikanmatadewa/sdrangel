@@ -158,6 +158,10 @@ SWGChannelSettings::SWGChannelSettings() {
     m_wfm_demod_settings_isSet = false;
     wfm_mod_settings = nullptr;
     m_wfm_mod_settings_isSet = false;
+    rdf_demod_settings = nullptr;
+    m_rdf_demod_settings_isSet = false;
+    rdf_mod_settings = nullptr;
+    m_rdf_mod_settings_isSet = false;
 }
 
 SWGChannelSettings::~SWGChannelSettings() {
@@ -296,6 +300,10 @@ SWGChannelSettings::init() {
     m_wfm_demod_settings_isSet = false;
     wfm_mod_settings = new SWGWFMModSettings();
     m_wfm_mod_settings_isSet = false;
+    rdf_demod_settings = new SWGRDFDemodSettings();
+    m_rdf_demod_settings_isSet = false;
+    rdf_mod_settings = new SWGRDFModSettings();
+    m_rdf_mod_settings_isSet = false;
 }
 
 void
@@ -489,6 +497,12 @@ SWGChannelSettings::cleanup() {
     if(wfm_mod_settings != nullptr) { 
         delete wfm_mod_settings;
     }
+    if (rdf_demod_settings != nullptr) {
+        delete rdf_demod_settings;
+    }
+    if (rdf_mod_settings != nullptr) {
+        delete rdf_mod_settings;
+    }
 }
 
 SWGChannelSettings*
@@ -631,6 +645,10 @@ SWGChannelSettings::fromJsonObject(QJsonObject &pJson) {
     ::SWGSDRangel::setValue(&wfm_demod_settings, pJson["WFMDemodSettings"], "SWGWFMDemodSettings", "SWGWFMDemodSettings");
     
     ::SWGSDRangel::setValue(&wfm_mod_settings, pJson["WFMModSettings"], "SWGWFMModSettings", "SWGWFMModSettings");
+
+    ::SWGSDRangel::setValue(&rdf_demod_settings, pJson["RDFDemodSettings"], "SWGRDFDemodSettings", "SWGRDFDemodSettings");
+
+    ::SWGSDRangel::setValue(&rdf_mod_settings, pJson["RDFModSettings"], "SWGRDFModSettings", "SWGRDFModSettings");
     
 }
 
@@ -842,6 +860,12 @@ SWGChannelSettings::asJsonObject() {
     }
     if((wfm_mod_settings != nullptr) && (wfm_mod_settings->isSet())){
         toJsonValue(QString("WFMModSettings"), wfm_mod_settings, obj, QString("SWGWFMModSettings"));
+    }
+    if ((rdf_demod_settings != nullptr) && (rdf_demod_settings->isSet())) {
+        toJsonValue(QString("RDFDemodSettings"), rdf_demod_settings, obj, QString("SWGRDFDemodSettings"));
+    }
+    if ((rdf_mod_settings != nullptr) && (rdf_mod_settings->isSet())) {
+        toJsonValue(QString("RDFModSettings"), rdf_mod_settings, obj, QString("SWGRDFModSettings"));
     }
 
     return obj;
@@ -1498,6 +1522,28 @@ SWGChannelSettings::setWfmModSettings(SWGWFMModSettings* wfm_mod_settings) {
 }
 
 
+// --
+SWGRDFDemodSettings*
+SWGChannelSettings::getRdfDemodSettings() {
+    return rdf_demod_settings;
+}
+void
+SWGChannelSettings::setRdfDemodSettings(SWGRDFDemodSettings* rdf_demod_settings) {
+    this->rdf_demod_settings = rdf_demod_settings;
+    this->m_rdf_demod_settings_isSet = true;
+}
+
+SWGRDFModSettings*
+SWGChannelSettings::getRdfModSettings() {
+    return rdf_mod_settings;
+}
+void
+SWGChannelSettings::setRdfModSettings(SWGRDFModSettings* rdf_mod_settings) {
+    this->rdf_mod_settings = rdf_mod_settings;
+    this->m_rdf_mod_settings_isSet = true;
+}
+
+
 bool
 SWGChannelSettings::isSet(){
     bool isObjectUpdated = false;
@@ -1695,6 +1741,12 @@ SWGChannelSettings::isSet(){
             isObjectUpdated = true; break;
         }
         if(wfm_mod_settings && wfm_mod_settings->isSet()){
+            isObjectUpdated = true; break;
+        }
+        if (rdf_demod_settings && rdf_demod_settings->isSet()) {
+            isObjectUpdated = true; break;
+        }
+        if (rdf_mod_settings && rdf_mod_settings->isSet()) {
             isObjectUpdated = true; break;
         }
     }while(false);
