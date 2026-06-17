@@ -30,6 +30,7 @@
 #include <QApplication>
 #include <QMenu>
 #include <QAction>
+#include <QMessageBox>
 
 #include "gui/samplingdevicedialog.h"
 #include "gui/rollupcontents.h"
@@ -387,9 +388,32 @@ void Workspace::addRxDeviceClicked()
 {
     SamplingDeviceDialog dialog(0, this);
 
-    if (dialog.exec() == QDialog::Accepted) {
-        emit addRxDevice(this, dialog.getSelectedDeviceIndex());
+    m_addRxDeviceButton->setDisabled(true);
+    QString searchString = "PD100[0:0]";
+    QMap<int, QString> deviceMap = dialog.getDeviceMap();
+    QList<int> matchingKeys;
+
+    for (auto it = deviceMap.begin(); it != deviceMap.end(); ++it) {
+        if (it.value().contains(searchString)) {
+            matchingKeys.append(it.key());
+        }
     }
+    if (matchingKeys.isEmpty()) {
+        QMessageBox msgBox;
+        msgBox.setIcon(QMessageBox::Information);
+        msgBox.setText("Please plug-in the PD100.");
+        msgBox.setStandardButtons(QMessageBox::Ok);
+        msgBox.setDefaultButton(QMessageBox::Ok);
+        msgBox.exec();
+    }
+    else {
+        dialog.setSelectedDeviceIndex(matchingKeys[0]);
+        emit addRxDevice(this, matchingKeys[0]);
+    }
+
+    m_addRxDeviceButton->setDisabled(false);
+
+    /* if (dialog.exec() == QDialog::Accepted) { emit addRxDevice(this, dialog.getSelectedDeviceIndex()); } */
 }
 
 void Workspace::addTxDeviceClicked()
@@ -1137,6 +1161,6 @@ void Workspace::adjustSubWindowsAfterRestore()
 
 void Workspace::addMapFeatureClicked()
 {
-    qDebug() << "--->> " << "eksekusi 8";
-    emit addFeature(this, 8);
+    //qDebug() << "--->> " << "eksekusi 8";
+    emit addFeature(this, 6);
 }

@@ -103,7 +103,7 @@ void WDSPRxSettings::resetToDefaults()
     m_volume = 1.0;
     m_inputFrequencyOffset = 0;
     m_rgbColor = QColor(0, 255, 196).rgb();
-    m_title = "WDSP Receiver";
+    m_title = "SSB";
     m_audioDeviceName = AudioDeviceManager::m_defaultDeviceName;
     m_streamIndex = 0;
     m_useReverseAPI = false;
@@ -399,7 +399,7 @@ bool WDSPRxSettings::deserialize(const QByteArray& data)
         d.readDouble(64, &m_ssqlTauUnmute, 0.1);
         d.readDouble(65, &m_amsqMaxTail, 1.5);
         //
-        d.readString(70, &m_title, "WDSP Receiver");
+        d.readString(70, &m_title, "SSB");
         d.readString(71, &m_audioDeviceName, AudioDeviceManager::m_defaultDeviceName);
         d.readBool(  72, &m_useReverseAPI, false);
         d.readString(73, &m_reverseAPIAddress, "127.0.0.1");

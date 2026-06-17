@@ -101,6 +101,8 @@ BladeRF2InputGui::BladeRF2InputGui(DeviceUISet *deviceUISet, QWidget* parent) :
     sendSettings();
     makeUIConnections();
     m_resizer.enableChildMouseTracking();
+
+    ui->overclock->setVisible(false);
 }
 
 BladeRF2InputGui::~BladeRF2InputGui()

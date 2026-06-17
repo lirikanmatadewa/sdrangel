@@ -101,7 +101,6 @@ bool WDSPRxGUI::handleMessage(const Message& message)
         const WDSPRx::MsgConfigureWDSPRx& cfg = (WDSPRx::MsgConfigureWDSPRx&) message;
         m_settings = cfg.getSettings();
         blockApplySettings(true);
-        ui->spectrumGUI->updateSettings();
         m_channelMarker.updateSettings(static_cast<const ChannelMarker*>(m_settings.m_channelMarker));
         displaySettings();
         blockApplySettings(false);
@@ -516,6 +515,7 @@ WDSPRxGUI::WDSPRxGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, BasebandSam
     m_helpURL = "plugins/channelrx/wdsprx/readme.md";
     RollupContents *rollupContents = getRollupContents();
 	ui->setupUi(rollupContents);
+
     setSizePolicy(rollupContents->sizePolicy());
     rollupContents->arrangeRollups();
 	connect(rollupContents, SIGNAL(widgetRolled(QWidget*,bool)), this, SLOT(onWidgetRolled(QWidget*,bool)));
@@ -523,7 +523,6 @@ WDSPRxGUI::WDSPRxGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, BasebandSam
 
 	m_wdspRx = (WDSPRx*) rxChannel;
     m_spectrumVis = m_wdspRx->getSpectrumVis();
-	m_spectrumVis->setGLSpectrum(ui->glSpectrum);
 	m_wdspRx->setMessageQueueToGUI(getInputMessageQueue());
 
     m_audioMuteRightClickEnabler = new CRightClickEnabler(ui->audioMute);
@@ -558,11 +557,6 @@ WDSPRxGUI::WDSPRxGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, BasebandSam
     ui->deltaFrequency->setValueRange(false, 7, -9999999, 9999999);
 	ui->channelPowerMeter->setColorTheme(LevelMeterSignalDB::ColorGreenAndBlue);
 
-	ui->spectrumGUI->setBuddies(m_spectrumVis, ui->glSpectrum);
-
-    ui->glSpectrum->setCenterFrequency(m_spectrumRate/2);
-    ui->glSpectrum->setSampleRate(m_spectrumRate);
-
     SpectrumSettings spectrumSettings = m_spectrumVis->getSettings();
     spectrumSettings.m_displayWaterfall = true;
     spectrumSettings.m_ssb = true;
@@ -582,7 +576,6 @@ WDSPRxGUI::WDSPRxGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, BasebandSam
     setTitleColor(m_channelMarker.getColor());
 
     m_settings.setChannelMarker(&m_channelMarker);
-    m_settings.setSpectrumGUI(ui->spectrumGUI);
     m_settings.setRollupState(&m_rollupState);
 
 	m_deviceUISet->addChannelMarker(&m_channelMarker);
@@ -720,11 +713,7 @@ void WDSPRxGUI::applyBandwidths(unsigned int spanLog2, bool force)
         ui->scalePlus->setText(tr("%1").arg(QChar(0xB1, 0x00)));
         ui->lsbLabel->setText("");
         ui->usbLabel->setText("");
-        ui->glSpectrum->setCenterFrequency(0);
-        ui->glSpectrum->setSampleRate(2*m_spectrumRate);
         spectrumSettings.m_ssb = false;
-        ui->glSpectrum->setLsbDisplay(false);
-        ui->glSpectrum->setSsbSpectrum(false);
     }
     else
     {
@@ -735,11 +724,7 @@ void WDSPRxGUI::applyBandwidths(unsigned int spanLog2, bool force)
         ui->scalePlus->setText("+");
         ui->lsbLabel->setText("LSB");
         ui->usbLabel->setText("USB");
-        ui->glSpectrum->setCenterFrequency(0);
-        ui->glSpectrum->setSampleRate(2*m_spectrumRate);
         spectrumSettings.m_ssb = true;
-        ui->glSpectrum->setLsbDisplay(bw < 0);
-        ui->glSpectrum->setSsbSpectrum(true);
     }
 
     SpectrumVis::MsgConfigureSpectrumVis *msg = SpectrumVis::MsgConfigureSpectrumVis::create(spectrumSettings, false);

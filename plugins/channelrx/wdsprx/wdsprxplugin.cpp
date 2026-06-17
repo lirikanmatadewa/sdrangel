@@ -32,7 +32,7 @@
 
 const PluginDescriptor WDSPRxPlugin::m_pluginDescriptor = {
     WDSPRx::m_channelId,
-	QStringLiteral("WDSP Receiver"),
+	QStringLiteral("SSB"),
     QStringLiteral("7.22.0"),
 	QStringLiteral("(c) Edouard Griffiths, F4EXB"),
 	QStringLiteral("https://github.com/f4exb/sdrangel"),

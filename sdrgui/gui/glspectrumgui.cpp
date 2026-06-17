@@ -130,6 +130,9 @@ GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
 	connect(ui->iqReplay, SIGNAL(clicked()), this, SLOT(openIqReplay()));
 	connect(ui->frequencyScanner, SIGNAL(clicked()), this, SLOT(openFrequencyScanner()));
 	connect(ui->widebandScanner, SIGNAL(clicked()), this, SLOT(openWidebandScanner()));
+	connect(ui->btnCW, SIGNAL(clicked()), this, SLOT(openCW()));
+
+	ui->widebandScanner->setVisible(false);
 
 	displaySettings();
 	setAveragingCombo();
@@ -352,8 +355,8 @@ void GLSpectrumGUI::displaySettings()
 	ui->fftWindow->hide();
 	ui->fftOverlap->hide();
 	ui->linscale->hide();
-	ui->freeze->hide();
-	ui->save->hide();
+	//ui->freeze->hide();
+	//ui->save->hide();
 	ui->wsSpectrum->hide();
 	//ui->markers->hide();
 	ui->calibration->hide();
@@ -1395,7 +1398,8 @@ void GLSpectrumGUI::open_am()
 void GLSpectrumGUI::open_ssb()
 {
 	try {
-		emit addChannel(this->rx_channel["SSBDemod"]);
+		//emit addChannel(this->rx_channel["SSBDemod"]);
+		emit addChannel(this->rx_channel["WDSPRx"]);
 	}
 	catch (...) {
 		;
@@ -1451,6 +1455,16 @@ void GLSpectrumGUI::openWidebandScanner()
 {
 	try {
 		emit addChannel(this->rx_channel["WidebandScanner"]);
+	}
+	catch (...) {
+		;
+	}
+}
+
+void GLSpectrumGUI::openCW()
+{
+	try {
+		emit addChannel(this->rx_channel["CWDemod"]);
 	}
 	catch (...) {
 		;
