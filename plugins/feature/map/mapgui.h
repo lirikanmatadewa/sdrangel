@@ -326,6 +326,10 @@ private:
     // bearing
     QNetworkAccessManager* m_bearingApiManager;
     QTimer m_bearingApiTimer;
+
+    QTimer m_syncCheckTimer;
+    bool m_lastSyncState = false;
+
     QString m_bearingApiUrl;
     int m_bearingRefreshSeconds = 1;
     bool m_bearingApiBusy = false;
@@ -334,6 +338,8 @@ private:
     QColor m_bearingColor = QColor("#ff0000");
 
     void requestBearingApi();
+    void checkSyncState();
+
     void updateBearingLineFromApi(double startLat,
         double startLon,
         double endLat,

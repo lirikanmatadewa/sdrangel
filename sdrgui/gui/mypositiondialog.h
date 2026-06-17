@@ -26,6 +26,9 @@
 #include "settings/mainsettings.h"
 #include "export.h"
 #include <QString>
+#include <QTimer>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
 
 namespace Ui {
 	class MyPositionDialog;
@@ -42,12 +45,27 @@ private:
 	Ui::MyPositionDialog* ui;
 	MainSettings& m_mainSettings;
 
+	QNetworkAccessManager* m_syncManager;
+	QTimer m_syncTimer;
+
+	bool m_syncConnected;
+
 	QString loadIPAddress();
 	void saveIPAddress(const QString& ip);
+
+	void saveSyncState(bool enabled);
+	bool loadSyncState();
+
+	void updateSyncUI(bool connected);
 
 private slots:
 	void accept();
 	void on_gps_clicked();
+
+	void on_btnSyncKraken_clicked();
+
+	void syncKrakenRequest();
+	void syncKrakenReply(QNetworkReply* reply);
 };
 
 #endif /* SDRBASE_GUI_MYPOSITIONDIALOG_H_ */

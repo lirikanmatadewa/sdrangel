@@ -346,6 +346,7 @@ MapGUI::MapGUI(PluginAPI* pluginAPI, FeatureUISet *featureUISet, Feature *featur
     m_antennaMapItem.setLongitude(stationLongitude);
     m_antennaMapItem.setAltitude(stationAltitude);
     m_antennaMapItem.setImage(new QString("antenna.png"));
+    //m_antennaMapItem.setImage(new QString("car.png"));
     m_antennaMapItem.setImageRotation(0);
     m_antennaMapItem.setText(new QString(MainCore::instance()->getSettings().getStationName()));
     m_antennaMapItem.setModel(new QString("antenna.glb"));
@@ -430,7 +431,19 @@ MapGUI::MapGUI(PluginAPI* pluginAPI, FeatureUISet *featureUISet, Feature *featur
 
     qDebug() << "Bearing API URL:" << bearingUrl;
 
-    startBearingApi(bearingUrl, 1);
+    //startBearingApi(bearingUrl, 1);
+    m_bearingApiUrl = bearingUrl;
+
+    connect(
+        &m_syncCheckTimer,
+        &QTimer::timeout,
+        this,
+        &MapGUI::checkSyncState
+    );
+
+    m_syncCheckTimer.start(1000);
+
+    qDebug() << "Sync monitor started";
 }
 
 MapGUI::~MapGUI()
@@ -457,6 +470,52 @@ MapGUI::~MapGUI()
     }
     delete m_giro;
     delete ui;
+}
+
+void MapGUI::checkSyncState()
+{
+    QString path =
+        QStandardPaths::writableLocation(
+            QStandardPaths::AppDataLocation);
+
+    QFile file(path + "/kraken_sync.txt");
+
+    bool syncEnabled = false;
+
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        QTextStream in(&file);
+
+        QString value =
+            in.readLine().trimmed();
+
+        syncEnabled = (value == "1");
+
+        file.close();
+    }
+
+    if (syncEnabled == m_lastSyncState)
+    {
+        return;
+    }
+
+    m_lastSyncState = syncEnabled;
+
+    if (syncEnabled)
+    {
+        qDebug() << "KRAKEN SYNC ENABLED";
+
+        startBearingApi(
+            m_bearingApiUrl,
+            1
+        );
+    }
+    else
+    {
+        qDebug() << "KRAKEN SYNC DISABLED";
+
+        stopBearingApi();
+    }
 }
 
 void MapGUI::setWorkspaceIndex(int index)
@@ -2894,6 +2953,10 @@ void MapGUI::startBearingApi(const QString& url, int refreshSeconds)
 void MapGUI::stopBearingApi()
 {
     m_bearingApiTimer.stop();
+
+    m_bearingApiBusy = false;
+
+    qDebug() << "Bearing API stopped";
 }
 
 void MapGUI::setBearingRefreshInterval(int seconds)
@@ -2988,12 +3051,22 @@ void MapGUI::bearingApiReplyFinished(QNetworkReply* reply)
 
     double absoluteBearing =
         obj.value("absolute_bearing").toDouble();
+    double gpsHeading =
+        obj.value("gps_heading").toDouble();
+
+    double compassHeading =
+        obj.value("compass_heading").toDouble();
+
+    QString stationId =
+        obj.value("station_id").toString();
 
     qDebug() << "Relative bearing =" << bearingRelative;
     qDebug() << "Absolute bearing =" << absoluteBearing;
 
     // compass pakai ABSOLUTE bearing
     setDoaAngle(absoluteBearing);
+
+    m_antennaMapItem.setOrientation(gpsHeading);
 
     //qDebug() << "Start:" << startLat << startLon;
     //qDebug() << "End:" << endLat << endLon;
