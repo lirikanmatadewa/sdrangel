@@ -30,7 +30,7 @@ void LicenseManager::initialize()
 void LicenseManager::addLicense(const QString &name, const QString &licensePath)
 {
     QString appDir = QCoreApplication::applicationDirPath();
-    QString appName = "SDR Analyzer";
+    QString appName = "CS100";
     QString idPath = appDir + "/lic/id.lic";
 
     qDebug() << "[LicenseManager] Adding license" << name;
