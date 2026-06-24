@@ -50,17 +50,21 @@ FFTEngine* FFTEngine::create(const QString& fftWisdomFileName, const QString& pr
     {
         // No engines available
 	   qCritical("FFTEngine::create: no engine built");
+       qDebug("3. FFTEngine::create: using %s engine", qPrintable(engine));
 	   return nullptr;
     }
-    else if (!preferredEngine.isEmpty() && allNames.contains(preferredEngine))
-    {
-        // Use the preferred engine
-        engine = preferredEngine;
-    }
+    //else if (!preferredEngine.isEmpty() && allNames.contains(preferredEngine))
+    //{
+    //    // Use the preferred engine
+    //    engine = preferredEngine;
+    //    qDebug("2. FFTEngine::create: using %s engine", qPrintable(engine));
+    //}
     else
     {
         // Use first available
-        engine = allNames[0];
+        //engine = allNames[0];
+        engine = allNames[2];
+        qDebug("1. FFTEngine::create: using %s engine", qPrintable(engine));
     }
 
 	qDebug("FFTEngine::create: using %s engine", qPrintable(engine));
@@ -68,6 +72,7 @@ FFTEngine* FFTEngine::create(const QString& fftWisdomFileName, const QString& pr
 #ifdef VKFFT_BACKEND
 #if VKFFT_BACKEND==0
     if (engine == VulkanvkFFTEngine::m_name) {
+        qDebug("4. FFTEngine::create: using %s engine", qPrintable(engine));
 	    return new VulkanvkFFTEngine();
     }
 #endif
@@ -79,6 +84,7 @@ FFTEngine* FFTEngine::create(const QString& fftWisdomFileName, const QString& pr
 #endif
 #ifdef USE_FFTW
 	if (engine == FFTWEngine::m_name) {
+        qDebug("5. FFTEngine::create: using %s engine", qPrintable(engine));
 	    return new FFTWEngine(fftWisdomFileName);
     }
 #endif
