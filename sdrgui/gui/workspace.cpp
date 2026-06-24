@@ -192,7 +192,7 @@ Workspace::Workspace(int index, QWidget *parent, Qt::WindowFlags flags) :
     m_titleBarLayout->addWidget(m_startStopButton);
     m_titleBarLayout->addWidget(m_vline1);
     m_titleBarLayout->addWidget(m_addRxDeviceButton);
-    //m_titleBarLayout->addWidget(m_addFeatureButton);
+    m_titleBarLayout->addWidget(m_addFeatureButton);
     m_titleBarLayout->addWidget(m_vline2);
     m_titleBarLayout->addWidget(m_cascadeSubWindows);
     m_titleBarLayout->addWidget(m_tileSubWindows);
@@ -1159,9 +1159,22 @@ void Workspace::adjustSubWindowsAfterRestore()
     }
 }
 
+void Workspace::setMapFeatureIndex(int index)
+{
+    m_mapFeatureIndex = index;
+
+    qDebug() << "Map feature index =" << m_mapFeatureIndex;
+}
 
 void Workspace::addMapFeatureClicked()
 {
-    qDebug() << "--->> " << "eksekusi 8";
-    emit addFeature(this, 8);
+    /*qDebug() << "--->> " << "eksekusi 8";
+    emit addFeature(this, 8);*/
+
+    qDebug() << "Map Index =" << m_mapFeatureIndex;
+
+    if (m_mapFeatureIndex >= 0)
+    {
+        emit addFeature(this, m_mapFeatureIndex);
+    }
 }

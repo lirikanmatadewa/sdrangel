@@ -52,15 +52,15 @@ FFTEngine* FFTEngine::create(const QString& fftWisdomFileName, const QString& pr
 	   qCritical("FFTEngine::create: no engine built");
 	   return nullptr;
     }
-    else if (!preferredEngine.isEmpty() && allNames.contains(preferredEngine))
-    {
-        // Use the preferred engine
-        engine = preferredEngine;
-    }
+    //else if (!preferredEngine.isEmpty() && allNames.contains(preferredEngine))
+    //{
+    //    // Use the preferred engine
+    //    engine = preferredEngine;
+    //}
     else
     {
         // Use first available
-        engine = allNames[0];
+        engine = allNames[2];
     }
 
 	qDebug("FFTEngine::create: using %s engine", qPrintable(engine));
