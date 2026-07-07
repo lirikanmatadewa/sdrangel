@@ -70,40 +70,19 @@ void BladeRF2InputThread::run()
 {
     int res;
 
-	 bool enable_oversampling = false;
-	 bladerf_format format = BLADERF_FORMAT_SC16_Q11;
-
     m_running = true;
     m_startWaiter.wakeAll();
 
     unsigned int nbFifos = getNbFifos();
-
-    
-    if (enable_oversampling) 
-    {
-       // Enable oversampling (AD9361 OC and 8bit mode)
-       int res = bladerf_enable_feature(m_dev, BLADERF_FEATURE_OVERSAMPLE, true); // To be checked
-       if (res < 0)
-       {
-          qCritical("DeviceBladeRF2::open_bladerf_from_serial: Failed to enable oversampling feature (%s)",
-             bladerf_strerror(res));
-       }
-       else 
-       {
-			 qInfo("DeviceBladeRF2::open_bladerf_from_serial: Oversampling feature enabled");
-          qInfo("DeviceBladeRF2::open_bladerf_from_serial: Enabling BLADERF_FORMAT_SC8_Q7 stream");
-          format = BLADERF_FORMAT_SC8_Q7;
-       }
-    }
 
     if ((m_nbChannels > 0) && (nbFifos > 0))
     {
         int status;
 
         if (m_nbChannels > 1) {
-            status = bladerf_sync_config(m_dev, BLADERF_RX_X2, format, 64, 8192, 32, 10000);
+            status = bladerf_sync_config(m_dev, BLADERF_RX_X2, BLADERF_FORMAT_SC16_Q11, 64, 8192, 32, 10000);
         } else {
-            status = bladerf_sync_config(m_dev, BLADERF_RX_X1, format, 64, 8192, 32, 10000);
+            status = bladerf_sync_config(m_dev, BLADERF_RX_X1, BLADERF_FORMAT_SC16_Q11, 64, 8192, 32, 10000);
         }
 
         if (status < 0)
