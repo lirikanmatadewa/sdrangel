@@ -48,6 +48,7 @@ public:
     Workspace(int index, QWidget *parent = nullptr, Qt::WindowFlags flags = Qt::WindowFlags());
     ~Workspace();
 
+    void setMapFeatureIndex(int index);
     int getIndex() const { return m_index; }
     void setIndex(int index);
     void resetAvailableFeatures() { m_featureAddDialog.resetFeatureNames(); }
@@ -71,6 +72,7 @@ public:
     QToolButton *getMenuButton() const { return m_menuButton; }
 
 private:
+    int m_mapFeatureIndex = -1;
     int m_index;
     QToolButton *m_menuButton;
     QPushButton *m_configurationPresetsButton;

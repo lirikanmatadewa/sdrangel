@@ -1161,6 +1161,20 @@ void Workspace::adjustSubWindowsAfterRestore()
 
 void Workspace::addMapFeatureClicked()
 {
-    //qDebug() << "--->> " << "eksekusi 8";
-    emit addFeature(this, 6);
+    /*qDebug() << "--->> " << "eksekusi 8";
+   emit addFeature(this, 8);*/
+
+    qDebug() << "Map Index =" << m_mapFeatureIndex;
+
+    if (m_mapFeatureIndex >= 0)
+    {
+        emit addFeature(this, m_mapFeatureIndex);
+    }
+}
+
+void Workspace::setMapFeatureIndex(int index)
+{
+    m_mapFeatureIndex = index;
+
+    qDebug() << "Map feature index =" << m_mapFeatureIndex;
 }

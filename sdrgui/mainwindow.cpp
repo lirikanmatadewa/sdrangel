@@ -2066,6 +2066,10 @@ void MainWindow::addWorkspace()
 	}
 	QStringList featureNames;
 	m_pluginManager->listFeatures(featureNames);
+
+	int mapIndex = featureNames.indexOf("Map");
+	m_workspaces.back()->setMapFeatureIndex(mapIndex);
+
 	m_workspaces.back()->addAvailableFeatures(featureNames);
 	this->addDockWidget(Qt::LeftDockWidgetArea, m_workspaces.back());
 
