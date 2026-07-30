@@ -17,6 +17,9 @@
 
 #include <QDebug>
 
+#include <vkFFT.h> 
+#include <vector>
+
 #include "glslang_c_interface.h"
 
 #include "dsp/vulkanvkfftengine.h"
@@ -141,6 +144,73 @@ VkFFTResult VulkanvkFFTEngine::gpuAllocateBuffers()
     }
 
     plan->m_configuration->buffer = &plan->m_buffer;
+
+    return VKFFT_SUCCESS;
+}
+
+uint32_t findMemoryTypeIndex(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties) {
+    VkPhysicalDeviceMemoryProperties memProperties;
+    vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+
+    for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
+        if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+            return i;
+        }
+    }
+    return 0; // Fallback (seharusnya error handling, tapi agar kompilasi lolos)
+}
+
+VkFFTResult vkFFTEngine::gpuAllocateBuffers()
+{
+    int n = m_currentPlan->n;
+
+    if (m_cachedBuffers.contains(n)) {
+        m_currentPlan->m_configuration->buffer = &m_cachedBuffers[n];
+        return VKFFT_SUCCESS;
+    }
+
+    VkBufferCreateInfo bufferInfo = {};
+    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferInfo.size = m_currentPlan->m_bufferSize;
+    bufferInfo.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+
+    VkBuffer newBuffer;
+    if (vkCreateBuffer(vkGPU->device, &bufferInfo, nullptr, &newBuffer) != VK_SUCCESS) {
+        return VKFFT_ERROR_FAILED_TO_CREATE_BUFFER;
+    }
+
+    VkMemoryRequirements memReq;
+    vkGetBufferMemoryRequirements(vkGPU->device, newBuffer, &memReq);
+
+    VkMemoryAllocateInfo allocInfo = {};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memReq.size;
+    allocInfo.memoryTypeIndex = findMemoryTypeIndex(
+        vkGPU->physicalDevice,
+        memReq.memoryTypeBits,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+    );
+    if (allocInfo.memoryTypeIndex == 0 && memReq.memoryTypeBits != 0) { // tambahkan pengecekan gagal find
+        vkDestroyBuffer(vkGPU->device, newBuffer, nullptr);
+        return VKFFT_ERROR_FAILED_TO_FIND_MEMORY;
+    }
+
+    VkDeviceMemory newMemory;
+    if (vkAllocateMemory(vkGPU->device, &allocInfo, nullptr, &newMemory) != VK_SUCCESS) {
+        vkDestroyBuffer(vkGPU->device, newBuffer, nullptr);
+        return VKFFT_ERROR_FAILED_TO_ALLOCATE_MEMORY;
+    }
+
+    if (vkBindBufferMemory(vkGPU->device, newBuffer, newMemory, 0) != VK_SUCCESS) {
+        vkDestroyBuffer(vkGPU->device, newBuffer, nullptr);
+        vkFreeMemory(vkGPU->device, newMemory, nullptr);
+        return VKFFT_ERROR_FAILED_TO_BIND_BUFFER_MEMORY;
+    }
+
+    m_cachedBuffers.insert(n, newBuffer);
+    m_cachedMemory.insert(n, newMemory);
+
+    m_currentPlan->m_configuration->buffer = &newBuffer;
 
     return VKFFT_SUCCESS;
 }

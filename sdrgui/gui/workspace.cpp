@@ -389,7 +389,7 @@ void Workspace::addRxDeviceClicked()
     SamplingDeviceDialog dialog(0, this);
 
     m_addRxDeviceButton->setDisabled(true);
-    QString searchString = "PD100[0:0]";
+    QString searchString = "ES300N[0:0]";
     QMap<int, QString> deviceMap = dialog.getDeviceMap();
     QList<int> matchingKeys;
 
@@ -401,7 +401,7 @@ void Workspace::addRxDeviceClicked()
     if (matchingKeys.isEmpty()) {
         QMessageBox msgBox;
         msgBox.setIcon(QMessageBox::Information);
-        msgBox.setText("Please plug-in the PD100.");
+        msgBox.setText("Please plug-in the ES300N.");
         msgBox.setStandardButtons(QMessageBox::Ok);
         msgBox.setDefaultButton(QMessageBox::Ok);
         msgBox.exec();

@@ -42,6 +42,11 @@ public:
     virtual void setReuse(bool reuse) { m_reuse = reuse; }
     bool isAvailable() override;
 
+private:
+    QHash<int, VkBuffer> m_cachedBuffers;       // Menyimpan buffer GPU untuk setiap ukuran FFT
+    QHash<int, VkDeviceMemory> m_cachedMemory;  // Menyimpan alokasi memori GPU untuk setiap ukuran
+    bool m_cacheInitialized = false;
+
 protected:
 	static QMutex m_globalPlanMutex;
 

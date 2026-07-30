@@ -33,6 +33,19 @@ vkFFTEngine::vkFFTEngine() :
 
 vkFFTEngine::~vkFFTEngine()
 {
+    // Hapus semua buffer yang ada di cache
+    for (VkBuffer buffer : m_cachedBuffers.values()) {
+        if (buffer != VK_NULL_HANDLE) {
+            vkDestroyBuffer(vkGPU->device, buffer, nullptr);
+        }
+    }
+    for (VkDeviceMemory memory : m_cachedMemory.values()) {
+        if (memory != VK_NULL_HANDLE) {
+            vkFreeMemory(vkGPU->device, memory, nullptr);
+        }
+    }
+    m_cachedBuffers.clear();
+    m_cachedMemory.clear();
 }
 
 bool vkFFTEngine::isAvailable()
@@ -42,6 +55,8 @@ bool vkFFTEngine::isAvailable()
 
 void vkFFTEngine::configure(int n, bool inverse)
 {
+    if (n < 1024) n = 1024;
+
     if (m_reuse)
     {
         for (const auto plan : m_plans)

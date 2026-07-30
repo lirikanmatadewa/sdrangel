@@ -129,6 +129,6 @@ int main(int argc, char* argv[])
         logger->installMsgHandler();
         int res = runQtApplication(argc, argv, logger);
         delete logger;
-        qWarning("Navix PD100 quit.");
+        qWarning("ES300N quit.");
         return res;
 }
