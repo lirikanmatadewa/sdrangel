@@ -22,6 +22,7 @@
 
 #include "device/deviceuiset.h"
 
+#include <QPointer>
 #include <QDockWidget>
 #include <QMainWindow>
 #include <QDebug>
@@ -43,6 +44,7 @@
 #include <QUrl>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QNetworkProxy>
 
 #include <QFile>
 #include <QTextStream>
@@ -102,12 +104,14 @@ bool RDFDemodGUI::handleMessage(const Message& message)
     }
     else if (DSPSignalNotification::match(message))
     {
-        const DSPSignalNotification& notif = (const DSPSignalNotification&) message;
+        const DSPSignalNotification& notif = (const DSPSignalNotification&)message;
         m_deviceCenterFrequency = notif.getCenterFrequency();
         m_basebandSampleRate = notif.getSampleRate();
-        /*ui->deltaFrequency->setValueRange(false, 8, -m_basebandSampleRate/2, m_basebandSampleRate/2);
-        ui->deltaFrequencyLabel->setToolTip(tr("Range %1 %L2 Hz").arg(QChar(0xB1)).arg(m_basebandSampleRate/2));*/
-        //ui->deltaFrequencyLabel->setToolTip(tr("Range %1 %L2 Hz").arg(QChar(0xB1)).arg(m_basebandSampleRate / 2));
+
+        // Hapus tanda komentar di dua baris ini
+        ui->deltaFrequency->setValueRange(false, 8, -m_basebandSampleRate / 2, m_basebandSampleRate / 2);
+        ui->deltaFrequencyLabel->setToolTip(tr("Range %1 %L2 Hz").arg(QChar(0xB1)).arg(m_basebandSampleRate / 2));
+
         updateAbsoluteCenterFrequency();
         return true;
     }
@@ -132,12 +136,13 @@ void RDFDemodGUI::handleInputMessages()
 
 void RDFDemodGUI::channelMarkerChangedByCursor()
 {
-    /*ui->deltaFrequency->setValue(m_channelMarker.getCenterFrequency());
+    ui->deltaFrequency->setValue(m_channelMarker.getCenterFrequency());
+    m_settings.m_inputFrequencyOffset = m_channelMarker.getCenterFrequency();
+    applySettings();
+
+    /*ui->deltaFrequency->setValue(m_deviceCenterFrequency + m_channelMarker.getCenterFrequency());
     m_settings.m_inputFrequencyOffset = m_channelMarker.getCenterFrequency();
     applySettings();*/
-    //ui->deltaFrequency->setValue(m_deviceCenterFrequency + m_channelMarker.getCenterFrequency());
-    //m_settings.m_inputFrequencyOffset = m_channelMarker.getCenterFrequency();
-    //applySettings();
 }
 
 void RDFDemodGUI::channelMarkerHighlightedByCursor()
@@ -147,10 +152,10 @@ void RDFDemodGUI::channelMarkerHighlightedByCursor()
 
 void RDFDemodGUI::on_deltaFrequency_changed(qint64 value)
 {
-    /*m_channelMarker.setCenterFrequency(value);
+    m_channelMarker.setCenterFrequency(value);
     m_settings.m_inputFrequencyOffset = m_channelMarker.getCenterFrequency();
     updateAbsoluteCenterFrequency();
-    applySettings();*/
+    applySettings();
 
     //qint64 offset = value - m_deviceCenterFrequency;
     //m_channelMarker.setCenterFrequency(offset);
@@ -368,12 +373,6 @@ RDFDemodGUI::RDFDemodGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, Baseban
     //}
     //// ==========================================
 
-    // Setup Timer untuk API GET
-    m_apiTimer = new QTimer(this);
-    connect(m_apiTimer, &QTimer::timeout, this, &RDFDemodGUI::fetchCenterFreq);
-    connect(m_apiTimer, &QTimer::timeout, this, &RDFDemodGUI::fetchDaqStatus);
-    m_apiTimer->start(2000);
-
     // Beri nilai awal untuk kedua label status
     ui->connStatusLabel->setText("Device Status : <span style='color: #cc0000; font-size: 18pt; vertical-align: middle;'>&#9679;</span> <span style='vertical-align: middle;'>Disconnected</span>");
     ui->daqStatusLabel->setText("DAQ Status : <span style='color: #cc0000; font-size: 18pt; vertical-align: middle;'>&#9679;</span> <span style='vertical-align: middle;'>Disconnected</span>");
@@ -430,11 +429,35 @@ RDFDemodGUI::RDFDemodGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, Baseban
 
 
     m_networkManager = new QNetworkAccessManager(this);
+    m_networkManager->setProxy(QNetworkProxy::NoProxy);
+
+    // Setup Timer untuk API GET
+    m_apiTimer = new QTimer(this);
+    connect(m_apiTimer, &QTimer::timeout, this, &RDFDemodGUI::fetchCenterFreq);
+    connect(m_apiTimer, &QTimer::timeout, this, &RDFDemodGUI::fetchDaqStatus);
+    m_apiTimer->start(2000);
 }
 
 RDFDemodGUI::~RDFDemodGUI()
 {
-	delete ui;
+    if (m_apiTimer) {
+        m_apiTimer->stop();
+        m_apiTimer->disconnect();
+    }
+
+    this->disconnect();
+
+    if (m_rdfDemod) {
+        m_rdfDemod->setMessageQueueToGUI(nullptr);
+    }
+
+    if (m_networkManager) {
+        m_networkManager->disconnect();
+        m_networkManager->deleteLater();
+        m_networkManager = nullptr;
+    }
+
+    delete ui;
 }
 
 void RDFDemodGUI::blockApplySettings(bool block)
@@ -595,35 +618,29 @@ void RDFDemodGUI::onBtnMapClicked()
 
 void RDFDemodGUI::fetchCenterFreq()
 {
-    QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QPointer<RDFDemodGUI> guard(this);
 
-    // --- 1. PENGECEKAN STATUS KONEKSI ---
+    QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
     QFile syncFile(path + "/kraken_sync.txt");
     bool isConnected = false;
 
     if (syncFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        QTextStream syncIn(&syncFile);
-        QString syncValue = syncIn.readLine().trimmed();
-        if (syncValue == "1") {
+        if (syncFile.readLine().trimmed() == "1") {
             isConnected = true;
         }
         syncFile.close();
     }
 
-    // Jika status belum connect (dari UI Kraken), batalkan pemanggilan API
     if (!isConnected) {
         return;
     }
-    // ------------------------------------
 
-    // --- 2. JIKA CONNECTED, LANJUTKAN MENGAMBIL IP & REQUEST ---
     QFile file(path + "/ip_device.txt");
     QString ip = "192.168.1.10";
 
     if (file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        QTextStream in(&file);
-        QString savedIp = in.readLine().trimmed();
+        QString savedIp = file.readLine().trimmed();
         if (!savedIp.isEmpty()) {
             ip = savedIp;
         }
@@ -631,13 +648,17 @@ void RDFDemodGUI::fetchCenterFreq()
     }
 
     QString urlString = QString("http://%1:8080/api/daq/center-freq").arg(ip);
-    QUrl url(urlString);
-    QNetworkRequest request(url);
+    QNetworkRequest request{ QUrl(urlString) };
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 
     QNetworkReply* reply = m_networkManager->get(request);
 
-    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+    connect(reply, &QNetworkReply::finished, this, [guard, reply]() {
+        if (!guard) {
+            if (reply) reply->deleteLater();
+            return;
+        }
+
         if (reply->error() == QNetworkReply::NoError) {
             QByteArray response = reply->readAll();
             QJsonDocument doc = QJsonDocument::fromJson(response);
@@ -646,58 +667,53 @@ void RDFDemodGUI::fetchCenterFreq()
             if (json.contains("status") && json["status"].toString() == "ok") {
                 if (json.contains("vfo_0_freq")) {
                     double vfoFreqHz = json["vfo_0_freq"].toDouble();
+                    double vfoFreqKHz = vfoFreqHz / 1000.0;
 
-                    // 1. UPDATE UI KE kHz
-                    qint64 absoluteFreqKHz = static_cast<qint64>(vfoFreqHz / 1000.0);
-                    ui->deltaFrequency->setValue(absoluteFreqKHz);
-
-                    // 2. UPDATE DSP/BACKEND KE Hz
-                    qint64 absoluteFreqHz = static_cast<qint64>(vfoFreqHz);
-                    qint64 offsetHz = absoluteFreqHz - m_deviceCenterFrequency;
-
-                    m_channelMarker.setCenterFrequency(offsetHz);
-                    m_settings.m_inputFrequencyOffset = m_channelMarker.getCenterFrequency();
-
-                    updateAbsoluteCenterFrequency();
-                    applySettings();
+                    // --- TAMPILKAN FREKWENSI KE LABEL freqFromDF ---
+                    if (guard->ui && guard->ui->freqFromDF) {
+                        guard->ui->freqFromDF->setText(QString("%1 kHz").arg(vfoFreqKHz, 0, 'f', 1));
+                    }
                 }
             }
         }
-        reply->deleteLater();
+        else {
+            if (guard->ui && guard->ui->freqFromDF) {
+                guard->ui->freqFromDF->setText("API Error");
+            }
+        }
+        if (reply) reply->deleteLater();
         });
 }
 
 void RDFDemodGUI::fetchDaqStatus()
 {
-    QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QPointer<RDFDemodGUI> guard(this);
 
-    // 1. Cek izin sinkronisasi dari MyPosition
+    QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
     QFile syncFile(path + "/kraken_sync.txt");
     bool isSyncEnabled = false;
 
     if (syncFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        QTextStream syncIn(&syncFile);
-        if (syncIn.readLine().trimmed() == "1") {
+        if (syncFile.readLine().trimmed() == "1") {
             isSyncEnabled = true;
         }
         syncFile.close();
     }
 
-    // Jika belum di-connect dari dialog MyPosition, buat keduanya merah
     if (!isSyncEnabled) {
-        ui->connStatusLabel->setText("Device Status : <span style='color: #cc0000; font-size: 18pt; vertical-align: middle;'>&#9679;</span> <span style='vertical-align: middle;'>Disconnected</span>");
-        ui->daqStatusLabel->setText("DAQ Status : <span style='color: #cc0000; font-size: 18pt; vertical-align: middle;'>&#9679;</span> <span style='vertical-align: middle;'>Disconnected</span>");
+        if (ui) {
+            ui->connStatusLabel->setText("Device Status : <span style='color: #cc0000; font-size: 18pt; vertical-align: middle;'>&#9679;</span> <span style='vertical-align: middle;'>Disconnected</span>");
+            ui->daqStatusLabel->setText("DAQ Status : <span style='color: #cc0000; font-size: 18pt; vertical-align: middle;'>&#9679;</span> <span style='vertical-align: middle;'>Disconnected</span>");
+        }
         return;
     }
 
-    // 2. Jika sinkronisasi aktif, ambil IP dan request API
     QFile file(path + "/ip_device.txt");
     QString ip = "192.168.1.10";
 
     if (file.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        QTextStream in(&file);
-        QString savedIp = in.readLine().trimmed();
+        QString savedIp = file.readLine().trimmed();
         if (!savedIp.isEmpty()) {
             ip = savedIp;
         }
@@ -705,47 +721,50 @@ void RDFDemodGUI::fetchDaqStatus()
     }
 
     QString urlString = QString("http://%1:9000/get_map_data").arg(ip);
-    QUrl url(urlString);
-    QNetworkRequest request(url);
+    QNetworkRequest request{ QUrl(urlString) };
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 
     QNetworkReply* reply = m_networkManager->get(request);
 
-    // 3. Tangani Respons untuk Kedua Status
-    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
-        if (reply->error() == QNetworkReply::NoError) {
+    connect(reply, &QNetworkReply::finished, this, [guard, reply]() {
+        if (!guard) {
+            if (reply) reply->deleteLater();
+            return;
+        }
 
-            // HTTP SUKSES: Update Status Koneksi ke Hijau
-            ui->connStatusLabel->setText("Device Status : <span style='color: #00cc00; font-size: 18pt; vertical-align: middle;'>&#9679;</span> <span style='vertical-align: middle;'>Connected</span>");
+        if (reply->error() == QNetworkReply::NoError) {
+            if (guard->ui) {
+                guard->ui->connStatusLabel->setText("Device Status : <span style='color: #00cc00; font-size: 18pt; vertical-align: middle;'>&#9679;</span> <span style='vertical-align: middle;'>Connected</span>");
+            }
 
             QByteArray response = reply->readAll();
             QJsonDocument doc = QJsonDocument::fromJson(response);
             QJsonObject json = doc.object();
 
-            // PARSING STATUS DAQ
             if (json.contains("body_daq_conn_status")) {
                 QString daqStatus = json["body_daq_conn_status"].toString();
-
-                if (daqStatus.toLower() == "connected") {
-                    // DAQ Status Hijau
-                    ui->daqStatusLabel->setText("DAQ Status : <span style='color: #00cc00; font-size: 18pt; vertical-align: middle;'>&#9679;</span> <span style='vertical-align: middle;'>Connected</span>");
-                }
-                else {
-                    // DAQ Status selain Connected (Misal Oranye/Kuning)
-                    ui->daqStatusLabel->setText(QString("DAQ Status : <span style='color: #ff9900; font-size: 18pt; vertical-align: middle;'>&#9679;</span> <span style='vertical-align: middle;'>%1</span>").arg(daqStatus));
+                if (guard->ui) {
+                    if (daqStatus.toLower() == "connected") {
+                        guard->ui->daqStatusLabel->setText("DAQ Status : <span style='color: #00cc00; font-size: 18pt; vertical-align: middle;'>&#9679;</span> <span style='vertical-align: middle;'>Connected</span>");
+                    }
+                    else {
+                        guard->ui->daqStatusLabel->setText(QString("DAQ Status : <span style='color: #ff9900; font-size: 18pt; vertical-align: middle;'>&#9679;</span> <span style='vertical-align: middle;'>%1</span>").arg(daqStatus));
+                    }
                 }
             }
             else {
-                // Key body_daq_conn_status tidak ada di JSON
-                ui->daqStatusLabel->setText("DAQ Status : <span style='color: #cc0000; font-size: 18pt; vertical-align: middle;'>&#9679;</span> <span style='vertical-align: middle;'>Unknown</span>");
+                if (guard->ui) {
+                    guard->ui->daqStatusLabel->setText("DAQ Status : <span style='color: #cc0000; font-size: 18pt; vertical-align: middle;'>&#9679;</span> <span style='vertical-align: middle;'>Unknown</span>");
+                }
             }
         }
         else {
-            // HTTP ERROR (Timeout / Server Mati): Keduanya menjadi Merah
-            ui->connStatusLabel->setText("Device Status : <span style='color: #cc0000; font-size: 18pt; vertical-align: middle;'>&#9679;</span> <span style='vertical-align: middle;'>API Error</span>");
-            ui->daqStatusLabel->setText("DAQ Status : <span style='color: #cc0000; font-size: 18pt; vertical-align: middle;'>&#9679;</span> <span style='vertical-align: middle;'>Unknown</span>");
+            if (guard->ui) {
+                guard->ui->connStatusLabel->setText("Device Status : <span style='color: #cc0000; font-size: 18pt; vertical-align: middle;'>&#9679;</span> <span style='vertical-align: middle;'>API Error</span>");
+                guard->ui->daqStatusLabel->setText("DAQ Status : <span style='color: #cc0000; font-size: 18pt; vertical-align: middle;'>&#9679;</span> <span style='vertical-align: middle;'>Unknown</span>");
+            }
         }
 
-        reply->deleteLater();
+        if (reply) reply->deleteLater();
         });
 }

@@ -177,5 +177,9 @@ void DSPEngine::createFFTFactory(const QString& fftWisdomFileName)
 
 void DSPEngine::preAllocateFFTs()
 {
-    m_fftFactory->preallocate(7, 10, 1, 0); // pre-acllocate forward FFT only 1 per size from 128 to 1024
+    //m_fftFactory->preallocate(7, 10, 1, 0); // pre-acllocate forward FFT only 1 per size from 128 to 1024
+
+    // Ubah angka 7 menjadi 10, dan 10 menjadi 13
+    m_fftFactory->preallocate(10, 13, 1, 0); // pre-acllocate forward FFT only 1 per size from 1024 to 8192
+
 }

@@ -187,6 +187,13 @@
     <item>
      <layout class="QHBoxLayout" name="levelMeterLAyout">
       <item>
+       <widget class="QLabel" name="freqFromDF">
+        <property name="text">
+         <string>Freq from DF</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QLabel" name="channelPowerMeter_2">
         <property name="text">
          <string>dB</string>
