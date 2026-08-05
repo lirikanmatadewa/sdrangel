@@ -201,6 +201,8 @@ DeviceGUI::DeviceGUI(QWidget *parent) :
     connect(m_showSpectrumButton, SIGNAL(clicked()), this, SLOT(showSpectrumHandler()));
     connect(m_showAllChannelsButton, SIGNAL(clicked()), this, SLOT(showAllChannelsHandler()));
 
+    m_addChannelsButton->setVisible(false);
+
     QObject::connect(
         &m_channelAddDialog,
         &ChannelAddDialog::addChannel,

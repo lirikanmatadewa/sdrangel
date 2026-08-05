@@ -31,6 +31,8 @@
 
 #include "rdfdemodsettings.h"
 
+#include <QTimer>
+
 class PluginAPI;
 class DeviceUISet;
 class BasebandSampleSink;
@@ -66,6 +68,8 @@ public:
 public slots:
 	void channelMarkerChangedByCursor();
     void channelMarkerHighlightedByCursor();
+	void fetchCenterFreq();
+	void fetchDaqStatus();
 
 private:
 	Ui::RDFDemodGUI* ui;
@@ -100,6 +104,8 @@ private:
 	void enterEvent(EnterEventType*);
 
 	QNetworkAccessManager* m_networkManager;
+
+	QTimer* m_apiTimer;
 
 private slots:
 	void on_deltaFrequency_changed(qint64 value);
