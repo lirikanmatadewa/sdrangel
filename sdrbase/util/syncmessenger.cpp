@@ -19,13 +19,16 @@
 ///////////////////////////////////////////////////////////////////////////////////
 
 #include <QtGlobal>
+#include <QDebug>
+#include <QTime>
 
 #include "util/syncmessenger.h"
 #include "util/message.h"
 
 SyncMessenger::SyncMessenger() :
 	m_complete(0),
-    m_message(0),
+	m_waiting(0),
+	m_message(0),
 	m_result(0)
 {
 	qRegisterMetaType<Message>("Message");
@@ -36,12 +39,17 @@ SyncMessenger::~SyncMessenger()
 
 int SyncMessenger::sendWait(Message& message, unsigned long msPollTime)
 {
-    m_message = &message;
+	QTime startTime = QTime::currentTime();
+	qDebug("SyncMessenger::sendWait START - UI thread waiting at %s (poll timeout: %lu ms)", qPrintable(startTime.toString("hh:mm:ss.zzz")), msPollTime);
+
+	m_message = &message;
 	m_mutex.lock();
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
 	m_complete.storeRelaxed(0);
+	m_waiting.storeRelaxed(1);
 #else
 	m_complete.store(0);
+	m_waiting.store(1);
 #endif
 
 	emit messageSent();
@@ -59,7 +67,20 @@ int SyncMessenger::sendWait(Message& message, unsigned long msPollTime)
 	int result = m_result;
 	m_mutex.unlock();
 
+	QTime endTime = QTime::currentTime();
+	int elapsedMs = startTime.msecsTo(endTime);
+	qDebug("SyncMessenger::sendWait END - UI thread unblocked after %d ms (finished at %s), result=%d", elapsedMs, qPrintable(endTime.toString("hh:mm:ss.zzz")), result);
+
 	return result;
+}
+
+bool SyncMessenger::isWaiting() const
+{
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+	return m_waiting.loadRelaxed() != 0;
+#else
+	return m_waiting.load() != 0;
+#endif
 }
 
 void SyncMessenger::done(int result)
@@ -67,11 +88,11 @@ void SyncMessenger::done(int result)
 	m_result = result;
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
 	m_complete.storeRelaxed(1);
+	m_waiting.storeRelaxed(0);
 #else
 	m_complete.store(1);
+	m_waiting.store(0);
 #endif
 	m_waitCondition.wakeAll();
 }
-
-
 

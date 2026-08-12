@@ -23,8 +23,10 @@
 
 #include <dsp/basebandsamplesink.h>
 #include <dsp/devicesamplesource.h>
+#include <algorithm>
 #include <stdio.h>
 #include <QDebug>
+#include <QTime>
 #include "dsp/dspcommands.h"
 #include "samplesinkfifo.h"
 
@@ -126,8 +128,15 @@ void DSPDeviceSourceEngine::setSourceSequence(int sequence)
 
 void DSPDeviceSourceEngine::addSink(BasebandSampleSink* sink)
 {
+	QTime startTime = QTime::currentTime();
+	qDebug("DSPDeviceSourceEngine::addSink START - Adding sink at %s", qPrintable(startTime.toString("hh:mm:ss.zzz")));
+
 	DSPAddBasebandSampleSink cmd(sink);
 	m_syncMessenger.sendWait(cmd);
+
+	QTime endTime = QTime::currentTime();
+	int elapsedMs = startTime.msecsTo(endTime);
+	qDebug("DSPDeviceSourceEngine::addSink END - Completed in %d ms (finished at %s)", elapsedMs, qPrintable(endTime.toString("hh:mm:ss.zzz")));
 }
 
 void DSPDeviceSourceEngine::removeSink(BasebandSampleSink* sink)
@@ -312,22 +321,49 @@ void DSPDeviceSourceEngine::work()
 	std::size_t samplesDone = 0;
 	bool positiveOnly = m_realElseComplex;
 
-	while ((sampleFifo->fill() > 0) && (m_inputMessageQueue.size() == 0) && (samplesDone < m_sampleRate))
+	// Keep each work() call short and preemptible so synchronous control messages are serviced quickly.
+	std::size_t maxSamplesPerWorkCall = m_sampleRate / 200; // ~5 ms worth of samples
+	const std::size_t maxSamplesPerChunk = (1u << 15);      // cap a single feed pass to 32k samples
+
+	if (maxSamplesPerWorkCall < (1u << 13)) {
+		maxSamplesPerWorkCall = (1u << 13);
+	}
+
+	if (maxSamplesPerWorkCall > (1u << 17)) {
+		maxSamplesPerWorkCall = (1u << 17);
+	}
+
+	while ((m_inputMessageQueue.size() == 0) &&
+		(samplesDone < maxSamplesPerWorkCall) &&
+		!m_syncMessenger.isWaiting())
 	{
+		const std::size_t fifoFill = sampleFifo->fill();
+
+		if (fifoFill == 0) {
+			break;
+		}
+
+		const std::size_t remainingBudget = maxSamplesPerWorkCall - samplesDone;
+		const std::size_t requestedCount = std::min(std::min(fifoFill, remainingBudget), maxSamplesPerChunk);
+
+		if (requestedCount == 0) {
+			break;
+		}
+
 		SampleVector::iterator part1begin;
 		SampleVector::iterator part1end;
 		SampleVector::iterator part2begin;
 		SampleVector::iterator part2end;
 
-		std::size_t count = sampleFifo->readBegin(sampleFifo->fill(), &part1begin, &part1end, &part2begin, &part2end);
+		std::size_t count = sampleFifo->readBegin((unsigned int)requestedCount, &part1begin, &part1end, &part2begin, &part2end);
 
 		// first part of FIFO data
 		if (part1begin != part1end)
 		{
 			// correct stuff
-            if (m_dcOffsetCorrection) {
-                iqCorrections(part1begin, part1end, m_iqImbalanceCorrection);
-            }
+			if (m_dcOffsetCorrection) {
+				iqCorrections(part1begin, part1end, m_iqImbalanceCorrection);
+			}
 
 			// feed data to direct sinks
 			for (BasebandSampleSinks::const_iterator it = m_basebandSampleSinks.begin(); it != m_basebandSampleSinks.end(); ++it) {
@@ -337,12 +373,12 @@ void DSPDeviceSourceEngine::work()
 		}
 
 		// second part of FIFO data (used when block wraps around)
-		if(part2begin != part2end)
+		if (part2begin != part2end)
 		{
 			// correct stuff
-            if (m_dcOffsetCorrection) {
-                iqCorrections(part2begin, part2end, m_iqImbalanceCorrection);
-            }
+			if (m_dcOffsetCorrection) {
+				iqCorrections(part2begin, part2end, m_iqImbalanceCorrection);
+			}
 
 			// feed data to direct sinks
 			for (BasebandSampleSinks::const_iterator it = m_basebandSampleSinks.begin(); it != m_basebandSampleSinks.end(); it++) {
@@ -352,7 +388,7 @@ void DSPDeviceSourceEngine::work()
 		}
 
 		// adjust FIFO pointers
-		sampleFifo->readCommit((unsigned int) count);
+		sampleFifo->readCommit((unsigned int)count);
 		samplesDone += count;
 	}
 }
@@ -517,19 +553,22 @@ void DSPDeviceSourceEngine::handleData()
 
 void DSPDeviceSourceEngine::handleSynchronousMessages()
 {
-    Message *message = m_syncMessenger.getMessage();
-	
+	QTime startTime = QTime::currentTime();
+	qDebug("DSPDeviceSourceEngine::handleSynchronousMessages START - at %s", qPrintable(startTime.toString("hh:mm:ss.zzz")));
+
+	Message* message = m_syncMessenger.getMessage();
+
 	if (DSPAcquisitionInit::match(*message))
 	{
 		setState(gotoIdle());
 
-		if(m_state == StIdle) {
+		if (m_state == StIdle) {
 			setState(gotoInit()); // State goes ready if init is performed
 		}
 	}
 	else if (DSPAcquisitionStart::match(*message))
 	{
-		if(m_state == StReady) {
+		if (m_state == StReady) {
 			setState(gotoRunning());
 		}
 	}
@@ -539,32 +578,33 @@ void DSPDeviceSourceEngine::handleSynchronousMessages()
 	}
 	else if (DSPGetSourceDeviceDescription::match(*message))
 	{
-		((DSPGetSourceDeviceDescription*) message)->setDeviceDescription(m_deviceDescription);
+		((DSPGetSourceDeviceDescription*)message)->setDeviceDescription(m_deviceDescription);
 	}
 	else if (DSPGetErrorMessage::match(*message))
 	{
-		((DSPGetErrorMessage*) message)->setErrorMessage(m_errorMessage);
+		((DSPGetErrorMessage*)message)->setErrorMessage(m_errorMessage);
 	}
 	else if (DSPSetSource::match(*message)) {
-		handleSetSource(((DSPSetSource*) message)->getSampleSource());
+		handleSetSource(((DSPSetSource*)message)->getSampleSource());
 	}
 	else if (DSPAddBasebandSampleSink::match(*message))
 	{
-		BasebandSampleSink* sink = ((DSPAddBasebandSampleSink*) message)->getSampleSink();
+		BasebandSampleSink* sink = ((DSPAddBasebandSampleSink*)message)->getSampleSink();
+		qDebug("DSPDeviceSourceEngine::handleSynchronousMessages - Adding sink to engine");
 		m_basebandSampleSinks.push_back(sink);
-        // initialize sample rate and center frequency in the sink:
-        DSPSignalNotification *msg = new DSPSignalNotification(m_sampleRate, m_centerFrequency);
-        sink->pushMessage(msg);
-        // start the sink:
-        if(m_state == StRunning) {
-            sink->start();
-        }
+		// initialize sample rate and center frequency in the sink:
+		DSPSignalNotification* msg = new DSPSignalNotification(m_sampleRate, m_centerFrequency);
+		sink->pushMessage(msg);
+		// start the sink:
+		if (m_state == StRunning) {
+			sink->start();
+		}
 	}
 	else if (DSPRemoveBasebandSampleSink::match(*message))
 	{
-		BasebandSampleSink* sink = ((DSPRemoveBasebandSampleSink*) message)->getSampleSink();
+		BasebandSampleSink* sink = ((DSPRemoveBasebandSampleSink*)message)->getSampleSink();
 
-		if(m_state == StRunning) {
+		if (m_state == StRunning) {
 			sink->stop();
 		}
 
@@ -572,6 +612,10 @@ void DSPDeviceSourceEngine::handleSynchronousMessages()
 	}
 
 	m_syncMessenger.done(m_state);
+
+	QTime endTime = QTime::currentTime();
+	int elapsedMs = startTime.msecsTo(endTime);
+	qDebug("DSPDeviceSourceEngine::handleSynchronousMessages END - Completed in %d ms (finished at %s)", elapsedMs, qPrintable(endTime.toString("hh:mm:ss.zzz")));
 }
 
 void DSPDeviceSourceEngine::handleInputMessages()
