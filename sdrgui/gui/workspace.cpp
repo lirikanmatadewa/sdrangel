@@ -43,6 +43,7 @@
 #include "mainspectrum/mainspectrumgui.h"
 #include "workspace.h"
 #include "maincore.h"
+#include "settings/instrumentconfigmanager.h"
 
 Workspace::Workspace(int index, QWidget *parent, Qt::WindowFlags flags) :
     QDockWidget(parent, flags),
@@ -386,29 +387,63 @@ void Workspace::toggleFloating()
 
 void Workspace::addRxDeviceClicked()
 {
-    SamplingDeviceDialog dialog(0, this);
-
     m_addRxDeviceButton->setDisabled(true);
-    QString searchString = "ES300N[0:0]";
-    QMap<int, QString> deviceMap = dialog.getDeviceMap();
-    QList<int> matchingKeys;
 
-    for (auto it = deviceMap.begin(); it != deviceMap.end(); ++it) {
-        if (it.value().contains(searchString)) {
-            matchingKeys.append(it.key());
+    SamplingDeviceDialog dialog(0, this);
+    const QMap<int, QString> deviceMap = dialog.getDeviceMap();
+
+    QList<int> orderedDeviceKeys;
+
+    // Preferred path: config-based ordering from appDir/instrumentConfig/instruments.json
+    INSTRUMENT_CONFIG_MANAGER.initialize();
+    orderedDeviceKeys = INSTRUMENT_CONFIG_MANAGER.resolveOrderedDeviceKeys(deviceMap, "rx");
+
+    // Fallback path: keep current concept when config is missing/invalid/no match
+    if (orderedDeviceKeys.isEmpty())
+    {
+        QMap<int, QString> matchingDevice;
+        const QRegularExpression firstOutputRe("^ES300N\\[\\d+:0\\]");
+        const int MAX_DEVICE_COUNT = 2;
+
+        for (QMap<int, QString>::const_iterator it = deviceMap.cbegin(); it != deviceMap.cend(); ++it)
+        {
+            if (it.value().contains(firstOutputRe)) {
+                matchingDevice.insert(it.key(), it.value());
+            }
         }
+
+        if (matchingDevice.isEmpty() || (matchingDevice.size() < MAX_DEVICE_COUNT))
+        {
+            QMessageBox::information(this, tr("Device detection"), tr("Please plug-in the ES300N."));
+            m_addRxDeviceButton->setDisabled(false);
+            return;
+        }
+
+        orderedDeviceKeys = matchingDevice.keys();
     }
-    if (matchingKeys.isEmpty()) {
-        QMessageBox msgBox;
-        msgBox.setIcon(QMessageBox::Information);
-        msgBox.setText("Please plug-in the ES300N.");
-        msgBox.setStandardButtons(QMessageBox::Ok);
-        msgBox.setDefaultButton(QMessageBox::Ok);
-        msgBox.exec();
+
+    QStringList orderedDevices;
+
+    for (QList<int>::const_iterator it = orderedDeviceKeys.cbegin(); it != orderedDeviceKeys.cend(); ++it) {
+        orderedDevices.append(QString("%1: %2").arg(*it).arg(deviceMap.value(*it)));
     }
-    else {
-        dialog.setSelectedDeviceIndex(matchingKeys[0]);
-        emit addRxDevice(this, matchingKeys[0]);
+
+    const QString prompt = tr("Detected device order:\n%1\n\nIs this order correct?")
+        .arg(orderedDevices.join("\n"));
+
+    const QMessageBox::StandardButton answer = QMessageBox::question(
+        this,
+        tr("Confirm device order"),
+        prompt,
+        QMessageBox::Yes | QMessageBox::No,
+        QMessageBox::Yes
+    );
+
+    if (answer == QMessageBox::Yes)
+    {
+        for (QList<int>::const_iterator it = orderedDeviceKeys.cbegin(); it != orderedDeviceKeys.cend(); ++it) {
+            emit addRxDevice(this, *it);
+        }
     }
 
     m_addRxDeviceButton->setDisabled(false);

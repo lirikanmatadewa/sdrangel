@@ -208,6 +208,7 @@ set(sdrbase_SOURCES
 
     settings/configuration.cpp
     settings/featuresetpreset.cpp
+    settings/instrumentconfigmanager.cpp
     settings/pluginpreset.cpp
     settings/preferences.cpp
     settings/preset.cpp
@@ -461,6 +462,7 @@ set(sdrbase_HEADERS
 
     settings/configuration.h
     settings/featuresetpreset.h
+    settings/instrumentconfigmanager.h
     settings/pluginpreset.h
     settings/preferences.h
     settings/preset.h
