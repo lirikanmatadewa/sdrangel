@@ -27,7 +27,7 @@ public:
     QString getConfigPath() const { return m_configPath; }
     QString getLastError() const { return m_lastError; }
 
-    QList<int> resolveOrderedDeviceKeys(
+    QMap<int, int> resolveOrderedDeviceKeys(
         const QMap<int, QString>& detectedDeviceMap,
         const QString& rxTx) const;
 
