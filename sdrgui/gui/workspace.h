@@ -139,6 +139,7 @@ signals:
     void configurationPresetsDialogRequested();
     void startAllDevices(Workspace *inWorkspace);
     void stopAllDevices(Workspace *inWorkspace);
+    void addRxDeviceInWorkspace(int workspaceIndex, int deviceIndex);
 };
 
 

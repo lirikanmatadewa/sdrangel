@@ -119,7 +119,7 @@ bool InstrumentConfigManager::loadFromFile(const QString& filePath)
         }
     }
 
-    std::sort(m_entries.begin(), m_entries.end(), [](const InstrumentConfigEntry& a, const InstrumentConfigEntry& b) {
+    std::stable_sort(m_entries.begin(), m_entries.end(), [](const InstrumentConfigEntry& a, const InstrumentConfigEntry& b) {
         return a.position < b.position;
     });
 
@@ -153,22 +153,22 @@ bool InstrumentConfigManager::parseDetectedDevice(
     return true;
 }
 
-QMap<int, int> InstrumentConfigManager::resolveOrderedDeviceKeys(
+QMap<int, QList<int>> InstrumentConfigManager::resolveOrderedDeviceKeys(
     const QMap<int, QString>& detectedDeviceMap,
     const QString& rxTx) const
 {
-    QMap<int, int> positionToDeviceKey;
+    QMap<int, QList<int>> positionToDeviceKeys;
 
     if (!m_hasConfig || rxTx.isEmpty()) {
-        return positionToDeviceKey;
+        return positionToDeviceKeys;
     }
 
     QSet<int> usedKeys;
 
     for (QList<InstrumentConfigEntry>::const_iterator itCfg = m_entries.cbegin(); itCfg != m_entries.cend(); ++itCfg)
     {
-        const InstrumentConfigEntry& entry = *itCfg;  // Dereference the iterator
-        
+        const InstrumentConfigEntry& entry = *itCfg;
+
         if (entry.rxTx.compare(rxTx, Qt::CaseInsensitive) != 0) {
             continue;
         }
@@ -196,18 +196,17 @@ QMap<int, int> InstrumentConfigManager::resolveOrderedDeviceKeys(
             qDebug() << "  detectedName:" << detectedName << "vs entry.deviceName:" << entry.deviceName;
             qDebug() << "  detectedId:" << detectedId;
             qDebug() << "  entry.id:" << entry.id;
-            
+
             bool portMatch = (detectedPort == entry.port);
             bool nameMatch = (detectedName.compare(entry.deviceName, Qt::CaseInsensitive) == 0);
             bool idMatch = (entry.id.isEmpty() || (detectedId.compare(entry.id, Qt::CaseInsensitive) == 0));
-            
+
             qDebug() << "  portMatch:" << portMatch << "nameMatch:" << nameMatch << "idMatch:" << idMatch;
-            
-            // Match ONLY on: deviceName, port, and ID
+
             if (portMatch && nameMatch && idMatch)
             {
                 qDebug() << "[DEBUG] MATCH FOUND! Inserting key:" << itDev.key() << "at position:" << entry.position;
-                positionToDeviceKey.insert(entry.position, itDev.key());
+                positionToDeviceKeys[entry.position].append(itDev.key());
                 usedKeys.insert(itDev.key());
                 matched = true;
                 break;
@@ -217,9 +216,9 @@ QMap<int, int> InstrumentConfigManager::resolveOrderedDeviceKeys(
         if (!matched) {
             qWarning() << "[InstrumentConfigManager] No device found for config entry:"
                        << entry.deviceName << "port:" << entry.port << "id:" << entry.id;
-            return QMap<int, int>(); // Return empty -- all-or-nothing
+            return QMap<int, QList<int>>(); // Return empty -- all-or-nothing
         }
     }
 
-    return positionToDeviceKey;
+    return positionToDeviceKeys;
 }

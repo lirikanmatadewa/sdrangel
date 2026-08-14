@@ -391,29 +391,32 @@ void Workspace::addRxDeviceClicked()
 
     SamplingDeviceDialog dialog(0, this);
     const QMap<int, QString> deviceMap = dialog.getDeviceMap();
-	 
+ 	 
     dialog.setSelectedDeviceIndex(-1);
 
-    QMap<int, int> positionToDeviceKey;
+    QMap<int, QList<int>> positionToDeviceKeys;
     QList<int> orderedDeviceKeys;
 
     INSTRUMENT_CONFIG_MANAGER.initialize();
     if (INSTRUMENT_CONFIG_MANAGER.hasConfig())
     {
-        positionToDeviceKey = INSTRUMENT_CONFIG_MANAGER.resolveOrderedDeviceKeys(deviceMap, "rx");
-        qDebug() << "[Workspace] Returned positionToDeviceKey size:" << positionToDeviceKey.size();
-        qDebug() << "[Workspace] Keys:" << positionToDeviceKey.keys();
-        qDebug() << "[Workspace] Values:" << positionToDeviceKey.values();
+        positionToDeviceKeys = INSTRUMENT_CONFIG_MANAGER.resolveOrderedDeviceKeys(deviceMap, "rx");
+        qDebug() << "[Workspace] Returned positionToDeviceKeys size:" << positionToDeviceKeys.size();
+        qDebug() << "[Workspace] Keys:" << positionToDeviceKeys.keys();
+        qDebug() << "[Workspace] Values:" << positionToDeviceKeys.values();
     }
 
-    if (!positionToDeviceKey.isEmpty())
+    if (!positionToDeviceKeys.isEmpty())
     {
-        // Convert map to ordered list based on position keys
-        QList<int> positions = positionToDeviceKey.keys();
-        std::sort(positions.begin(), positions.end());
-        
-        for (QList<int>::const_iterator it = positions.cbegin(); it != positions.cend(); ++it) {
-            orderedDeviceKeys.append(positionToDeviceKey.value(*it));
+        for (QMap<int, QList<int>>::const_iterator it = positionToDeviceKeys.cbegin(); it != positionToDeviceKeys.cend(); ++it)
+        {
+            const int workspaceIndex = it.key();
+            const QList<int>& deviceKeys = it.value();
+
+            for (const int deviceKey : deviceKeys)
+            {
+                emit addRxDeviceInWorkspace(workspaceIndex, deviceKey);
+            }
         }
     }
     else
@@ -422,35 +425,35 @@ void Workspace::addRxDeviceClicked()
        QMap<int, QString> matchingDevice;
        const QRegularExpression firstOutputRe("^ES300N\\[\\d+:0\\]");
        const int MAX_DEVICE_COUNT = 2;
-
+ 
        for (QMap<int, QString>::const_iterator it = deviceMap.cbegin(); it != deviceMap.cend(); ++it)
        {
           if (it.value().contains(firstOutputRe)) {
              matchingDevice.insert(it.key(), it.value());
           }
        }
-
+ 
        if (matchingDevice.isEmpty() || (matchingDevice.size() < MAX_DEVICE_COUNT))
        {
           QMessageBox::information(this, tr("Device detection"), tr("Please plug-in the ES300N."));
           m_addRxDeviceButton->setDisabled(false);
           return;
        }
-
+ 
        orderedDeviceKeys = matchingDevice.keys();
-
+ 
        QStringList orderedDevices;
-
+ 
        for (QList<int>::const_iterator it = orderedDeviceKeys.cbegin(); it != orderedDeviceKeys.cend(); ++it) {
           orderedDevices.append(QString("%1: %2").arg(*it).arg(deviceMap.value(*it)));
        }
-
+ 
        const QString prompt = tr("Detected device order:\n%1\n\nIs this order correct?")
           .arg(orderedDevices.join("\n"));
-
+ 
        const QMessageBox::StandardButton answer = QMessageBox::question(
           this,
-          tr("Confirm device order"),
+          tr("Confirm device order\n(Yes accept the ordering, No reverse the ordering)"),
           prompt,
           QMessageBox::Yes | QMessageBox::No,
           QMessageBox::Yes
@@ -458,15 +461,15 @@ void Workspace::addRxDeviceClicked()
 
        if (answer != QMessageBox::Yes)
        {
-          //  empty the orderedDeviceKeys
-          orderedDeviceKeys.clear();
+          std::reverse(orderedDeviceKeys.begin(), orderedDeviceKeys.end());
        }
     }
-
+ 
     if (!orderedDeviceKeys.isEmpty())
     {
+		 int workspaceIndex = 0;
        for (QList<int>::const_iterator it = orderedDeviceKeys.cbegin(); it != orderedDeviceKeys.cend(); ++it) {
-          emit addRxDevice(this, *it);
+          emit addRxDeviceInWorkspace(workspaceIndex++, *it);
        }
 	 }
     

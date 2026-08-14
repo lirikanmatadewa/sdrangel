@@ -236,6 +236,7 @@ private slots:
 	void commandKeyPressed(Qt::Key key, Qt::KeyboardModifiers keyModifiers, bool release);
 	void fftWisdomProcessFinished(int exitCode, QProcess::ExitStatus exitStatus);
 	void orientationChanged(Qt::ScreenOrientation orientation);
+	void sampleSourceAddInWorkspace(int workspaceIndex, int deviceIndex);
 };
 
 #endif // INCLUDE_MAINWINDOW_H
