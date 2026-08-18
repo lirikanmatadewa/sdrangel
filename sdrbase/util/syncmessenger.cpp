@@ -19,6 +19,8 @@
 ///////////////////////////////////////////////////////////////////////////////////
 
 #include <QtGlobal>
+#include <QDebug>
+#include <QTime>
 
 #include "util/syncmessenger.h"
 #include "util/message.h"
@@ -103,5 +105,4 @@ void SyncMessenger::done(int result)
 
 	m_waitCondition.wakeAll();
 }
-
 

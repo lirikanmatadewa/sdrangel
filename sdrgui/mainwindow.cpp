@@ -1701,10 +1701,10 @@ void MainWindow::createMenuBar(QToolButton* button)
 	QAction* myPositionAction = preferencesMenu->addAction("My &Position...");
 	myPositionAction->setToolTip("Set station position");
 	QObject::connect(myPositionAction, &QAction::triggered, this, &MainWindow::on_action_My_Position_triggered);
-	/*QAction* fftAction = preferencesMenu->addAction("&FFT...");
+	QAction* fftAction = preferencesMenu->addAction("&FFT...");
 	fftAction->setToolTip("Set FFT preferences");
 	QObject::connect(fftAction, &QAction::triggered, this, &MainWindow::on_action_FFT_triggered);
-	QAction* fftWisdomAction = preferencesMenu->addAction("&FFTW Wisdom...");
+	/*QAction* fftWisdomAction = preferencesMenu->addAction("&FFTW Wisdom...");
 	fftWisdomAction->setToolTip("Set FFTW cache");
 	QObject::connect(fftWisdomAction, &QAction::triggered, this, &MainWindow::on_action_FFTWisdom_triggered);
 	QMenu* devicesMenu = preferencesMenu->addMenu("&Devices");

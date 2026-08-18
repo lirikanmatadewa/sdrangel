@@ -571,13 +571,13 @@ void DSPDeviceSourceEngine::handleSynchronousMessages()
 	{
 		setState(gotoIdle());
 
-		if(m_state == StIdle) {
+		if (m_state == StIdle) {
 			setState(gotoInit()); // State goes ready if init is performed
 		}
 	}
 	else if (DSPAcquisitionStart::match(*message))
 	{
-		if(m_state == StReady) {
+		if (m_state == StReady) {
 			setState(gotoRunning());
 		}
 	}
@@ -587,33 +587,33 @@ void DSPDeviceSourceEngine::handleSynchronousMessages()
 	}
 	else if (DSPGetSourceDeviceDescription::match(*message))
 	{
-		((DSPGetSourceDeviceDescription*) message)->setDeviceDescription(m_deviceDescription);
+		((DSPGetSourceDeviceDescription*)message)->setDeviceDescription(m_deviceDescription);
 	}
 	else if (DSPGetErrorMessage::match(*message))
 	{
-		((DSPGetErrorMessage*) message)->setErrorMessage(m_errorMessage);
+		((DSPGetErrorMessage*)message)->setErrorMessage(m_errorMessage);
 	}
 	else if (DSPSetSource::match(*message)) {
-		handleSetSource(((DSPSetSource*) message)->getSampleSource());
+		handleSetSource(((DSPSetSource*)message)->getSampleSource());
 	}
 	else if (DSPAddBasebandSampleSink::match(*message))
 	{
 		BasebandSampleSink* sink = ((DSPAddBasebandSampleSink*)message)->getSampleSink();
 		qDebug("DSPDeviceSourceEngine::handleSynchronousMessages - Adding sink to engine");
 		m_basebandSampleSinks.push_back(sink);
-        // initialize sample rate and center frequency in the sink:
-        DSPSignalNotification *msg = new DSPSignalNotification(m_sampleRate, m_centerFrequency);
-        sink->pushMessage(msg);
-        // start the sink:
-        if(m_state == StRunning) {
-            sink->start();
-        }
+		// initialize sample rate and center frequency in the sink:
+		DSPSignalNotification* msg = new DSPSignalNotification(m_sampleRate, m_centerFrequency);
+		sink->pushMessage(msg);
+		// start the sink:
+		if (m_state == StRunning) {
+			sink->start();
+		}
 	}
 	else if (DSPRemoveBasebandSampleSink::match(*message))
 	{
-		BasebandSampleSink* sink = ((DSPRemoveBasebandSampleSink*) message)->getSampleSink();
+		BasebandSampleSink* sink = ((DSPRemoveBasebandSampleSink*)message)->getSampleSink();
 
-		if(m_state == StRunning) {
+		if (m_state == StRunning) {
 			sink->stop();
 		}
 

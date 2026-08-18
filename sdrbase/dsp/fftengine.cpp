@@ -53,17 +53,17 @@ FFTEngine* FFTEngine::create(const QString& fftWisdomFileName, const QString& pr
        qDebug("3. FFTEngine::create: using %s engine", qPrintable(engine));
 	   return nullptr;
     }
-    //else if (!preferredEngine.isEmpty() && allNames.contains(preferredEngine))
-    //{
-    //    // Use the preferred engine
-    //    engine = preferredEngine;
-    //    qDebug("2. FFTEngine::create: using %s engine", qPrintable(engine));
-    //}
+    else if (!preferredEngine.isEmpty() && allNames.contains(preferredEngine))
+    {
+        // Use the preferred engine
+        engine = preferredEngine;
+        qDebug("2. FFTEngine::create: using %s engine", qPrintable(engine));
+    }
     else
     {
         // Use first available
-        //engine = allNames[0];
-        engine = allNames[2];
+        engine = allNames[0];
+        //engine = allNames[2];
         qDebug("1. FFTEngine::create: using %s engine", qPrintable(engine));
     }
 
