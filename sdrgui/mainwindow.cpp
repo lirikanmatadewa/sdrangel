@@ -2129,6 +2129,13 @@ void MainWindow::addWorkspace()
 		&MainWindow::stopAllDevices
 	);
 
+	QObject::connect(
+		m_workspaces.back(),
+		&Workspace::addRxDeviceInWorkspace,
+		this,
+		[=](int workspaceIndex, int deviceIndex) { this->sampleSourceAddInWorkspace(workspaceIndex, deviceIndex); }
+	);
+
 	if (m_workspaces.size() > 1)
 	{
 		for (int i = 1; i < m_workspaces.size(); i++) {
@@ -3133,4 +3140,21 @@ void MainWindow::orientationChanged(Qt::ScreenOrientation orientation)
 #else
 	(void)orientation;
 #endif
+}
+
+void MainWindow::sampleSourceAddInWorkspace(int workspaceIndex, int deviceIndex)
+{
+	qDebug() << "MainWindow::sampleSourceAddInWorkspace: workspaceIndex = " << workspaceIndex << " | deviceIndex = " << deviceIndex;
+
+	// Create workspaces as needed
+	while (workspaceIndex >= (int)m_workspaces.size())
+	{
+		addWorkspace();
+	}
+
+	if ((workspaceIndex >= 0) && (workspaceIndex < (int)m_workspaces.size()))
+	{
+		Workspace* workspace = m_workspaces[workspaceIndex];
+		sampleSourceAdd(workspace, workspace, deviceIndex);
+	}
 }
