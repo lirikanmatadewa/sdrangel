@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>703</width>
+    <width>801</width>
     <height>228</height>
    </rect>
   </property>
@@ -539,7 +539,7 @@
         <string>FFT window function</string>
        </property>
        <property name="sizeAdjustPolicy">
-        <enum>QComboBox::AdjustToContents</enum>
+        <enum>QComboBox::SizeAdjustPolicy::AdjustToContents</enum>
        </property>
        <item>
         <property name="text">
@@ -612,7 +612,7 @@
         <string>FFT size</string>
        </property>
        <property name="sizeAdjustPolicy">
-        <enum>QComboBox::AdjustToContents</enum>
+        <enum>QComboBox::SizeAdjustPolicy::AdjustToContents</enum>
        </property>
        <item>
         <property name="text">
@@ -1210,7 +1210,7 @@
         </size>
        </property>
        <property name="focusPolicy">
-        <enum>Qt::NoFocus</enum>
+        <enum>Qt::FocusPolicy::NoFocus</enum>
        </property>
        <property name="toolTip">
         <string>ADS-B Demodulator</string>
@@ -1247,7 +1247,7 @@
         </size>
        </property>
        <property name="focusPolicy">
-        <enum>Qt::NoFocus</enum>
+        <enum>Qt::FocusPolicy::NoFocus</enum>
        </property>
        <property name="toolTip">
         <string>AM Demodulator</string>
@@ -1272,7 +1272,7 @@
         </size>
        </property>
        <property name="focusPolicy">
-        <enum>Qt::NoFocus</enum>
+        <enum>Qt::FocusPolicy::NoFocus</enum>
        </property>
        <property name="toolTip">
         <string>SSB Demodulator</string>
@@ -1297,7 +1297,7 @@
         </size>
        </property>
        <property name="focusPolicy">
-        <enum>Qt::NoFocus</enum>
+        <enum>Qt::FocusPolicy::NoFocus</enum>
        </property>
        <property name="toolTip">
         <string>WFM Demodulator</string>
@@ -1406,6 +1406,20 @@
       <widget class="QPushButton" name="btnCW">
        <property name="text">
         <string>CW</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnAis">
+       <property name="text">
+        <string>AIS</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnNfm">
+       <property name="text">
+        <string>NFM</string>
        </property>
       </widget>
      </item>

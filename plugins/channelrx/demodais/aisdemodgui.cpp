@@ -746,19 +746,19 @@ AISDemodGUI::AISDemodGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, Baseban
     ui->scopeGUI->setBuddies(m_scopeVis->getInputMessageQueue(), m_scopeVis, ui->glScope);
     ui->scopeGUI->setStreams(QStringList({"IQ", "MagSq", "FM demod", "Gaussian", "RX buf", "Correlation", "Threshold met", "DC offset", "CRC"}));
 
-    // Scope settings to display the IQ waveforms
-    ui->scopeGUI->setPreTrigger(1);
-    GLScopeSettings::TraceData traceDataI, traceDataQ;
-    traceDataI.m_projectionType = Projector::ProjectionReal;
-    traceDataI.m_amp = 1.0;      // for -1 to +1
-    traceDataI.m_ofs = 0.0;      // vertical offset
-    traceDataQ.m_projectionType = Projector::ProjectionImag;
-    traceDataQ.m_amp = 1.0;
-    traceDataQ.m_ofs = 0.0;
-    ui->scopeGUI->changeTrace(0, traceDataI);
-    ui->scopeGUI->addTrace(traceDataQ);
-    ui->scopeGUI->setDisplayMode(GLScopeSettings::DisplayXYV);
-    ui->scopeGUI->focusOnTrace(0); // re-focus to take changes into account in the GUI
+    //// Scope settings to display the IQ waveforms
+    //ui->scopeGUI->setPreTrigger(1);
+    //GLScopeSettings::TraceData traceDataI, traceDataQ;
+    //traceDataI.m_projectionType = Projector::ProjectionReal;
+    //traceDataI.m_amp = 1.0;      // for -1 to +1
+    //traceDataI.m_ofs = 0.0;      // vertical offset
+    //traceDataQ.m_projectionType = Projector::ProjectionImag;
+    //traceDataQ.m_amp = 1.0;
+    //traceDataQ.m_ofs = 0.0;
+    //ui->scopeGUI->changeTrace(0, traceDataI);
+    //ui->scopeGUI->addTrace(traceDataQ);
+    //ui->scopeGUI->setDisplayMode(GLScopeSettings::DisplayXYV);
+    //ui->scopeGUI->focusOnTrace(0); // re-focus to take changes into account in the GUI
 
     GLScopeSettings::TriggerData triggerData;
     triggerData.m_triggerLevel = 0.1;

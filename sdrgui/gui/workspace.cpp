@@ -192,7 +192,7 @@ Workspace::Workspace(int index, QWidget *parent, Qt::WindowFlags flags) :
     m_titleBarLayout->addWidget(m_startStopButton);
     m_titleBarLayout->addWidget(m_vline1);
     m_titleBarLayout->addWidget(m_addRxDeviceButton);
-    //m_titleBarLayout->addWidget(m_addFeatureButton);
+    m_titleBarLayout->addWidget(m_addFeatureButton);
     m_titleBarLayout->addWidget(m_vline2);
     m_titleBarLayout->addWidget(m_cascadeSubWindows);
     m_titleBarLayout->addWidget(m_tileSubWindows);

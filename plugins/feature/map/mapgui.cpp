@@ -1827,7 +1827,7 @@ void MapGUI::supportedMapsChanged()
         // Mapbox plugin only works for Satellite imagary, despite what is indicated
         if (m_settings.m_mapProvider == "mapbox")
         {
-            ui->mapTypes->addItem("Satellite");
+            //ui->mapTypes->addItem("Satellite");
         }
         else
         {
@@ -1835,7 +1835,14 @@ void MapGUI::supportedMapsChanged()
             QMetaObject::invokeMethod(item, "getMapTypes", Q_RETURN_ARG(QVariant, mapTypesVariant));
             QStringList mapTypes = mapTypesVariant.value<QStringList>();
             for (int i = 0; i < mapTypes.size(); i++) {
-                ui->mapTypes->addItem(mapTypes[i]);
+                qDebug() << " --> " << mapTypes[i];
+                if (mapTypes[i] == "Street Map") {
+                    ui->mapTypes->addItem(mapTypes[i]);
+                }
+                else if (mapTypes[i] == "Night Transit Map") {
+                    ui->mapTypes->addItem(mapTypes[i]);
+                }
+
             }
         }
     }
@@ -2938,6 +2945,18 @@ void MapGUI::makeUIConnections()
     QObject::connect(ui->beacons, &QToolButton::clicked, this, &MapGUI::on_beacons_clicked);
     QObject::connect(ui->ibpBeacons, &QToolButton::clicked, this, &MapGUI::on_ibpBeacons_clicked);
     QObject::connect(ui->radiotime, &QToolButton::clicked, this, &MapGUI::on_radiotime_clicked);
+
+    ui->maidenhead->hide();
+    ui->beacons->hide();
+    ui->ibpBeacons->hide();
+    ui->radiotime->hide();
+    ui->layersMenu->hide();
+    ui->displayClouds->hide();
+    ui->displayRain->hide();
+    ui->displayRailways->hide();
+    ui->displayMUF->hide();
+    ui->displayfoF2->hide();
+    ui->displayNASAGlobalImagery->hide();
 }
 
 // bearing

@@ -125,6 +125,8 @@ GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
 	connect(ui->am, SIGNAL(clicked()), this, SLOT(open_am()));
 	connect(ui->ssb, SIGNAL(clicked()), this, SLOT(open_ssb()));
 	connect(ui->wfm, SIGNAL(clicked()), this, SLOT(open_wfm()));
+	connect(ui->btnAis, SIGNAL(clicked()), this, SLOT(open_ais()));
+	connect(ui->btnNfm, SIGNAL(clicked()), this, SLOT(open_nfm()));
 	connect(ui->btnDrf, SIGNAL(clicked()), this, SLOT(open_rdf()));
 	connect(ui->iqRecord, SIGNAL(clicked()), this, SLOT(openIqRecord()));
 	connect(ui->iqReplay, SIGNAL(clicked()), this, SLOT(openIqReplay()));
@@ -1420,6 +1422,26 @@ void GLSpectrumGUI::open_rdf()
 {
 	try {
 		emit addChannel(this->rx_channel["RDFDemod"]);
+	}
+	catch (...) {
+		;
+	}
+}
+
+void GLSpectrumGUI::open_ais()
+{
+	try {
+		emit addChannel(this->rx_channel["AISDemod"]);
+	}
+	catch (...) {
+		;
+	}
+}
+
+void GLSpectrumGUI::open_nfm()
+{
+	try {
+		emit addChannel(this->rx_channel["NFMDemod"]);
 	}
 	catch (...) {
 		;

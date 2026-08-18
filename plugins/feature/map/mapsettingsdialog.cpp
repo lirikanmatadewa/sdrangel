@@ -86,12 +86,25 @@ MapSettingsDialog::MapSettingsDialog(MapSettings *settings, QWidget* parent) :
     ui->osmURL->setText(settings->m_osmURL);
     ui->mapBoxStyles->setText(settings->m_mapBoxStyles);
     ui->map2DEnabled->setChecked(m_settings->m_map2DEnabled);
-    ui->map3DEnabled->setChecked(m_settings->m_map3DEnabled);
+    /*ui->map3DEnabled->setChecked(m_settings->m_map3DEnabled);*/
     ui->terrain->setCurrentIndex(ui->terrain->findText(m_settings->m_terrain));
     ui->buildings->setCurrentIndex(ui->buildings->findText(m_settings->m_buildings));
     ui->sunLightEnabled->setCurrentIndex((int)m_settings->m_sunLightEnabled);
     ui->eciCamera->setCurrentIndex((int)m_settings->m_eciCamera);
     ui->antiAliasing->setCurrentIndex(ui->antiAliasing->findText(m_settings->m_antiAliasing));
+
+    // hide icon
+    m_settings->m_map3DEnabled = false;
+    ui->map3DEnabled->setChecked(false);
+
+    ui->apiKeys->hide();
+    ui->map3DSettings->hide();
+
+    ui->getWaypoints->hide();
+    ui->getAirspacesDB->hide();
+    ui->getAirportDB->hide();
+    ui->downloadModels->hide();
+    // hide icon
 
     // Sort groups in table alphabetically
     QList<MapSettings::MapItemSettings *> itemSettings = m_settings->m_itemSettings.values();

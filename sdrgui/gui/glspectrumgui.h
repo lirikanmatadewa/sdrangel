@@ -129,6 +129,8 @@ protected:
 	bool eventFilter(QObject* obj, QEvent* ev) override;
 
 private slots:
+	void open_ais();
+	void open_nfm();
 	void open_adsb();
 	void open_am();
 	void open_ssb();
