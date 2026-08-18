@@ -149,7 +149,7 @@ QMap<int, QString> SamplingDeviceDialog::getDeviceMap()
 
     foreach(QString var, deviceDisplayNames)
     {
-        if (var.contains("ES300N[0:0]")) {
+        if (var.contains("ES300[0:0]")) {
             isBladeRF2Found = true;
         }
     }

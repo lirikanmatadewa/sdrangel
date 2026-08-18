@@ -168,7 +168,7 @@ ChannelGUI::ChannelGUI(QWidget *parent) :
     m_bottomLayout = new QHBoxLayout();
     m_bottomLayout->setContentsMargins(0, 0, 0, 0);
     m_bottomLayout->addWidget(m_duplicateButton);
-    m_bottomLayout->addWidget(m_moveToDeviceButton);
+    //m_bottomLayout->addWidget(m_moveToDeviceButton);
     m_bottomLayout->addWidget(m_statusFrequency);
     m_bottomLayout->addWidget(m_statusLabel);
     m_sizeGripBottomRight = new QSizeGrip(this);

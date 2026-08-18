@@ -198,6 +198,7 @@ signals:
 	void requestCenterFrequency(qint64 frequency);
 	void addChannel(int channelPluginIndex);
 	void addIqReplaySignal();
+	void requestAISFeature();
 };
 
 #endif // INCLUDE_GLSPECTRUMGUI_H

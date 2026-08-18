@@ -17,11 +17,11 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>BWE Solutions - ES300N</string>
+   <string>BWE Solutions - ES300</string>
   </property>
   <property name="windowIcon">
    <iconset resource="resources/res.qrc">
-    <normaloff>:/navic_icon.png</normaloff>:/navic_icon.png</iconset>
+    <normaloff>:/es300_icon.png</normaloff>:/es300_icon.png</iconset>
   </property>
   <property name="animated">
    <bool>true</bool>
@@ -812,7 +812,7 @@
   </action>
   <action name="action_About">
    <property name="text">
-    <string>&amp;About ES300N...</string>
+    <string>&amp;About ES300...</string>
    </property>
    <property name="font">
     <font>

@@ -147,7 +147,9 @@ private slots:
     void on_deltaFrequency_changed(qint64 value);
     void on_rfBW_valueChanged(int index);
     void on_fmDev_valueChanged(int value);
-    void on_threshold_valueChanged(int value);
+    //void on_threshold_valueChanged(int value);
+    void on_thresholdDown_clicked();
+    void on_thresholdUp_clicked();
     void on_filterMMSI_editingFinished();
     void on_clearTable_clicked();
     void on_udpEnabled_clicked(bool checked);

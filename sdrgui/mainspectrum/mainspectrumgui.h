@@ -116,6 +116,7 @@ private slots:
 	void onTimeSelected(float time);
 	void onRequestAddChannel(int channelPluginIndex);
 	void onRequestAddIqReplay();
+	void onRequestAISFeature();
 
 signals:
 	void closing();
@@ -125,6 +126,7 @@ signals:
 	void timeSelected(int deviceSetIndex, float time); // user ctrl-clicked waterfall to set a time
 	void addChannel(int channelPluginIndex);
 	void addIqReplaySignal();
+	void addAISFeature();
 };
 
 #endif // SDRGUI_MAINSPECTRUM_MAINSPECTRUMGUIGUI_H_

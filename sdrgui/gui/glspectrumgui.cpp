@@ -1432,6 +1432,7 @@ void GLSpectrumGUI::open_ais()
 {
 	try {
 		emit addChannel(this->rx_channel["AISDemod"]);
+		emit requestAISFeature();
 	}
 	catch (...) {
 		;

@@ -206,47 +206,97 @@ void NFMDemodGUI::on_volume_valueChanged(int value)
 	applySettings();
 }
 
-void NFMDemodGUI::on_squelchGate_valueChanged(int value)
+void NFMDemodGUI::on_squelchGateUp_clicked()
 {
-    ui->squelchGateText->setText(QString("%1").arg(value * 10.0f, 0, 'f', 0));
-    m_settings.m_squelchGate = value;
-	applySettings();
+    if (m_settings.m_squelchGate < 50)
+    {
+        m_settings.m_squelchGate++;
+        ui->squelchGateText->setText(
+            QString("%1").arg(m_settings.m_squelchGate * 10)
+        );
+        applySettings();
+    }
+}
+
+void NFMDemodGUI::on_squelchGateDown_clicked()
+{
+    if (m_settings.m_squelchGate > 1)
+    {
+        m_settings.m_squelchGate--;
+        ui->squelchGateText->setText(
+            QString("%1").arg(m_settings.m_squelchGate * 10)
+        );
+        applySettings();
+    }
 }
 
 void NFMDemodGUI::on_deltaSquelch_toggled(bool checked)
 {
     if (checked)
     {
-        ui->squelchText->setText(QString("%1").arg((-ui->squelch->value()) / 1.0, 0, 'f', 0));
-        ui->squelchText->setToolTip(tr("Squelch AF balance threshold (%)"));
-        ui->squelch->setToolTip(tr("Squelch AF balance threshold (%)"));
+        ui->squelchText->setText(
+            QString("%1").arg(-m_settings.m_squelch, 0, 'f', 0)
+        );
+        ui->squelchText->setToolTip(
+            tr("Squelch AF balance threshold (%)")
+        );
+        ui->squelchUp->setToolTip(
+            tr("Increase squelch AF balance threshold (%)")
+        );
+        ui->squelchDown->setToolTip(
+            tr("Decrease squelch AF balance threshold (%)")
+        );
     }
     else
     {
-        ui->squelchText->setText(QString("%1").arg(ui->squelch->value() / 1.0, 0, 'f', 0));
-        ui->squelchText->setToolTip(tr("Squelch power threshold (dB)"));
-        ui->squelch->setToolTip(tr("Squelch power threshold (dB)"));
+        ui->squelchText->setText(
+            QString("%1").arg(m_settings.m_squelch, 0, 'f', 0)
+        );
+        ui->squelchText->setToolTip(
+            tr("Squelch power threshold (dB)")
+        );
+        ui->squelchUp->setToolTip(
+            tr("Increase squelch power threshold (dB)")
+        );
+        ui->squelchDown->setToolTip(
+            tr("Decrease squelch power threshold (dB)")
+        );
     }
+
     m_settings.m_deltaSquelch = checked;
     applySettings();
 }
 
-void NFMDemodGUI::on_squelch_valueChanged(int value)
+void NFMDemodGUI::on_squelchUp_clicked()
 {
-    if (ui->deltaSquelch->isChecked())
+    if (m_settings.m_squelch < 0)
     {
-        ui->squelchText->setText(QString("%1").arg(-value / 1.0, 0, 'f', 0));
-        ui->squelchText->setToolTip(tr("Squelch AF balance threshold (%)"));
-        ui->squelch->setToolTip(tr("Squelch AF balance threshold (%)"));
+        m_settings.m_squelch++;
+        const int value = static_cast<int>(m_settings.m_squelch);
+
+        if (ui->deltaSquelch->isChecked())
+            ui->squelchText->setText(QString::number(-value));
+        else
+            ui->squelchText->setText(QString::number(value));
+
+        applySettings();
     }
-    else
+}
+
+void NFMDemodGUI::on_squelchDown_clicked()
+{
+    if (m_settings.m_squelch > -100)
     {
-        ui->squelchText->setText(QString("%1").arg(value / 1.0, 0, 'f', 0));
-        ui->squelchText->setToolTip(tr("Squelch power threshold (dB)"));
-        ui->squelch->setToolTip(tr("Squelch power threshold (dB)"));
+        m_settings.m_squelch--;
+        const int value = static_cast<int>(m_settings.m_squelch);
+
+        if (ui->deltaSquelch->isChecked())
+            ui->squelchText->setText(QString::number(-value));
+        else
+            ui->squelchText->setText(QString::number(value));
+
+        applySettings();
     }
-    m_settings.m_squelch = value * 1.0;
-	applySettings();
 }
 
 void NFMDemodGUI::on_ctcssOn_toggled(bool checked)
@@ -516,23 +566,29 @@ void NFMDemodGUI::displaySettings()
     ui->volumeText->setText(QString("%1").arg(m_settings.m_volume*100.0, 0, 'f', 0));
     ui->volume->setValue(m_settings.m_volume * 100.0);
 
-    ui->squelchGateText->setText(QString("%1").arg(m_settings.m_squelchGate * 10.0f, 0, 'f', 0));
-    ui->squelchGate->setValue(m_settings.m_squelchGate);
+    ui->squelchGateText->setText(
+        QString::number(m_settings.m_squelchGate * 10)
+    );
 
     ui->deltaSquelch->setChecked(m_settings.m_deltaSquelch);
-    ui->squelch->setValue(m_settings.m_squelch * 1.0);
 
     if (m_settings.m_deltaSquelch)
     {
-        ui->squelchText->setText(QString("%1").arg((-m_settings.m_squelch) / 1.0, 0, 'f', 0));
-        ui->squelchText->setToolTip(tr("Squelch AF balance threshold (%)"));
-        ui->squelch->setToolTip(tr("Squelch AF balance threshold (%)"));
+        ui->squelchText->setText(
+            QString("%1").arg(-m_settings.m_squelch, 0, 'f', 0)
+        );
+        ui->squelchText->setToolTip(
+            tr("Squelch AF balance threshold (%)")
+        );
     }
     else
     {
-        ui->squelchText->setText(QString("%1").arg(m_settings.m_squelch / 1.0, 0, 'f', 0));
-        ui->squelchText->setToolTip(tr("Squelch power threshold (dB)"));
-        ui->squelch->setToolTip(tr("Squelch power threshold (dB)"));
+        ui->squelchText->setText(
+            QString("%1").arg(m_settings.m_squelch, 0, 'f', 0)
+        );
+        ui->squelchText->setToolTip(
+            tr("Squelch power threshold (dB)")
+        );
     }
 
     ui->ctcssOn->setChecked(m_settings.m_ctcssOn);
@@ -661,9 +717,28 @@ void NFMDemodGUI::makeUIConnections()
     QObject::connect(ui->afBW, &QSlider::valueChanged, this, &NFMDemodGUI::on_afBW_valueChanged);
     QObject::connect(ui->fmDev, &QSlider::valueChanged, this, &NFMDemodGUI::on_fmDev_valueChanged);
     QObject::connect(ui->volume, &QDial::valueChanged, this, &NFMDemodGUI::on_volume_valueChanged);
-    QObject::connect(ui->squelchGate, &QDial::valueChanged, this, &NFMDemodGUI::on_squelchGate_valueChanged);
+
+    QObject::connect(ui->squelchGateUp,
+        &QPushButton::clicked,
+        this,
+        &NFMDemodGUI::on_squelchGateUp_clicked);
+
+    QObject::connect(ui->squelchGateDown,
+        &QPushButton::clicked,
+        this,
+        &NFMDemodGUI::on_squelchGateDown_clicked);
+
+    QObject::connect(ui->squelchUp,
+        &QPushButton::clicked,
+        this,
+        &NFMDemodGUI::on_squelchUp_clicked);
+
+    QObject::connect(ui->squelchDown,
+        &QPushButton::clicked,
+        this,
+        &NFMDemodGUI::on_squelchDown_clicked);
+
     QObject::connect(ui->deltaSquelch, &ButtonSwitch::toggled, this, &NFMDemodGUI::on_deltaSquelch_toggled);
-    QObject::connect(ui->squelch, &QDial::valueChanged, this, &NFMDemodGUI::on_squelch_valueChanged);
     QObject::connect(ui->ctcss, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &NFMDemodGUI::on_ctcss_currentIndexChanged);
     QObject::connect(ui->ctcssOn, &QCheckBox::toggled, this, &NFMDemodGUI::on_ctcssOn_toggled);
     QObject::connect(ui->dcsOn, &QCheckBox::toggled, this, &NFMDemodGUI::on_dcsOn_toggled);

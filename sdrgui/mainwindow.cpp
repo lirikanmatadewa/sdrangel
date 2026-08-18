@@ -135,7 +135,7 @@ MainWindow::MainWindow(qtwebapp::LoggerWithFile* logger, const MainParser& parse
 	m_profileDialog(nullptr),
 	m_fftWisdomProcess(nullptr)
 {
-	setWindowTitle("BWE Solutions - ES300N");
+	setWindowTitle("BWE Solutions - ES300");
 #ifdef ANDROID
 	bool showWelcome = true;
 #else
@@ -146,7 +146,7 @@ MainWindow::MainWindow(qtwebapp::LoggerWithFile* logger, const MainParser& parse
 	QAccessible::installFactory(AccessibleValueDialZ::factory);
 
 	qDebug() << "MainWindow::MainWindow: start";
-	setWindowTitle("ES300N");
+	setWindowTitle("ES300");
 
 	m_instance = this;
 	m_mainCore->m_logger = logger;
@@ -161,14 +161,14 @@ MainWindow::MainWindow(qtwebapp::LoggerWithFile* logger, const MainParser& parse
 	font.setPointSize(9);
 	qApp->setFont(font);
 
-	QPixmap logoPixmap(":/navix_black.png");
+	QPixmap logoPixmap(":/es300_logo.png");
 	SDRangelSplash* splash = new SDRangelSplash(logoPixmap);
 	splash->setMessageRect(QRect(40, 150, 350, 18));
 	splash->show();
 	splash->showStatusMessage("starting...", Qt::white);
 	splash->showStatusMessage("starting...", Qt::white);
 
-	setWindowIcon(QIcon(":/navic_icon.png"));
+	setWindowIcon(QIcon(":/es300_icon.png"));
 #ifndef ANDROID
 	// To save screen space on Android, don't have menu bar. Instead menus are accessed via toolbar button
 	createMenuBar(nullptr);
@@ -423,6 +423,30 @@ void MainWindow::sampleSourceAdd(Workspace* deviceWorkspace, Workspace* spectrum
 		&MainSpectrumGUI::addIqReplaySignal,
 		this,
 		[=]() { this->openIqReplayDialog(deviceWorkspace, spectrumWorkspace); }
+	);
+
+	QObject::connect(
+		mainSpectrumGUI,
+		&MainSpectrumGUI::addAISFeature,
+		this,
+		[=]() {
+			QStringList featureNames;
+			m_pluginManager->listFeatures(featureNames);
+
+			int aisFeatureIndex = featureNames.indexOf("AIS");
+
+			if (aisFeatureIndex >= 0)
+			{
+				this->featureAddClicked(
+					spectrumWorkspace,
+					aisFeatureIndex
+				);
+			}
+			else
+			{
+				qDebug() << "AIS feature not found";
+			}
+		}
 	);
 
 	QObject::connect(
@@ -1703,8 +1727,8 @@ void MainWindow::createMenuBar(QToolButton* button)
 	QAction* loadedPluginsAction = helpMenu->addAction("Loaded &Plugins...");
 	loadedPluginsAction->setToolTip("List available plugins");
 	QObject::connect(loadedPluginsAction, &QAction::triggered, this, &MainWindow::on_action_Loaded_Plugins_triggered);*/
-	QAction* aboutAction = helpMenu->addAction("&About ES300N...");
-	aboutAction->setToolTip("ES300N application details");
+	QAction* aboutAction = helpMenu->addAction("&About ES300...");
+	aboutAction->setToolTip("ES300 application details");
 	QObject::connect(aboutAction, &QAction::triggered, this, &MainWindow::on_action_About_triggered);
 }
 
@@ -1713,10 +1737,10 @@ void MainWindow::createStatusBar()
 	QString qtVersionStr = QString("Qt %1 ").arg(QT_VERSION_STR);
 	QString openGLVersionStr = QString("OpenGL %1 ").arg(openGLVersion());
 #if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
-	m_showSystemWidget = new QLabel("ES300N " + qApp->applicationVersion() + " " + qtVersionStr + openGLVersionStr
+	m_showSystemWidget = new QLabel("ES300 " + qApp->applicationVersion() + " " + qtVersionStr + openGLVersionStr
 		+ QSysInfo::currentCpuArchitecture() + " " + QSysInfo::prettyProductName(), this);
 #else
-	m_showSystemWidget = new QLabel("ES300N " + qApp->applicationVersion() + " " + qtVersionStr + openGLVersionStr, this);
+	m_showSystemWidget = new QLabel("ES300 " + qApp->applicationVersion() + " " + qtVersionStr + openGLVersionStr, this);
 #endif
 	statusBar()->addPermanentWidget(m_showSystemWidget);
 

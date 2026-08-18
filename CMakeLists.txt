@@ -163,7 +163,7 @@ endif()
 # Set additional project information
 set(COMPANY "BWE Solutions")
 add_definitions("-DCOMPANY=\"${COMPANY}\"")
-set(APPLICATION_NAME "ES300N")
+set(APPLICATION_NAME "ES300")
 add_definitions("-DAPPLICATION_NAME=\"${APPLICATION_NAME}\"")
 set(APPLICATION_MAINTAINER="BWE Solutions <support@bwe-solutions.com>")
 set(COPYRIGHT "")

@@ -129,6 +129,6 @@ int main(int argc, char* argv[])
         logger->installMsgHandler();
         int res = runQtApplication(argc, argv, logger);
         delete logger;
-        qWarning("ES300N quit.");
+        qWarning("ES300 quit.");
         return res;
 }

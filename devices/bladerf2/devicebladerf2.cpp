@@ -80,7 +80,7 @@ void DeviceBladeRF2::enumOriginDevices(const QString& hardwareId, PluginInterfac
                 unsigned int nbRxChannels = bladerf_get_channel_count(dev, BLADERF_RX);
                 unsigned int nbTxChannels = bladerf_get_channel_count(dev, BLADERF_TX);
                 // make the stream index a placeholder for future arg() hence the arg("%1")
-                QString displayableName(QString("ES300N[%1:$1] %2").arg(devinfo[i].instance).arg(devinfo[i].serial));
+                QString displayableName(QString("ES300[%1:$1] %2").arg(devinfo[i].instance).arg(devinfo[i].serial));
 
                 originDevices.append(PluginInterface::OriginDevice(
                     displayableName,

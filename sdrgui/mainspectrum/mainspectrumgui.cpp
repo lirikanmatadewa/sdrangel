@@ -158,6 +158,7 @@ MainSpectrumGUI::MainSpectrumGUI(GLSpectrum* spectrum, GLSpectrumGUI* spectrumGU
 	connect(spectrumGUI, &GLSpectrumGUI::requestCenterFrequency, this, &MainSpectrumGUI::onRequestCenterFrequency);
 	connect(spectrumGUI, &GLSpectrumGUI::addChannel, this, &MainSpectrumGUI::onRequestAddChannel);
 	connect(spectrumGUI, &GLSpectrumGUI::addIqReplaySignal, this, &MainSpectrumGUI::onRequestAddIqReplay);
+	connect(spectrumGUI, &GLSpectrumGUI::requestAISFeature, this, &MainSpectrumGUI::onRequestAISFeature);
 
 	connect(spectrum->getSpectrumView(), &GLSpectrumView::timeSelected, this, &MainSpectrumGUI::onTimeSelected);
 
@@ -402,4 +403,9 @@ void MainSpectrumGUI::setRxChannel(QMap<QString, int>* rx_channel)
 void MainSpectrumGUI::onRequestAddIqReplay()
 {
 	emit addIqReplaySignal();
+}
+
+void MainSpectrumGUI::onRequestAISFeature()
+{
+	emit addAISFeature();
 }

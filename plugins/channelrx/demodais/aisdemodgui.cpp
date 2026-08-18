@@ -580,11 +580,24 @@ void AISDemodGUI::on_fmDev_valueChanged(int value)
     applySettings();
 }
 
-void AISDemodGUI::on_threshold_valueChanged(int value)
+void AISDemodGUI::on_thresholdDown_clicked()
 {
-    ui->thresholdText->setText(QString("%1").arg(value));
-    m_settings.m_correlationThreshold = value;
-    applySettings();
+    if (m_settings.m_correlationThreshold > 0)
+    {
+        m_settings.m_correlationThreshold--;
+        ui->thresholdText->setText(QString::number(m_settings.m_correlationThreshold));
+        applySettings();
+    }
+}
+
+void AISDemodGUI::on_thresholdUp_clicked()
+{
+    if (m_settings.m_correlationThreshold < 60)
+    {
+        m_settings.m_correlationThreshold++;
+        ui->thresholdText->setText(QString::number(m_settings.m_correlationThreshold));
+        applySettings();
+    }
 }
 
 void AISDemodGUI::on_filterMMSI_editingFinished()
@@ -728,8 +741,11 @@ AISDemodGUI::AISDemodGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, Baseban
 {
     setAttribute(Qt::WA_DeleteOnClose, true);
     m_helpURL = "plugins/channelrx/demodais/readme.md";
-    RollupContents *rollupContents = getRollupContents();
-	ui->setupUi(rollupContents);
+    RollupContents* rollupContents = getRollupContents();
+    ui->setupUi(rollupContents);
+
+    ui->scopeContainer->setProperty("noRollup", true);
+
     setSizePolicy(rollupContents->sizePolicy());
     rollupContents->arrangeRollups();
 	connect(rollupContents, SIGNAL(widgetRolled(QWidget*,bool)), this, SLOT(onWidgetRolled(QWidget*,bool)));
@@ -746,19 +762,19 @@ AISDemodGUI::AISDemodGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, Baseban
     ui->scopeGUI->setBuddies(m_scopeVis->getInputMessageQueue(), m_scopeVis, ui->glScope);
     ui->scopeGUI->setStreams(QStringList({"IQ", "MagSq", "FM demod", "Gaussian", "RX buf", "Correlation", "Threshold met", "DC offset", "CRC"}));
 
-    //// Scope settings to display the IQ waveforms
-    //ui->scopeGUI->setPreTrigger(1);
-    //GLScopeSettings::TraceData traceDataI, traceDataQ;
-    //traceDataI.m_projectionType = Projector::ProjectionReal;
-    //traceDataI.m_amp = 1.0;      // for -1 to +1
-    //traceDataI.m_ofs = 0.0;      // vertical offset
-    //traceDataQ.m_projectionType = Projector::ProjectionImag;
-    //traceDataQ.m_amp = 1.0;
-    //traceDataQ.m_ofs = 0.0;
-    //ui->scopeGUI->changeTrace(0, traceDataI);
-    //ui->scopeGUI->addTrace(traceDataQ);
-    //ui->scopeGUI->setDisplayMode(GLScopeSettings::DisplayXYV);
-    //ui->scopeGUI->focusOnTrace(0); // re-focus to take changes into account in the GUI
+    // Scope settings to display the IQ waveforms
+    ui->scopeGUI->setPreTrigger(1);
+    GLScopeSettings::TraceData traceDataI, traceDataQ;
+    traceDataI.m_projectionType = Projector::ProjectionReal;
+    traceDataI.m_amp = 1.0;      // for -1 to +1
+    traceDataI.m_ofs = 0.0;      // vertical offset
+    traceDataQ.m_projectionType = Projector::ProjectionImag;
+    traceDataQ.m_amp = 1.0;
+    traceDataQ.m_ofs = 0.0;
+    ui->scopeGUI->changeTrace(0, traceDataI);
+    ui->scopeGUI->addTrace(traceDataQ);
+    ui->scopeGUI->setDisplayMode(GLScopeSettings::DisplayXYV);
+    ui->scopeGUI->focusOnTrace(0); // re-focus to take changes into account in the GUI
 
     GLScopeSettings::TriggerData triggerData;
     triggerData.m_triggerLevel = 0.1;
@@ -896,8 +912,9 @@ void AISDemodGUI::displaySettings()
     ui->fmDevText->setText(QString("%1k").arg(m_settings.m_fmDeviation / 1000.0, 0, 'f', 1));
     ui->fmDev->setValue(m_settings.m_fmDeviation / 100.0);
 
-    ui->thresholdText->setText(QString("%1").arg(m_settings.m_correlationThreshold));
-    ui->threshold->setValue(m_settings.m_correlationThreshold);
+    ui->thresholdText->setText(
+        QString::number(m_settings.m_correlationThreshold)
+    );
 
     updateIndexLabel();
 
@@ -1099,7 +1116,8 @@ void AISDemodGUI::makeUIConnections()
     QObject::connect(ui->deltaFrequency, &ValueDialZ::changed, this, &AISDemodGUI::on_deltaFrequency_changed);
     QObject::connect(ui->rfBW, &QSlider::valueChanged, this, &AISDemodGUI::on_rfBW_valueChanged);
     QObject::connect(ui->fmDev, &QSlider::valueChanged, this, &AISDemodGUI::on_fmDev_valueChanged);
-    QObject::connect(ui->threshold, &QDial::valueChanged, this, &AISDemodGUI::on_threshold_valueChanged);
+    QObject::connect(ui->thresholdDown, &QToolButton::clicked, this, &AISDemodGUI::on_thresholdDown_clicked);
+    QObject::connect(ui->thresholdUp,&QToolButton::clicked, this, &AISDemodGUI::on_thresholdUp_clicked);
     QObject::connect(ui->filterMMSI, &QLineEdit::editingFinished, this, &AISDemodGUI::on_filterMMSI_editingFinished);
     QObject::connect(ui->clearTable, &QPushButton::clicked, this, &AISDemodGUI::on_clearTable_clicked);
     QObject::connect(ui->udpEnabled, &QCheckBox::clicked, this, &AISDemodGUI::on_udpEnabled_clicked);

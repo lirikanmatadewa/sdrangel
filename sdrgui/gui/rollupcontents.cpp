@@ -421,7 +421,10 @@ bool RollupContents::eventFilter(QObject* object, QEvent* event)
     return QWidget::eventFilter(object, event);
 }
 
-bool RollupContents::isRollupChild(QWidget *childWidget)
+bool RollupContents::isRollupChild(QWidget* childWidget)
 {
-    return (qobject_cast<QDialog*>(childWidget) == nullptr); // exclude Dialogs from rollups
+    if (childWidget->property("noRollup").toBool())
+        return false;
+
+    return (qobject_cast<QDialog*>(childWidget) == nullptr);
 }

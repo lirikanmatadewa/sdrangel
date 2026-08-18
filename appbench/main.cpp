@@ -115,6 +115,6 @@ static int runQtApplication(int argc, char* argv[], qtwebapp::LoggerWithFile *lo
         qtwebapp::LoggerWithFile *logger = new qtwebapp::LoggerWithFile(qApp);
         logger->installMsgHandler();
         int res = runQtApplication(argc, argv, logger);
-        qWarning("ES300N quit.");
+        qWarning("ES300 quit.");
         return res;
       }

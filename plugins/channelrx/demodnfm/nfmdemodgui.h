@@ -106,9 +106,13 @@ private slots:
 	void on_afBW_valueChanged(int value);
 	void on_fmDev_valueChanged(int value);
 	void on_volume_valueChanged(int value);
-	void on_squelchGate_valueChanged(int value);
+	
+	void on_squelchGateUp_clicked();
+	void on_squelchGateDown_clicked();
+	void on_squelchUp_clicked();
+	void on_squelchDown_clicked();
+
 	void on_deltaSquelch_toggled(bool checked);
-	void on_squelch_valueChanged(int value);
 	void on_ctcss_currentIndexChanged(int index);
 	void on_ctcssOn_toggled(bool checked);
 	void on_dcsOn_toggled(bool checked);

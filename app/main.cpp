@@ -55,7 +55,7 @@ static int runQtApplication(int argc, char *argv[], qtwebapp::LoggerWithFile *lo
     QTextCodec::setCodecForCStrings(QTextCodec::codecForName("UTF-8"));
 */
     QCoreApplication::setOrganizationName("BWE Solutions");
-    QCoreApplication::setApplicationName("ES300N");
+    QCoreApplication::setApplicationName("ES300");
     QCoreApplication::setApplicationVersion(SDRANGEL_VERSION);
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)
@@ -267,6 +267,6 @@ int main(int argc, char* argv[])
         delete logger;
     }
     
-    qWarning("ES300N quit.");
+    qWarning("ES300 quit.");
     return res;
 }
