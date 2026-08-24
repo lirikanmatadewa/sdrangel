@@ -453,7 +453,7 @@ void HackRFOutputGui::updateStatus()
                 ui->startStop->setStyleSheet("QToolButton { background:rgb(79,79,79); }");
                 break;
             case DeviceAPI::StIdle:
-                ui->startStop->setStyleSheet("QToolButton { background-color : blue; }");
+                ui->startStop->setStyleSheet("QToolButton { background-color : red; }");
                 ui->startStop->setChecked(false);
                 break;
             case DeviceAPI::StRunning:

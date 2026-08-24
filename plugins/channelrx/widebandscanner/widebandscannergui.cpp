@@ -558,7 +558,7 @@ WidebandScannerGUI::WidebandScannerGUI(PluginAPI* pluginAPI, DeviceUISet *device
     TableTapAndHold* tableTapAndHold = new TableTapAndHold(ui->table);
     connect(tableTapAndHold, &TableTapAndHold::tapAndHold, this, &WidebandScannerGUI::table_customContextMenuRequested);
 
-    ui->startStop->setStyleSheet(QString("QToolButton{ background-color: blue; } QToolButton:checked{ background-color: green; }"));
+    ui->startStop->setStyleSheet(QString("QToolButton{ background-color: red; } QToolButton:checked{ background-color: green; }"));
 
     displaySettings();
     makeUIConnections();

@@ -558,7 +558,7 @@ FreqScannerGUI::FreqScannerGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUISet, B
     TableTapAndHold* tableTapAndHold = new TableTapAndHold(ui->table);
     connect(tableTapAndHold, &TableTapAndHold::tapAndHold, this, &FreqScannerGUI::table_customContextMenuRequested);
 
-    ui->startStop->setStyleSheet(QString("QToolButton{ background-color: blue; } QToolButton:checked{ background-color: green; }"));
+    ui->startStop->setStyleSheet(QString("QToolButton{ background-color: red; } QToolButton:checked{ background-color: green; }"));
 
     displaySettings();
     makeUIConnections();

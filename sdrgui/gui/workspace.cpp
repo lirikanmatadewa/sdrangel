@@ -1048,7 +1048,7 @@ void Workspace::updateStartStopButton(bool checked)
     {
         QIcon startIcon(":/play.png");
         m_startStopButton->setIcon(startIcon);
-        m_startStopButton->setStyleSheet("QToolButton { background-color : blue; }");
+        m_startStopButton->setStyleSheet("QToolButton { background-color : red; }");
         m_startStopButton->setToolTip("Start all devices in workspace");
     }
     else

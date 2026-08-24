@@ -412,7 +412,7 @@ void AFCGUI::updateStatus()
                 ui->startStop->setStyleSheet("QToolButton { background:rgb(79,79,79); }");
                 break;
             case Feature::StIdle:
-                ui->startStop->setStyleSheet("QToolButton { background-color : blue; }");
+                ui->startStop->setStyleSheet("QToolButton { background-color : red; }");
                 break;
             case Feature::StRunning:
                 ui->startStop->setStyleSheet("QToolButton { background-color : green; }");

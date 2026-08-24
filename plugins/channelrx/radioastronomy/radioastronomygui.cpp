@@ -1035,7 +1035,7 @@ bool RadioAstronomyGUI::handleMessage(const Message& message)
         ui->startStop->blockSignals(true);
         ui->startStop->setChecked(false);
         ui->startStop->blockSignals(false);
-        ui->startStop->setStyleSheet("QToolButton { background-color : blue; }");
+        ui->startStop->setStyleSheet("QToolButton { background-color : red; }");
         return true;
     }
     else if (RadioAstronomy::MsgCalComplete::match(message))
@@ -1053,7 +1053,7 @@ bool RadioAstronomyGUI::handleMessage(const Message& message)
             ui->startStop->blockSignals(true);
             ui->startStop->setChecked(false);
             ui->startStop->blockSignals(false);
-            ui->startStop->setStyleSheet("QToolButton { background-color : blue; }");
+            ui->startStop->setStyleSheet("QToolButton { background-color : red; }");
         }
         return true;
     }
@@ -2221,7 +2221,7 @@ RadioAstronomyGUI::RadioAstronomyGUI(PluginAPI* pluginAPI, DeviceUISet *deviceUI
     ui->sweepStartDateTime->setMinimumDateTime(QDateTime::currentDateTime());
     ui->spectrumDateTime->setDateTime(QDateTime::currentDateTime());
 
-    ui->startStop->setStyleSheet("QToolButton { background-color : blue; }");
+    ui->startStop->setStyleSheet("QToolButton { background-color : red; }");
 
     displaySettings();
     makeUIConnections();
@@ -6241,7 +6241,7 @@ void RadioAstronomyGUI::on_startStop_clicked(bool checked)
     {
         m_radioAstronomy->getInputMessageQueue()->push(RadioAstronomy::MsgStopSweep::create());
         if (m_settings.m_runMode != RadioAstronomySettings::SWEEP) {
-            ui->startStop->setStyleSheet("QToolButton { background-color : blue; }");
+            ui->startStop->setStyleSheet("QToolButton { background-color : red; }");
         }
     }
 }

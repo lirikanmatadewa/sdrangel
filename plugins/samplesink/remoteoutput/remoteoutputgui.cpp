@@ -265,7 +265,7 @@ void RemoteOutputSinkGui::updateStatus()
                 ui->startStop->setStyleSheet("QToolButton { background:rgb(79,79,79); }");
                 break;
             case DeviceAPI::StIdle:
-                ui->startStop->setStyleSheet("QToolButton { background-color : blue; }");
+                ui->startStop->setStyleSheet("QToolButton { background-color : red; }");
                 break;
             case DeviceAPI::StRunning:
                 ui->startStop->setStyleSheet("QToolButton { background-color : green; }");

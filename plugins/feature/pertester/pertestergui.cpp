@@ -354,7 +354,7 @@ void PERTesterGUI::updateStatus()
                 oldState = ui->startStop->blockSignals(true);
                 ui->startStop->setChecked(false);
                 ui->startStop->blockSignals(oldState);
-                ui->startStop->setStyleSheet("QToolButton { background-color : blue; }");
+                ui->startStop->setStyleSheet("QToolButton { background-color : red; }");
                 break;
             case Feature::StRunning:
                 oldState = ui->startStop->blockSignals(true);
