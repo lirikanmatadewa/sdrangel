@@ -1797,6 +1797,19 @@ void MapGUI::displayToolbar()
     ui->displayMUF->setVisible(!narrow && m_settings.m_map3DEnabled);
     ui->displayfoF2->setVisible(!narrow && m_settings.m_map3DEnabled);
     ui->save->setVisible(m_settings.m_map3DEnabled);
+
+    // Keep these buttons permanently hidden
+    ui->maidenhead->hide();
+    ui->beacons->hide();
+    ui->ibpBeacons->hide();
+    ui->radiotime->hide();
+    ui->layersMenu->hide();
+    ui->displayClouds->hide();
+    ui->displayRain->hide();
+    ui->displayRailways->hide();
+    ui->displayMUF->hide();
+    ui->displayfoF2->hide();
+    ui->displayNASAGlobalImagery->hide();
 }
 
 void MapGUI::setEnableOverlay()

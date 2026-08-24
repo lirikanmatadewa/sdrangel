@@ -181,72 +181,6 @@ void WFMDemodGUI::on_audioMute_toggled(bool checked)
     applySettings();
 }
 
-void WFMDemodGUI::on_DF()
-{
-    qint64 cfHz = m_deviceCenterFrequency + m_settings.m_inputFrequencyOffset;
-    int cfMHz = static_cast<int>(cfHz / 1000000);
-
-    qDebug() << "DF Clicked :: CF(Hz) =" << cfHz;
-    qDebug() << "DF Clicked :: CF(MHz int) =" << cfMHz;
-
-    //QUrl url("http://192.168.1.10:8080/api/daq/center-freq");
-    QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-
-    QFile file(path + "/ip_device.txt");
-
-    QString ip = "192.168.1.10";
-
-    if (file.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
-        QTextStream in(&file);
-        QString savedIp = in.readLine().trimmed();
-
-        if (!savedIp.isEmpty())
-        {
-            ip = savedIp;
-        }
-
-        file.close();
-    }
-
-    QString urlString = QString("http://%1:8080/api/daq/center-freq").arg(ip);
-
-    qDebug() << "Using API URL:" << urlString;
-
-    QUrl url(urlString);
-    QNetworkRequest request(url);
-
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    request.setRawHeader("accept", "*/*");
-
-    QJsonObject json;
-    json["daq_center_freq"] = cfMHz;
-
-    QJsonDocument doc(json);
-    QByteArray data = doc.toJson(QJsonDocument::Compact);
-
-    qDebug() << "POST Payload:" << data;
-
-    QNetworkReply* reply = m_networkManager->post(request, data);
-
-    connect(reply, &QNetworkReply::finished, this, [reply]() {
-        int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-        QByteArray response = reply->readAll();
-
-        if (reply->error() != QNetworkReply::NoError) {
-            qDebug() << "HTTP Status:" << statusCode;
-            qDebug() << "API Error:" << reply->errorString();
-            qDebug() << "API Body:" << response;
-        }
-        else {
-            qDebug() << "HTTP Status:" << statusCode;
-            qDebug() << "API Response:" << response;
-        }
-
-        reply->deleteLater();
-        });
-}
-
 void WFMDemodGUI::onWidgetRolled(QWidget* widget, bool rollDown)
 {
     (void) widget;
@@ -491,7 +425,6 @@ void WFMDemodGUI::makeUIConnections()
     QObject::connect(ui->volume, &QSlider::valueChanged, this, &WFMDemodGUI::on_volume_valueChanged);
     QObject::connect(ui->squelch, &QSlider::valueChanged, this, &WFMDemodGUI::on_squelch_valueChanged);
     QObject::connect(ui->audioMute, &QToolButton::toggled, this, &WFMDemodGUI::on_audioMute_toggled);
-    QObject::connect(ui->DFButton, &QToolButton::clicked, this, &WFMDemodGUI::on_DF);
 }
 
 void WFMDemodGUI::updateAbsoluteCenterFrequency()

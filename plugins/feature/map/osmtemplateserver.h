@@ -85,11 +85,12 @@ private slots:
                 QString xml, url;
                 if ((tokens[1] == "/street") || (tokens[1] == "/street-hires"))
                 {
-                    if (m_overlay) {
-                        url = QString("http://127.0.0.1:%1/street/%z/%x/%y.png").arg(m_tileServerPort);
+                    url = "http://127.0.0.1:8080/tile/%z/%x/%y.png";
+                    /*if (m_overlay) {
+                        url = QString("http://127.0.0.1:%1/tile/%z/%x/%y.png").arg(m_tileServerPort);
                     } else {
                         url = "https://tile.openstreetmap.org/%z/%x/%y.png";
-                    }
+                    }*/
                     xml = QString("\
                         {\
                             \"UrlTemplate\" : \"%1\",\

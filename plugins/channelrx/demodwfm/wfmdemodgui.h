@@ -113,8 +113,6 @@ private slots:
     void handleInputMessages();
     void audioSelect(const QPoint& p);
 	void tick();
-
-	void on_DF();
 };
 
 #endif // INCLUDE_WFMDEMODGUI_H

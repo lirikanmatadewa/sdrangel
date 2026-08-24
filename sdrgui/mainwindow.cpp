@@ -1697,14 +1697,14 @@ void MainWindow::createMenuBar(QToolButton* button)
 	QObject::connect(graphicsAction, &QAction::triggered, this, &MainWindow::on_action_Graphics_triggered);
 	/*QAction* loggingAction = preferencesMenu->addAction("&Logging...");
 	loggingAction->setToolTip("Logging preferences");
-	QObject::connect(loggingAction, &QAction::triggered, this, &MainWindow::on_action_Logging_triggered);*/
+	QObject::connect(loggingAction, &QAction::triggered, this, &MainWindow::on_action_Logging_triggered); */
 	QAction* myPositionAction = preferencesMenu->addAction("My &Position...");
 	myPositionAction->setToolTip("Set station position");
 	QObject::connect(myPositionAction, &QAction::triggered, this, &MainWindow::on_action_My_Position_triggered);
-	QAction* fftAction = preferencesMenu->addAction("&FFT...");
+	/*QAction* fftAction = preferencesMenu->addAction("&FFT...");
 	fftAction->setToolTip("Set FFT preferences");
 	QObject::connect(fftAction, &QAction::triggered, this, &MainWindow::on_action_FFT_triggered);
-	/*QAction* fftWisdomAction = preferencesMenu->addAction("&FFTW Wisdom...");
+	QAction* fftWisdomAction = preferencesMenu->addAction("&FFTW Wisdom...");
 	fftWisdomAction->setToolTip("Set FFTW cache");
 	QObject::connect(fftWisdomAction, &QAction::triggered, this, &MainWindow::on_action_FFTWisdom_triggered);
 	QMenu* devicesMenu = preferencesMenu->addMenu("&Devices");
@@ -1734,13 +1734,10 @@ void MainWindow::createMenuBar(QToolButton* button)
 
 void MainWindow::createStatusBar()
 {
-	QString qtVersionStr = QString("Qt %1 ").arg(QT_VERSION_STR);
-	QString openGLVersionStr = QString("OpenGL %1 ").arg(openGLVersion());
 #if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
-	m_showSystemWidget = new QLabel("ES300 " + qApp->applicationVersion() + " " + qtVersionStr + openGLVersionStr
-		+ QSysInfo::currentCpuArchitecture() + " " + QSysInfo::prettyProductName(), this);
+	m_showSystemWidget = new QLabel("ES300 ", this);
 #else
-	m_showSystemWidget = new QLabel("ES300 " + qApp->applicationVersion() + " " + qtVersionStr + openGLVersionStr, this);
+	m_showSystemWidget = new QLabel("ES300 ", this);
 #endif
 	statusBar()->addPermanentWidget(m_showSystemWidget);
 

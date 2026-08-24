@@ -728,29 +728,60 @@ bool DeviceUISet::ChannelInstanceRegistration::operator<(const ChannelInstanceRe
 
 void DeviceUISet::handleChannelGUIClosing(ChannelGUI* channelGUI)
 {
-	qDebug("DeviceUISet::handleChannelGUIClosing: %s: %d", qPrintable(channelGUI->getTitle()), channelGUI->getIndex());
+	qDebug() << "========================================";
+	qDebug() << "DeviceUISet::handleChannelGUIClosing:"
+		<< channelGUI->getTitle()
+		<< channelGUI->getIndex();
 
-	for (ChannelInstanceRegistrations::iterator it = m_channelInstanceRegistrations.begin(); it != m_channelInstanceRegistrations.end(); ++it)
+	ChannelAPI* channelAPI = nullptr;
+
+	for (ChannelInstanceRegistrations::iterator it = m_channelInstanceRegistrations.begin();
+		it != m_channelInstanceRegistrations.end();
+		++it)
 	{
 		if (it->m_gui == channelGUI)
 		{
-			ChannelAPI* channelAPI = it->m_channelAPI;
+			channelAPI = it->m_channelAPI;
+
+			qDebug() << "Found ChannelAPI:" << channelAPI;
+
+			// Remove channel from DeviceSet immediately so it is no longer
+			// considered an active channel.
 			m_deviceSet->removeChannelInstance(channelAPI);
-			QObject::connect(
-				channelGUI,
-				&ChannelGUI::destroyed,
-				this,
-				[this, channelAPI]() { this->handleDeleteChannel(channelAPI); }
-			);
+
+			// Remove GUI/API pair from the registration list.
 			m_channelInstanceRegistrations.erase(it);
+
 			break;
 		}
 	}
 
-	// Renumerate
+	// Renumerate remaining channels.
 	for (int i = 0; i < m_channelInstanceRegistrations.count(); i++) {
 		m_channelInstanceRegistrations.at(i).m_gui->setIndex(i);
 	}
+
+	if (channelAPI)
+	{
+		qDebug() << "Scheduling ChannelAPI destroy:" << channelAPI;
+
+		QMetaObject::invokeMethod(
+			this,
+			[this, channelAPI]()
+			{
+				qDebug() << "Executing scheduled ChannelAPI destroy:"
+					<< channelAPI;
+
+				if (channelAPI)
+				{
+					channelAPI->destroy();
+				}
+			},
+			Qt::QueuedConnection
+		);
+	}
+
+	qDebug() << "========================================";
 }
 
 void DeviceUISet::handleDeleteChannel(ChannelAPI* channelAPI)

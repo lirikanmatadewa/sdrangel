@@ -364,6 +364,7 @@ void GLSpectrumGUI::displaySettings()
 	ui->calibration->hide();
 	//ui->gotoMarker->hide();
 	ui->stroke->hide();
+	ui->btnCW->hide();
 }
 
 void GLSpectrumGUI::displayControls()

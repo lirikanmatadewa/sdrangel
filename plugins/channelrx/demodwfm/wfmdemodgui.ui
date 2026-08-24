@@ -166,13 +166,6 @@
           </property>
          </spacer>
         </item>
-        <item>
-         <widget class="QPushButton" name="DFButton">
-          <property name="text">
-           <string>DF</string>
-          </property>
-         </widget>
-        </item>
        </layout>
       </item>
      </layout>

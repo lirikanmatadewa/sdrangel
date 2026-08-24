@@ -83,17 +83,27 @@ RDFDemod::RDFDemod(DeviceAPI* deviceAPI) :
 
 RDFDemod::~RDFDemod()
 {
-    QObject::connect(
-        m_networkManager,
-        &QNetworkAccessManager::finished,
-        this,
-        &RDFDemod::networkManagerFinished
-    );
-    delete m_networkManager;
+    qDebug() << "========================================";
+    qDebug() << "RDFDemod::~RDFDemod()";
 
-    m_deviceAPI->removeChannelSinkAPI(this);
-    m_deviceAPI->removeChannelSink(this);
+    // Stop DSP processing before destroying the RDF demodulator.
     stop();
+
+    if (m_deviceAPI)
+    {
+        m_deviceAPI->removeChannelSinkAPI(this);
+        m_deviceAPI->removeChannelSink(this);
+    }
+
+    if (m_networkManager)
+    {
+        m_networkManager->disconnect();
+        delete m_networkManager;
+        m_networkManager = nullptr;
+    }
+
+    qDebug() << "RDFDemod destroyed";
+    qDebug() << "========================================";
 }
 
 void RDFDemod::setDeviceAPI(DeviceAPI *deviceAPI)
@@ -153,14 +163,31 @@ void RDFDemod::start()
 
 void RDFDemod::stop()
 {
-    if (!m_running) {
+    qDebug() << "========================================";
+    qDebug() << "RDFDemod::stop()";
+    qDebug() << "m_running =" << m_running;
+    qDebug() << "m_thread =" << m_thread;
+
+    if (!m_running)
+    {
+        qDebug() << "RDFDemod::stop(): already stopped";
+        qDebug() << "========================================";
         return;
     }
 
-    qDebug() << "RDFDemod::stop";
     m_running = false;
-	m_thread->exit();
-	m_thread->wait();
+
+    if (m_thread)
+    {
+        qDebug() << "Stopping RDF thread...";
+
+        m_thread->quit();
+        m_thread->wait();
+
+        qDebug() << "RDF thread stopped";
+    }
+
+    qDebug() << "========================================";
 }
 
 bool RDFDemod::handleMessage(const Message& cmd)

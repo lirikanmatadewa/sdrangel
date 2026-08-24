@@ -40,11 +40,19 @@ TransverterDialog::TransverterDialog(qint64& deltaFrequency, bool& deltaFrequenc
     ui->deltaFrequencyLabel->setText(QString("%1f").arg(QChar(0x94, 0x03)));
     ui->deltaFrequency->setColorMapper(ColorMapper(ColorMapper::GrayGold));
     ui->deltaFrequency->setValueRange(false, 12, -999999999999L, 999999999999L);
-    ui->deltaFrequency->setValue(m_deltaFrequency);
-    ui->deltaFrequencyActive->setChecked(m_deltaFrequencyActive);
+
+    if (m_deltaFrequency == 0) {
+        ui->deltaFrequency->setValue(-125000000);
+    }
+    else {
+        ui->deltaFrequency->setValue(m_deltaFrequency);
+    }
+
+    ui->deltaFrequencyActive->setChecked(true);
+
     ui->iqOrder->setEnabled(true);
-    ui->iqOrder->setChecked(m_iqOrder);
-    ui->iqOrder->setText(m_iqOrder ? "IQ" : "QI");
+    ui->iqOrder->setChecked(false);
+    ui->iqOrder->setText("QI");
 }
 
 TransverterDialog::~TransverterDialog()

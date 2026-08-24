@@ -289,13 +289,15 @@ private slots:
                     // This should match code in OSMTemplateServer::readClient
                     QString baseMapURL;
                     if (map == "street") {
-                        baseMapURL = QString("https://tile.openstreetmap.org/%3/%1/%2.png").arg(x).arg(y).arg(z);
+                        baseMapURL = QString("http://127.0.0.1:8080/tile/%1/%2/%3.png").arg(z).arg(x).arg(y);
+                        //baseMapURL = QString("https://tile.openstreetmap.org/%3/%1/%2.png").arg(x).arg(y).arg(z);
                     } else if (map == "satellite") {
                         baseMapURL = QString("https://api.maptiler.com/tiles/satellite-v2/%3/%1/%2.jpg?key=%4").arg(x).arg(y).arg(z).arg(m_maptilerAPIKey);
                     } else if ((map == "dark_nolabels") || (map == "light_nolabels")) {
                         baseMapURL = QString("http://1.basemaps.cartocdn.com/%4/%3/%1/%2.png").arg(x).arg(y).arg(z).arg(map);
                     } else {
-                        baseMapURL = QString("http://a.tile.thunderforest.com/%4/%3/%1/%2.png?apikey=%5").arg(x).arg(y).arg(z).arg(map).arg(m_thunderforestAPIKey);
+                        baseMapURL = QString("http://127.0.0.1:8080/tile/%1/%2/%3.png").arg(z).arg(x).arg(y);
+                        //baseMapURL = QString("http://a.tile.thunderforest.com/%4/%3/%1/%2.png?apikey=%5").arg(x).arg(y).arg(z).arg(map).arg(m_thunderforestAPIKey);
                     }
 
                     job->m_urls.append(baseMapURL);

@@ -332,7 +332,7 @@
         <string>Transverter frequency translation dialog</string>
        </property>
        <property name="text">
-        <string>X</string>
+        <string>HF</string>
        </property>
       </widget>
      </item>
@@ -371,7 +371,7 @@
         <string>Toggle between device to host (SR) and base band (BB) sample rate input</string>
        </property>
        <property name="text">
-        <string>SR</string>
+        <string>BW</string>
        </property>
        <property name="checkable">
         <bool>true</bool>

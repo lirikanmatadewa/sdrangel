@@ -103,6 +103,16 @@ BladeRF2InputGui::BladeRF2InputGui(DeviceUISet *deviceUISet, QWidget* parent) :
     m_resizer.enableChildMouseTracking();
 
     ui->overclock->setVisible(false);
+
+    ui->bandwidthLabel->hide();
+    ui->bandwidth->hide();
+    ui->bandwidthUnit->hide();
+
+    ui->label_fcPos->hide();
+    ui->fcPos->hide();
+    ui->label_decim->hide();
+    ui->decim->hide();
+
 }
 
 BladeRF2InputGui::~BladeRF2InputGui()
