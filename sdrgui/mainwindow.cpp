@@ -1710,15 +1710,15 @@ void MainWindow::createMenuBar(QToolButton* button)
 
 void MainWindow::createStatusBar()
 {
-	QString qtVersionStr = QString("Qt %1 ").arg(QT_VERSION_STR);
-	QString openGLVersionStr = QString("OpenGL %1 ").arg(openGLVersion());
-#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
-	m_showSystemWidget = new QLabel("Wideband Receiver " + qApp->applicationVersion() + " " + qtVersionStr + openGLVersionStr
-		+ QSysInfo::currentCpuArchitecture() + " " + QSysInfo::prettyProductName(), this);
-#else
-	m_showSystemWidget = new QLabel("Wideband Receiver " + qApp->applicationVersion() + " " + qtVersionStr + openGLVersionStr, this);
-#endif
-	statusBar()->addPermanentWidget(m_showSystemWidget);
+//	QString qtVersionStr = QString("Qt %1 ").arg(QT_VERSION_STR);
+//	QString openGLVersionStr = QString("OpenGL %1 ").arg(openGLVersion());
+//#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
+//	m_showSystemWidget = new QLabel("Wideband Receiver " + qApp->applicationVersion() + " " + qtVersionStr + openGLVersionStr
+//		+ QSysInfo::currentCpuArchitecture() + " " + QSysInfo::prettyProductName(), this);
+//#else
+//	m_showSystemWidget = new QLabel("Wideband Receiver " + qApp->applicationVersion() + " " + qtVersionStr + openGLVersionStr, this);
+//#endif
+//	statusBar()->addPermanentWidget(m_showSystemWidget);
 
 	m_dateTimeWidget = new QLabel(tr("Date"), this);
 	m_dateTimeWidget->setToolTip(tr("Current date/time"));

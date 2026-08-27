@@ -39,8 +39,9 @@ public:
 	~SyncMessenger();
 
 	int sendWait(Message& message, unsigned long msPollTime = 100); //!< Send message and waits for its process completion
-    Message* getMessage() const { return m_message; }
-    void storeMessage(Message& message) { m_message = &message; }
+	Message* getMessage() const { return m_message; }
+	void storeMessage(Message& message) { m_message = &message; }
+	bool isWaiting() const;
 	void done(int result = 0); //!< Processing of the message is complete
 
 signals:
@@ -50,7 +51,8 @@ protected:
 	QWaitCondition m_waitCondition;
 	QMutex m_mutex;
 	QAtomicInt m_complete;
-    Message *m_message;
+	QAtomicInt m_waiting;
+	Message* m_message;
 	int m_result;
 };
 

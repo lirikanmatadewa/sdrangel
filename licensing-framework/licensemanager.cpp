@@ -31,7 +31,7 @@ void LicenseManager::addLicense(const QString &name, const QString &licensePath)
 {
     QString appDir = QCoreApplication::applicationDirPath();
     QString appName = "CS100";
-    /*QString appName = "Navix PD100";*/
+    //QString appName = "Navix PD100";
     QString idPath = appDir + "/lic/id.lic";
 
     qDebug() << "[LicenseManager] Adding license" << name;

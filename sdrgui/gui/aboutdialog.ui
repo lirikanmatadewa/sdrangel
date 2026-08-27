@@ -27,7 +27,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <property name="sizeConstraint">
-    <enum>QLayout::SetFixedSize</enum>
+    <enum>QLayout::SizeConstraint::SetFixedSize</enum>
    </property>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
@@ -37,7 +37,7 @@
      <item>
       <spacer name="horizontalSpacer_2">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -56,10 +56,10 @@
         </sizepolicy>
        </property>
        <property name="frameShape">
-        <enum>QFrame::Panel</enum>
+        <enum>QFrame::Shape::Panel</enum>
        </property>
        <property name="frameShadow">
-        <enum>QFrame::Sunken</enum>
+        <enum>QFrame::Shadow::Sunken</enum>
        </property>
        <property name="text">
         <string/>
@@ -71,14 +71,14 @@
         <bool>true</bool>
        </property>
        <property name="alignment">
-        <set>Qt::AlignCenter</set>
+        <set>Qt::AlignmentFlag::AlignCenter</set>
        </property>
       </widget>
      </item>
      <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Orientation::Horizontal</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
@@ -91,70 +91,13 @@
     </layout>
    </item>
    <item>
-    <widget class="QLabel" name="version">
-     <property name="text">
-      <string>Here goes the version and copyright</string>
-     </property>
-    </widget>
+    <layout class="QHBoxLayout" name="buildLayout"/>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="buildLayout">
-     <item>
-      <widget class="QLabel" name="build">
-       <property name="text">
-        <string>Here goes the build info</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="dspBits">
-       <property name="text">
-        <string>DSP Rx 24 bits Tx 16 bits</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-       </property>
-      </widget>
-     </item>
-    </layout>
+    <layout class="QHBoxLayout" name="runtimeLayout"/>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="runtimeLayout">
-     <item>
-      <widget class="QLabel" name="restApiUrl">
-       <property name="text">
-        <string>Here goes the REST API URL</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="pid">
-       <property name="maximumSize">
-        <size>
-         <width>80</width>
-         <height>16777215</height>
-        </size>
-       </property>
-       <property name="text">
-        <string>PID: 00000</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
-     <item>
-      <widget class="QLabel" name="settingsFile">
-       <property name="text">
-        <string>Here goes the settings file location</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
+    <layout class="QHBoxLayout" name="horizontalLayout_2"/>
    </item>
    <item>
     <widget class="QLabel" name="info">
@@ -172,7 +115,7 @@
    <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
-      <enum>Qt::Vertical</enum>
+      <enum>Qt::Orientation::Vertical</enum>
      </property>
      <property name="sizeHint" stdset="0">
       <size>
@@ -185,10 +128,10 @@
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Ok</set>
+      <set>QDialogButtonBox::StandardButton::Ok</set>
      </property>
     </widget>
    </item>

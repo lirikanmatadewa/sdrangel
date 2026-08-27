@@ -129,7 +129,9 @@ GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
 	connect(ui->iqReplay, SIGNAL(clicked()), this, SLOT(openIqReplay()));
 	connect(ui->frequencyScanner, SIGNAL(clicked()), this, SLOT(openFrequencyScanner()));
 	connect(ui->widebandScanner, SIGNAL(clicked()), this, SLOT(openWidebandScanner()));
+	
 	ui->widebandScanner->setVisible(false);
+	ui->frequencyScanner->hide();
 
 	displaySettings();
 	setAveragingCombo();
