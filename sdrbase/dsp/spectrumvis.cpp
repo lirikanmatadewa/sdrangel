@@ -791,9 +791,18 @@ bool SpectrumVis::handleMessage(const Message& message)
 {
     if (DSPSignalNotification::match(message))
     {
-        // This is coming from device engine and will apply to main spectrum
-        DSPSignalNotification& notif = (DSPSignalNotification&) message;
-        handleConfigureDSP(notif.getCenterFrequency(), notif.getSampleRate());
+        DSPSignalNotification& notif =
+            (DSPSignalNotification&)message;
+
+        qDebug() << "[SpectrumVis] DSPSignalNotification:"
+            << "CF =" << notif.getCenterFrequency()
+            << "SampleRate =" << notif.getSampleRate();
+
+        handleConfigureDSP(
+            notif.getCenterFrequency(),
+            notif.getSampleRate()
+        );
+
         return true;
     }
 	else if (MsgConfigureSpectrumVis::match(message))
@@ -914,8 +923,13 @@ void SpectrumVis::applySettings(const SpectrumSettings& settings, bool force)
 void SpectrumVis::handleConfigureDSP(uint64_t centerFrequency, int sampleRate)
 {
     QMutexLocker mutexLocker(&m_mutex);
+
     m_centerFrequency = centerFrequency;
     m_sampleRate = sampleRate;
+
+    qDebug() << "[SpectrumVis] DSP CF UPDATE:"
+        << "CF =" << m_centerFrequency
+        << "SampleRate =" << m_sampleRate;
 }
 
 void SpectrumVis::handleScalef(Real scalef)

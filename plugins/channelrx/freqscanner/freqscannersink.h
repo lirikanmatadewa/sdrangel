@@ -46,7 +46,9 @@ public:
     void applySettings(const FreqScannerSettings& settings, const QStringList& settingsKeys, bool force = false);
     void setMessageQueueToChannel(MessageQueue *messageQueue) { m_messageQueueToChannel = messageQueue; }
     void setChannel(ChannelAPI *channel) { m_channel = channel; }
-    void setCenterFrequency(qint64 centerFrequency) { m_centerFrequency = centerFrequency; }
+    void setCenterFrequency(qint64 centerFrequency);
+    void reset();
+
 
 private:
 

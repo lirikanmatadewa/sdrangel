@@ -452,7 +452,7 @@ void Workspace::addRxDeviceClicked()
         //Fallback path : keep current concept when config is missing / invalid / no match
             QMap<int, QString> matchingDevice;
         const QRegularExpression firstOutputRe("^ES300\\[\\d+:0\\]");
-        const int MAX_DEVICE_COUNT = 1;
+        const int MAX_DEVICE_COUNT = 2;
 
         for (QMap<int, QString>::const_iterator it = deviceMap.cbegin(); it != deviceMap.cend(); ++it)
         {

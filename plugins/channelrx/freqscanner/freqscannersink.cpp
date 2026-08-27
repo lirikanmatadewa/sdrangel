@@ -77,12 +77,13 @@ void FreqScannerSink::feed(const SampleVector::const_iterator& begin, const Samp
     }
 }
 
-void FreqScannerSink::processOneSample(Complex &ci)
+void FreqScannerSink::processOneSample(Complex& ci)
 {
     ci /= SDR_RX_SCALEF;
 
     m_fft->in()[m_fftCounter] = ci;
     m_fftCounter++;
+
     if (m_fftCounter == m_fftSize)
     {
         // Apply windowing function
@@ -93,64 +94,120 @@ void FreqScannerSink::processOneSample(Complex &ci)
 
         // Reorder (so negative frequencies are first) and average
         int halfSize = m_fftSize / 2;
+
         for (int i = 0; i < halfSize; i++) {
-            m_fftAverage.storeAndGetAvg(m_magSq[i], magSq(i + halfSize), i);
+            m_fftAverage.storeAndGetAvg(
+                m_magSq[i],
+                magSq(i + halfSize),
+                i
+            );
         }
+
         for (int i = 0; i < halfSize; i++) {
-            m_fftAverage.storeAndGetAvg(m_magSq[i + halfSize], magSq(i), i + halfSize);
+            m_fftAverage.storeAndGetAvg(
+                m_magSq[i + halfSize],
+                magSq(i),
+                i + halfSize
+            );
         }
 
         if (m_fftAverage.nextAverage())
         {
             // Send results to channel
-            if (getMessageQueueToChannel() && (m_settings.m_channelBandwidth != 0) && (m_binsPerChannel != 0))
+            if (getMessageQueueToChannel()
+                && (m_settings.m_channelBandwidth != 0)
+                && (m_binsPerChannel != 0))
             {
-                FreqScanner::MsgScanResult* msg = FreqScanner::MsgScanResult::create(m_fftStartTime);
-                QList<FreqScanner::MsgScanResult::ScanResult>& results = msg->getScanResults();
+                FreqScanner::MsgScanResult* msg =
+                    FreqScanner::MsgScanResult::create(m_fftStartTime);
 
-                for (int i = 0; i < m_settings.m_frequencySettings.size(); i++)
+                QList<FreqScanner::MsgScanResult::ScanResult>& results =
+                    msg->getScanResults();
+
+                for (int i = 0;
+                    i < m_settings.m_frequencySettings.size();
+                    i++)
                 {
                     if (m_settings.m_frequencySettings[i].m_enabled)
                     {
-                        qint64 frequency = m_settings.m_frequencySettings[i].m_frequency;
-                        qint64 startFrequency = m_centerFrequency - m_scannerSampleRate / 2;
-                        qint64 diff = frequency - startFrequency;
-                        float binBW = m_scannerSampleRate / (float)m_fftSize;
+                        qint64 frequency =
+                            m_settings.m_frequencySettings[i].m_frequency;
 
-                        // Ignore results in upper and lower 12.5%, as there may be aliasing here from half-band filters
-                        if ((diff >= m_scannerSampleRate / 8) && (diff < m_scannerSampleRate * 7 / 8))
+                        qint64 startFrequency =
+                            m_centerFrequency - m_scannerSampleRate / 2;
+
+                        qint64 diff =
+                            frequency - startFrequency;
+
+                        float binBW =
+                            m_scannerSampleRate / (float)m_fftSize;
+
+                        // Ignore results in upper and lower 12.5%,
+                        // as there may be aliasing here from half-band filters
+                        if ((diff >= m_scannerSampleRate / 8)
+                            && (diff < m_scannerSampleRate * 7 / 8))
                         {
                             int bin = std::round(diff / binBW);
+
                             int channelBins;
 
-                            if (m_settings.m_frequencySettings[i].m_channelBandwidth.isEmpty())
+                            if (m_settings.m_frequencySettings[i]
+                                .m_channelBandwidth.isEmpty())
                             {
                                 channelBins = m_binsPerChannel;
                             }
                             else
                             {
-                                int channelBW = m_settings.getChannelBandwidth(&m_settings.m_frequencySettings[i]);
-                                channelBins = m_fftSize / (m_scannerSampleRate / (float)channelBW);
+                                int channelBW =
+                                    m_settings.getChannelBandwidth(
+                                        &m_settings.m_frequencySettings[i]
+                                    );
+
+                                channelBins =
+                                    m_fftSize /
+                                    (m_scannerSampleRate /
+                                        (float)channelBW);
                             }
 
                             // Calculate power at that frequency
                             Real power;
-                            if (m_settings.m_measurement == FreqScannerSettings::PEAK) {
+
+                            if (m_settings.m_measurement ==
+                                FreqScannerSettings::PEAK)
+                            {
                                 power = peakPower(bin, channelBins);
-                            } else {
+                            }
+                            else
+                            {
                                 power = totalPower(bin, channelBins);
                             }
-                            //qDebug() << "startFrequency:" << startFrequency << "m_scannerSampleRate:" << m_scannerSampleRate << "m_centerFrequency:" << m_centerFrequency << "frequency" << frequency << "bin" << bin << "power" << power;
-                            FreqScanner::MsgScanResult::ScanResult result = {frequency, power};
+
+                            FreqScanner::MsgScanResult::ScanResult result =
+                            {
+                                frequency,
+                                power
+                            };
+
                             results.append(result);
                         }
                     }
                 }
+
                 getMessageQueueToChannel()->push(msg);
             }
+            else
+            {
+                //qDebug() << "[FreqScannerSink] WARNING:"
+                //    << "Cannot send MsgScanResult"
+                //    << "queue =" << getMessageQueueToChannel()
+                //    << "channelBandwidth =" << m_settings.m_channelBandwidth
+                //    << "binsPerChannel =" << m_binsPerChannel;
+            }
+
             m_averageCount = 0;
             m_fftStartTime = QDateTime::currentDateTime();
         }
+
         m_fftCounter = 0;
     }
 }
@@ -263,4 +320,26 @@ void FreqScannerSink::applySettings(const FreqScannerSettings& settings, const Q
     } else {
         m_settings.applySettings(settingsKeys, settings);
     }
+}
+
+void FreqScannerSink::setCenterFrequency(qint64 centerFrequency)
+{
+    if (m_centerFrequency != centerFrequency)
+    {
+        m_centerFrequency = centerFrequency;
+
+        // Reset partial FFT when center frequency changes.
+        m_fftCounter = 0;
+        m_averageCount = 0;
+        m_fftStartTime = QDateTime::currentDateTime();
+    }
+}
+
+void FreqScannerSink::reset()
+{
+    m_fftCounter = 0;
+    m_averageCount = 0;
+    m_fftStartTime = QDateTime::currentDateTime();
+
+    qDebug() << "[FreqScannerSink] reset FFT state";
 }

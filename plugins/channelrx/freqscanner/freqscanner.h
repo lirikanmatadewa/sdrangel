@@ -384,6 +384,7 @@ private:
     AvailableChannelOrFeatureList m_availableChannels;
     AvailableChannelOrFeatureHandler m_availableChannelHandler;
 
+    int m_scanFrequencyIndex;
     unsigned int m_scanDeviceSetIndex;
     unsigned int m_scanChannelIndex;
     qint64 m_activeFrequency;

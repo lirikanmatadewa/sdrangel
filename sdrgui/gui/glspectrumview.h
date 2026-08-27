@@ -86,8 +86,8 @@ public:
     int waterfallReferenceIndex() const { return m_waterfallReferenceIndex; }
 
     // Manual span control
-    void setManualSpan(qint64 centerHz, int spanLeftHz, int spanRightHz); 
-    void clearManualSpan();                                               
+    void setManualSpan(qint64 centerHz, int spanLeftHz, int spanRightHz);
+    void clearManualSpan();
     bool isManualSpanEnabled() const { return m_manualSpanEnabled; }
 
     void enableMultiSlices(const QVector<qint64>& centersHz);
@@ -101,7 +101,8 @@ public:
         MsgReportSampleRate(quint32 sampleRate) :
             Message(),
             m_sampleRate(sampleRate)
-        {}
+        {
+        }
 
         quint32 getSampleRate() const { return m_sampleRate; }
 
@@ -116,7 +117,8 @@ public:
         MsgReportWaterfallShare(Real waterfallShare) :
             Message(),
             m_waterfallShare(waterfallShare)
-        {}
+        {
+        }
 
         Real getWaterfallShare() const { return m_waterfallShare; }
 
@@ -131,7 +133,8 @@ public:
         MsgReportFFTOverlap(int overlap) :
             Message(),
             m_overlap(overlap)
-        {}
+        {
+        }
 
         int getOverlap() const { return m_overlap; }
 
@@ -147,7 +150,8 @@ public:
             Message(),
             m_refLevel(refLevel),
             m_range(range)
-        {}
+        {
+        }
 
         Real getRefLevel() const { return m_refLevel; }
         Real getRange() const { return m_range; }
@@ -164,7 +168,8 @@ public:
         MsgReportCalibrationShift(Real calibrationShiftdB) :
             Message(),
             m_calibrationShiftdB(calibrationShiftdB)
-        {}
+        {
+        }
 
         Real getCalibrationShiftdB() const { return m_calibrationShiftdB; }
     private:
@@ -177,7 +182,8 @@ public:
     public:
         MsgReportHistogramMarkersChange() :
             Message()
-        {}
+        {
+        }
     };
 
     class MsgReportWaterfallMarkersChange : public Message {
@@ -186,7 +192,8 @@ public:
     public:
         MsgReportWaterfallMarkersChange() :
             Message()
-        {}
+        {
+        }
     };
 
     // marker
@@ -214,7 +221,7 @@ public:
     void setDisplayWaterfall(bool display);
     void setDisplay3DSpectrogram(bool display);
     void set3DSpectrogramStyle(SpectrumSettings::SpectrogramStyle style);
-    void setColorMapName(const QString &colorMapName);
+    void setColorMapName(const QString& colorMapName);
     void setSpectrumStyle(SpectrumSettings::SpectrumStyle style);
     void setSsbSpectrum(bool ssbSpectrum);
     void setLsbDisplay(bool lsbDisplay);
@@ -228,10 +235,10 @@ public:
     void setFreqScaleTruncationMode(bool mode);
     void setLinear(bool linear);
     void setUseCalibration(bool useCalibration);
-    void setMeasurements(SpectrumMeasurements *measurements) { m_measurements = measurements; }
+    void setMeasurements(SpectrumMeasurements* measurements) { m_measurements = measurements; }
     void setMeasurementParams(SpectrumSettings::Measurement measurement,
-                              int centerFrequencyOffset, int bandwidth, int chSpacing, int adjChBandwidth,
-                              int harmonics, int peaks, bool highlight, int precision);
+        int centerFrequencyOffset, int bandwidth, int chSpacing, int adjChBandwidth,
+        int harmonics, int peaks, bool highlight, int precision);
     qint32 getSampleRate() const { return m_sampleRate; }
 
     void addChannelMarker(ChannelMarker* channelMarker);
@@ -250,8 +257,8 @@ public:
         m_displaySourceOrSink = sourceOrSink;
         m_displayStreamIndex = streamIndex;
     }
-    void setSpectrumVis(SpectrumVis *spectrumVis) { m_spectrumVis = spectrumVis; }
-    SpectrumVis *getSpectrumVis() { return m_spectrumVis; }
+    void setSpectrumVis(SpectrumVis* spectrumVis) { m_spectrumVis = spectrumVis; }
+    SpectrumVis* getSpectrumVis() { return m_spectrumVis; }
     const QList<SpectrumHistogramMarker>& getHistogramMarkers() const { return m_histogramMarkers; }
     QList<SpectrumHistogramMarker>& getHistogramMarkers() { return m_histogramMarkers; }
     void setHistogramMarkers(const QList<SpectrumHistogramMarker>& histogramMarkers);
@@ -270,7 +277,7 @@ public:
     SpectrumSettings::MarkersDisplay& getMarkersDisplay() { return m_markersDisplay; }
     bool& getHistogramFindPeaks() { return m_histogramFindPeaks; }
     void setHistogramFindPeaks(bool value) { m_histogramFindPeaks = value; }
-	void setMarkersDisplay(SpectrumSettings::MarkersDisplay markersDisplay);
+    void setMarkersDisplay(SpectrumSettings::MarkersDisplay markersDisplay);
     QList<SpectrumCalibrationPoint>& getCalibrationPoints() { return m_calibrationPoints; }
     void setCalibrationPoints(const QList<SpectrumCalibrationPoint>& calibrationPoints);
     SpectrumSettings::CalibrationInterpolationMode& getCalibrationInterpMode() { return m_calibrationInterpMode; }
@@ -346,6 +353,12 @@ private:
 
     bool m_multiCompositeDirty = false;
 
+    // Per-instance multi-slice capture state.
+    // Do NOT make these static: multiple SpectrumView instances (FreqScanner/WidebandScanner)
+    // must never share capture state.
+    QVector<qint64> m_multiCentersUniq;
+    QVector<bool>   m_multiSeenUniq;
+
     struct CycleSlice {
         qint32        sampleRate = 0;
         int           fftSize = 0;
@@ -369,7 +382,8 @@ private:
 
         ChannelMarkerState(ChannelMarker* channelMarker) :
             m_channelMarker(channelMarker)
-        { }
+        {
+        }
     };
     QList<ChannelMarkerState*> m_channelMarkerStates;
 
@@ -420,7 +434,7 @@ private:
 
     std::vector<Real> m_maxHold;
     bool m_displayMaxHold;
-    const Real *m_currentSpectrum;
+    const Real* m_currentSpectrum;
     bool m_displayCurrent;
 
     Real m_waterfallShare;
@@ -477,7 +491,7 @@ private:
     SpectrumSettings::SpectrogramStyle m_3DSpectrogramStyle;
     QString m_colorMapName;
     SpectrumSettings::SpectrumStyle m_spectrumStyle;
-    const float *m_colorMap;
+    const float* m_colorMap;
 
     bool m_scrollFrequency;
     qint64 m_scrollStartCenterFreq;
@@ -530,11 +544,11 @@ private:
     IncrementalArray<GLfloat> m_q3FFT;
     IncrementalArray<GLfloat> m_q3ColorMap;
 
-    MessageQueue *m_messageQueueToGUI;
-    QOpenGLDebugLogger *m_openGLLogger;
+    MessageQueue* m_messageQueueToGUI;
+    QOpenGLDebugLogger* m_openGLLogger;
     bool m_isDeviceSpectrum;
 
-    SpectrumMeasurements *m_measurements;
+    SpectrumMeasurements* m_measurements;
     SpectrumSettings::Measurement m_measurement;
     int m_measurementCenterFrequencyOffset;
     int m_measurementBandwidth;
@@ -551,16 +565,16 @@ private:
     QString m_profileName;
 #endif
 
-    void updateWaterfall(const Real *spectrum);
-    void update3DSpectrogram(const Real *spectrum);
-    void updateHistogram(const Real *spectrum);
+    void updateWaterfall(const Real* spectrum);
+    void update3DSpectrogram(const Real* spectrum);
+    void updateHistogram(const Real* spectrum);
 
     void initializeGL();
     void resizeGL(int width, int height);
     void paintGL();
-    void drawPowerBandMarkers(float max, float min, const QVector4D &color);
-    void drawBandwidthMarkers(int64_t centerFrequency, int bandwidth, const QVector4D &color);
-    void drawPeakMarkers(int64_t startFrequency, int64_t endFrequency, const QVector4D &color);
+    void drawPowerBandMarkers(float max, float min, const QVector4D& color);
+    void drawBandwidthMarkers(int64_t centerFrequency, int bandwidth, const QVector4D& color);
+    void drawPeakMarkers(int64_t startFrequency, int64_t endFrequency, const QVector4D& color);
     void drawSpectrumMarkers();
     void drawAnnotationMarkers();
 
@@ -574,9 +588,9 @@ private:
     void measureSFDR();
     float calcChannelPower(int64_t centerFrequency, int channelBandwidth) const;
     float calPower(float power) const;
-    int findPeakBin(const Real *spectrum) const;
-    void findPeak(float &power, float &frequency) const;
-    void peakWidth(const Real *spectrum, int center, int &left, int &right, int maxLeft, int maxRight) const;
+    int findPeakBin(const Real* spectrum) const;
+    void findPeak(float& power, float& frequency) const;
+    void peakWidth(const Real* spectrum, int center, int& left, int& right, int maxLeft, int maxRight) const;
     int frequencyToBin(int64_t frequency) const;
     int64_t binToFrequency(int bin) const;
 
@@ -600,8 +614,8 @@ private:
     void setFrequencyScale();
     void setPowerScale(int height);
     void getFrequencyZoom(int64_t& centerFrequency, int& frequencySpan);
-    bool pointInWaterfallOrSpectrogram(const QPointF &point) const;
-    bool pointInHistogram(const QPointF &point) const;
+    bool pointInWaterfallOrSpectrogram(const QPointF& point) const;
+    bool pointInHistogram(const QPointF& point) const;
 
     void enterEvent(EnterEventType* event);
     void leaveEvent(QEvent* event);
@@ -611,33 +625,34 @@ private:
     static QString displayScaledF(float value, char type, int precision, bool showMult);
     static QString displayPower(float value, char type, int precision);
     int getPrecision(int value);
-    void drawTextRight(const QString &text, const QString &value, const QString &max, const QString &units);
-    void drawTextsRight(const QStringList &text, const QStringList &value, const QStringList &max, const QStringList &units);
+    void drawTextRight(const QString& text, const QString& value, const QString& max, const QString& units);
+    void drawTextsRight(const QStringList& text, const QStringList& value, const QStringList& max, const QStringList& units);
     void drawTextOverlayCentered(
-            const QString& text,
-            const QColor& color,
-            const QFont& font,
-            float shiftX,
-            float shiftY,
-            const QRectF& glRect);
+        const QString& text,
+        const QColor& color,
+        const QFont& font,
+        float shiftX,
+        float shiftY,
+        const QRectF& glRect);
     void drawTextOverlay(      //!< Draws a text overlay
-            const QString& text,
-            const QColor& color,
-            const QFont& font,
-            float shiftX,
-            float shiftY,
-            bool leftHalf,
-            bool topHalf,
-            const QRectF& glRect);
+        const QString& text,
+        const QColor& color,
+        const QFont& font,
+        float shiftX,
+        float shiftY,
+        bool leftHalf,
+        bool topHalf,
+        const QRectF& glRect);
     void formatTextInfo(QString& info);
     void updateSortedAnnotationMarkers();
     void queueRequestCenterFrequency(qint64 frequency);
 
-    static bool annotationDisplayLessThan(const SpectrumAnnotationMarker *m1, const SpectrumAnnotationMarker *m2)
+    static bool annotationDisplayLessThan(const SpectrumAnnotationMarker* m1, const SpectrumAnnotationMarker* m2)
     {
         if (m1->m_bandwidth == m2->m_bandwidth) {
             return m1->m_startFrequency < m2->m_startFrequency;
-        } else {
+        }
+        else {
             return m1->m_bandwidth > m2->m_bandwidth; // larger bandwidths should come first for display (lower layer)
         }
     }
@@ -652,8 +667,8 @@ private slots:
     void tick();
     void channelMarkerChanged();
     void channelMarkerDestroyed(QObject* object);
-    void openGLDebug(const QOpenGLDebugMessage &debugMessage);
-    bool eventFilter(QObject *object, QEvent *event);
+    void openGLDebug(const QOpenGLDebugMessage& debugMessage);
+    bool eventFilter(QObject* object, QEvent* event);
 
 signals:
     // Emitted when user tries to scroll to frequency currently out of range

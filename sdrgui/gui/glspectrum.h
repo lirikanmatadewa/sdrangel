@@ -24,6 +24,7 @@
 #define SDRGUI_GLSPECTRUM_H_
 
 #include <QWidget>
+#include <QDebug>
 
 #include "export.h"
 #include "glspectrumview.h"
@@ -46,7 +47,16 @@ public:
     void setMeasurementsVisible(bool visible);
     void setMeasurementsPosition(SpectrumSettings::MeasurementsPosition position);
 
-    void setCenterFrequency(qint64 frequency) { m_spectrum->setCenterFrequency(frequency); }
+    //void setCenterFrequency(qint64 frequency) { m_spectrum->setCenterFrequency(frequency); }
+    void setCenterFrequency(qint64 frequency)
+    {
+        qDebug() << "[GLSpectrum] setCenterFrequency =" << frequency;
+
+        if (m_spectrum)
+        {
+            m_spectrum->setCenterFrequency(frequency);
+        }
+    }
     qint64 getCenterFrequency() const { return m_spectrum->getCenterFrequency(); }
     float getPowerMax() const { return m_spectrum->getPowerMax(); }
     float getTimeMax() const { return m_spectrum->getTimeMax(); }

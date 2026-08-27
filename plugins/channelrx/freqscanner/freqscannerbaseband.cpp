@@ -79,26 +79,57 @@ void FreqScannerBaseband::handleData()
 {
     QMutexLocker mutexLocker(&m_mutex);
 
-    while ((m_sampleFifo.fill() > 0) && (m_inputMessageQueue.size() == 0))
+    // Process pending control messages first.
+    if (m_inputMessageQueue.size() > 0)
     {
-        SampleVector::iterator part1begin;
-        SampleVector::iterator part1end;
-        SampleVector::iterator part2begin;
-        SampleVector::iterator part2end;
+        handleInputMessages();
+    }
 
-        std::size_t count = m_sampleFifo.readBegin(m_sampleFifo.fill(), &part1begin, &part1end, &part2begin, &part2end);
+    // Process a bounded amount of FIFO data.
+    // Do not drain the entire FIFO in one event-loop iteration.
+    constexpr unsigned int maxSamplesPerCall = 65536;
 
-        // first part of FIFO data
-        if (part1begin != part1end) {
-            m_channelizer->feed(part1begin, part1end);
-        }
+    unsigned int samplesToProcess =
+        std::min<unsigned int>(
+            static_cast<unsigned int>(m_sampleFifo.fill()),
+            maxSamplesPerCall);
 
-        // second part of FIFO data (used when block wraps around)
-        if (part2begin != part2end) {
-            m_channelizer->feed(part2begin, part2end);
-        }
+    if (samplesToProcess == 0)
+    {
+        return;
+    }
 
-        m_sampleFifo.readCommit((unsigned int) count);
+    SampleVector::iterator part1begin;
+    SampleVector::iterator part1end;
+    SampleVector::iterator part2begin;
+    SampleVector::iterator part2end;
+
+    std::size_t count = m_sampleFifo.readBegin(
+        samplesToProcess,
+        &part1begin,
+        &part1end,
+        &part2begin,
+        &part2end);
+
+    if (part1begin != part1end)
+    {
+        m_channelizer->feed(part1begin, part1end);
+    }
+
+    if (part2begin != part2end)
+    {
+        m_channelizer->feed(part2begin, part2end);
+    }
+
+    m_sampleFifo.readCommit(static_cast<unsigned int>(count));
+
+    // If data remains, schedule another pass.
+    if (m_sampleFifo.fill() > 0)
+    {
+        QMetaObject::invokeMethod(
+            this,
+            "handleData",
+            Qt::QueuedConnection);
     }
 }
 
@@ -129,14 +160,32 @@ bool FreqScannerBaseband::handleMessage(const Message& cmd)
     else if (DSPSignalNotification::match(cmd))
     {
         QMutexLocker mutexLocker(&m_mutex);
-        DSPSignalNotification& notif = (DSPSignalNotification&) cmd;
-        qDebug() << "FreqScannerBaseband::handleMessage: DSPSignalNotification: basebandSampleRate: " << notif.getSampleRate();
+
+        DSPSignalNotification& notif =
+            (DSPSignalNotification&)cmd;
+
+        qDebug() << "[FreqScannerBaseband] DSPSignalNotification:"
+            << "CF =" << notif.getCenterFrequency()
+            << "SampleRate =" << notif.getSampleRate();
+
+        // Drop samples belonging to the previous CF.
+        m_sampleFifo.reset();
+
         setBasebandSampleRate(notif.getSampleRate());
-        m_sampleFifo.setSize(SampleSinkFifo::getSizePolicy(notif.getSampleRate()));
-        if (m_channelSampleRate != m_channelizer->getChannelSampleRate()) {
-            m_channelSampleRate = m_channelizer->getChannelSampleRate();
+
+        m_sampleFifo.setSize(
+            SampleSinkFifo::getSizePolicy(notif.getSampleRate()));
+
+        if (m_channelSampleRate !=
+            m_channelizer->getChannelSampleRate())
+        {
+            m_channelSampleRate =
+                m_channelizer->getChannelSampleRate();
         }
-        m_sink.setCenterFrequency(notif.getCenterFrequency());
+
+        // Reset FFT and bind the new CF.
+        m_sink.setCenterFrequency(
+            notif.getCenterFrequency());
 
         return true;
     }
