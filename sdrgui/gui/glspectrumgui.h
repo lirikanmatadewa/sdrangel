@@ -27,6 +27,7 @@
 
 #include <QWidget>
 #include <QMap>
+#include <QPointer>
 
 #include "dsp/dsptypes.h"
 #include "dsp/spectrumsettings.h"
@@ -45,6 +46,9 @@ class SpectrumVis;
 class GLSpectrum;
 class SpectrumMarkersDialog;
 class SpectrumMeasurementsTable;
+class QNetworkAccessManager;
+class QTimer;
+class ChannelGUI;
 
 class SDRGUI_API GLSpectrumGUI : public QWidget, public Serializable {
 	Q_OBJECT
@@ -83,6 +87,9 @@ private:
 	Real m_calibrationShiftdB;
 	static const int m_fpsMs[];
 	SpectrumMarkersDialog* m_markersDialog;
+	QNetworkAccessManager* m_networkManager;
+	QTimer* m_apiTimer;
+	QPointer<ChannelGUI> m_activeChannelGUI;
 
 	void blockApplySettings(bool block);
 	void applySettings();
@@ -192,6 +199,9 @@ private slots:
 	void updateCalibrationPoints();
 	void updateMeasurements();
 	void closeMarkersDialog();
+	void fetchDaqStatus();
+	void fetchCenterFreq();
+	void on_DF();
 
 signals:
 	// Emitted when user selects an annotation marker

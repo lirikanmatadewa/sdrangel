@@ -26,12 +26,9 @@
 #include "util/messagequeue.h"
 #include "settings/rollupstate.h"
 
-#include <QNetworkAccessManager>
-#include <QNetworkReply>
 
 #include "rdfdemodsettings.h"
 
-#include <QTimer>
 
 class PluginAPI;
 class DeviceUISet;
@@ -68,8 +65,6 @@ public:
 public slots:
 	void channelMarkerChangedByCursor();
     void channelMarkerHighlightedByCursor();
-	void fetchCenterFreq();
-	void fetchDaqStatus();
 
 private:
 	Ui::RDFDemodGUI* ui;
@@ -103,9 +98,6 @@ private:
 	void leaveEvent(QEvent*);
 	void enterEvent(EnterEventType*);
 
-	QNetworkAccessManager* m_networkManager;
-
-	QTimer* m_apiTimer;
 
 private slots:
 	void on_deltaFrequency_changed(qint64 value);
@@ -120,7 +112,6 @@ private slots:
     void audioSelect(const QPoint& p);
 	void tick();
 
-	void on_DF();
 	void onBtnMapClicked();
 };
 

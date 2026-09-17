@@ -46,6 +46,7 @@
 #include "remotetcpsinkstarter.h"
 #include "dsp/dsptypes.h"
 #include "licensing-framework/licensemanager.h"
+#include "SingleInstanceGuard.h"
 
 #define NO_LICENSE 1
 static int runQtApplication(int argc, char *argv[], qtwebapp::LoggerWithFile *logger)
@@ -88,6 +89,17 @@ static int runQtApplication(int argc, char *argv[], qtwebapp::LoggerWithFile *lo
     }
 
     QApplication a(argc, argv);
+
+    // Prevent multiple ES300 instances
+    const QString appId = "BWE_Solutions_ES300_SINGLE_INSTANCE_v1";
+
+    SingleInstanceGuard singleInstanceGuard(appId);
+
+    if (!singleInstanceGuard.tryToRun())
+    {
+        qWarning() << "ES300 is already running.";
+        return EXIT_SUCCESS;
+    }
 
     // Initialize licensing system early
     qDebug() << "Initializing licensing framework...";

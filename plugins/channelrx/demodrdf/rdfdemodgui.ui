@@ -166,13 +166,7 @@
           </property>
          </spacer>
         </item>
-        <item>
-         <widget class="QPushButton" name="DFButton">
-          <property name="text">
-           <string>DF</string>
-          </property>
-         </widget>
-        </item>
+        
         <item>
          <widget class="QPushButton" name="btnMap">
           <property name="text">
@@ -186,13 +180,6 @@
     </item>
     <item>
      <layout class="QHBoxLayout" name="levelMeterLAyout">
-      <item>
-       <widget class="QLabel" name="freqFromDF">
-        <property name="text">
-         <string>Freq from DF</string>
-        </property>
-       </widget>
-      </item>
       <item>
        <widget class="QLabel" name="channelPowerMeter_2">
         <property name="text">
@@ -371,13 +358,7 @@
     </item>
     <item>
      <layout class="QHBoxLayout" name="squelchLayout">
-      <item>
-       <widget class="QLabel" name="connStatusLabel">
-        <property name="text">
-         <string>Device Status : ..</string>
-        </property>
-       </widget>
-      </item>
+      
       <item>
        <widget class="QLabel" name="squelchLabel">
         <property name="text">
@@ -424,13 +405,7 @@
     </item>
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
-      <item>
-       <widget class="QLabel" name="daqStatusLabel">
-        <property name="text">
-         <string>DAQ Status : ..</string>
-        </property>
-       </widget>
-      </item>
+      
       <item>
        <spacer name="horizontalSpacer_3">
         <property name="orientation">

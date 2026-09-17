@@ -53,3 +53,4 @@ wdsp/*.o
 wdsp/*.h
 wdsp/*.c
 wdsp/Makefile
+*.patch

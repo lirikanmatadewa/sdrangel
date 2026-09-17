@@ -56,6 +56,20 @@
 #include <QPainter>
 #include <QStyledItemDelegate>
 #include <QCheckBox>
+#include <QApplication>
+#include "channel/channelgui.h"
+#include <QPointer>
+#include <QFile>
+#include <QTextStream>
+#include <QStandardPaths>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QUrl>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QNetworkProxy>
+#include <QTimer>
 
 
 static inline double clamp01(double v) {
@@ -73,11 +87,20 @@ GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
 	m_glSpectrum(nullptr),
 	m_doApplySettings(true),
 	m_calibrationShiftdB(0.0),
-	m_markersDialog(nullptr)
+	m_markersDialog(nullptr),
+	m_networkManager(nullptr),
+	m_apiTimer(nullptr),
+	m_activeChannelGUI(nullptr)
 {
 	ui->setupUi(this);
 
+	qApp->installEventFilter(this);
+
 	// Use the custom flow layout for the 3 main horizontal layouts (lines)
+	// The DF panel must stay below the plugin-button flow layout.  Remove it
+	// before rebuilding the flow so it is not left above the plugin buttons.
+	ui->verticalLayout->removeWidget(ui->dfDevicePanel);
+
 	ui->verticalLayout->removeItem(ui->Line7Layout);
 	ui->verticalLayout->removeItem(ui->Line6Layout);
 	ui->verticalLayout->removeItem(ui->Line5Layout);
@@ -94,6 +117,7 @@ GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
 	flowLayout->addItem(ui->Line6Layout);
 	flowLayout->addItem(ui->Line7Layout);
 	ui->verticalLayout->addItem(flowLayout);
+	ui->verticalLayout->addWidget(ui->dfDevicePanel);
 
 	on_linscale_toggled(false);
 	//displayMeasurementGUI();
@@ -133,6 +157,59 @@ GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
 	connect(ui->frequencyScanner, SIGNAL(clicked()), this, SLOT(openFrequencyScanner()));
 	connect(ui->widebandScanner, SIGNAL(clicked()), this, SLOT(openWidebandScanner()));
 	connect(ui->btnCW, SIGNAL(clicked()), this, SLOT(openCW()));
+	connect(ui->DFButton, &QPushButton::clicked, this, &GLSpectrumGUI::on_DF);
+
+	// Compact DF/device control panel styling.
+	ui->dfDevicePanel->setStyleSheet(
+		"QGroupBox {"
+		"  border: 1px solid rgb(82,82,82);"
+		"  border-radius: 5px;"
+		"  margin-top: 7px;"
+		"  padding: 2px 4px 3px 4px;"
+		"  color: rgb(220,220,220);"
+		"  font-weight: bold;"
+		"}"
+		"QGroupBox::title {"
+		"  subcontrol-origin: margin;"
+		"  left: 8px;"
+		"  padding: 0px 4px;"
+		"}"
+		"QLabel#connStatusLabel, QLabel#daqStatusLabel {"
+		"  background: rgb(58,58,58);"
+		"  border: 1px solid rgb(79,79,79);"
+		"  border-radius: 4px;"
+		"  padding: 1px 5px;"
+		"}"
+		"QLabel#dfActiveChannelLabel {"
+		"  background: rgb(52,52,52);"
+		"  border: 1px solid rgb(79,79,79);"
+		"  border-radius: 4px;"
+		"  padding: 1px 7px;"
+		"  color: rgb(225,225,225);"
+		"  font-size: 9pt;"
+		"}"
+		"QLabel#freqFromDF {"
+		"  background: rgb(45,45,45);"
+		"  border: 1px solid rgb(79,79,79);"
+		"  border-radius: 4px;"
+		"  padding: 1px 8px;"
+		"  color: rgb(245,245,245);"
+		"  font-family: 'Liberation Mono';"
+		"  font-size: 9pt;"
+		"}"
+	);
+
+	ui->connStatusLabel->setText("Device <span style='color:#cc0000; font-size:16pt;'>&#9679;</span> Disconnected");
+	ui->daqStatusLabel->setText("DAQ <span style='color:#cc0000; font-size:16pt;'>&#9679;</span> Disconnected");
+	ui->dfActiveChannelLabel->setText("Active: --");
+
+	m_networkManager = new QNetworkAccessManager(this);
+	m_networkManager->setProxy(QNetworkProxy::NoProxy);
+
+	m_apiTimer = new QTimer(this);
+	connect(m_apiTimer, &QTimer::timeout, this, &GLSpectrumGUI::fetchCenterFreq);
+	connect(m_apiTimer, &QTimer::timeout, this, &GLSpectrumGUI::fetchDaqStatus);
+	m_apiTimer->start(2000);
 
 	ui->widebandScanner->setVisible(false);
 
@@ -179,8 +256,21 @@ GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
 
 GLSpectrumGUI::~GLSpectrumGUI()
 {
+	qApp->removeEventFilter(this);
+
 	if (m_markersDialog) {
 		delete m_markersDialog;
+	}
+
+	if (m_apiTimer) {
+		m_apiTimer->stop();
+		m_apiTimer->disconnect();
+	}
+
+	if (m_networkManager) {
+		m_networkManager->disconnect();
+		m_networkManager->deleteLater();
+		m_networkManager = nullptr;
 	}
 
 	delete ui;
@@ -960,6 +1050,312 @@ void GLSpectrumGUI::on_calibration_toggled(bool checked)
 	applySettings();
 }
 
+void GLSpectrumGUI::on_DF()
+{
+    if (!m_glSpectrum || !m_networkManager) {
+        qDebug() << "DF Clicked :: spectrum or network manager is not available";
+        return;
+    }
+
+    // Current displayed/device frequency.
+    const qint64 currentFreqHz = m_glSpectrum->getCenterFrequency();
+
+    // ChannelGUI's ChannelMarker carries the same channel frequency offset
+    // used by the demodulator settings (m_inputFrequencyOffset).
+    qint64 inputFrequencyOffset = 0;
+    QString activeChannelTitle = "None";
+
+    if (m_activeChannelGUI) {
+        inputFrequencyOffset = m_activeChannelGUI->getChannelMarker().getCenterFrequency();
+        activeChannelTitle = m_activeChannelGUI->getTitle();
+    }
+
+    // The plugin input offset is relative to the current device/spectrum frequency.
+    // Therefore the tuned plugin frequency is current frequency + input offset.
+    const qint64 dfFreqHz = currentFreqHz + inputFrequencyOffset;
+    const double dfFreqMHz = static_cast<double>(dfFreqHz) / 1000000.0;
+
+    qDebug() << "DF Formula: Current Frequency + m_inputFrequencyOffset";
+    qDebug() << "DF Clicked :: Current Frequency(Hz) =" << currentFreqHz;
+    qDebug() << "DF Clicked :: Active Channel =" << activeChannelTitle;
+    qDebug() << "DF Clicked :: m_inputFrequencyOffset(Hz) =" << inputFrequencyOffset;
+    qDebug() << "DF Clicked :: DF Frequency(Hz) =" << dfFreqHz;
+    qDebug() << "DF Clicked :: DF Frequency(MHz) =" << QString::number(dfFreqMHz, 'f', 6);
+
+    const QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+
+    QFile file(path + "/ip_device.txt");
+    QString ip = "192.168.1.10";
+
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        QTextStream in(&file);
+        const QString savedIp = in.readLine().trimmed();
+
+        if (!savedIp.isEmpty()) {
+            ip = savedIp;
+        }
+
+        file.close();
+    }
+
+    const QString urlString = QString("http://%1:8080/api/daq/center-freq").arg(ip);
+
+    QNetworkRequest request{QUrl(urlString)};
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    request.setRawHeader("accept", "*/*");
+
+    QJsonObject json;
+    json["daq_center_freq"] = dfFreqMHz;
+
+    const QJsonDocument doc(json);
+    const QByteArray data = doc.toJson(QJsonDocument::Compact);
+
+    qDebug() << "POST Payload:" << data;
+
+    QNetworkReply* reply = m_networkManager->post(request, data);
+
+    if (!reply) {
+        return;
+    }
+
+    connect(reply, &QNetworkReply::finished, this, [reply]() {
+        const int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        const QByteArray response = reply->readAll();
+
+        if (reply->error() != QNetworkReply::NoError) {
+            qDebug() << "HTTP Status:" << statusCode;
+            qDebug() << "API Error:" << reply->errorString();
+            qDebug() << "API Body:" << response;
+        }
+        else {
+            qDebug() << "HTTP Status:" << statusCode;
+            qDebug() << "API Response:" << response;
+        }
+
+        reply->deleteLater();
+    });
+}
+
+void GLSpectrumGUI::fetchCenterFreq()
+{
+    QPointer<GLSpectrumGUI> guard(this);
+
+    if (!guard || !m_networkManager) {
+        return;
+    }
+
+    const QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+
+    QFile syncFile(path + "/kraken_sync.txt");
+    bool isConnected = false;
+
+    if (syncFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        if (syncFile.readLine().trimmed() == "1") {
+            isConnected = true;
+        }
+        syncFile.close();
+    }
+
+    if (!isConnected) {
+        if (ui && ui->freqFromDF) {
+            ui->freqFromDF->setText("Device DF  -- MHz");
+        }
+        return;
+    }
+
+    QFile file(path + "/ip_device.txt");
+    QString ip = "192.168.1.10";
+
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        const QString savedIp = file.readLine().trimmed();
+        if (!savedIp.isEmpty()) {
+            ip = savedIp;
+        }
+        file.close();
+    }
+
+    const QString urlString = QString("http://%1:8080/api/daq/center-freq").arg(ip);
+    QNetworkRequest request{QUrl(urlString)};
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+
+    QNetworkReply* reply = m_networkManager->get(request);
+    if (!reply) {
+        return;
+    }
+
+    connect(reply, &QNetworkReply::finished, this, [guard, reply]()
+    {
+        if (!guard) {
+            reply->deleteLater();
+            return;
+        }
+
+        if (reply->error() == QNetworkReply::NoError) {
+            const QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
+            const QJsonObject json = doc.object();
+
+            if (json.contains("status") && json["status"].toString() == "ok" && json.contains("vfo_0_freq")) {
+                const qint64 freqHz = qRound64(json["vfo_0_freq"].toDouble());
+                const double freqMHz = static_cast<double>(freqHz) / 1000000.0;
+
+                if (guard->ui && guard->ui->freqFromDF) {
+                    guard->ui->freqFromDF->setText(
+                        QString("Device DF  %1 MHz")
+                            .arg(QString::number(freqMHz, 'f', 6))
+                    );
+                }
+            }
+            else if (guard->ui && guard->ui->freqFromDF) {
+                guard->ui->freqFromDF->setText("Device DF  -- MHz");
+            }
+        }
+        else if (guard->ui && guard->ui->freqFromDF) {
+            guard->ui->freqFromDF->setText("Device DF  API Error");
+        }
+
+        reply->deleteLater();
+    });
+}
+
+void GLSpectrumGUI::fetchDaqStatus()
+{
+    QPointer<GLSpectrumGUI> guard(this);
+
+    if (!guard || !m_networkManager) {
+        return;
+    }
+
+    const QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+
+    QFile syncFile(path + "/kraken_sync.txt");
+    bool isSyncEnabled = false;
+
+    if (syncFile.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        if (syncFile.readLine().trimmed() == "1") {
+            isSyncEnabled = true;
+        }
+
+        syncFile.close();
+    }
+
+    if (!isSyncEnabled)
+    {
+        if (ui) {
+            ui->connStatusLabel->setText(
+                "Device <span style='color:#cc0000; font-size:16pt;'>&#9679;</span> Disconnected"
+            );
+
+            ui->daqStatusLabel->setText(
+                "DAQ <span style='color:#cc0000; font-size:16pt;'>&#9679;</span> Disconnected"
+            );
+        }
+
+        return;
+    }
+
+    QFile file(path + "/ip_device.txt");
+    QString ip = "192.168.1.10";
+
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        const QString savedIp = file.readLine().trimmed();
+
+        if (!savedIp.isEmpty()) {
+            ip = savedIp;
+        }
+
+        file.close();
+    }
+
+    const QString urlString = QString("http://%1:9000/get_map_data").arg(ip);
+
+    QNetworkRequest request{QUrl(urlString)};
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+
+    QNetworkReply* reply = m_networkManager->get(request);
+
+    if (!reply) {
+        return;
+    }
+
+    connect(reply, &QNetworkReply::finished,
+        this,
+        [guard, reply]()
+        {
+            if (!guard)
+            {
+                if (reply) {
+                    reply->deleteLater();
+                }
+
+                return;
+            }
+
+            if (reply->error() == QNetworkReply::NoError)
+            {
+                if (guard->ui)
+                {
+                    guard->ui->connStatusLabel->setText(
+                        "Device <span style='color:#00cc00; font-size:16pt;'>&#9679;</span> Connected"
+                    );
+                }
+
+                const QByteArray response = reply->readAll();
+                const QJsonDocument doc = QJsonDocument::fromJson(response);
+                const QJsonObject json = doc.object();
+
+                if (json.contains("body_daq_conn_status"))
+                {
+                    const QString daqStatus = json["body_daq_conn_status"].toString();
+
+                    if (guard->ui)
+                    {
+                        if (daqStatus.toLower() == "connected")
+                        {
+                            guard->ui->daqStatusLabel->setText(
+                                "DAQ <span style='color:#00cc00; font-size:16pt;'>&#9679;</span> Connected"
+                            );
+                        }
+                        else
+                        {
+                            guard->ui->daqStatusLabel->setText(
+                                QString("DAQ <span style='color:#ff9900; font-size:16pt;'>&#9679;</span> %1").arg(daqStatus)
+                            );
+                        }
+                    }
+                }
+                else
+                {
+                    if (guard->ui)
+                    {
+                        guard->ui->daqStatusLabel->setText(
+                            "DAQ <span style='color:#cc0000; font-size:16pt;'>&#9679;</span> Unknown"
+                        );
+                    }
+                }
+            }
+            else
+            {
+                if (guard->ui)
+                {
+                    guard->ui->connStatusLabel->setText(
+                        "Device <span style='color:#cc0000; font-size:16pt;'>&#9679;</span> API Error"
+                    );
+
+                    guard->ui->daqStatusLabel->setText(
+                        "DAQ <span style='color:#cc0000; font-size:16pt;'>&#9679;</span> Unknown"
+                    );
+                }
+            }
+
+            if (reply) {
+                reply->deleteLater();
+            }
+        });
+}
+
 void GLSpectrumGUI::on_gotoMarker_currentIndexChanged(int index)
 {
 	if (index <= 0) {
@@ -1638,36 +2034,68 @@ void GLSpectrumGUI::applyDragAt(const QPoint& p)
 // Event filter aktif hanya ketika dialog marker terlihat
 bool GLSpectrumGUI::eventFilter(QObject* obj, QEvent* ev)
 {
-	if ((obj == m_glSpectrum) && markersDragActive()) {
-		if (ev->type() == QEvent::MouseButtonPress) {
-			auto* me = static_cast<QMouseEvent*>(ev);
-			if (me->button() == Qt::LeftButton) {
-				if (pickMarkerAt(me->pos())) {
-					m_glSpectrum->setCursor(Qt::SizeHorCursor);
-					return true; 
-				}
-			}
-		}
-		else if (ev->type() == QEvent::MouseMove) {
-			auto* me = static_cast<QMouseEvent*>(ev);
-			if ((me->buttons() & Qt::LeftButton) && m_dragKind != DragKind::None) {
-				applyDragAt(me->pos());
-				return true;
-			}
-		}
-		else if (ev->type() == QEvent::MouseButtonRelease) {
-			auto* me = static_cast<QMouseEvent*>(ev);
-			if (me->button() == Qt::LeftButton && m_dragKind != DragKind::None) {
-				applyDragAt(me->pos());
-				m_dragKind = DragKind::None;
-				m_dragIndex = -1;
-				m_glSpectrum->unsetCursor();
-				return true;
-			}
-		}
-	}
+    // Remember the most recently interacted channel plugin. Its ChannelMarker
+    // represents the plugin inputFrequencyOffset for all standard RX channels.
+    if (ev->type() == QEvent::FocusIn || ev->type() == QEvent::MouseButtonPress) {
+        QWidget* widget = qobject_cast<QWidget*>(obj);
+        while (widget) {
+            if (auto* channelGUI = qobject_cast<ChannelGUI*>(widget)) {
+                if (m_activeChannelGUI != channelGUI) {
+                    m_activeChannelGUI = channelGUI;
+                    if (ui && ui->dfActiveChannelLabel) {
+                        ui->dfActiveChannelLabel->setText(
+                            QString("Active: %1").arg(channelGUI->getTitle())
+                        );
+                        ui->dfActiveChannelLabel->setToolTip(
+                            QString("Active channel: %1").arg(channelGUI->getTitle())
+                        );
+                    }
+                    connect(channelGUI, &QObject::destroyed, this, [this](QObject* object) {
+                        if (m_activeChannelGUI.data() == object) {
+                            m_activeChannelGUI = nullptr;
+                            if (ui && ui->dfActiveChannelLabel) {
+                                ui->dfActiveChannelLabel->setText("Active: --");
+                                ui->dfActiveChannelLabel->setToolTip("Plugin/channel whose frequency offset will be used by DF");
+                            }
+                        }
+                    }, Qt::UniqueConnection);
+                }
+                break;
+            }
+            widget = widget->parentWidget();
+        }
+    }
 
-	return QWidget::eventFilter(obj, ev);
+    if ((obj == m_glSpectrum) && markersDragActive()) {
+        if (ev->type() == QEvent::MouseButtonPress) {
+            auto* me = static_cast<QMouseEvent*>(ev);
+            if (me->button() == Qt::LeftButton) {
+                if (pickMarkerAt(me->pos())) {
+                    m_glSpectrum->setCursor(Qt::SizeHorCursor);
+                    return true;
+                }
+            }
+        }
+        else if (ev->type() == QEvent::MouseMove) {
+            auto* me = static_cast<QMouseEvent*>(ev);
+            if ((me->buttons() & Qt::LeftButton) && m_dragKind != DragKind::None) {
+                applyDragAt(me->pos());
+                return true;
+            }
+        }
+        else if (ev->type() == QEvent::MouseButtonRelease) {
+            auto* me = static_cast<QMouseEvent*>(ev);
+            if (me->button() == Qt::LeftButton && m_dragKind != DragKind::None) {
+                applyDragAt(me->pos());
+                m_dragKind = DragKind::None;
+                m_dragIndex = -1;
+                m_glSpectrum->unsetCursor();
+                return true;
+            }
+        }
+    }
+
+    return QWidget::eventFilter(obj, ev);
 }
 
 bool GLSpectrumGUI::markersDragActive() const {
