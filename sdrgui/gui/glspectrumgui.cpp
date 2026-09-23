@@ -159,6 +159,8 @@ GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
 	connect(ui->btnCW, SIGNAL(clicked()), this, SLOT(openCW()));
 	connect(ui->DFButton, &QPushButton::clicked, this, &GLSpectrumGUI::on_DF);
 
+	ui->btnDrf->hide();
+
 	// Compact DF/device control panel styling.
 	ui->dfDevicePanel->setStyleSheet(
 		"QGroupBox {"
@@ -199,8 +201,8 @@ GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
 		"}"
 	);
 
-	ui->connStatusLabel->setText("Device <span style='color:#cc0000; font-size:16pt;'>&#9679;</span> Disconnected");
-	ui->daqStatusLabel->setText("DAQ <span style='color:#cc0000; font-size:16pt;'>&#9679;</span> Disconnected");
+	ui->connStatusLabel->setText("<span style='color:#cc0000; font-size:16pt;'>&#9679;</span>");
+	ui->daqStatusLabel->setText("<span style='color:#cc0000; font-size:16pt;'>&#9679;</span>");
 	ui->dfActiveChannelLabel->setText("Active: --");
 
 	m_networkManager = new QNetworkAccessManager(this);
@@ -1244,11 +1246,11 @@ void GLSpectrumGUI::fetchDaqStatus()
     {
         if (ui) {
             ui->connStatusLabel->setText(
-                "Device <span style='color:#cc0000; font-size:16pt;'>&#9679;</span> Disconnected"
+                "<span style='color:#cc0000; font-size:16pt;'>&#9679;</span>"
             );
 
             ui->daqStatusLabel->setText(
-                "DAQ <span style='color:#cc0000; font-size:16pt;'>&#9679;</span> Disconnected"
+                "<span style='color:#cc0000; font-size:16pt;'>&#9679;</span>"
             );
         }
 
@@ -1298,7 +1300,7 @@ void GLSpectrumGUI::fetchDaqStatus()
                 if (guard->ui)
                 {
                     guard->ui->connStatusLabel->setText(
-                        "Device <span style='color:#00cc00; font-size:16pt;'>&#9679;</span> Connected"
+                        "<span style='color:#00cc00; font-size:16pt;'>&#9679;</span>"
                     );
                 }
 
@@ -1315,7 +1317,7 @@ void GLSpectrumGUI::fetchDaqStatus()
                         if (daqStatus.toLower() == "connected")
                         {
                             guard->ui->daqStatusLabel->setText(
-                                "DAQ <span style='color:#00cc00; font-size:16pt;'>&#9679;</span> Connected"
+                                "<span style='color:#00cc00; font-size:16pt;'>&#9679;</span>"
                             );
                         }
                         else
@@ -1830,6 +1832,7 @@ void GLSpectrumGUI::open_ais()
 	try {
 		emit addChannel(this->rx_channel["AISDemod"]);
 		emit requestAISFeature();
+		emit addChannel(this->rx_channel["AISDemod"]);
 	}
 	catch (...) {
 		;

@@ -189,7 +189,7 @@ Workspace::Workspace(int index, QWidget *parent, Qt::WindowFlags flags) :
     if (m_menuButton) {
         m_titleBarLayout->addWidget(m_menuButton);
     }
-    m_titleBarLayout->addWidget(m_configurationPresetsButton);
+    //m_titleBarLayout->addWidget(m_configurationPresetsButton);
     m_titleBarLayout->addWidget(m_startStopButton);
     m_titleBarLayout->addWidget(m_vline1);
     m_titleBarLayout->addWidget(m_addRxDeviceButton);
