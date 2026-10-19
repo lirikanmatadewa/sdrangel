@@ -1662,9 +1662,9 @@ void MainWindow::createMenuBar(QToolButton* button)
 	removeEmptyWorkspacesAction->setToolTip("Remove empty workspaces");
 	QObject::connect(removeEmptyWorkspacesAction, &QAction::triggered, this, &MainWindow::removeEmptyWorkspaces);
 
-	QAction* configurationsAction = preferencesMenu->addAction("&Configurations...");
+	/*QAction* configurationsAction = preferencesMenu->addAction("&Configurations...");
 	configurationsAction->setToolTip("Manage configurations");
-	QObject::connect(configurationsAction, &QAction::triggered, this, &MainWindow::on_action_Configurations_triggered);
+	QObject::connect(configurationsAction, &QAction::triggered, this, &MainWindow::on_action_Configurations_triggered);*/
 	QAction* audioAction = preferencesMenu->addAction("&Audio...");
 	audioAction->setToolTip("Audio preferences");
 	QObject::connect(audioAction, &QAction::triggered, this, &MainWindow::on_action_Audio_triggered);

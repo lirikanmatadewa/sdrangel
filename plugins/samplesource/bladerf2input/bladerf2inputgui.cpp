@@ -62,7 +62,7 @@ BladeRF2InputGui::BladeRF2InputGui(DeviceUISet *deviceUISet, QWidget* parent) :
 
     m_sampleSource->getSampleRateRange(min, max, step, scale);
     ui->sampleRate->setColorMapper(ColorMapper(ColorMapper::GrayGreenYellow));
-    ui->sampleRate->setValueRange(9, min, max);
+    ui->sampleRate->setValueRange(8, min, max);
 
     m_sampleSource->getBandwidthRange(min, max, step, scale);
     ui->bandwidth->setColorMapper(ColorMapper(ColorMapper::GrayYellow));
@@ -274,21 +274,24 @@ void BladeRF2InputGui::displaySampleRate()
     if (m_sampleRateMode)
     {
         ui->sampleRateMode->setStyleSheet("QToolButton { background:rgb(60,60,60); }");
-        ui->sampleRateMode->setText("SR");
+        ui->sampleRateMode->setText("BW");
         // BladeRF can go as low as 80 kS/s but because of buffering in practice experience is not good below 330 kS/s
-        ui->sampleRate->setValueRange(9, min, max);
+        ui->sampleRate->setValueRange(8, min, max);
         ui->sampleRate->setValue(m_settings.m_devSampleRate);
         ui->sampleRate->setToolTip("Device to host sample rate (S/s)");
         ui->deviceRateText->setToolTip("Baseband sample rate (S/s)");
         uint32_t basebandSampleRate = m_settings.m_devSampleRate/(1<<m_settings.m_log2Decim);
         ui->deviceRateText->setText(tr("%1k").arg(QString::number(basebandSampleRate / 1000.0f, 'g', 5)));
+
+        // BW
+        ui->bandwidth->setValue(m_settings.m_bandwidth / 1000);
     }
     else
     {
         ui->sampleRateMode->setStyleSheet("QToolButton { background:rgb(50,50,50); }");
-        ui->sampleRateMode->setText("BB");
+        ui->sampleRateMode->setText("BW");
         // BladeRF can go as low as 80 kS/s but because of buffering in practice experience is not good below 330 kS/s
-        ui->sampleRate->setValueRange(9, min/(1<<m_settings.m_log2Decim), max/(1<<m_settings.m_log2Decim));
+        ui->sampleRate->setValueRange(8, min/(1<<m_settings.m_log2Decim), max/(1<<m_settings.m_log2Decim));
         ui->sampleRate->setValue(m_settings.m_devSampleRate/(1<<m_settings.m_log2Decim));
         ui->sampleRate->setToolTip("Baseband sample rate (S/s)");
         ui->deviceRateText->setToolTip("Device to host sample rate (S/s)");
@@ -375,6 +378,18 @@ void BladeRF2InputGui::on_sampleRate_changed(quint64 value)
 
     displayFcTooltip();
     m_settingsKeys.append("devSampleRate");
+
+    float bw = value / 1000;
+
+    if (bw > 56000) {
+        ui->bandwidth->setValue(56000);
+        m_settings.m_bandwidth = 56000000;
+    }
+    else {
+        m_settings.m_bandwidth = value;
+    }
+    m_settingsKeys.append("bandwidth");
+
     sendSettings();
 }
 
@@ -530,7 +545,7 @@ void BladeRF2InputGui::updateStatus()
                 ui->startStop->setStyleSheet("QToolButton { background:rgb(79,79,79); }");
                 break;
             case DeviceAPI::StIdle:
-                ui->startStop->setStyleSheet("QToolButton { background-color : blue; }");
+                ui->startStop->setStyleSheet("QToolButton { background-color : red; }");
                 break;
             case DeviceAPI::StRunning:
                 ui->startStop->setStyleSheet("QToolButton { background-color : green; }");
@@ -609,4 +624,18 @@ void BladeRF2InputGui::makeUIConnections()
     QObject::connect(ui->transverter, &TransverterButton::clicked, this, &BladeRF2InputGui::on_transverter_clicked);
     QObject::connect(ui->startStop, &ButtonSwitch::toggled, this, &BladeRF2InputGui::on_startStop_toggled);
     QObject::connect(ui->sampleRateMode, &QToolButton::toggled, this, &BladeRF2InputGui::on_sampleRateMode_toggled);
+
+    // hide icon
+    ui->LOppmLabel->hide();
+    ui->LOppm->hide();
+    ui->LOppmText->hide();
+    ui->label_fcPos->hide();
+    ui->fcPos->hide();
+    ui->label_decim->hide();
+    ui->decim->hide();
+    ui->biasTee->hide();
+    ui->bandwidthLabel->hide();
+    ui->bandwidth->hide();
+    ui->bandwidthUnit->hide();
+    ui->transverter->hide();
 }

@@ -49,7 +49,7 @@
         <string>Grid</string>
        </property>
        <property name="icon">
-        <iconset resource="../resources/res.qrc">
+        <iconset>
          <normaloff>:/gridrect.png</normaloff>:/gridrect.png</iconset>
        </property>
        <property name="iconSize">
@@ -97,7 +97,7 @@
         <string>Grid</string>
        </property>
        <property name="icon">
-        <iconset resource="../resources/res.qrc">
+        <iconset>
          <normaloff>:/truncate.png</normaloff>:/truncate.png</iconset>
        </property>
        <property name="iconSize">
@@ -126,7 +126,7 @@
         <string/>
        </property>
        <property name="icon">
-        <iconset resource="../resources/res.qrc">
+        <iconset>
          <normaloff>:/clear.png</normaloff>:/clear.png</iconset>
        </property>
        <property name="iconSize">
@@ -146,7 +146,7 @@
         <string>Histogram</string>
        </property>
        <property name="icon">
-        <iconset resource="../resources/res.qrc">
+        <iconset>
          <normaloff>:/bell_phosphor.png</normaloff>:/bell_phosphor.png</iconset>
        </property>
        <property name="iconSize">
@@ -169,7 +169,7 @@
         <string>Max Hold</string>
        </property>
        <property name="icon">
-        <iconset resource="../resources/res.qrc">
+        <iconset>
          <normaloff>:/bell_max.png</normaloff>:/bell_max.png</iconset>
        </property>
        <property name="iconSize">
@@ -287,7 +287,7 @@
         <string>Max Hold</string>
        </property>
        <property name="icon">
-        <iconset resource="../resources/res.qrc">
+        <iconset>
          <normaloff>:/bell_line.png</normaloff>:/bell_line.png</iconset>
        </property>
        <property name="iconSize">
@@ -310,7 +310,7 @@
         <string>Max Hold</string>
        </property>
        <property name="icon">
-        <iconset resource="../resources/res.qrc">
+        <iconset>
          <normaloff>:/bell_fill.png</normaloff>:/bell_fill.png</iconset>
        </property>
        <property name="iconSize">
@@ -333,7 +333,7 @@
         <string>Max Hold</string>
        </property>
        <property name="icon">
-        <iconset resource="../resources/res.qrc">
+        <iconset>
          <normaloff>:/bell_gradient.png</normaloff>:/bell_gradient.png</iconset>
        </property>
        <property name="iconSize">
@@ -401,7 +401,7 @@
         <string>Inv</string>
        </property>
        <property name="icon">
-        <iconset resource="../resources/res.qrc">
+        <iconset>
          <normaloff>:/flip_windows.png</normaloff>:/flip_windows.png</iconset>
        </property>
        <property name="iconSize">
@@ -424,7 +424,7 @@
         <string>Waterfall</string>
        </property>
        <property name="icon">
-        <iconset resource="../resources/res.qrc">
+        <iconset>
          <normaloff>:/waterfall.png</normaloff>:/waterfall.png</iconset>
        </property>
        <property name="iconSize">
@@ -450,7 +450,7 @@
         <string>3D Spectrogram</string>
        </property>
        <property name="icon">
-        <iconset resource="../resources/res.qrc">
+        <iconset>
          <normaloff>:/waterfall_3d.png</normaloff>:/waterfall_3d.png</iconset>
        </property>
        <property name="iconSize">
@@ -983,7 +983,7 @@
         <string/>
        </property>
        <property name="icon">
-        <iconset resource="../resources/res.qrc">
+        <iconset>
          <normaloff>:/logarithmic.png</normaloff>
          <normalon>:/linear.png</normalon>:/logarithmic.png</iconset>
        </property>
@@ -1021,7 +1021,7 @@
         <string>Play/Pause spectrum display</string>
        </property>
        <property name="icon">
-        <iconset resource="../resources/res.qrc">
+        <iconset>
          <normaloff>:/pause.png</normaloff>
          <normalon>:/play.png</normalon>:/pause.png</iconset>
        </property>
@@ -1039,7 +1039,7 @@
         <string/>
        </property>
        <property name="icon">
-        <iconset resource="../resources/res.qrc">
+        <iconset>
          <normaloff>:/save.png</normaloff>:/save.png</iconset>
        </property>
       </widget>
@@ -1095,7 +1095,7 @@
         <string>Open spectrum measurements dialog</string>
        </property>
        <property name="icon">
-        <iconset resource="../resources/res.qrc">
+        <iconset>
          <normaloff>:/ruler.png</normaloff>:/ruler.png</iconset>
        </property>
        <property name="checkable">
@@ -1112,7 +1112,7 @@
         <string/>
        </property>
        <property name="icon">
-        <iconset resource="../resources/res.qrc">
+        <iconset>
          <normaloff>:/bin.png</normaloff>:/bin.png</iconset>
        </property>
       </widget>
@@ -1123,7 +1123,7 @@
         <string>Left: toggle relative / calibrated power - Right: open calibration dialog</string>
        </property>
        <property name="icon">
-        <iconset resource="../resources/res.qrc">
+        <iconset>
          <normaloff>:/caliper.png</normaloff>:/caliper.png</iconset>
        </property>
        <property name="checkable">
@@ -1140,7 +1140,7 @@
         <string>Grid</string>
        </property>
        <property name="icon">
-        <iconset resource="../resources/res.qrc">
+        <iconset>
          <normaloff>:/listing.png</normaloff>:/listing.png</iconset>
        </property>
        <property name="iconSize">
@@ -1366,6 +1366,13 @@
        </property>
        <property name="text">
         <string>IQ Replay</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnNfm">
+       <property name="text">
+        <string>NFM</string>
        </property>
       </widget>
      </item>

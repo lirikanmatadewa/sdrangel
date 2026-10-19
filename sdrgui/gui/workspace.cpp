@@ -188,11 +188,11 @@ Workspace::Workspace(int index, QWidget *parent, Qt::WindowFlags flags) :
     if (m_menuButton) {
         m_titleBarLayout->addWidget(m_menuButton);
     }
-    m_titleBarLayout->addWidget(m_configurationPresetsButton);
+    //m_titleBarLayout->addWidget(m_configurationPresetsButton);
     m_titleBarLayout->addWidget(m_startStopButton);
     m_titleBarLayout->addWidget(m_vline1);
     m_titleBarLayout->addWidget(m_addRxDeviceButton);
-    m_titleBarLayout->addWidget(m_addFeatureButton);
+    //m_titleBarLayout->addWidget(m_addFeatureButton);
     m_titleBarLayout->addWidget(m_vline2);
     m_titleBarLayout->addWidget(m_cascadeSubWindows);
     m_titleBarLayout->addWidget(m_tileSubWindows);
@@ -958,7 +958,7 @@ void Workspace::updateStartStopButton(bool checked)
     {
         QIcon startIcon(":/play.png");
         m_startStopButton->setIcon(startIcon);
-        m_startStopButton->setStyleSheet("QToolButton { background-color : blue; }");
+        m_startStopButton->setStyleSheet("QToolButton { background-color : red; }");
         m_startStopButton->setToolTip("Start all devices in workspace");
     }
     else
