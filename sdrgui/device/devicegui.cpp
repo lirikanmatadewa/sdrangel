@@ -151,9 +151,9 @@ DeviceGUI::DeviceGUI(QWidget *parent) :
     m_topLayout = new QHBoxLayout();
     m_topLayout->setContentsMargins(0, 0, 0, 0);
     m_topLayout->addWidget(m_indexLabel);
-    m_topLayout->addWidget(m_settingsButton);
-    m_topLayout->addWidget(m_changeDeviceButton);
-    m_topLayout->addWidget(m_reloadDeviceButton);
+    //m_topLayout->addWidget(m_settingsButton);
+    //m_topLayout->addWidget(m_changeDeviceButton);
+    //m_topLayout->addWidget(m_reloadDeviceButton);
     m_topLayout->addWidget(m_deviceSetPresetsButton);
      //m_topLayout->addWidget(m_addChannelsButton);
     m_topLayout->addWidget(m_titleLabel);
@@ -172,7 +172,7 @@ DeviceGUI::DeviceGUI(QWidget *parent) :
     m_bottomLayout = new QHBoxLayout();
     m_bottomLayout->setContentsMargins(0, 0, 0, 0);
     m_bottomLayout->addWidget(m_showSpectrumButton);
-    m_bottomLayout->addWidget(m_showAllChannelsButton);
+    //m_bottomLayout->addWidget(m_showAllChannelsButton);
     m_bottomLayout->addWidget(m_statusLabel);
     m_sizeGripBottomRight = new QSizeGrip(this);
     m_sizeGripBottomRight->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);

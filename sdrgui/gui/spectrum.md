@@ -310,7 +310,7 @@ Use this button to freeze the spectrum update. Useful when making measurements w
 
 <h4>B.6.3: Spectrum server control</h4>
 
-A websockets based server can be used to send spectrum data to clients. An example of such client can be found in the [SDRangelSpectrum](https://github.com/f4exb/sdrangelspectrum) project.
+A websockets based server can be used to send spectrum data to clients.
 
   - Left button: toggles server on/off
   - Right button: opens a secondary dialog that lets you choose the server listening (local) address and port.

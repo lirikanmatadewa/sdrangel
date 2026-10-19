@@ -50,11 +50,11 @@ void SpectrumSettings::resetToDefaults()
 	m_waterfallShare = 0.5;
 	m_displayCurrent = true;
 	m_displayWaterfall = false;
-	m_invertedWaterfall = false;
+	m_invertedWaterfall = true;
     m_display3DSpectrogram = false;
 	m_displayMaxHold = false;
 	m_displayHistogram = true;
-	m_displayGrid = false;
+	m_displayGrid = true;
     m_truncateFreqScale = false;
 	m_averagingMode = AvgModeFixed;
 	m_averagingIndex = 2;
@@ -202,7 +202,7 @@ bool SpectrumSettings::deserialize(const QByteArray& data)
 		d.readBool(8, &m_displayMaxHold, false);
 		d.readBool(9, &m_displayHistogram, false);
 		d.readS32(10, &m_decay, 1);
-		d.readBool(11, &m_displayGrid, false);
+		d.readBool(11, &m_displayGrid, true);
 		d.readS32(13, &m_displayGridIntensity, 15);
 		d.readS32(14, &m_decayDivisor, 1);
 		d.readS32(15, &m_histogramStroke, 30);
@@ -648,7 +648,8 @@ uint64_t SpectrumSettings::getMaxAveragingValue(int fftSize, AveragingMode avera
 	}
 	else
 	{
-		return (1<<20); // fixed 1 MS
+		//return (1<<20); // fixed 1 MS
+		return 200; // fixed max 200
 	}
 }
 

@@ -378,6 +378,8 @@ void GLSpectrumGUI::displaySettings()
 	ui->currentGradient->blockSignals(false);
 	ui->maxHold->setChecked(m_settings.m_displayMaxHold);
 	ui->histogram->setChecked(m_settings.m_displayHistogram);
+
+	m_settings.m_invertedWaterfall = true;
 	ui->invertWaterfall->setChecked(m_settings.m_invertedWaterfall);
 	ui->grid->setChecked(m_settings.m_displayGrid);
 	ui->gridIntensity->setSliderPosition(m_settings.m_displayGridIntensity);
@@ -436,6 +438,8 @@ void GLSpectrumGUI::displaySettings()
 
 	updateMeasurements();
 
+	ui->invertWaterfall->hide();
+	ui->grid->hide();
 	ui->gridIntensity->hide();
 	ui->truncateScale->hide();
 	ui->clearSpectrum->hide();
@@ -1385,7 +1389,13 @@ void GLSpectrumGUI::setAveragingCombo()
 	ui->averaging->blockSignals(true);
 	ui->averaging->clear();
 	ui->averaging->addItem(QString("1"));
-	uint64_t maxAveraging = SpectrumSettings::getMaxAveragingValue(m_settings.m_fftSize, m_settings.m_averagingMode);
+	uint64_t maxAveraging = SpectrumSettings::getMaxAveragingValue(
+		m_settings.m_fftSize,
+		m_settings.m_averagingMode
+	);
+
+	// Batasi averaging maksimum UI menjadi 200
+	maxAveraging = qMin(maxAveraging, (uint64_t)200);
 
 	for (int i = 0; i <= SpectrumSettings::getAveragingMaxScale(m_settings.m_averagingMode); i++)
 	{

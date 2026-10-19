@@ -77,7 +77,7 @@ void GraphicsDialog::accept()
     if (showRestart)
     {
         QMessageBox msgBox;
-        msgBox.setText("Please restart SDRangel to use the new UI settings.");
+        msgBox.setText("Please restart to use the new UI settings.");
         msgBox.exec();
     }
     QDialog::accept();

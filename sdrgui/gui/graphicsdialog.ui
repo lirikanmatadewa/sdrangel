@@ -43,7 +43,7 @@
       <item row="0" column="1">
        <widget class="QSlider" name="uiScaleFactor">
         <property name="toolTip">
-         <string>UI scale factor. Set &gt;100% for high DPI displays. Requires restarting SDRangel to apply</string>
+         <string>UI scale factor. Set &gt;100% for high DPI displays. Requires restarting to apply</string>
         </property>
         <property name="minimum">
          <number>100</number>

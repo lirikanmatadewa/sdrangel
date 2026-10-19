@@ -46,7 +46,7 @@
        <property name="toolTip">
         <string>Select FFT engine.
 
-Changes only apply to new devices / channels until SDRangel is restarted.</string>
+Changes only apply to new devices / channels until ES300 is restarted.</string>
        </property>
       </widget>
      </item>

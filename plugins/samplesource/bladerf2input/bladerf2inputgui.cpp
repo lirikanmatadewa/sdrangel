@@ -641,4 +641,9 @@ void BladeRF2InputGui::makeUIConnections()
     QObject::connect(ui->transverter, &TransverterButton::clicked, this, &BladeRF2InputGui::on_transverter_clicked);
     QObject::connect(ui->startStop, &ButtonSwitch::toggled, this, &BladeRF2InputGui::on_startStop_toggled);
     QObject::connect(ui->sampleRateMode, &QToolButton::toggled, this, &BladeRF2InputGui::on_sampleRateMode_toggled);
+
+    ui->biasTee->hide();
+    ui->LOppm->hide();
+    ui->LOppmLabel->hide();
+    ui->LOppmText->hide();
 }
