@@ -57,7 +57,7 @@ static int runQtApplication(int argc, char* argv[], qtwebapp::LoggerWithFile *lo
     QTextCodec::setCodecForCStrings(QTextCodec::codecForName("UTF-8"));
 */
     QCoreApplication::setOrganizationName("BWE Solutions");
-    QCoreApplication::setApplicationName("Wideband Receiver");
+    QCoreApplication::setApplicationName("CS100");
     QCoreApplication::setApplicationVersion(SDRANGEL_VERSION);
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 6, 0)
@@ -281,6 +281,6 @@ int main(int argc, char* argv[])
         delete logger;
     }
     
-    qWarning("Wideband Receiver quit.");
+    qWarning("CS100 quit.");
     return res;
 }

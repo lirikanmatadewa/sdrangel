@@ -135,7 +135,7 @@ MainWindow::MainWindow(qtwebapp::LoggerWithFile* logger, const MainParser& parse
 	m_profileDialog(nullptr),
 	m_fftWisdomProcess(nullptr)
 {
-	setWindowTitle("BWE Solutions - Wideband Receiver");
+	setWindowTitle("BWE Solutions - CS100");
 #ifdef ANDROID
 	bool showWelcome = true;
 #else
@@ -146,7 +146,7 @@ MainWindow::MainWindow(qtwebapp::LoggerWithFile* logger, const MainParser& parse
 	QAccessible::installFactory(AccessibleValueDialZ::factory);
 
 	qDebug() << "MainWindow::MainWindow: start";
-	setWindowTitle("Wideband Receiver");
+	setWindowTitle("CS100");
 
 	m_instance = this;
 	m_mainCore->m_logger = logger;
@@ -1703,8 +1703,8 @@ void MainWindow::createMenuBar(QToolButton* button)
 	QAction* loadedPluginsAction = helpMenu->addAction("Loaded &Plugins...");
 	loadedPluginsAction->setToolTip("List available plugins");
 	QObject::connect(loadedPluginsAction, &QAction::triggered, this, &MainWindow::on_action_Loaded_Plugins_triggered);*/
-	QAction* aboutAction = helpMenu->addAction("&About Wideband Receiver...");
-	aboutAction->setToolTip("Wideband Receiver application details");
+	QAction* aboutAction = helpMenu->addAction("&About CS100...");
+	aboutAction->setToolTip("CS100 application details");
 	QObject::connect(aboutAction, &QAction::triggered, this, &MainWindow::on_action_About_triggered);
 }
 
@@ -1713,10 +1713,10 @@ void MainWindow::createStatusBar()
 //	QString qtVersionStr = QString("Qt %1 ").arg(QT_VERSION_STR);
 //	QString openGLVersionStr = QString("OpenGL %1 ").arg(openGLVersion());
 //#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
-//	m_showSystemWidget = new QLabel("Wideband Receiver " + qApp->applicationVersion() + " " + qtVersionStr + openGLVersionStr
+//	m_showSystemWidget = new QLabel("CS100 " + qApp->applicationVersion() + " " + qtVersionStr + openGLVersionStr
 //		+ QSysInfo::currentCpuArchitecture() + " " + QSysInfo::prettyProductName(), this);
 //#else
-//	m_showSystemWidget = new QLabel("Wideband Receiver " + qApp->applicationVersion() + " " + qtVersionStr + openGLVersionStr, this);
+//	m_showSystemWidget = new QLabel("CS100 " + qApp->applicationVersion() + " " + qtVersionStr + openGLVersionStr, this);
 //#endif
 //	statusBar()->addPermanentWidget(m_showSystemWidget);
 

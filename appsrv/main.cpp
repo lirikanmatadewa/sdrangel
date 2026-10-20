@@ -129,6 +129,6 @@ int main(int argc, char* argv[])
         logger->installMsgHandler();
         int res = runQtApplication(argc, argv, logger);
         delete logger;
-        qWarning("Wideband Receiver quit.");
+        qWarning("CS100 quit.");
         return res;
 }
