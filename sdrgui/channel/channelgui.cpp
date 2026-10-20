@@ -153,7 +153,7 @@ ChannelGUI::ChannelGUI(QWidget *parent) :
     m_topLayout->addWidget(m_settingsButton);
     m_topLayout->addWidget(m_titleLabel);
     // m_topLayout->addStretch(1);
-    m_topLayout->addWidget(m_helpButton);
+    //m_topLayout->addWidget(m_helpButton);
     m_topLayout->addWidget(m_moveButton);
     m_topLayout->addWidget(m_shrinkButton);
     m_topLayout->addWidget(m_maximizeButton);

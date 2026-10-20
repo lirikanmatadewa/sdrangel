@@ -125,6 +125,7 @@ GLSpectrumGUI::GLSpectrumGUI(QWidget* parent) :
 	connect(ui->am, SIGNAL(clicked()), this, SLOT(open_am()));
 	connect(ui->ssb, SIGNAL(clicked()), this, SLOT(open_ssb()));
 	connect(ui->wfm, SIGNAL(clicked()), this, SLOT(open_wfm()));
+	connect(ui->btnNfm, SIGNAL(clicked()), this, SLOT(open_nfm()));
 	connect(ui->iqRecord, SIGNAL(clicked()), this, SLOT(openIqRecord()));
 	connect(ui->iqReplay, SIGNAL(clicked()), this, SLOT(openIqReplay()));
 	connect(ui->frequencyScanner, SIGNAL(clicked()), this, SLOT(openFrequencyScanner()));
@@ -1419,6 +1420,17 @@ void GLSpectrumGUI::open_wfm()
 	}
 }
 
+void GLSpectrumGUI::open_nfm()
+{
+	try {
+		qDebug() << "---------> NFM";
+		emit addChannel(this->rx_channel["NFMDemod"]);
+	}
+	catch (...) {
+		;
+	}
+}
+
 void GLSpectrumGUI::openIqRecord()
 {
 	try {
@@ -1463,7 +1475,7 @@ void GLSpectrumGUI::setRxChannel(QMap<QString, int>* rx_channel)
 	for (auto i = rx_channel->cbegin(), end = rx_channel->cend(); i != end; ++i)
 	{
 		this->rx_channel[i.key()] = i.value();
-		qDebug() << i.key() << " = " << i.value();
+		qDebug() << "-->" << i.key() << " = " << i.value();
 	}
 }
 

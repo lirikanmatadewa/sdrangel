@@ -155,10 +155,10 @@ DeviceGUI::DeviceGUI(QWidget *parent) :
     //m_topLayout->addWidget(m_changeDeviceButton);
     //m_topLayout->addWidget(m_reloadDeviceButton);
     m_topLayout->addWidget(m_deviceSetPresetsButton);
-     m_topLayout->addWidget(m_addChannelsButton);
+     //m_topLayout->addWidget(m_addChannelsButton);
     m_topLayout->addWidget(m_titleLabel);
     // m_topLayout->addStretch(1);
-    m_topLayout->addWidget(m_helpButton);
+    //m_topLayout->addWidget(m_helpButton);
     m_topLayout->addWidget(m_moveButton);
     m_topLayout->addWidget(m_shrinkButton);
     m_topLayout->addWidget(m_maximizeButton);

@@ -46,6 +46,7 @@
 #include "remotetcpsinkstarter.h"
 #include "dsp/dsptypes.h"
 #include "licensing-framework/licensemanager.h"
+#include "SingleInstanceGuard.h"
 
 #define NO_LICENSE 1
 
@@ -89,6 +90,17 @@ static int runQtApplication(int argc, char* argv[], qtwebapp::LoggerWithFile *lo
     }
 
 	QApplication a(argc, argv);
+
+    // Prevent multiple CS100 instances
+    const QString appId = "BWE_Solutions_CS100_SINGLE_INSTANCE_v1";
+
+    SingleInstanceGuard singleInstanceGuard(appId);
+
+    if (!singleInstanceGuard.tryToRun())
+    {
+        qWarning() << "CS100 is already running.";
+        return EXIT_SUCCESS;
+    }
 
     // Initialize licensing system early
     qDebug() << "Initializing licensing framework...";
