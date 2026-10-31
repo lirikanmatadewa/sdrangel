@@ -333,6 +333,7 @@ private:
     QString m_bearingApiUrl;
     int m_bearingRefreshSeconds = 1;
     bool m_bearingApiBusy = false;
+    QGeoCoordinate m_lastApiPosition;
 
     QString m_bearingLineName = "API Bearing Line";
     QColor m_bearingColor = QColor("#ff0000");

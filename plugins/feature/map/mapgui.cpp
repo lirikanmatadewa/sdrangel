@@ -65,6 +65,23 @@
 #include <QStandardPaths>
 #include <QDir>
 
+namespace {
+QString bearingApiUrlFromConfig()
+{
+    const QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QFile file(path + "/ip_device.txt");
+    QString ip = "192.168.1.10";
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        const QString savedIp = QString::fromUtf8(file.readLine()).trimmed();
+        if (!savedIp.isEmpty()) {
+            ip = savedIp;
+        }
+    }
+    return QString("http://%1:9000/get_map_data").arg(ip);
+}
+}
+
 MapGUI* MapGUI::create(PluginAPI* pluginAPI, FeatureUISet *featureUISet, Feature *feature)
 {
     MapGUI* gui = new MapGUI(pluginAPI, featureUISet, feature);
@@ -406,28 +423,7 @@ MapGUI::MapGUI(PluginAPI* pluginAPI, FeatureUISet *featureUISet, Feature *featur
     m_bearingLineName = "Bearing Nawasanga";
     m_bearingColor = QColor("#00ff00");
 
-    // Load IP from config file
-    QString path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-
-    QFile file(path + "/ip_device.txt");
-
-    QString ip = "192.168.1.10";
-
-    if (file.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
-        QTextStream in(&file);
-
-        QString savedIp = in.readLine().trimmed();
-
-        if (!savedIp.isEmpty())
-        {
-            ip = savedIp;
-        }
-
-        file.close();
-    }
-
-    QString bearingUrl = QString("http://%1:9000/get_map_data").arg(ip);
+    const QString bearingUrl = bearingApiUrlFromConfig();
 
     qDebug() << "Bearing API URL:" << bearingUrl;
 
@@ -1628,9 +1624,9 @@ void MapGUI::applyMap2DSettings(bool reloadMap)
 
     if (m_settings.m_map2DEnabled && reloadMap)
     {
-        float stationLatitude = MainCore::instance()->getSettings().getLatitude();
-        float stationLongitude = MainCore::instance()->getSettings().getLongitude();
-        float stationAltitude = MainCore::instance()->getSettings().getAltitude();
+        const double stationLatitude = m_lastApiPosition.isValid() ? m_lastApiPosition.latitude() : MainCore::instance()->getSettings().getLatitude();
+        const double stationLongitude = m_lastApiPosition.isValid() ? m_lastApiPosition.longitude() : MainCore::instance()->getSettings().getLongitude();
+        const double stationAltitude = m_lastApiPosition.isValid() ? m_lastApiPosition.altitude() : MainCore::instance()->getSettings().getAltitude();
 
         QQuickItem *item = ui->map->rootObject();
 
@@ -1991,9 +1987,9 @@ void MapGUI::init3DMap()
 
     m_cesium->initCZML();
 
-    float stationLatitude = MainCore::instance()->getSettings().getLatitude();
-    float stationLongitude = MainCore::instance()->getSettings().getLongitude();
-    float stationAltitude = MainCore::instance()->getSettings().getLongitude();
+    const double stationLatitude = m_lastApiPosition.isValid() ? m_lastApiPosition.latitude() : MainCore::instance()->getSettings().getLatitude();
+    const double stationLongitude = m_lastApiPosition.isValid() ? m_lastApiPosition.longitude() : MainCore::instance()->getSettings().getLongitude();
+    const double stationAltitude = m_lastApiPosition.isValid() ? m_lastApiPosition.altitude() : MainCore::instance()->getSettings().getAltitude();
 
     m_cesium->setPosition(QGeoCoordinate(stationLatitude, stationLongitude, stationAltitude));
     m_cesium->setTerrain(m_settings.m_terrain, maptilerAPIKey());
@@ -2886,6 +2882,10 @@ void MapGUI::preferenceChanged(int elementType)
     Preferences::ElementType pref = (Preferences::ElementType)elementType;
     if ((pref == Preferences::Latitude) || (pref == Preferences::Longitude) || (pref == Preferences::Altitude))
     {
+        // The API remains authoritative after the first valid device GPS fix.
+        if (m_lastApiPosition.isValid()) {
+            return;
+        }
         float stationLatitude = MainCore::instance()->getSettings().getLatitude();
         float stationLongitude = MainCore::instance()->getSettings().getLongitude();
         float stationAltitude = MainCore::instance()->getSettings().getAltitude();
@@ -2986,7 +2986,7 @@ void MapGUI::stopBearingApi()
 {
     m_bearingApiTimer.stop();
 
-    m_bearingApiBusy = false;
+    // Keep the busy flag until the outstanding request finishes.
 
     qDebug() << "Bearing API stopped";
 }
@@ -3003,26 +3003,39 @@ void MapGUI::setBearingRefreshInterval(int seconds)
 
 void MapGUI::requestBearingApi()
 {
-    if (m_bearingApiUrl.isEmpty() || m_bearingApiBusy) {
+    if (m_bearingApiBusy) {
         return;
     }
 
+    // Pick up device IP changes without reopening the Map.
+    m_bearingApiUrl = bearingApiUrlFromConfig();
     m_bearingApiBusy = true;
 
     QNetworkRequest request{ QUrl(m_bearingApiUrl) };
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-    m_bearingApiManager->get(request);
+    QNetworkReply* reply = m_bearingApiManager->get(request);
+    QTimer::singleShot(5000, reply, [reply]() {
+        if (!reply->isFinished()) {
+            reply->abort();
+        }
+    });
 }
 
 void MapGUI::bearingApiReplyFinished(QNetworkReply* reply)
 {
     m_bearingApiBusy = false;
 
+    if (!reply) {
+        return;
+    }
+
     qDebug() << "Reply error =" << reply->error();
     qDebug() << "Reply error string =" << reply->errorString();
     qDebug() << "Reply URL =" << reply->url();
 
-    if (!reply) {
+    // Ignore old responses after sync is disabled or the device IP changes.
+    if (!m_lastSyncState || reply->url() != QUrl(bearingApiUrlFromConfig())) {
+        reply->deleteLater();
         return;
     }
 
@@ -3062,21 +3075,65 @@ void MapGUI::bearingApiReplyFinished(QNetworkReply* reply)
 
     QJsonObject obj = doc.object();
 
-    if (!obj.contains("start_lat") ||
-        !obj.contains("start_lon") ||
-        !obj.contains("end_lat") ||
-        !obj.contains("end_lon") ||
-        !obj.contains("kraken_bearing_relative"))
-    {
-        qWarning() << "MapGUI::bearingApiReplyFinished missing required fields:"
-            << responseBytes;
+    // GPS updates must not depend on the availability of DF/bearing fields.
+    if (!obj.value("start_lat").isDouble() || !obj.value("start_lon").isDouble()) {
+        qWarning() << "Map API: missing or non-numeric ship coordinates";
         return;
     }
 
-    double startLat = obj.value("start_lat").toDouble();
-    double startLon = obj.value("start_lon").toDouble();
-    double endLat = obj.value("end_lat").toDouble();
-    double endLon = obj.value("end_lon").toDouble();
+    const double startLat = obj.value("start_lat").toDouble();
+    const double startLon = obj.value("start_lon").toDouble();
+    const QGeoCoordinate position(startLat, startLon, 0.0);
+    if (!std::isfinite(startLat) || !std::isfinite(startLon) || !position.isValid()) {
+        qWarning() << "Map API: invalid ship coordinates" << startLat << startLon;
+        return;
+    }
+
+    const bool positionChanged = position != m_lastApiPosition;
+    m_lastApiPosition = position;
+    m_azEl.setLocation(startLat, startLon, 0.0);
+    m_antennaMapItem.setLatitude(startLat);
+    m_antennaMapItem.setLongitude(startLon);
+    m_antennaMapItem.setAltitude(0.0);
+    if (obj.value("gps_heading").isDouble()) {
+        m_antennaMapItem.setOrientation(obj.value("gps_heading").toDouble());
+    }
+    delete m_antennaMapItem.getPositionDateTime();
+    m_antennaMapItem.setPositionDateTime(
+        new QString(QDateTime::currentDateTime().toString(Qt::ISODateWithMs)));
+    update(m_map, &m_antennaMapItem, "Station");
+
+    if (positionChanged)
+    {
+        m_objectMapFilter.setPosition(position);
+        m_imageMapFilter.setPosition(position);
+        m_polygonMapFilter.setPosition(position);
+        m_polylineMapFilter.setPosition(position);
+
+        QQuickItem* root = ui->map->rootObject();
+        QObject* mapObject = root ? root->findChild<QObject*>("map") : nullptr;
+        if (mapObject) {
+            mapObject->setProperty("center", QVariant::fromValue(position));
+        }
+        if (m_cesium) {
+            m_cesium->setPosition(position);
+            m_cesium->setView(startLat, startLon);
+        }
+        if (!m_lastFullUpdatePosition.isValid() || position.distanceTo(m_lastFullUpdatePosition) >= 1000) {
+            m_objectMapModel.allUpdated();
+            m_lastFullUpdatePosition = position;
+        }
+    }
+
+    if (!obj.value("end_lat").isDouble() || !obj.value("end_lon").isDouble() ||
+        !obj.value("kraken_bearing_relative").isDouble()) {
+        return;
+    }
+    const double endLat = obj.value("end_lat").toDouble();
+    const double endLon = obj.value("end_lon").toDouble();
+    if (!QGeoCoordinate(endLat, endLon).isValid()) {
+        return;
+    }
 
     double bearingRelative =
         obj.value("kraken_bearing_relative").toDouble();
@@ -3097,27 +3154,6 @@ void MapGUI::bearingApiReplyFinished(QNetworkReply* reply)
 
     // compass pakai ABSOLUTE bearing
     setDoaAngle(absoluteBearing);
-
-    m_antennaMapItem.setOrientation(gpsHeading);
-
-    //qDebug() << "Start:" << startLat << startLon;
-    //qDebug() << "End:" << endLat << endLon;
-    //qDebug() << "Bearing relative:" << bearingRelative;
-
-    // Optional: update posisi marker station ke start point API
-    m_antennaMapItem.setLatitude(startLat);
-    m_antennaMapItem.setLongitude(startLon);
-    m_antennaMapItem.setAltitude(0.0);
-
-    if (m_antennaMapItem.getPositionDateTime() != nullptr) {
-        delete m_antennaMapItem.getPositionDateTime();
-    }
-
-    m_antennaMapItem.setPositionDateTime(
-        new QString(QDateTime::currentDateTime().toString(Qt::ISODateWithMs))
-    );
-
-    update(m_map, &m_antennaMapItem, "Station");
 
     updateBearingLineFromApi(startLat,
         startLon,
