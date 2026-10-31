@@ -38,6 +38,8 @@
 #include "gui/crightclickenabler.h"
 #include "channel/channelgui.h"
 #include "feature/featuregui.h"
+#include "feature/feature.h"
+#include "feature/featureset.h"
 #include "device/devicegui.h"
 #include "device/deviceset.h"
 #include "mainspectrum/mainspectrumgui.h"
@@ -1251,15 +1253,23 @@ void Workspace::adjustSubWindowsAfterRestore()
 
 void Workspace::addMapFeatureClicked()
 {
-    /*qDebug() << "--->> " << "eksekusi 8";
-   emit addFeature(this, 8);*/
-
-    qDebug() << "Map Index =" << m_mapFeatureIndex;
-
-    if (m_mapFeatureIndex >= 0)
-    {
-        emit addFeature(this, m_mapFeatureIndex);
+    if (m_mapFeatureIndex < 0) {
+        return;
     }
+
+    // Only allow one Map across all workspaces, including restored Maps.
+    for (const FeatureSet* featureSet : MainCore::instance()->getFeatureeSets())
+    {
+        for (int i = 0; i < featureSet->getNumberOfFeatures(); ++i)
+        {
+            const Feature* feature = featureSet->getFeatureAt(i);
+            if (feature && feature->getURI() == QStringLiteral("sdrangel.feature.map")) {
+                return;
+            }
+        }
+    }
+
+    emit addFeature(this, m_mapFeatureIndex);
 }
 
 void Workspace::setMapFeatureIndex(int index)
